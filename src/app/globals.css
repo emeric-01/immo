@@ -1,16 +1,18 @@
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #64748b;
+  --background: #f6f8fb;
+  --foreground: #162033;
+  --muted: #667287;
   --panel: #ffffff;
-  --line: #dbe3ef;
-  --primary: #0f2747;
-  --primary-hover: #12335e;
-  --accent: #10b981;
-  --accent-soft: #d1fae5;
+  --line: #e0e7f0;
+  --primary: #16324f;
+  --primary-hover: #0f2844;
+  --accent: #0f9f78;
+  --accent-soft: #ddf7ed;
   --warning: #f59e0b;
   --danger: #dc2626;
-  --shadow: 0 18px 45px rgba(15, 39, 71, 0.08);
+  --shadow: 0 16px 36px rgba(22, 32, 51, 0.07);
+  --shadow-soft: 0 10px 24px rgba(22, 32, 51, 0.06);
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.14);
 }
 
 * {
@@ -24,11 +26,16 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background: var(--background);
+  background:
+    linear-gradient(180deg, #fbfcfe 0%, var(--background) 360px),
+    var(--background);
   color: var(--foreground);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -45,6 +52,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+strong {
+  font-weight: 650;
+}
+
 .address-step {
   display: grid;
   min-height: 100svh;
@@ -59,11 +70,12 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #071933;
+  color: #10233a;
 }
 
 .brand-lockup strong {
   font-size: 2rem;
+  font-weight: 650;
   line-height: 1;
   letter-spacing: 0;
 }
@@ -84,10 +96,10 @@ button:disabled {
   position: relative;
   width: 36px;
   height: 41px;
-  border: 3px solid #12357a;
+  border: 3px solid #1c4b86;
   border-bottom: 0;
   border-radius: 16px 16px 12px 12px;
-  color: #12357a;
+  color: #1c4b86;
 }
 
 .brand-shield::before,
@@ -124,8 +136,9 @@ button:disabled {
 .address-hero h1 {
   max-width: 680px;
   margin-bottom: 0;
-  color: #071933;
+  color: #10233a;
   font-size: 2.05rem;
+  font-weight: 620;
   line-height: 1.12;
   letter-spacing: 0;
 }
@@ -139,10 +152,10 @@ button:disabled {
 
 .address-search-card {
   width: min(100%, 760px);
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(22, 32, 51, 0.1);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.11);
+  box-shadow: 0 20px 44px rgba(22, 32, 51, 0.08);
 }
 
 .address-search-row {
@@ -214,8 +227,8 @@ button:disabled {
   background: #2563eb;
   color: #ffffff;
   padding: 0 28px;
-  font-weight: 800;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+  font-weight: 650;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }
 
 .estimate-button:hover:not(:disabled) {
@@ -317,14 +330,14 @@ button:disabled {
   background: #f3f6fa;
   color: #0f172a;
   font-size: 0.88rem;
-  font-weight: 850;
+  font-weight: 650;
 }
 
 .stepper-item.active > span {
   border-color: #4d88ee;
   background: #4d88ee;
   color: #ffffff;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
 }
 
 .stepper-item div {
@@ -375,7 +388,7 @@ button:disabled {
   background: #ffffff;
   color: var(--primary);
   padding: 0 14px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .back-button:hover {
@@ -400,7 +413,7 @@ button:disabled {
   margin: 0 0 10px;
   color: var(--accent);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -415,6 +428,7 @@ h1 {
   max-width: 760px;
   margin-bottom: 14px;
   font-size: 2.35rem;
+  font-weight: 620;
   line-height: 0.98;
   letter-spacing: 0;
 }
@@ -422,6 +436,7 @@ h1 {
 h2 {
   margin-bottom: 10px;
   font-size: 1.15rem;
+  font-weight: 620;
   line-height: 1.2;
 }
 
@@ -447,7 +462,7 @@ h2 {
   box-shadow: var(--shadow);
   color: var(--primary);
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -491,7 +506,7 @@ label {
   gap: 8px;
   color: var(--foreground);
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 input,
@@ -504,13 +519,17 @@ select {
   color: var(--foreground);
   padding: 0 12px;
   outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
 }
 
 input:focus,
 select:focus,
 button:focus-visible {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(15, 39, 71, 0.16);
+  box-shadow: var(--focus-ring);
 }
 
 .address-combobox {
@@ -523,7 +542,7 @@ button:focus-visible {
 .field-hint {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 650;
+  font-weight: 500;
   line-height: 1.35;
 }
 
@@ -542,7 +561,7 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-soft);
 }
 
 .suggestions-list button {
@@ -568,12 +587,13 @@ button:focus-visible {
 .suggestions-list strong {
   color: var(--foreground);
   font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .suggestions-list span {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 650;
+  font-weight: 500;
 }
 
 .segmented-control {
@@ -582,7 +602,7 @@ button:focus-visible {
   gap: 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #eef3f8;
+  background: #f1f5f9;
   padding: 4px;
 }
 
@@ -592,13 +612,18 @@ button:focus-visible {
   border-radius: 7px;
   background: transparent;
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 600;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
 }
 
 .segmented-control button.selected {
   background: #ffffff;
   color: var(--primary);
-  box-shadow: 0 3px 12px rgba(15, 39, 71, 0.09);
+  box-shadow: 0 3px 10px rgba(22, 32, 51, 0.07);
 }
 
 .property-switch {
@@ -622,6 +647,7 @@ button:focus-visible {
 .property-switch button.selected {
   border-color: #9ec2ff;
   color: #1457db;
+  background: #f8fbff;
   box-shadow: inset 0 0 0 1px #c7dcff;
 }
 
@@ -706,7 +732,7 @@ button:focus-visible {
   border-radius: 50%;
   color: #64748b;
   font-size: 0.58rem;
-  font-weight: 850;
+  font-weight: 650;
 }
 
 .form-grid,
@@ -749,7 +775,7 @@ button:focus-visible {
   background: #ffffff;
   padding: 8px 12px;
   color: var(--foreground);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .quick-criteria input {
@@ -773,13 +799,13 @@ button:focus-visible {
 }
 
 .asset-heading strong {
-  font-weight: 850;
+  font-weight: 650;
 }
 
 .asset-heading span {
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 450;
 }
 
 .asset-grid {
@@ -800,13 +826,17 @@ button:focus-visible {
   padding: 10px 12px;
   color: #1d2a3e;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 600;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .asset-pill.selected {
   border-color: #8db6ff;
   background: #f7faff;
-  box-shadow: inset 0 0 0 1px #bdd4ff;
+  box-shadow: inset 0 0 0 1px #c9dcff;
 }
 
 .asset-pill input {
@@ -967,12 +997,13 @@ button:focus-visible {
 }
 
 .advanced-criteria summary span {
-  font-weight: 850;
+  font-weight: 650;
 }
 
 .advanced-criteria summary strong {
   color: var(--muted);
   font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .advanced-criteria[open] summary {
@@ -992,11 +1023,16 @@ button:focus-visible {
   border-radius: 8px;
   background: var(--primary);
   color: #ffffff;
-  font-weight: 850;
+  font-weight: 650;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .primary-action:hover:not(:disabled) {
   background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .primary-action:disabled {
@@ -1011,7 +1047,7 @@ button:focus-visible {
   gap: 12px;
   margin-top: 12px;
   background: #1457f4;
-  box-shadow: 0 12px 24px rgba(20, 87, 244, 0.2);
+  box-shadow: 0 10px 20px rgba(20, 87, 244, 0.18);
 }
 
 .continue-action:hover:not(:disabled) {
@@ -1050,7 +1086,7 @@ button:focus-visible {
   color: #047857;
   padding: 0 10px;
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .result-panel h2 {
@@ -1070,11 +1106,12 @@ button:focus-visible {
 .result-metrics span {
   color: var(--muted);
   font-size: 0.84rem;
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .price-range strong {
   font-size: 1.6rem;
+  font-weight: 650;
   line-height: 1.08;
   letter-spacing: 0;
 }
@@ -1094,6 +1131,7 @@ button:focus-visible {
 
 .result-metrics strong {
   font-size: 1.15rem;
+  font-weight: 650;
 }
 
 .signal-list {
@@ -1133,7 +1171,7 @@ button:focus-visible {
   margin-bottom: 14px;
   color: #1f4ed8;
   font-size: 0.82rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .status-check {
@@ -1167,7 +1205,7 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-soft);
 }
 
 .valuation-card {
@@ -1205,19 +1243,21 @@ button:focus-visible {
   margin-bottom: 0;
   color: #17233a;
   font-size: 0.88rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .valuation-card h1 {
   margin-bottom: 0;
   color: #071933;
   font-size: 1.55rem;
+  font-weight: 620;
   line-height: 1.15;
 }
 
 .result-price {
   color: #071933;
   font-size: 3rem;
+  font-weight: 680;
   line-height: 1;
   letter-spacing: 0;
 }
@@ -1230,7 +1270,7 @@ button:focus-visible {
 }
 
 .result-range {
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .result-kpis {
@@ -1255,7 +1295,7 @@ button:focus-visible {
 .comparable-row span {
   color: #64748b;
   font-size: 0.78rem;
-  font-weight: 650;
+  font-weight: 500;
   line-height: 1.35;
 }
 
@@ -1265,6 +1305,7 @@ button:focus-visible {
 .comparable-row strong {
   color: #0f172a;
   font-size: 0.92rem;
+  font-weight: 650;
 }
 
 .kpi-icon {
@@ -1272,7 +1313,7 @@ button:focus-visible {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #1457f4;
+  background: #1d5ee8;
 }
 
 .kpi-icon.tag::before {
@@ -1318,12 +1359,13 @@ button:focus-visible {
   margin-bottom: 0;
   color: #17233a;
   font-size: 0.95rem;
+  font-weight: 620;
 }
 
 .section-heading > span {
   color: #1457f4;
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .summary-chips {
@@ -1341,7 +1383,7 @@ button:focus-visible {
   padding: 0 10px;
   color: #1d2a3e;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .comparable-list {
@@ -1416,12 +1458,13 @@ button:focus-visible {
 .price-trend-footer span {
   color: #64748b;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .price-trend-heading strong {
   color: #1457f4;
   font-size: 1.18rem;
+  font-weight: 650;
   line-height: 1;
 }
 
@@ -1474,13 +1517,13 @@ button:focus-visible {
   border-radius: 8px;
   padding: 10px 14px;
   text-align: center;
-  font-weight: 850;
+  font-weight: 650;
 }
 
 .report-action span,
 .secondary-action span {
   font-size: 0.72rem;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .secondary-action {
