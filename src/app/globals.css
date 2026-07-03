@@ -1393,6 +1393,59 @@ button:focus-visible {
   gap: 10px;
 }
 
+.price-trend {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.price-trend-heading,
+.price-trend-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.price-trend-heading span,
+.price-trend-footer span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.price-trend-heading strong {
+  color: #1457f4;
+  font-size: 1.18rem;
+  line-height: 1;
+}
+
+.price-trend-chart {
+  display: block;
+  width: 100%;
+  height: 72px;
+  overflow: visible;
+}
+
+.price-trend-chart path:first-child {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 1.5;
+}
+
+.price-trend-chart path:last-child {
+  fill: none;
+  stroke: #1457f4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
 .market-grid article,
 .meaning-grid article {
   display: grid;

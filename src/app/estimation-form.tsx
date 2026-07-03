@@ -111,6 +111,28 @@ function formatSoldAt(date?: string) {
   return month && year ? `${month}/${year}` : date;
 }
 
+function buildTrendPath(points: Array<{ value: number }>) {
+  if (points.length < 2) {
+    return "";
+  }
+
+  const width = 220;
+  const height = 64;
+  const values = points.map((point) => point.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(1, max - min);
+
+  return points
+    .map((point, index) => {
+      const x = (index / (points.length - 1)) * width;
+      const y = height - ((point.value - min) / range) * height;
+
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
 export function EstimationForm() {
   const [step, setStep] = useState<FlowStep>("address");
   const [form, setForm] = useState<FormState>(initialForm);
@@ -605,6 +627,10 @@ export function EstimationForm() {
       form.condition === "refresh" || form.condition === "renovate"
         ? Math.max(8000, Math.round(estimation.medianPrice * 0.04))
         : 0;
+    const priceHistory = market?.priceHistory ?? [];
+    const trendPath = buildTrendPath(priceHistory);
+    const firstTrendPoint = priceHistory[0];
+    const lastTrendPoint = priceHistory[priceHistory.length - 1];
 
     return (
       <section className="result-page" aria-labelledby="result-title">
@@ -715,20 +741,41 @@ export function EstimationForm() {
           <aside className="result-side">
             <section className="result-card market-card" aria-labelledby="market-title">
               <h2 id="market-title">Marche local</h2>
+              <div className="price-trend">
+                <div className="price-trend-heading">
+                  <span>Evolution des prix</span>
+                  <strong>
+                    {market?.priceEvolution12Months !== undefined
+                      ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
+                      : "Indisponible"}
+                  </strong>
+                </div>
+                {trendPath ? (
+                  <svg
+                    aria-label="Courbe d'evolution des prix"
+                    className="price-trend-chart"
+                    role="img"
+                    viewBox="0 0 220 72"
+                  >
+                    <path d="M 0 68 H 220" />
+                    <path d={trendPath} />
+                  </svg>
+                ) : (
+                  <p className="empty-small">Historique indisponible sur ce secteur.</p>
+                )}
+                {firstTrendPoint && lastTrendPoint ? (
+                  <div className="price-trend-footer">
+                    <span>{firstTrendPoint.period}</span>
+                    <span>{numberFormatter.format(lastTrendPoint.value)} EUR/m2</span>
+                  </div>
+                ) : null}
+              </div>
               <div className="market-grid">
                 <article>
                   <span>Prix moyen</span>
                   <strong>
                     {market?.sectorPricePerM2
                       ? `${numberFormatter.format(market.sectorPricePerM2)} EUR/m2`
-                      : "Indisponible"}
-                  </strong>
-                </article>
-                <article>
-                  <span>Evolution 12 mois</span>
-                  <strong>
-                    {market?.priceEvolution12Months !== undefined
-                      ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
                       : "Indisponible"}
                   </strong>
                 </article>

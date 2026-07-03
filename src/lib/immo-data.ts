@@ -40,6 +40,10 @@ export type PropertyEstimation = {
   market?: {
     sectorPricePerM2?: number;
     priceEvolution12Months?: number;
+    priceHistory?: Array<{
+      period: string;
+      value: number;
+    }>;
     saleDurationDays?: number;
     supplyLevel?: "Faible" | "Modere" | "Eleve";
     demandLevel?: "Faible" | "Bonne demande" | "Forte demande";
@@ -556,6 +560,13 @@ async function getMarketEnrichment(
     priceHistory?.data
       ?.map((point) => point.value)
       .filter((value): value is number => typeof value === "number") ?? [];
+  const priceHistoryPoints =
+    priceHistory?.data
+      ?.filter(
+        (point): point is { period: string; value: number } =>
+          typeof point.value === "number",
+      )
+      .slice(-12) ?? [];
   const firstHistoryValue = historyValues[0];
   const lastHistoryValue = historyValues[historyValues.length - 1];
   const priceEvolution12Months =
@@ -585,6 +596,7 @@ async function getMarketEnrichment(
     market: {
       sectorPricePerM2: currentPrice?.value ?? undefined,
       priceEvolution12Months,
+      priceHistory: priceHistoryPoints,
       saleDurationDays,
       supplyLevel,
       demandLevel,
@@ -658,6 +670,15 @@ export function createMockEstimation(
     market: {
       sectorPricePerM2: Math.round(pricePerM2 * 0.98),
       priceEvolution12Months: 3.2,
+      priceHistory: [
+        { period: "2025-03", value: Math.round(pricePerM2 * 0.94) },
+        { period: "2025-05", value: Math.round(pricePerM2 * 0.95) },
+        { period: "2025-07", value: Math.round(pricePerM2 * 0.96) },
+        { period: "2025-09", value: Math.round(pricePerM2 * 0.98) },
+        { period: "2025-11", value: Math.round(pricePerM2 * 0.99) },
+        { period: "2026-01", value: Math.round(pricePerM2 * 1.01) },
+        { period: "2026-03", value: Math.round(pricePerM2 * 1.02) },
+      ],
       saleDurationDays: 47,
       supplyLevel: "Modere",
       demandLevel: "Bonne demande",
