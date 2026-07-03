@@ -1728,3 +1728,1045 @@ button:focus-visible {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.city-price-page {
+  min-height: 100svh;
+  background: #f2f4f7;
+  color: #343843;
+}
+
+.city-price-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  min-height: 70px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e1e5eb;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0 20px;
+  backdrop-filter: blur(12px);
+}
+
+.city-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #10233a;
+  text-decoration: none;
+}
+
+.city-brand .brand-shield {
+  width: 30px;
+  height: 34px;
+  border-width: 3px;
+}
+
+.city-brand .brand-shield::before,
+.city-brand .brand-shield::after {
+  bottom: -7px;
+  width: 20px;
+  height: 3px;
+}
+
+.city-brand strong {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.city-brand span {
+  color: #2563eb;
+}
+
+.city-price-header nav {
+  display: none;
+  align-items: center;
+  gap: 22px;
+  color: #3f4654;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.city-price-header nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.city-search-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  border-bottom: 1px solid #dfe4eb;
+  background: #ffffff;
+}
+
+.city-search-bar input {
+  min-height: 64px;
+  border: 0;
+  border-radius: 0;
+  padding: 0 18px;
+  color: #343843;
+  font-size: 1rem;
+}
+
+.city-search-bar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  background: #1f3ecb;
+  color: transparent;
+  font-size: 0;
+}
+
+.city-search-bar button::before,
+.city-search-bar button::after {
+  content: "";
+}
+
+.city-search-bar button::before {
+  width: 18px;
+  height: 18px;
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+}
+
+.city-search-bar button::after {
+  width: 12px;
+  height: 4px;
+  margin-left: -3px;
+  border-radius: 999px;
+  background: #ffffff;
+  transform: translate(3px, 10px) rotate(45deg);
+}
+
+.city-price-hero {
+  display: grid;
+  min-height: calc(100svh - 134px);
+  border-bottom: 1px solid #dfe4eb;
+}
+
+.city-price-panel {
+  order: 2;
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  background: #f3f5f8;
+  padding: 18px 12px 24px;
+}
+
+.city-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #656d7b;
+  font-size: 0.82rem;
+}
+
+.city-breadcrumb a,
+.city-breadcrumb span {
+  color: inherit;
+  text-decoration: none;
+}
+
+.city-breadcrumb span::before {
+  content: ">";
+  margin-right: 7px;
+  color: #9aa2af;
+}
+
+.city-price-tabs {
+  display: inline-flex;
+  justify-self: center;
+  gap: 20px;
+  border-bottom: 1px solid #e2e6ec;
+}
+
+.city-price-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #9297a2;
+  padding: 0 4px;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.city-price-tabs button.active {
+  border-color: #2588ff;
+  color: #343843;
+}
+
+.city-price-panel h1 {
+  max-width: none;
+  margin: 0;
+  color: #3b3d44;
+  font-size: clamp(1.8rem, 4vw, 2.15rem);
+  font-weight: 620;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.city-price-panel > p {
+  margin: -12px 0 0;
+  color: #9a9ea7;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.city-price-types {
+  display: grid;
+  gap: 16px;
+}
+
+.city-price-type-card {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e2e6ec;
+  border-radius: 2px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.city-price-type-card > div {
+  display: grid;
+  gap: 4px;
+}
+
+.city-price-label,
+.city-property-type,
+.city-confidence-row {
+  color: #757b87;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.city-price-type-card strong {
+  color: #3a3d45;
+  font-size: 1.65rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.city-price-type-card small {
+  color: #5f6571;
+  font-size: 0.95rem;
+}
+
+.city-property-type {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  color: #575d67;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.city-property-symbol {
+  position: relative;
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  justify-self: center;
+  color: #41444b;
+}
+
+.city-property-symbol.apartment {
+  border: 3px solid currentColor;
+  border-radius: 2px;
+}
+
+.city-property-symbol.apartment::before {
+  position: absolute;
+  inset: 10px 10px auto;
+  height: 3px;
+  background: currentColor;
+  box-shadow: 0 11px 0 currentColor, 0 22px 0 currentColor;
+  content: "";
+}
+
+.city-property-symbol.apartment::after {
+  position: absolute;
+  left: 20px;
+  bottom: -3px;
+  width: 10px;
+  height: 15px;
+  background: currentColor;
+  content: "";
+}
+
+.city-property-symbol.house::before,
+.city-property-symbol.house::after {
+  position: absolute;
+  content: "";
+}
+
+.city-property-symbol.house::before {
+  left: 8px;
+  top: 24px;
+  width: 36px;
+  height: 25px;
+  border: 3px solid currentColor;
+  border-top: 0;
+  border-radius: 2px;
+}
+
+.city-property-symbol.house::after {
+  left: 10px;
+  top: 7px;
+  width: 31px;
+  height: 31px;
+  border-top: 3px solid currentColor;
+  border-left: 3px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.confidence-dots {
+  display: inline-flex;
+  gap: 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.confidence-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dfe3e8;
+}
+
+.confidence-dots span.active {
+  background: #10c69a;
+}
+
+.city-cta-stack {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  color: #5d6370;
+  text-align: center;
+}
+
+.city-primary-cta,
+.city-secondary-cta {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  padding: 0 24px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.city-primary-cta {
+  border: 1px solid #1f3ecb;
+  background: #1f3ecb;
+  color: #ffffff;
+}
+
+.city-secondary-cta {
+  border: 1px solid #1f3ecb;
+  background: #ffffff;
+  color: #1f3ecb;
+}
+
+.city-map-shell {
+  position: relative;
+  order: 1;
+  min-height: 520px;
+  background: #d7dce3;
+}
+
+.city-map-toolbar {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 10px 12px;
+  box-shadow: 0 8px 18px rgba(25, 31, 43, 0.12);
+}
+
+.city-map-tabs {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.city-map-tabs button {
+  min-height: 34px;
+  border: 1px solid #dfe4eb;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #555b66;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.city-map-tabs button.active {
+  border-color: #1f3ecb;
+  background: #eef3ff;
+  color: #1f3ecb;
+}
+
+.city-map-scale {
+  color: #555b66;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.city-map-toolbar select {
+  min-height: 34px;
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #555b66;
+  padding: 0 8px;
+}
+
+.city-map-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scale-track {
+  width: 110px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #31c84d, #f6ef4a, #f59c49, #ff3f38);
+}
+
+.city-map {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+}
+
+.city-map canvas {
+  outline: none;
+}
+
+.city-map-shell .mapboxgl-popup-content {
+  display: grid;
+  gap: 5px;
+  border-radius: 4px;
+  padding: 12px 14px;
+  color: #3b3d44;
+  box-shadow: 0 8px 22px rgba(25, 31, 43, 0.18);
+}
+
+.city-map-shell .mapboxgl-popup-content strong,
+.city-map-shell .mapboxgl-popup-content span {
+  display: block;
+}
+
+.city-map-shell .mapboxgl-popup-content span {
+  color: #646b77;
+  font-size: 0.86rem;
+}
+
+.city-map-inspector {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 62px;
+  left: 12px;
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(224, 228, 234, 0.95);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 12px;
+  box-shadow: 0 8px 18px rgba(25, 31, 43, 0.12);
+}
+
+.city-map-inspector > span {
+  color: #737a86;
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.city-map-inspector strong {
+  color: #343843;
+  font-size: 1.08rem;
+}
+
+.city-map-inspector p {
+  margin: 0;
+  color: #1f3ecb;
+  font-weight: 700;
+}
+
+.city-map-zone-list {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-top: 4px;
+}
+
+.city-map-zone-list button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e1e5eb;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #555b66;
+  padding: 0 9px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.city-map-zone-list button.active {
+  border-color: #1f3ecb;
+  color: #1f3ecb;
+}
+
+.city-map-zone-list button span {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.city-map-footer {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #dfe4eb;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.city-map-footer label,
+.city-map-footer > span {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-left: 1px solid #e4e7ec;
+  color: #5d6370;
+  font-weight: 500;
+}
+
+.city-map-footer label:first-child,
+.city-map-footer > span:first-child {
+  border-left: 0;
+}
+
+.city-map-footer input {
+  min-height: auto;
+  width: 16px;
+  height: 16px;
+  accent-color: #2588ff;
+}
+
+.mock-map {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(25deg, transparent 0 28%, rgba(255, 255, 255, 0.95) 29% 31%, transparent 32%),
+    linear-gradient(145deg, transparent 0 38%, rgba(255, 255, 255, 0.95) 39% 41%, transparent 42%),
+    linear-gradient(90deg, #d5d9df 0 16%, #f4f5f6 16% 18%, #d5d9df 18% 100%);
+}
+
+.mock-map::before,
+.mock-map::after {
+  position: absolute;
+  border-radius: 999px;
+  background: #ffffff;
+  content: "";
+}
+
+.mock-map::before {
+  left: -6%;
+  top: 48%;
+  width: 112%;
+  height: 12px;
+  transform: rotate(-12deg);
+}
+
+.mock-map::after {
+  left: 36%;
+  top: -10%;
+  width: 12px;
+  height: 120%;
+  transform: rotate(8deg);
+}
+
+.mock-map strong {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  z-index: 2;
+  color: #ffffff;
+  font-size: 1.4rem;
+  text-shadow: 0 1px 5px rgba(24, 31, 45, 0.55);
+  transform: translate(-50%, -50%);
+}
+
+.mock-zone {
+  position: absolute;
+  width: 34%;
+  height: 30%;
+  opacity: 0.75;
+  transform: rotate(-10deg);
+}
+
+.mock-zone.active {
+  outline: 3px solid #1f3ecb;
+  opacity: 0.9;
+}
+
+.mock-sale-point {
+  position: absolute;
+  z-index: 3;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #2588ff;
+  box-shadow: 0 2px 8px rgba(24, 31, 45, 0.24);
+}
+
+.mock-sale-point.house {
+  background: #10b981;
+}
+
+.city-content-section {
+  width: min(1180px, calc(100% - 24px));
+  margin: 18px auto 0;
+  border: 1px solid #e0e4ea;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(25, 31, 43, 0.05);
+}
+
+.city-split-section {
+  display: grid;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.city-detail-card,
+.city-table-card,
+.city-local-grid article {
+  border: 1px solid #e0e4ea;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(25, 31, 43, 0.05);
+}
+
+.city-detail-card h2,
+.city-chart-card h2,
+.city-table-card h2,
+.city-sales-section h2,
+.city-seo-text h2,
+.city-local-grid h2,
+.city-faq-section h2 {
+  margin: 0 0 14px;
+  color: #3b3d44;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.city-detail-card p,
+.city-seo-text p,
+.city-faq-section p {
+  color: #5f6571;
+  line-height: 1.65;
+}
+
+.price-distribution {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.price-distribution > span {
+  height: 10px;
+  border-radius: 999px;
+  background: #dce8ff;
+}
+
+.price-distribution > span:nth-child(2) {
+  background: #1f3ecb;
+}
+
+.price-distribution > span:nth-child(3) {
+  background: #dce8ff;
+}
+
+.price-distribution div {
+  display: grid;
+  gap: 4px;
+}
+
+.price-distribution strong {
+  color: #3a3d45;
+  font-size: 1.05rem;
+}
+
+.price-distribution small {
+  color: #858b96;
+}
+
+.city-chart-card {
+  padding: 22px;
+}
+
+.section-title-row {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: #5f6571;
+  font-size: 0.9rem;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chart-legend span::before {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  content: "";
+}
+
+.chart-legend .apartment::before {
+  background: #1f3ecb;
+}
+
+.chart-legend .house::before {
+  background: #10b981;
+}
+
+.city-trend-kpis {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.city-trend-kpis article {
+  display: grid;
+  gap: 5px;
+  border: 1px solid #e4e8ef;
+  border-radius: 3px;
+  padding: 14px;
+}
+
+.city-trend-kpis span {
+  color: #737a86;
+  font-size: 0.86rem;
+}
+
+.city-trend-kpis strong {
+  font-size: 1.18rem;
+}
+
+.positive {
+  color: #0fa879;
+}
+
+.negative {
+  color: #ff3939;
+}
+
+.city-trend-chart {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+}
+
+.city-trend-chart path {
+  fill: none;
+  stroke: #dfe3e8;
+  stroke-width: 1;
+  stroke-dasharray: 6 8;
+}
+
+.city-trend-chart .apartment-line,
+.city-trend-chart .house-line {
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
+}
+
+.city-trend-chart .apartment-line {
+  stroke: #1f3ecb;
+}
+
+.city-trend-chart .house-line {
+  stroke: #10b981;
+}
+
+.city-trend-chart text {
+  fill: #6d737e;
+  font-size: 18px;
+  text-anchor: middle;
+}
+
+.city-source-note {
+  margin: 14px 0 0;
+  border-top: 1px solid #e4e8ef;
+  padding-top: 14px;
+  color: #5f6571;
+  text-align: center;
+}
+
+.city-table-grid,
+.city-local-grid {
+  display: grid;
+  gap: 18px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.city-table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.city-table-card th,
+.city-table-card td {
+  border-bottom: 1px solid #edf0f4;
+  padding: 12px 0;
+  color: #555b66;
+  text-align: left;
+}
+
+.city-table-card th:last-child,
+.city-table-card td:last-child {
+  text-align: right;
+}
+
+.street-lists {
+  display: grid;
+  gap: 18px;
+}
+
+.street-lists h3,
+.city-seo-text h3 {
+  margin: 0 0 10px;
+  color: #3b3d44;
+  font-size: 1rem;
+}
+
+.street-lists p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  border-bottom: 1px solid #edf0f4;
+  padding: 10px 0;
+  color: #555b66;
+}
+
+.city-sales-section,
+.city-seo-text,
+.city-faq-section {
+  padding: 22px;
+}
+
+.recent-sales-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.recent-sales-grid article {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #e4e8ef;
+  border-radius: 3px;
+  padding: 16px;
+}
+
+.recent-sales-grid span {
+  justify-self: start;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #0f9f78;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.recent-sales-grid h3 {
+  margin: 0;
+  color: #3b3d44;
+  font-size: 1rem;
+}
+
+.recent-sales-grid p,
+.recent-sales-grid small {
+  margin: 0;
+  color: #646b77;
+}
+
+.recent-sales-grid a {
+  color: #1f3ecb;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.city-local-grid dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.city-local-grid dl div,
+.nearby-city-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #edf0f4;
+  padding: 10px 0;
+}
+
+.city-local-grid dt,
+.nearby-city-list span {
+  color: #737a86;
+}
+
+.city-local-grid dd {
+  margin: 0;
+  color: #3b3d44;
+  font-weight: 650;
+}
+
+.nearby-city-list {
+  display: grid;
+}
+
+.nearby-city-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nearby-city-list strong {
+  color: #1f3ecb;
+}
+
+.city-faq-section {
+  margin-bottom: 28px;
+}
+
+.city-faq-section details {
+  border-top: 1px solid #edf0f4;
+  padding: 14px 0;
+}
+
+.city-faq-section details:last-child {
+  border-bottom: 1px solid #edf0f4;
+}
+
+.city-faq-section summary {
+  color: #3b3d44;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+@media (min-width: 640px) {
+  .city-price-types,
+  .city-trend-kpis,
+  .recent-sales-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .city-trend-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .city-price-header nav {
+    display: flex;
+  }
+
+  .city-search-bar {
+    grid-template-columns: minmax(0, 540px) 60px minmax(0, 1fr);
+  }
+
+  .city-search-bar input {
+    grid-column: 1;
+  }
+
+  .city-search-bar button {
+    grid-column: 2;
+  }
+
+  .city-price-hero {
+    grid-template-columns: minmax(420px, 44vw) minmax(0, 1fr);
+  }
+
+  .city-price-panel {
+    order: 1;
+    padding: 24px 20px 28px;
+  }
+
+  .city-map-shell {
+    order: 2;
+    min-height: auto;
+  }
+
+  .city-split-section,
+  .city-table-grid,
+  .city-local-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .section-title-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 1180px) {
+  .city-price-panel {
+    padding: 28px 32px 34px;
+  }
+}
