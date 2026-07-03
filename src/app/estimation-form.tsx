@@ -29,7 +29,7 @@ type FormState = {
   hasNiceView: boolean;
 };
 
-type FlowStep = "address" | "details";
+type FlowStep = "address" | "essential" | "refine";
 
 type LocationHint = {
   city?: string;
@@ -65,10 +65,10 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const quickCriteria = [
-  ["hasOutdoorSpace", "Exterieur"],
-  ["hasParking", "Parking"],
-  ["hasCellar", "Cave"],
-  ["hasNiceView", "Belle vue"],
+  ["hasOutdoorSpace", "Exterieur", "outdoor"],
+  ["hasParking", "Parking", "parking"],
+  ["hasCellar", "Cave", "cellar"],
+  ["hasNiceView", "Belle vue", "view"],
 ] as const;
 
 function optionalNumber(value: string): number | undefined {
@@ -263,7 +263,7 @@ export function EstimationForm() {
 
   const addressField = (
     <label className="address-label">
-      {step === "details" ? "Adresse du bien" : null}
+      {step === "refine" ? "Adresse du bien" : null}
       <div className="address-combobox">
         <input
           name="address"
@@ -310,7 +310,7 @@ export function EstimationForm() {
       </div>
       {addressError ? (
         <span className="field-hint warning">{addressError}</span>
-      ) : step === "details" ? (
+      ) : step === "refine" ? (
         <span className="field-hint">
           Recherche Immo Data a partir de 10 caracteres.
         </span>
@@ -341,7 +341,7 @@ export function EstimationForm() {
             event.preventDefault();
 
             if (canOpenDetails) {
-              setStep("details");
+              setStep("essential");
             }
           }}
         >
@@ -358,6 +358,192 @@ export function EstimationForm() {
           <span className="privacy-lock" aria-hidden="true" />
           Vos donnees sont protegees (RGPD) et ne seront jamais revendues.
         </p>
+      </section>
+    );
+  }
+
+  if (step === "essential") {
+    return (
+      <section className="details-step essential-step" aria-labelledby="essential-title">
+        <div className="stepper" aria-label="Progression de l'estimation">
+          <div className="stepper-item active">
+            <span>1</span>
+            <div>
+              <strong>Informations essentielles</strong>
+              <small>Etape 1 sur 2</small>
+            </div>
+          </div>
+          <div className="stepper-item">
+            <span>2</span>
+            <div>
+              <strong>Affiner l&apos;estimation</strong>
+              <small>Optionnel</small>
+            </div>
+          </div>
+        </div>
+
+        <form
+          className="essential-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+
+            if (canSubmit) {
+              setStep("refine");
+            }
+          }}
+        >
+          <div className="module-heading">
+            <h2 id="essential-title">Decrivez votre bien</h2>
+            <p>Ces informations nous permettent d&apos;estimer votre bien.</p>
+          </div>
+
+          <div className="segmented-control property-switch" aria-label="Type de bien">
+            {(["apartment", "house"] as const).map((type) => (
+              <button
+                type="button"
+                className={form.propertyType === type ? "selected" : ""}
+                key={type}
+                onClick={() =>
+                  setForm((current) => ({ ...current, propertyType: type }))
+                }
+              >
+                <span className={`property-icon ${type}`} aria-hidden="true" />
+                {type === "apartment" ? "Appartement" : "Maison"}
+              </button>
+            ))}
+          </div>
+
+          <div className="form-grid">
+            <label>
+              <span className="field-title">
+                Surface <span className="field-help" aria-label="Surface habitable">?</span>
+              </span>
+              <span className="input-unit">
+                <input
+                  inputMode="decimal"
+                  name="surface"
+                  value={form.surfaceM2}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      surfaceM2: event.target.value,
+                    }))
+                  }
+                />
+                m2
+              </span>
+            </label>
+
+            <label>
+              Nombre de pieces
+              <input
+                inputMode="numeric"
+                name="rooms"
+                value={form.rooms}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    rooms: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          </div>
+
+          <label>
+            Etat du bien
+            <select
+              value={form.condition}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  condition: event.target
+                    .value as NonNullable<PropertyEstimationInput["condition"]>,
+                }))
+              }
+            >
+              <option value="new">Excellent etat</option>
+              <option value="good">Bon etat</option>
+              <option value="refresh">A rafraichir</option>
+              <option value="renovate">A renover</option>
+            </select>
+          </label>
+
+          <section className="asset-section" aria-label="Atouts du bien">
+            <div className="asset-heading">
+              <strong>Atouts de votre bien</strong>
+              <span>(selectionnez tout ce qui s&apos;applique)</span>
+            </div>
+
+            <div className="asset-grid">
+              {quickCriteria.map(([key, label, icon]) => (
+                <label
+                  className={form[key] ? "asset-pill selected" : "asset-pill"}
+                  key={key}
+                >
+                  <span className={`asset-icon ${icon}`} aria-hidden="true" />
+                  <span>{label}</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form[key])}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        [key]: event.target.checked,
+                      }))
+                    }
+                  />
+                </label>
+              ))}
+              {form.propertyType === "apartment" ? (
+                <label
+                  className={
+                    form.hasElevator ? "asset-pill selected" : "asset-pill"
+                  }
+                >
+                  <span className="asset-icon elevator" aria-hidden="true" />
+                  <span>Ascenseur</span>
+                  <input
+                    type="checkbox"
+                    checked={form.hasElevator}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        hasElevator: event.target.checked,
+                      }))
+                    }
+                  />
+                </label>
+              ) : (
+                <label
+                  className={form.hasPool ? "asset-pill selected" : "asset-pill"}
+                >
+                  <span className="asset-icon pool" aria-hidden="true" />
+                  <span>Piscine</span>
+                  <input
+                    type="checkbox"
+                    checked={form.hasPool}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        hasPool: event.target.checked,
+                      }))
+                    }
+                  />
+                </label>
+              )}
+            </div>
+          </section>
+
+          <button className="primary-action continue-action" disabled={!canSubmit}>
+            Continuer <span aria-hidden="true">-&gt;</span>
+          </button>
+
+          <p className="privacy-note essential-privacy">
+            <span className="privacy-lock" aria-hidden="true" />
+            Vos donnees sont protegees et ne seront jamais revendues.
+          </p>
+        </form>
       </section>
     );
   }
