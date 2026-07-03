@@ -20,7 +20,18 @@ export const southCities: City[] = [
     region: "Provence-Alpes-Cote d'Azur",
     latitude: 43.2928,
     longitude: 5.5707,
-    nearbySlugs: ["marseille", "aix-en-provence", "toulon"],
+    nearbySlugs: ["gemenos", "marseille", "aix-en-provence", "toulon"],
+  },
+  {
+    slug: "gemenos",
+    name: "Gemenos",
+    postalCode: "13420",
+    inseeCode: "13042",
+    department: "Bouches-du-Rhone",
+    region: "Provence-Alpes-Cote d'Azur",
+    latitude: 43.2989,
+    longitude: 5.6284,
+    nearbySlugs: ["aubagne", "marseille", "aix-en-provence", "toulon"],
   },
   {
     slug: "marseille",
@@ -31,7 +42,7 @@ export const southCities: City[] = [
     region: "Provence-Alpes-Cote d'Azur",
     latitude: 43.2965,
     longitude: 5.3698,
-    nearbySlugs: ["aubagne", "aix-en-provence", "toulon"],
+    nearbySlugs: ["aubagne", "gemenos", "aix-en-provence", "toulon"],
   },
   {
     slug: "aix-en-provence",

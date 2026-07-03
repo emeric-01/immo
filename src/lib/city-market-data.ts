@@ -422,10 +422,11 @@ function getTrend1Year(history: PriceHistoryResponse | undefined) {
   return Number((((end - start) / start) * 100).toFixed(1));
 }
 
-function getRangeFromAverage(value: number | undefined, propertyType: "apartment" | "house") {
-  const fallback =
-    propertyType === "apartment" ? aubagneMarketData.apartment : aubagneMarketData.house;
-
+function getRangeFromAverage(
+  value: number | undefined,
+  propertyType: "apartment" | "house",
+  fallback: PropertyMarketStat,
+) {
   if (!value) {
     return fallback;
   }
@@ -449,6 +450,7 @@ function hasPriceValue(response: CurrentPriceResponse | undefined) {
 function toHistoryPoints(
   apartmentHistory: PriceHistoryResponse | undefined,
   houseHistory: PriceHistoryResponse | undefined,
+  fallbackHistory: CityPriceHistoryPoint[],
 ) {
   const byPeriod = new Map<string, Partial<CityPriceHistoryPoint>>();
 
@@ -482,7 +484,7 @@ function toHistoryPoints(
     .sort((a, b) => a.period.localeCompare(b.period));
 
   if (points.length === 0) {
-    return aubagneMarketData.history;
+    return fallbackHistory;
   }
 
   return points.filter((_, index) => {
@@ -597,8 +599,12 @@ function streetsFromTransactions(
     .slice(0, 5);
 }
 
-async function getAubagneImmoDataMarket(config: ImmoDataConfig): Promise<CityMarketData> {
-  const cityCode = "13005";
+async function getCityImmoDataMarket(
+  config: ImmoDataConfig,
+  city: City,
+): Promise<CityMarketData> {
+  const cityCode = city.inseeCode;
+  const fallbackData = getStaticCityMarketData(city);
   const baseMarketParams = {
     code: cityCode,
     geoLevel: "city",
@@ -721,38 +727,50 @@ async function getAubagneImmoDataMarket(config: ImmoDataConfig): Promise<CityMar
   );
 
   const zones = districts.filter((zone): zone is CityPriceZone => Boolean(zone));
-  const salePoints =
+  const salePointsFromTransactions =
     transactions?.data
       ?.map(toSalePoint)
       .filter((salePoint): salePoint is CitySalePoint => Boolean(salePoint))
-      .slice(0, 12) ?? aubagneMarketData.salePoints;
+      .slice(0, 12) ?? [];
+  const salePoints =
+    salePointsFromTransactions.length > 0
+      ? salePointsFromTransactions
+      : fallbackData.salePoints;
   const expensiveStreets =
     streetsFromTransactions(transactions?.data, "desc").length > 0
       ? streetsFromTransactions(transactions?.data, "desc")
-      : aubagneMarketData.expensiveStreets;
+      : fallbackData.expensiveStreets;
   const affordableStreets =
     streetsFromTransactions(transactions?.data, "asc").length > 0
       ? streetsFromTransactions(transactions?.data, "asc")
-      : aubagneMarketData.affordableStreets;
+      : fallbackData.affordableStreets;
 
-  const apartment = getRangeFromAverage(currentApartment?.value ?? undefined, "apartment");
-  const house = getRangeFromAverage(currentHouse?.value ?? undefined, "house");
+  const apartment = getRangeFromAverage(
+    currentApartment?.value ?? undefined,
+    "apartment",
+    fallbackData.apartment,
+  );
+  const house = getRangeFromAverage(
+    currentHouse?.value ?? undefined,
+    "house",
+    fallbackData.house,
+  );
   const hasImmoDataPrice = hasPriceValue(currentApartment) || hasPriceValue(currentHouse);
 
   return {
-    ...aubagneMarketData,
+    ...fallbackData,
     source: hasImmoDataPrice ? "immo-data" : "fallback",
     updatedAt: new Date().toISOString().slice(0, 10),
     apartment: {
       ...apartment,
-      trend1Year: getTrend1Year(apartmentHistory) || aubagneMarketData.apartment.trend1Year,
+      trend1Year: getTrend1Year(apartmentHistory) || fallbackData.apartment.trend1Year,
     },
     house: {
       ...house,
-      trend1Year: getTrend1Year(houseHistory) || aubagneMarketData.house.trend1Year,
+      trend1Year: getTrend1Year(houseHistory) || fallbackData.house.trend1Year,
     },
-    history: toHistoryPoints(apartmentHistory, houseHistory),
-    zones: zones.length > 0 ? zones : aubagneMarketData.zones,
+    history: toHistoryPoints(apartmentHistory, houseHistory, fallbackData.history),
+    zones: zones.length > 0 ? zones : fallbackData.zones,
     salePoints,
     neighborhoods:
       zones.length > 0
@@ -760,7 +778,7 @@ async function getAubagneImmoDataMarket(config: ImmoDataConfig): Promise<CityMar
             name: zone.name,
             pricePerM2: zone.pricePerM2,
           }))
-        : aubagneMarketData.neighborhoods,
+        : fallbackData.neighborhoods,
     expensiveStreets,
     affordableStreets,
   };
@@ -828,17 +846,19 @@ export function getStaticCityMarketData(city: City): CityMarketData {
 }
 
 export async function getCityMarketData(city: City): Promise<CityMarketData> {
-  if (city.slug !== "aubagne") {
+  const immoDataCitySlugs = new Set(["aubagne", "gemenos"]);
+
+  if (!immoDataCitySlugs.has(city.slug)) {
     return getStaticCityMarketData(city);
   }
 
   const config = getImmoDataConfig();
 
   if (!config) {
-    return aubagneMarketData;
+    return getStaticCityMarketData(city);
   }
 
-  const market = await optionalImmoData(() => getAubagneImmoDataMarket(config));
+  const market = await optionalImmoData(() => getCityImmoDataMarket(config, city));
 
-  return market ?? aubagneMarketData;
+  return market ?? getStaticCityMarketData(city);
 }

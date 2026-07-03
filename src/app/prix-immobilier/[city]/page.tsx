@@ -231,7 +231,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         </nav>
       </header>
 
-      <form className="city-search-bar" action="/prix-immobilier/aubagne">
+      <form className="city-search-bar" action={`/prix-immobilier/${city.slug}`}>
         <input
           aria-label="Rechercher une adresse ou une ville"
           placeholder='Ex : "10 rue du Chateau", "Marseille", "13400"...'
@@ -515,7 +515,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         <details>
           <summary>Les donnees sont-elles actualisees ?</summary>
           <p>
-            Oui. Pour Aubagne, les appels Immo Data sont faits cote serveur et
+            Oui. Pour {city.name}, les appels Immo Data sont faits cote serveur et
             stockes en cache pendant {cacheDays} jours. Apres expiration, la
             prochaine visite relance les requetes et met a jour la page.
           </p>
