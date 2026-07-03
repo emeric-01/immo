@@ -175,6 +175,69 @@ button:focus-visible {
   box-shadow: 0 0 0 3px rgba(15, 39, 71, 0.16);
 }
 
+.address-combobox {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.address-status,
+.field-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.field-hint.warning {
+  color: #9a3412;
+}
+
+.suggestions-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.suggestions-list button {
+  display: grid;
+  gap: 4px;
+  min-height: 54px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.suggestions-list button:last-child {
+  border-bottom: 0;
+}
+
+.suggestions-list button:hover,
+.suggestions-list button:focus-visible {
+  background: #f1f5f9;
+}
+
+.suggestions-list strong {
+  color: var(--foreground);
+  font-size: 0.92rem;
+}
+
+.suggestions-list span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
 .segmented-control {
   display: grid;
   grid-template-columns: 1fr 1fr;

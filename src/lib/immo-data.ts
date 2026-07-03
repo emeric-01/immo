@@ -2,6 +2,7 @@ export type RealtyType = "apartment" | "house";
 
 export type PropertyEstimationInput = {
   address: string;
+  selectedAddress?: AddressSuggestion;
   propertyType: RealtyType;
   surfaceM2: number;
   rooms: number;
@@ -36,6 +37,15 @@ export type PropertyEstimation = {
   marketSignals: string[];
   positiveFactors: string[];
   negativeFactors: string[];
+};
+
+export type AddressSuggestion = {
+  label: string;
+  addressId?: string;
+  cityName?: string;
+  postCode?: string[];
+  longitude: number;
+  latitude: number;
 };
 
 type ImmoDataConfig = {
@@ -137,6 +147,46 @@ async function fetchImmoData<T>(
   return response.json() as Promise<T>;
 }
 
+function toAddressSuggestion(result: ImmoDataGeocodeResult): AddressSuggestion | null {
+  if (!result.label || !result.center || result.center.length !== 2) {
+    return null;
+  }
+
+  return {
+    label: result.label,
+    addressId: result.addressId,
+    cityName: result.cityName,
+    postCode: result.postCode,
+    longitude: result.center[0],
+    latitude: result.center[1],
+  };
+}
+
+export async function searchImmoDataAddresses(
+  query: string,
+): Promise<AddressSuggestion[]> {
+  const config = getImmoDataConfig();
+
+  if (!config || query.trim().length < 3) {
+    return [];
+  }
+
+  const params = new URLSearchParams({
+    q: query.trim(),
+    geoLevel: "address",
+    limit: "5",
+  });
+  const results = await fetchImmoData<ImmoDataGeocodeResult[]>(
+    config,
+    "/v1/geocode",
+    params,
+  );
+
+  return results
+    .map(toAddressSuggestion)
+    .filter((suggestion): suggestion is AddressSuggestion => Boolean(suggestion));
+}
+
 async function geocodeAddress(
   config: ImmoDataConfig,
   address: string,
@@ -230,7 +280,13 @@ export function createMockEstimation(
     confidence: input.address && input.surfaceM2 > 20 ? "medium" : "low",
     confidenceScore: input.address && input.surfaceM2 > 20 ? 3 : 1,
     pricePerM2,
-    addressLabel: input.address,
+    addressLabel: input.selectedAddress?.label ?? input.address,
+    coordinates: input.selectedAddress
+      ? {
+          longitude: input.selectedAddress.longitude,
+          latitude: input.selectedAddress.latitude,
+        }
+      : undefined,
     marketSignals: [
       "Adresse qualifiee en mode demonstration",
       "Fourchette calculee avec donnees simulees",
@@ -259,7 +315,18 @@ export async function createImmoDataEstimation(
     return createMockEstimation(input);
   }
 
-  const geocode = await geocodeAddress(config, input.address);
+  const geocode = input.selectedAddress
+    ? {
+        label: input.selectedAddress.label,
+        addressId: input.selectedAddress.addressId,
+        cityName: input.selectedAddress.cityName,
+        postCode: input.selectedAddress.postCode,
+        center: [
+          input.selectedAddress.longitude,
+          input.selectedAddress.latitude,
+        ] as [number, number],
+      }
+    : await geocodeAddress(config, input.address);
   const valuation = await getValuation(config, input, geocode);
   const pricePerM2 = Math.round(valuation.mainValuation / input.surfaceM2);
 

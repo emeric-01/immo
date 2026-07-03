@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
+  AddressSuggestion,
   PropertyEstimation,
   PropertyEstimationInput,
   RealtyType,
@@ -39,9 +40,15 @@ const numberFormatter = new Intl.NumberFormat("fr-FR");
 
 export function EstimationForm() {
   const [form, setForm] = useState<FormState>(initialForm);
+  const [selectedAddress, setSelectedAddress] =
+    useState<AddressSuggestion | null>(null);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [estimation, setEstimation] = useState<PropertyEstimation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const addressAbortRef = useRef<AbortController | null>(null);
 
   const canSubmit = useMemo(() => {
     return (
@@ -51,6 +58,67 @@ export function EstimationForm() {
     );
   }, [form.address, form.rooms, form.surfaceM2]);
 
+  useEffect(() => {
+    const query = form.address.trim();
+
+    if (selectedAddress?.label === query) {
+      return;
+    }
+
+    setSelectedAddress(null);
+
+    if (query.length < 3) {
+      setSuggestions([]);
+      setAddressError(null);
+      setIsAddressLoading(false);
+      addressAbortRef.current?.abort();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      addressAbortRef.current?.abort();
+      const controller = new AbortController();
+      addressAbortRef.current = controller;
+      setIsAddressLoading(true);
+      setAddressError(null);
+
+      try {
+        const response = await fetch(
+          `/api/addresses?q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+          },
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Recherche indisponible.");
+        }
+
+        setSuggestions(data as AddressSuggestion[]);
+      } catch (searchError) {
+        if (searchError instanceof DOMException && searchError.name === "AbortError") {
+          return;
+        }
+
+        setSuggestions([]);
+        setAddressError(
+          searchError instanceof Error
+            ? searchError.message
+            : "Recherche indisponible.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsAddressLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.address, selectedAddress]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -59,6 +127,7 @@ export function EstimationForm() {
 
     const payload: PropertyEstimationInput = {
       address: form.address.trim(),
+      selectedAddress: selectedAddress ?? undefined,
       propertyType: form.propertyType,
       surfaceM2: Number(form.surfaceM2),
       rooms: Number(form.rooms),
@@ -109,18 +178,56 @@ export function EstimationForm() {
 
         <label>
           Adresse du bien
-          <input
-            name="address"
-            autoComplete="street-address"
-            value={form.address}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                address: event.target.value,
-              }))
-            }
-            placeholder="Ex. 26 Rue de Beaulieu, 49400 Saumur"
-          />
+          <div className="address-combobox">
+            <input
+              name="address"
+              autoComplete="street-address"
+              value={form.address}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  address: event.target.value,
+                }))
+              }
+              placeholder="Ex. 26 Rue de Beaulieu, 49400 Saumur"
+            />
+            <span className="address-status">
+              {isAddressLoading
+                ? "Recherche..."
+                : selectedAddress
+                  ? "Adresse selectionnee"
+                  : "Saisie libre possible"}
+            </span>
+            {suggestions.length > 0 && !selectedAddress ? (
+              <div className="suggestions-list" role="listbox">
+                {suggestions.map((suggestion) => (
+                  <button
+                    type="button"
+                    key={`${suggestion.addressId ?? suggestion.label}-${suggestion.longitude}`}
+                    onClick={() => {
+                      setSelectedAddress(suggestion);
+                      setSuggestions([]);
+                      setForm((current) => ({
+                        ...current,
+                        address: suggestion.label,
+                      }));
+                    }}
+                  >
+                    <strong>{suggestion.label}</strong>
+                    {suggestion.cityName ? <span>{suggestion.cityName}</span> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          {addressError ? (
+            <span className="field-hint warning">{addressError}</span>
+          ) : (
+            <span className="field-hint">
+              Immo Data geocode les adresses puis renvoie les coordonnees pour
+              l&apos;estimation.
+            </span>
+          )}
         </label>
 
         <div className="segmented-control" aria-label="Type de bien">
