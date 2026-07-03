@@ -48,9 +48,9 @@ button:disabled {
 .address-step {
   display: grid;
   min-height: 100svh;
-  width: min(920px, calc(100% - 32px));
+  width: min(920px, calc(100% - 24px));
   margin: 0 auto;
-  padding: clamp(48px, 10vh, 96px) 0 32px;
+  padding: 36px 0 28px;
   align-content: start;
   justify-items: center;
 }
@@ -58,12 +58,12 @@ button:disabled {
 .brand-lockup {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: #071933;
 }
 
 .brand-lockup strong {
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-size: 2rem;
   line-height: 1;
   letter-spacing: 0;
 }
@@ -82,9 +82,9 @@ button:disabled {
 
 .brand-shield {
   position: relative;
-  width: 46px;
-  height: 52px;
-  border: 4px solid #12357a;
+  width: 36px;
+  height: 41px;
+  border: 3px solid #12357a;
   border-bottom: 0;
   border-radius: 16px 16px 12px 12px;
   color: #12357a;
@@ -99,25 +99,25 @@ button:disabled {
 
 .brand-shield::before {
   left: 50%;
-  bottom: -9px;
-  width: 28px;
-  height: 4px;
+  bottom: -7px;
+  width: 22px;
+  height: 3px;
   transform: translateX(-50%) rotate(28deg);
 }
 
 .brand-shield::after {
   left: 50%;
-  bottom: -9px;
-  width: 28px;
-  height: 4px;
+  bottom: -7px;
+  width: 22px;
+  height: 3px;
   transform: translateX(-50%) rotate(-28deg);
 }
 
 .address-hero {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   justify-items: center;
-  margin: 38px 0 28px;
+  margin: 30px 0 24px;
   text-align: center;
 }
 
@@ -125,15 +125,15 @@ button:disabled {
   max-width: 680px;
   margin-bottom: 0;
   color: #071933;
-  font-size: clamp(2rem, 5vw, 3.15rem);
-  line-height: 1.08;
+  font-size: 2.05rem;
+  line-height: 1.12;
   letter-spacing: 0;
 }
 
 .address-hero p {
   margin-bottom: 0;
   color: #5f6878;
-  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-size: 1rem;
   line-height: 1.45;
 }
 
@@ -147,11 +147,11 @@ button:disabled {
 
 .address-search-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr);
   gap: 14px;
   align-items: center;
-  min-height: 80px;
-  padding: 12px 14px 12px 24px;
+  min-height: 72px;
+  padding: 12px 14px 14px 18px;
 }
 
 .search-icon {
@@ -205,8 +205,10 @@ button:disabled {
 }
 
 .estimate-button {
+  grid-column: 1 / -1;
   min-width: 128px;
   min-height: 52px;
+  width: 100%;
   border: 0;
   border-radius: 8px;
   background: #2563eb;
@@ -226,13 +228,13 @@ button:disabled {
 
 .privacy-note {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin: 34px 0 0;
   color: #4b5563;
   font-size: 0.9rem;
   line-height: 1.4;
-  text-align: center;
+  text-align: left;
 }
 
 .privacy-lock {
@@ -257,14 +259,14 @@ button:disabled {
 }
 
 .details-step {
-  width: min(1120px, calc(100% - 28px));
+  width: min(1120px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 24px 0 34px;
+  padding: 18px 0 28px;
 }
 
 .details-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
   padding: 0 0 18px;
@@ -285,16 +287,16 @@ button:disabled {
 }
 
 .app-shell {
-  width: min(1120px, calc(100% - 28px));
+  width: min(1120px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 34px 0;
+  padding: 22px 0;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
   gap: 24px;
-  align-items: end;
+  align-items: start;
   padding: 18px 0 28px;
 }
 
@@ -316,7 +318,7 @@ p {
 h1 {
   max-width: 760px;
   margin-bottom: 14px;
-  font-size: clamp(2.35rem, 6vw, 5rem);
+  font-size: 2.35rem;
   line-height: 0.98;
   letter-spacing: 0;
 }
@@ -338,6 +340,7 @@ h2 {
 .status-card {
   display: inline-flex;
   min-width: 136px;
+  justify-self: start;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -361,7 +364,7 @@ h2 {
 
 .estimation-module {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -377,7 +380,7 @@ h2 {
 .estimation-form {
   display: grid;
   gap: 16px;
-  padding: 20px;
+  padding: 16px;
 }
 
 .module-heading p,
@@ -505,7 +508,7 @@ button:focus-visible {
 .form-grid,
 .result-metrics {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -587,7 +590,7 @@ button:focus-visible {
 
 .advanced-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
   padding: 14px;
 }
@@ -621,7 +624,7 @@ button:focus-visible {
 
 .result-panel {
   min-height: 100%;
-  padding: 22px;
+  padding: 16px;
 }
 
 .result-source,
@@ -658,7 +661,7 @@ button:focus-visible {
 }
 
 .price-range strong {
-  font-size: clamp(1.6rem, 4vw, 2.35rem);
+  font-size: 1.6rem;
   line-height: 1.08;
   letter-spacing: 0;
 }
@@ -696,77 +699,108 @@ button:focus-visible {
   align-content: center;
 }
 
-@media (max-width: 860px) {
+@media (min-width: 560px) {
+  .form-grid,
+  .result-metrics,
+  .advanced-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .estimation-form {
+    padding: 20px;
+  }
+
+  .result-panel {
+    padding: 22px;
+  }
+}
+
+@media (min-width: 720px) {
   .address-step {
-    min-height: 100svh;
-    padding-top: 42px;
+    width: min(920px, calc(100% - 32px));
+    padding: 64px 0 32px;
+  }
+
+  .brand-lockup {
+    gap: 12px;
+  }
+
+  .brand-lockup strong {
+    font-size: 2.75rem;
+  }
+
+  .brand-shield {
+    width: 46px;
+    height: 52px;
+    border-width: 4px;
+  }
+
+  .brand-shield::before,
+  .brand-shield::after {
+    bottom: -9px;
+    width: 28px;
+    height: 4px;
+  }
+
+  .address-hero {
+    gap: 14px;
+    margin: 38px 0 28px;
+  }
+
+  .address-hero h1 {
+    font-size: 3.15rem;
+    line-height: 1.08;
+  }
+
+  .address-hero p {
+    font-size: 1.35rem;
+  }
+
+  .price-range strong {
+    font-size: 2.35rem;
   }
 
   .address-search-row {
-    grid-template-columns: 24px minmax(0, 1fr);
-    padding: 12px 14px 14px 18px;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    min-height: 80px;
+    padding: 12px 14px 12px 24px;
   }
 
   .estimate-button {
-    grid-column: 1 / -1;
-    width: 100%;
+    grid-column: auto;
+    width: auto;
   }
 
   .privacy-note {
-    align-items: flex-start;
-    text-align: left;
+    align-items: center;
+    text-align: center;
   }
+}
 
+@media (min-width: 861px) {
   .app-shell {
-    width: min(100% - 24px, 1120px);
-    padding: 22px 0;
+    width: min(1120px, calc(100% - 28px));
+    padding: 34px 0;
   }
 
   .hero,
   .estimation-module {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
   }
 
   .hero {
-    align-items: start;
-  }
-
-  .status-card {
-    justify-self: start;
-  }
-}
-
-@media (max-width: 520px) {
-  .brand-shield {
-    width: 36px;
-    height: 41px;
-    border-width: 3px;
-  }
-
-  .brand-lockup strong {
-    font-size: 2rem;
-  }
-
-  .address-search-row {
-    min-height: 72px;
-  }
-
-  .details-header {
-    align-items: flex-start;
+    align-items: end;
   }
 
   h1 {
-    font-size: 2.45rem;
+    font-size: 5rem;
   }
 
-  .form-grid,
-  .result-metrics,
-  .advanced-grid {
-    grid-template-columns: 1fr;
+  .status-card {
+    justify-self: auto;
   }
 
-  .estimation-form,
-  .result-panel {
-    padding: 16px;
+  .details-header {
+    align-items: center;
   }
 }
