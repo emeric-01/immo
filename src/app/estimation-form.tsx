@@ -14,7 +14,7 @@ type FormState = {
   propertyType: RealtyType;
   surfaceM2: string;
   rooms: string;
-  condition: NonNullable<PropertyEstimationInput["condition"]>;
+  condition: "" | NonNullable<PropertyEstimationInput["condition"]>;
   dpe: "" | NonNullable<PropertyEstimationInput["dpe"]>;
   bathrooms: string;
   constructionYear: string;
@@ -40,9 +40,9 @@ type LocationHint = {
 const initialForm: FormState = {
   address: "",
   propertyType: "apartment",
-  surfaceM2: "72",
-  rooms: "3",
-  condition: "good",
+  surfaceM2: "",
+  rooms: "",
+  condition: "",
   dpe: "",
   bathrooms: "",
   constructionYear: "",
@@ -51,7 +51,7 @@ const initialForm: FormState = {
   landAreaM2: "",
   hasOutdoorSpace: false,
   hasParking: false,
-  hasElevator: true,
+  hasElevator: false,
   hasCellar: false,
   hasPool: false,
   hasNiceView: false,
@@ -214,7 +214,7 @@ export function EstimationForm() {
       propertyType: form.propertyType,
       surfaceM2: Number(form.surfaceM2),
       rooms: Number(form.rooms),
-      condition: form.condition,
+      condition: form.condition || undefined,
       dpe: form.dpe || undefined,
       bathrooms: optionalNumber(form.bathrooms),
       constructionYear: optionalNumber(form.constructionYear),
@@ -458,10 +458,11 @@ export function EstimationForm() {
                 setForm((current) => ({
                   ...current,
                   condition: event.target
-                    .value as NonNullable<PropertyEstimationInput["condition"]>,
-                }))
-              }
-            >
+                    .value as FormState["condition"],
+              }))
+            }
+          >
+              <option value="">Selectionner</option>
               <option value="new">Excellent etat</option>
               <option value="good">Bon etat</option>
               <option value="refresh">A rafraichir</option>
@@ -637,10 +638,11 @@ export function EstimationForm() {
               setForm((current) => ({
                 ...current,
                 condition: event.target
-                  .value as NonNullable<PropertyEstimationInput["condition"]>,
+                  .value as FormState["condition"],
               }))
             }
           >
+            <option value="">Selectionner</option>
             <option value="new">Excellent etat</option>
             <option value="good">Bon etat</option>
             <option value="refresh">A rafraichir</option>
