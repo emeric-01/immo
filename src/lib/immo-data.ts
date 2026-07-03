@@ -71,6 +71,9 @@ export type ComparableSale = {
 export type AddressSuggestion = {
   label: string;
   addressId?: string;
+  inseeCode?: string;
+  districtCode?: string;
+  departmentCode?: string;
   cityName?: string;
   postCode?: string[];
   longitude: number;
@@ -302,6 +305,9 @@ function toAddressSuggestion(result: ImmoDataGeocodeResult): AddressSuggestion |
   return {
     label: result.label,
     addressId: result.addressId,
+    inseeCode: result.inseeCode,
+    districtCode: result.districtCode,
+    departmentCode: result.departmentCode,
     cityName: result.cityName,
     postCode: result.postCode,
     longitude: result.center[0],
@@ -735,10 +741,13 @@ export async function createImmoDataEstimation(
     return createMockEstimation(input);
   }
 
-  const geocode = input.selectedAddress
+  let geocode = input.selectedAddress
     ? {
         label: input.selectedAddress.label,
         addressId: input.selectedAddress.addressId,
+        inseeCode: input.selectedAddress.inseeCode,
+        districtCode: input.selectedAddress.districtCode,
+        departmentCode: input.selectedAddress.departmentCode,
         cityName: input.selectedAddress.cityName,
         postCode: input.selectedAddress.postCode,
         center: [
@@ -747,6 +756,11 @@ export async function createImmoDataEstimation(
         ] as [number, number],
       }
     : await geocodeAddress(config, input.address);
+
+  if (!toGeoScope(geocode)) {
+    geocode = await geocodeAddress(config, input.address);
+  }
+
   const valuation = await getValuation(config, input, geocode);
   const pricePerM2 = Math.round(valuation.mainValuation / input.surfaceM2);
   const coordinates = geocode.center
