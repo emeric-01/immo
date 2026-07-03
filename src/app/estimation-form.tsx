@@ -29,6 +29,14 @@ type FormState = {
   hasNiceView: boolean;
 };
 
+type FlowStep = "address" | "details";
+
+type LocationHint = {
+  city?: string;
+  region?: string;
+  country?: string;
+};
+
 const initialForm: FormState = {
   address: "",
   propertyType: "apartment",
@@ -74,10 +82,12 @@ function optionalNumber(value: string): number | undefined {
 }
 
 export function EstimationForm() {
+  const [step, setStep] = useState<FlowStep>("address");
   const [form, setForm] = useState<FormState>(initialForm);
   const [selectedAddress, setSelectedAddress] =
     useState<AddressSuggestion | null>(null);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [locationHint, setLocationHint] = useState<LocationHint | null>(null);
   const [estimation, setEstimation] = useState<PropertyEstimation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -93,6 +103,36 @@ export function EstimationForm() {
       Number(form.rooms) > 0
     );
   }, [form.address, form.rooms, form.surfaceM2]);
+
+  const canOpenDetails = form.address.trim().length > 4;
+  const addressPlaceholder = locationHint?.city
+    ? `Entrez une adresse (ex : 12 rue de la Republique, ${locationHint.city})`
+    : "Entrez une adresse (ex : 12 rue de la Paix, 75002 Paris)";
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchLocationHint() {
+      try {
+        const response = await fetch("/api/location-hint");
+        const data = (await response.json()) as LocationHint;
+
+        if (!ignore) {
+          setLocationHint(data);
+        }
+      } catch {
+        if (!ignore) {
+          setLocationHint({});
+        }
+      }
+    }
+
+    fetchLocationHint();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     const query = form.address.trim();
@@ -221,73 +261,137 @@ export function EstimationForm() {
     }
   }
 
-  return (
-    <section className="estimation-module" aria-labelledby="estimation-title">
-      <form className="estimation-form" onSubmit={handleSubmit}>
-        <div className="module-heading">
-          <p className="eyebrow">Module MVP</p>
-          <h2 id="estimation-title">Estimer une fourchette par adresse</h2>
-          <p>
-            Le module appelle notre route interne. Sans cle Immo Data, il reste
-            en mode demonstration.
-          </p>
+  const addressField = (
+    <label className="address-label">
+      {step === "details" ? "Adresse du bien" : null}
+      <div className="address-combobox">
+        <input
+          name="address"
+          autoComplete="street-address"
+          value={form.address}
+          onChange={(event) => {
+            setHasTypedAddress(true);
+            setForm((current) => ({
+              ...current,
+              address: event.target.value,
+            }));
+          }}
+          placeholder={addressPlaceholder}
+        />
+        <span className="address-status">
+          {isAddressLoading
+            ? "Recherche..."
+            : selectedAddress
+              ? "Adresse selectionnee"
+              : "Saisie libre possible"}
+        </span>
+        {suggestions.length > 0 && !selectedAddress ? (
+          <div className="suggestions-list" role="listbox">
+            {suggestions.map((suggestion) => (
+              <button
+                type="button"
+                key={`${suggestion.addressId ?? suggestion.label}-${suggestion.longitude}`}
+                onClick={() => {
+                  setSelectedAddress(suggestion);
+                  setSuggestions([]);
+                  setHasTypedAddress(false);
+                  setForm((current) => ({
+                    ...current,
+                    address: suggestion.label,
+                  }));
+                }}
+              >
+                <strong>{suggestion.label}</strong>
+                {suggestion.cityName ? <span>{suggestion.cityName}</span> : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {addressError ? (
+        <span className="field-hint warning">{addressError}</span>
+      ) : step === "details" ? (
+        <span className="field-hint">
+          Recherche Immo Data a partir de 10 caracteres.
+        </span>
+      ) : null}
+    </label>
+  );
+
+  if (step === "address") {
+    return (
+      <section className="address-step" aria-labelledby="address-step-title">
+        <div className="brand-lockup" aria-label="ImmoSafe">
+          <span className="brand-shield" />
+          <strong>
+            Immo<span>Safe</span>
+          </strong>
         </div>
 
-        <label>
-          Adresse du bien
-          <div className="address-combobox">
-            <input
-              name="address"
-              autoComplete="street-address"
-              value={form.address}
-              onChange={(event) => {
-                setHasTypedAddress(true);
-                setForm((current) => ({
-                  ...current,
-                  address: event.target.value,
-                }));
-              }}
-              placeholder="Ex. 26 Rue de Beaulieu, 49400 Saumur"
-            />
-            <span className="address-status">
-              {isAddressLoading
-                ? "Recherche..."
-                : selectedAddress
-                  ? "Adresse selectionnee"
-                  : "Saisie libre possible"}
-            </span>
-            {suggestions.length > 0 && !selectedAddress ? (
-              <div className="suggestions-list" role="listbox">
-                {suggestions.map((suggestion) => (
-                  <button
-                    type="button"
-                    key={`${suggestion.addressId ?? suggestion.label}-${suggestion.longitude}`}
-                    onClick={() => {
-                      setSelectedAddress(suggestion);
-                      setSuggestions([]);
-                      setHasTypedAddress(false);
-                      setForm((current) => ({
-                        ...current,
-                        address: suggestion.label,
-                      }));
-                    }}
-                  >
-                    <strong>{suggestion.label}</strong>
-                    {suggestion.cityName ? <span>{suggestion.cityName}</span> : null}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+        <div className="address-hero">
+          <h1 id="address-step-title">
+            Estimez votre bien immobilier en toute confiance
+          </h1>
+          <p>Rapide, gratuit et sans engagement.</p>
+        </div>
+
+        <form
+          className="address-search-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+
+            if (canOpenDetails) {
+              setStep("details");
+            }
+          }}
+        >
+          <div className="address-search-row">
+            <span className="search-icon" aria-hidden="true" />
+            {addressField}
+            <button className="estimate-button" disabled={!canOpenDetails}>
+              Estimer
+            </button>
           </div>
-          {addressError ? (
-            <span className="field-hint warning">{addressError}</span>
-          ) : (
-            <span className="field-hint">
-              Immo Data geocode les adresses puis renvoie les coordonnees pour
-              l&apos;estimation. Recherche a partir de 10 caracteres.
-            </span>
-          )}
-        </label>
+        </form>
+
+        <p className="privacy-note">
+          <span className="privacy-lock" aria-hidden="true" />
+          Vos donnees sont protegees (RGPD) et ne seront jamais revendues.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="details-step" aria-labelledby="estimation-title">
+      <div className="details-header">
+        <button
+          type="button"
+          className="back-button"
+          onClick={() => setStep("address")}
+        >
+          Retour
+        </button>
+        <div className="brand-lockup compact" aria-label="ImmoSafe">
+          <span className="brand-shield" />
+          <strong>
+            Immo<span>Safe</span>
+          </strong>
+        </div>
+      </div>
+
+      <section className="estimation-module" aria-labelledby="estimation-title">
+        <form className="estimation-form" onSubmit={handleSubmit}>
+          <div className="module-heading">
+            <p className="eyebrow">Etape 2</p>
+            <h2 id="estimation-title">Quelques questions pour affiner</h2>
+            <p>
+              On garde le parcours court. Les criteres avances restent
+              optionnels.
+            </p>
+          </div>
+
+          {addressField}
 
         <div className="segmented-control" aria-label="Type de bien">
           {(["apartment", "house"] as const).map((type) => (
@@ -520,7 +624,7 @@ export function EstimationForm() {
         </button>
 
         {error ? <p className="form-error">{error}</p> : null}
-      </form>
+        </form>
 
       <aside className="result-panel" aria-live="polite">
         {estimation ? (
@@ -573,6 +677,7 @@ export function EstimationForm() {
           </div>
         )}
       </aside>
+    </section>
     </section>
   );
 }
