@@ -231,7 +231,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         </nav>
       </header>
 
-      <form className="city-search-bar" action="/prix-immobilier/aubagne">
+      <form className="city-search-bar" action={`/prix-immobilier/${city.slug}`}>
         <input
           aria-label="Rechercher une adresse ou une ville"
           placeholder='Ex : "10 rue du Chateau", "Marseille", "13400"...'
@@ -454,22 +454,32 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
               <dt>Population</dt>
               <dd>{euroFormatter.format(market.localInfo.population)} habitants</dd>
             </div>
-            <div>
-              <dt>Age median</dt>
-              <dd>{market.localInfo.medianAge} ans</dd>
-            </div>
+            {typeof market.localInfo.medianAge === "number" ? (
+              <div>
+                <dt>Age median</dt>
+                <dd>{market.localInfo.medianAge} ans</dd>
+              </div>
+            ) : null}
             <div>
               <dt>Densite</dt>
               <dd>{euroFormatter.format(market.localInfo.density)} hab. / km2</dd>
             </div>
             <div>
-              <dt>Logements</dt>
-              <dd>{euroFormatter.format(market.localInfo.homes)} logements</dd>
+              <dt>Surface</dt>
+              <dd>{decimalFormatter.format(market.localInfo.areaKm2)} km2</dd>
             </div>
-            <div>
-              <dt>Proprietaires</dt>
-              <dd>{decimalFormatter.format(market.localInfo.ownerShare)} %</dd>
-            </div>
+            {typeof market.localInfo.homes === "number" ? (
+              <div>
+                <dt>Logements</dt>
+                <dd>{euroFormatter.format(market.localInfo.homes)} logements</dd>
+              </div>
+            ) : null}
+            {typeof market.localInfo.ownerShare === "number" ? (
+              <div>
+                <dt>Proprietaires</dt>
+                <dd>{decimalFormatter.format(market.localInfo.ownerShare)} %</dd>
+              </div>
+            ) : null}
           </dl>
         </article>
 
@@ -515,7 +525,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         <details>
           <summary>Les donnees sont-elles actualisees ?</summary>
           <p>
-            Oui. Pour Aubagne, les appels Immo Data sont faits cote serveur et
+            Oui. Pour {city.name}, les appels Immo Data sont faits cote serveur et
             stockes en cache pendant {cacheDays} jours. Apres expiration, la
             prochaine visite relance les requetes et met a jour la page.
           </p>
