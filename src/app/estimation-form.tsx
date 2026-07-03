@@ -29,7 +29,7 @@ type FormState = {
   hasNiceView: boolean;
 };
 
-type FlowStep = "address" | "essential" | "refine";
+type FlowStep = "address" | "essential" | "refine" | "result";
 
 type LocationHint = {
   city?: string;
@@ -70,6 +70,12 @@ const quickCriteria = [
   ["hasCellar", "Cave", "cellar"],
   ["hasNiceView", "Belle vue", "view"],
 ] as const;
+const conditionLabels: Record<NonNullable<PropertyEstimationInput["condition"]>, string> = {
+  new: "Excellent etat",
+  good: "Bon etat",
+  refresh: "A rafraichir",
+  renovate: "A renover",
+};
 
 function optionalNumber(value: string): number | undefined {
   if (value.trim() === "") {
@@ -79,6 +85,30 @@ function optionalNumber(value: string): number | undefined {
   const number = Number(value);
 
   return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
+function formatDistance(distance?: number) {
+  if (distance === undefined) {
+    return "Secteur proche";
+  }
+
+  if (distance >= 1000) {
+    return `${(distance / 1000).toLocaleString("fr-FR", {
+      maximumFractionDigits: 1,
+    })} km`;
+  }
+
+  return `${numberFormatter.format(distance)} m`;
+}
+
+function formatSoldAt(date?: string) {
+  if (!date) {
+    return "Date NC";
+  }
+
+  const [year, month] = date.split("-");
+
+  return month && year ? `${month}/${year}` : date;
 }
 
 export function EstimationForm() {
@@ -250,6 +280,7 @@ export function EstimationForm() {
       }
 
       setEstimation(data as PropertyEstimation);
+      setStep("result");
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -384,13 +415,7 @@ export function EstimationForm() {
 
         <form
           className="essential-card"
-          onSubmit={(event) => {
-            event.preventDefault();
-
-            if (canSubmit) {
-              setStep("refine");
-            }
-          }}
+          onSubmit={handleSubmit}
         >
           <div className="module-heading">
             <h2 id="essential-title">Decrivez votre bien</h2>
@@ -457,11 +482,10 @@ export function EstimationForm() {
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
-                  condition: event.target
-                    .value as FormState["condition"],
-              }))
-            }
-          >
+                  condition: event.target.value as FormState["condition"],
+                }))
+              }
+            >
               <option value="">Selectionner</option>
               <option value="new">Excellent etat</option>
               <option value="good">Bon etat</option>
@@ -536,15 +560,254 @@ export function EstimationForm() {
             </div>
           </section>
 
-          <button className="primary-action continue-action" disabled={!canSubmit}>
-            Continuer <span aria-hidden="true">-&gt;</span>
+          <button
+            className="primary-action continue-action"
+            disabled={!canSubmit || isLoading}
+          >
+            {isLoading ? "Estimation en cours" : "Estimer"}
+            <span aria-hidden="true">-&gt;</span>
           </button>
+
+          {error ? <p className="form-error">{error}</p> : null}
 
           <p className="privacy-note essential-privacy">
             <span className="privacy-lock" aria-hidden="true" />
             Vos donnees sont protegees et ne seront jamais revendues.
           </p>
         </form>
+      </section>
+    );
+  }
+
+  if (step === "result" && estimation) {
+    const propertyLabel = form.propertyType === "house" ? "Maison" : "Appartement";
+    const resultChips = [
+      propertyLabel,
+      `${numberFormatter.format(Number(form.surfaceM2))} m2`,
+      `${numberFormatter.format(Number(form.rooms))} pieces`,
+      form.condition ? conditionLabels[form.condition] : undefined,
+      form.hasOutdoorSpace ? "Exterieur" : undefined,
+      form.hasParking ? "Parking" : undefined,
+      form.hasCellar ? "Cave" : undefined,
+      form.hasNiceView ? "Belle vue" : undefined,
+      form.propertyType === "apartment" && form.hasElevator ? "Ascenseur" : undefined,
+      form.propertyType === "house" && form.hasPool ? "Piscine" : undefined,
+    ].filter((chip): chip is string => Boolean(chip));
+    const market = estimation.market;
+    const priceAdvice =
+      market?.sectorPricePerM2 && estimation.pricePerM2 > market.sectorPricePerM2 * 1.08
+        ? "Prix ambitieux vs secteur"
+        : market?.sectorPricePerM2 &&
+            estimation.pricePerM2 < market.sectorPricePerM2 * 0.92
+          ? "Prix attractif vs secteur"
+          : "Prix coherent marche";
+    const refreshPotential =
+      form.condition === "refresh" || form.condition === "renovate"
+        ? Math.max(8000, Math.round(estimation.medianPrice * 0.04))
+        : 0;
+
+    return (
+      <section className="result-page" aria-labelledby="result-title">
+        <header className="result-topbar">
+          <div className="brand-lockup compact" aria-label="ImmoSafe">
+            <span className="brand-shield" />
+            <strong>
+              Immo<span>Safe</span>
+            </strong>
+          </div>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => setStep("essential")}
+          >
+            Retour
+          </button>
+        </header>
+
+        <div className="result-status">
+          <span className="status-check" aria-hidden="true" />
+          Resultat de l&apos;estimation
+        </div>
+
+        <div className="result-layout">
+          <section className="valuation-card" aria-labelledby="result-title">
+            <span className="result-source">
+              {estimation.source === "immo-data" ? "Immo Data" : "Mode demonstration"}
+            </span>
+            <p className="result-address">{estimation.addressLabel}</p>
+            <h1 id="result-title">Votre estimation est prete</h1>
+            <strong className="result-price">
+              {currencyFormatter.format(estimation.medianPrice)}
+            </strong>
+            <p className="result-range">
+              Fourchette estimee : {currencyFormatter.format(estimation.lowPrice)} -{" "}
+              {currencyFormatter.format(estimation.highPrice)}
+            </p>
+
+            <div className="result-kpis">
+              <article>
+                <span className="kpi-icon tag" aria-hidden="true" />
+                <div>
+                  <span>Prix / m2</span>
+                  <strong>{numberFormatter.format(estimation.pricePerM2)} EUR/m2</strong>
+                </div>
+              </article>
+              <article>
+                <span className="kpi-icon shield" aria-hidden="true" />
+                <div>
+                  <span>Confiance</span>
+                  <strong>{estimation.confidenceScore}/5</strong>
+                </div>
+              </article>
+            </div>
+
+            <p className="result-note">
+              Estimation basee sur l&apos;adresse, les caracteristiques du bien et
+              les donnees comparables disponibles sur le secteur.
+            </p>
+          </section>
+
+          <section className="result-card summary-card" aria-labelledby="summary-title">
+            <div className="section-heading">
+              <h2 id="summary-title">Resume du bien</h2>
+            </div>
+            <div className="summary-chips">
+              {resultChips.map((chip) => (
+                <span key={chip}>{chip}</span>
+              ))}
+            </div>
+          </section>
+
+          <section className="result-card comparables-card" aria-labelledby="comparables-title">
+            <div className="section-heading inline">
+              <h2 id="comparables-title">Biens comparables vendus</h2>
+              <span>Voir tout</span>
+            </div>
+            <div className="comparable-list">
+              {estimation.comparables.length > 0 ? (
+                estimation.comparables.map((sale) => (
+                  <article className="comparable-row" key={sale.id}>
+                    <span className="comparable-thumb" aria-hidden="true" />
+                    <div>
+                      <strong>{sale.label}</strong>
+                      <span>
+                        {sale.surfaceM2 ? `${sale.surfaceM2} m2` : "Surface NC"}
+                        {" · "}
+                        {sale.pricePerM2
+                          ? `${numberFormatter.format(sale.pricePerM2)} EUR/m2`
+                          : "Prix/m2 NC"}
+                        {" · "}
+                        {formatDistance(sale.distanceMeters)}
+                      </span>
+                    </div>
+                    <div>
+                      <strong>{currencyFormatter.format(sale.price)}</strong>
+                      <span>{formatSoldAt(sale.soldAt)}</span>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className="empty-small">Aucun comparable disponible sur ce secteur.</p>
+              )}
+            </div>
+          </section>
+
+          <aside className="result-side">
+            <section className="result-card market-card" aria-labelledby="market-title">
+              <h2 id="market-title">Marche local</h2>
+              <div className="market-grid">
+                <article>
+                  <span>Prix moyen</span>
+                  <strong>
+                    {market?.sectorPricePerM2
+                      ? `${numberFormatter.format(market.sectorPricePerM2)} EUR/m2`
+                      : "NC"}
+                  </strong>
+                </article>
+                <article>
+                  <span>Evolution 12 mois</span>
+                  <strong>
+                    {market?.priceEvolution12Months !== undefined
+                      ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
+                      : "NC"}
+                  </strong>
+                </article>
+                <article>
+                  <span>Offre</span>
+                  <strong>{market?.supplyLevel ?? "NC"}</strong>
+                </article>
+                <article>
+                  <span>Delai moyen</span>
+                  <strong>
+                    {market?.saleDurationDays
+                      ? `${market.saleDurationDays} jours`
+                      : "NC"}
+                  </strong>
+                </article>
+              </div>
+            </section>
+
+            <section className="result-card energy-card" aria-labelledby="energy-title">
+              <h2 id="energy-title">DPE / GES</h2>
+              <div className="energy-badges">
+                <span>{estimation.energy?.dpeRating ?? (form.dpe || "NC")}<small>DPE</small></span>
+                <span>{estimation.energy?.gesRating ?? "NC"}<small>GES</small></span>
+              </div>
+              <p>Rafraichissement conseille pour ameliorer la valeur.</p>
+            </section>
+
+            <section className="result-card demand-card" aria-labelledby="demand-title">
+              <h2 id="demand-title">Niveau de demande</h2>
+              <div className="gauge">
+                <span />
+              </div>
+              <strong>{market?.demandLevel ?? "Demande a qualifier"}</strong>
+              <p>Lecture basee sur les delais de vente et la dynamique locale.</p>
+            </section>
+          </aside>
+
+          <section className="result-card meaning-card" aria-labelledby="meaning-title">
+            <h2 id="meaning-title">Ce que cela signifie pour vous</h2>
+            <div className="meaning-grid">
+              <article>
+                <span>Conseil du prix</span>
+                <strong>{priceAdvice}</strong>
+              </article>
+              <article>
+                <span>Potentiel de valorisation</span>
+                <strong>
+                  {refreshPotential
+                    ? `+${currencyFormatter.format(refreshPotential)}`
+                    : "A confirmer"}
+                </strong>
+              </article>
+              <article>
+                <span>Delai estime</span>
+                <strong>
+                  {market?.saleDurationDays
+                    ? `${market.saleDurationDays} jours`
+                    : "A qualifier"}
+                </strong>
+              </article>
+            </div>
+          </section>
+
+          <div className="result-actions">
+            <button className="primary-action report-action">
+              Recevoir le rapport complet
+              <span>Analyse detaillee, photos, carte et recommandations</span>
+            </button>
+            <button className="secondary-action">
+              Confier ma vente a ImmoSafe
+              <span>Un expert local vous accompagne</span>
+            </button>
+          </div>
+
+          <p className="privacy-note result-privacy">
+            <span className="privacy-lock" aria-hidden="true" />
+            Vos donnees sont protegees. Aucune revente de donnees.
+          </p>
+        </div>
       </section>
     );
   }
