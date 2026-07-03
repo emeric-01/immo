@@ -14,9 +14,18 @@ type FormState = {
   surfaceM2: string;
   rooms: string;
   condition: NonNullable<PropertyEstimationInput["condition"]>;
+  dpe: "" | NonNullable<PropertyEstimationInput["dpe"]>;
+  bathrooms: string;
+  constructionYear: string;
+  buildingLevels: string;
+  floor: string;
+  landAreaM2: string;
   hasOutdoorSpace: boolean;
   hasParking: boolean;
   hasElevator: boolean;
+  hasCellar: boolean;
+  hasPool: boolean;
+  hasNiceView: boolean;
 };
 
 const initialForm: FormState = {
@@ -25,9 +34,18 @@ const initialForm: FormState = {
   surfaceM2: "72",
   rooms: "3",
   condition: "good",
+  dpe: "",
+  bathrooms: "",
+  constructionYear: "",
+  buildingLevels: "",
+  floor: "",
+  landAreaM2: "",
   hasOutdoorSpace: false,
   hasParking: false,
   hasElevator: true,
+  hasCellar: false,
+  hasPool: false,
+  hasNiceView: false,
 };
 
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -37,6 +55,22 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
 });
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
+const quickCriteria = [
+  ["hasOutdoorSpace", "Exterieur"],
+  ["hasParking", "Parking"],
+  ["hasCellar", "Cave"],
+  ["hasNiceView", "Belle vue"],
+] as const;
+
+function optionalNumber(value: string): number | undefined {
+  if (value.trim() === "") {
+    return undefined;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
 
 export function EstimationForm() {
   const [form, setForm] = useState<FormState>(initialForm);
@@ -132,10 +166,24 @@ export function EstimationForm() {
       surfaceM2: Number(form.surfaceM2),
       rooms: Number(form.rooms),
       condition: form.condition,
+      dpe: form.dpe || undefined,
+      bathrooms: optionalNumber(form.bathrooms),
+      constructionYear: optionalNumber(form.constructionYear),
+      buildingLevels:
+        form.propertyType === "apartment"
+          ? optionalNumber(form.buildingLevels)
+          : undefined,
+      floor:
+        form.propertyType === "apartment" ? optionalNumber(form.floor) : undefined,
+      landAreaM2:
+        form.propertyType === "house" ? optionalNumber(form.landAreaM2) : undefined,
       hasOutdoorSpace: form.hasOutdoorSpace,
       hasParking: form.hasParking,
       hasElevator:
         form.propertyType === "apartment" ? form.hasElevator : undefined,
+      hasCellar: form.hasCellar,
+      hasPool: form.propertyType === "house" ? form.hasPool : undefined,
+      hasNiceView: form.hasNiceView,
     };
 
     try {
@@ -299,33 +347,22 @@ export function EstimationForm() {
           </select>
         </label>
 
-        <div className="toggle-grid" aria-label="Caracteristiques">
-          <label>
-            <input
-              type="checkbox"
-              checked={form.hasOutdoorSpace}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  hasOutdoorSpace: event.target.checked,
-                }))
-              }
-            />
-            Terrasse / exterieur
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={form.hasParking}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  hasParking: event.target.checked,
-                }))
-              }
-            />
-            Parking
-          </label>
+        <section className="quick-criteria" aria-label="Criteres rapides">
+          {quickCriteria.map(([key, label]) => (
+            <label key={key}>
+              <input
+                type="checkbox"
+                checked={Boolean(form[key])}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    [key]: event.target.checked,
+                  }))
+                }
+              />
+              {label}
+            </label>
+          ))}
           {form.propertyType === "apartment" ? (
             <label>
               <input
@@ -340,8 +377,132 @@ export function EstimationForm() {
               />
               Ascenseur
             </label>
-          ) : null}
-        </div>
+          ) : (
+            <label>
+              <input
+                type="checkbox"
+                checked={form.hasPool}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    hasPool: event.target.checked,
+                  }))
+                }
+              />
+              Piscine
+            </label>
+          )}
+        </section>
+
+        <details className="advanced-criteria">
+          <summary>
+            <span>Affiner l&apos;estimation</span>
+            <strong>DPE, etage, annee, salles de bain</strong>
+          </summary>
+
+          <div className="advanced-grid">
+            <label>
+              DPE
+              <select
+                value={form.dpe}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    dpe: event.target.value as FormState["dpe"],
+                  }))
+                }
+              >
+                <option value="">Non renseigne</option>
+                {["A", "B", "C", "D", "E", "F", "G"].map((dpe) => (
+                  <option value={dpe} key={dpe}>
+                    {dpe}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Salles de bain
+              <input
+                inputMode="numeric"
+                value={form.bathrooms}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    bathrooms: event.target.value,
+                  }))
+                }
+                placeholder="Ex. 1"
+              />
+            </label>
+
+            <label>
+              Annee construction
+              <input
+                inputMode="numeric"
+                value={form.constructionYear}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    constructionYear: event.target.value,
+                  }))
+                }
+                placeholder="Ex. 2010"
+              />
+            </label>
+
+            {form.propertyType === "apartment" ? (
+              <>
+                <label>
+                  Etage du bien
+                  <input
+                    inputMode="numeric"
+                    value={form.floor}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        floor: event.target.value,
+                      }))
+                    }
+                    placeholder="Ex. 2"
+                  />
+                </label>
+                <label>
+                  Etages immeuble
+                  <input
+                    inputMode="numeric"
+                    value={form.buildingLevels}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        buildingLevels: event.target.value,
+                      }))
+                    }
+                    placeholder="Ex. 5"
+                  />
+                </label>
+              </>
+            ) : (
+              <label>
+                Surface terrain
+                <span className="input-unit">
+                  <input
+                    inputMode="decimal"
+                    value={form.landAreaM2}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        landAreaM2: event.target.value,
+                      }))
+                    }
+                    placeholder="Ex. 500"
+                  />
+                  m2
+                </span>
+              </label>
+            )}
+          </div>
+        </details>
 
         <button className="primary-action" disabled={!canSubmit || isLoading}>
           {isLoading ? "Estimation en cours" : "Obtenir la fourchette"}

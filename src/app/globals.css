@@ -287,27 +287,70 @@ button:focus-visible {
   border-radius: 0;
 }
 
-.toggle-grid {
-  display: grid;
+.quick-criteria {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.toggle-grid label {
-  display: flex;
-  min-height: 44px;
+.quick-criteria label {
+  display: inline-flex;
+  min-height: 42px;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 8px 12px;
   color: var(--foreground);
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.toggle-grid input {
+.quick-criteria input {
   min-height: auto;
   width: 18px;
   height: 18px;
+}
+
+.advanced-criteria {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.advanced-criteria summary {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  align-content: center;
+  padding: 12px 14px;
+  color: var(--foreground);
+  cursor: pointer;
+  list-style: none;
+}
+
+.advanced-criteria summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-criteria summary span {
+  font-weight: 850;
+}
+
+.advanced-criteria summary strong {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.advanced-criteria[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
 }
 
 .primary-action {
@@ -440,7 +483,8 @@ button:focus-visible {
   }
 
   .form-grid,
-  .result-metrics {
+  .result-metrics,
+  .advanced-grid {
     grid-template-columns: 1fr;
   }
 
