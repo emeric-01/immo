@@ -721,7 +721,7 @@ export function EstimationForm() {
                   <strong>
                     {market?.sectorPricePerM2
                       ? `${numberFormatter.format(market.sectorPricePerM2)} EUR/m2`
-                      : "NC"}
+                      : "Indisponible"}
                   </strong>
                 </article>
                 <article>
@@ -729,40 +729,22 @@ export function EstimationForm() {
                   <strong>
                     {market?.priceEvolution12Months !== undefined
                       ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
-                      : "NC"}
+                      : "Indisponible"}
                   </strong>
                 </article>
                 <article>
                   <span>Offre</span>
-                  <strong>{market?.supplyLevel ?? "NC"}</strong>
+                  <strong>{market?.supplyLevel ?? "Indisponible"}</strong>
                 </article>
                 <article>
                   <span>Delai moyen</span>
                   <strong>
                     {market?.saleDurationDays
                       ? `${market.saleDurationDays} jours`
-                      : "NC"}
+                      : "Indisponible"}
                   </strong>
                 </article>
               </div>
-            </section>
-
-            <section className="result-card energy-card" aria-labelledby="energy-title">
-              <h2 id="energy-title">DPE / GES</h2>
-              <div className="energy-badges">
-                <span>{estimation.energy?.dpeRating ?? (form.dpe || "NC")}<small>DPE</small></span>
-                <span>{estimation.energy?.gesRating ?? "NC"}<small>GES</small></span>
-              </div>
-              <p>Rafraichissement conseille pour ameliorer la valeur.</p>
-            </section>
-
-            <section className="result-card demand-card" aria-labelledby="demand-title">
-              <h2 id="demand-title">Niveau de demande</h2>
-              <div className="gauge">
-                <span />
-              </div>
-              <strong>{market?.demandLevel ?? "Demande a qualifier"}</strong>
-              <p>Lecture basee sur les delais de vente et la dynamique locale.</p>
             </section>
           </aside>
 

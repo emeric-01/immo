@@ -1227,9 +1227,7 @@ button:focus-visible {
 .result-kpis span,
 .market-grid span,
 .meaning-grid span,
-.comparable-row span,
-.energy-card p,
-.demand-card p {
+.comparable-row span {
   color: #64748b;
   font-size: 0.78rem;
   font-weight: 650;
@@ -1239,8 +1237,7 @@ button:focus-visible {
 .result-kpis strong,
 .market-grid strong,
 .meaning-grid strong,
-.comparable-row strong,
-.demand-card strong {
+.comparable-row strong {
   color: #0f172a;
   font-size: 0.92rem;
 }
@@ -1383,71 +1380,6 @@ button:focus-visible {
   border: 1px solid #eef2f7;
   border-radius: 8px;
   padding: 10px;
-}
-
-.energy-card,
-.demand-card {
-  display: grid;
-  gap: 12px;
-}
-
-.energy-badges {
-  display: flex;
-  gap: 12px;
-}
-
-.energy-badges span {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  place-items: center;
-  border-radius: 8px;
-  background: #bef264;
-  color: #17320f;
-  font-size: 1.35rem;
-  font-weight: 900;
-}
-
-.energy-badges span:first-child {
-  background: #fde047;
-}
-
-.energy-badges small {
-  color: inherit;
-  font-size: 0.62rem;
-  font-weight: 850;
-}
-
-.gauge {
-  position: relative;
-  height: 54px;
-  overflow: hidden;
-}
-
-.gauge::before {
-  position: absolute;
-  left: 50%;
-  bottom: -44px;
-  width: 120px;
-  height: 120px;
-  border: 12px solid #dbeafe;
-  border-top-color: #1457f4;
-  border-right-color: #1457f4;
-  border-radius: 50%;
-  content: "";
-  transform: translateX(-50%) rotate(-35deg);
-}
-
-.gauge span {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 3px;
-  height: 44px;
-  border-radius: 999px;
-  background: #071933;
-  transform: translateX(-50%) rotate(35deg);
-  transform-origin: bottom center;
 }
 
 .result-actions {
