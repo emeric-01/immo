@@ -41,3 +41,26 @@ src/lib/
   immo-api.ts
   supabase.ts
 ```
+
+## Estimation Immo Data
+
+Le front doit appeler notre route interne :
+
+```text
+POST /api/estimations
+```
+
+Si `IMMO_DATA_BASE_URL` et `IMMO_DATA_API_KEY` sont absents, la route renvoie une estimation mockee.
+Quand les acces fournisseur sont disponibles, renseigne :
+
+```env
+IMMO_DATA_BASE_URL="https://api.immo-data.fr"
+IMMO_DATA_API_KEY=""
+```
+
+Le flux conforme a la documentation officielle est :
+
+```text
+GET /v1/geocode?q=...&geoLevel=address&limit=1
+GET /v1/valuation?longitude=...&latitude=...&realtyType=...&nbRooms=...&livingArea=...
+```
