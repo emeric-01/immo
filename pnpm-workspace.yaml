@@ -1,0 +1,13 @@
+packages:
+  - "."
+
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
+confirmModulesPurge: false
+verifyDepsBeforeRun: false
