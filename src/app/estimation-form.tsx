@@ -7,6 +7,7 @@ import type {
   PropertyEstimationInput,
   RealtyType,
 } from "@/lib/immo-data";
+import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
 
 type FormState = {
   address: string;
@@ -109,7 +110,7 @@ export function EstimationForm() {
 
     setSelectedAddress(null);
 
-    if (query.length < 3) {
+    if (query.length < MIN_ADDRESS_QUERY_LENGTH) {
       setSuggestions([]);
       setAddressError(null);
       setIsAddressLoading(false);
@@ -283,7 +284,7 @@ export function EstimationForm() {
           ) : (
             <span className="field-hint">
               Immo Data geocode les adresses puis renvoie les coordonnees pour
-              l&apos;estimation.
+              l&apos;estimation. Recherche a partir de 10 caracteres.
             </span>
           )}
         </label>

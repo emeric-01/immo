@@ -48,6 +48,8 @@ export type AddressSuggestion = {
   latitude: number;
 };
 
+export const MIN_ADDRESS_QUERY_LENGTH = 10;
+
 type ImmoDataConfig = {
   baseUrl: string;
   apiKey: string;
@@ -167,7 +169,7 @@ export async function searchImmoDataAddresses(
 ): Promise<AddressSuggestion[]> {
   const config = getImmoDataConfig();
 
-  if (!config || query.trim().length < 3) {
+  if (!config || query.trim().length < MIN_ADDRESS_QUERY_LENGTH) {
     return [];
   }
 

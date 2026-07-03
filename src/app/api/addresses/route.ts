@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { searchImmoDataAddresses } from "@/lib/immo-data";
+import {
+  MIN_ADDRESS_QUERY_LENGTH,
+  searchImmoDataAddresses,
+} from "@/lib/immo-data";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q")?.trim() ?? "";
 
-  if (query.length < 3) {
+  if (query.length < MIN_ADDRESS_QUERY_LENGTH) {
     return NextResponse.json([]);
   }
 
