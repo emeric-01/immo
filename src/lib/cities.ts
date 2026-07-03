@@ -29,8 +29,8 @@ export const southCities: City[] = [
     inseeCode: "13042",
     department: "Bouches-du-Rhone",
     region: "Provence-Alpes-Cote d'Azur",
-    latitude: 43.2969,
-    longitude: 5.6518,
+    latitude: 43.2989,
+    longitude: 5.6284,
     nearbySlugs: ["aubagne", "marseille", "aix-en-provence", "toulon"],
   },
   {
