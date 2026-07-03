@@ -8,6 +8,7 @@ import {
 } from "@/lib/cities";
 import {
   getCityMarketData,
+  getStaticCityMarketData,
   type CityPriceHistoryPoint,
   type PropertyMarketStat,
 } from "@/lib/city-market-data";
@@ -47,6 +48,12 @@ function formatDate(date: string) {
 
 function getAverageMarketPrice(apartment: number, house: number) {
   return Math.round((apartment + house) / 2);
+}
+
+function getMarketCacheDays() {
+  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
+
+  return Number.isFinite(days) && days > 0 ? Math.round(days) : 30;
 }
 
 function ConfidenceDots({ score }: { score: number }) {
@@ -192,13 +199,22 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
     notFound();
   }
 
-  const market = getCityMarketData(city);
+  const market = await getCityMarketData(city);
   const nearbyCities = getNearbyCities(city);
   const averagePrice = getAverageMarketPrice(
     market.apartment.averagePricePerM2,
     market.house.averagePricePerM2,
   );
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+  const cacheDays = getMarketCacheDays();
+  const sourceText =
+    market.source === "immo-data"
+      ? "Donnees Immo Data actualisees cote serveur et mises en cache."
+      : "Mode pilote : donnees de secours affichees en attendant la reponse Immo Data.";
+  const sourceNote =
+    market.source === "immo-data"
+      ? "Source : Immo Data pour les prix, historiques et transactions disponibles. Les informations locales et les elements absents de l'API restent completes par donnees pilote."
+      : "Source : donnees pilote affichees car Immo Data n'est pas encore configure ou n'a pas repondu pour cette generation.";
 
   return (
     <main className="city-price-page">
@@ -244,8 +260,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             Prix immobilier a {city.name} ({city.postalCode})
           </h1>
           <p>
-            Estimations ImmoSafe au {formatDate(market.updatedAt)}. Donnees
-            indicatives preparees pour le pilote Mapbox.
+            Estimations ImmoSafe au {formatDate(market.updatedAt)}. {sourceText}
           </p>
 
           <div className="city-price-types">
@@ -336,8 +351,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
 
         <TrendChart points={market.history} />
         <p className="city-source-note">
-          Source : donnees ImmoSafe pilote, a remplacer par Immo Data et donnees
-          publiques lors du branchement production.
+          {sourceNote}
         </p>
       </section>
 
@@ -463,7 +477,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
           <h2>Prix immobilier au m2 des villes voisines</h2>
           <div className="nearby-city-list">
             {nearbyCities.map((nearbyCity) => {
-              const nearbyMarket = getCityMarketData(nearbyCity);
+              const nearbyMarket = getStaticCityMarketData(nearbyCity);
               const nearbyAverage = getAverageMarketPrice(
                 nearbyMarket.apartment.averagePricePerM2,
                 nearbyMarket.house.averagePricePerM2,
@@ -501,9 +515,9 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         <details>
           <summary>Les donnees sont-elles actualisees ?</summary>
           <p>
-            Cette page pilote utilise des donnees mockees. En production, les
-            donnees seront stockees en cache et actualisees regulierement avec
-            Immo Data.
+            Oui. Pour Aubagne, les appels Immo Data sont faits cote serveur et
+            stockes en cache pendant {cacheDays} jours. Apres expiration, la
+            prochaine visite relance les requetes et met a jour la page.
           </p>
         </details>
       </section>

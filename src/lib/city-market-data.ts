@@ -34,6 +34,7 @@ export type CitySalePoint = {
 };
 
 export type CityMarketData = {
+  source: "immo-data" | "fallback";
   updatedAt: string;
   apartment: PropertyMarketStat;
   house: PropertyMarketStat;
@@ -66,7 +67,71 @@ export type CityMarketData = {
   };
 };
 
+type ImmoDataConfig = {
+  apiKey: string;
+  baseUrl: string;
+  revalidateSeconds: number;
+};
+
+type CurrentPriceResponse = {
+  value: number | null;
+};
+
+type PriceHistoryResponse = {
+  data?: Array<{
+    period: string;
+    value: number | null;
+  }>;
+};
+
+type CityGeoResponse = {
+  districtCodes?: string[];
+};
+
+type DistrictGeoResponse = {
+  districtCode?: string;
+  districtName?: string;
+  boundaries?: {
+    type?: string;
+    coordinates?: unknown;
+  };
+};
+
+type TransactionsResponse = {
+  data?: TransactionResponse[];
+};
+
+type TransactionResponse = {
+  txId?: string;
+  txDate?: string;
+  price?: number;
+  squareMeterPrice?: number;
+  realtyType?: "apartment" | "house";
+  attributes?: {
+    livingArea?: number;
+    rooms?: number;
+  };
+  lot?: Array<{
+    location?: {
+      address?: {
+        cityName?: string;
+        streetName?: string;
+        streetNumber?: string;
+      };
+      geometry?: {
+        coordinates?: [number, number];
+      };
+    };
+    realty?: Array<{
+      livingArea?: number;
+      rooms?: number;
+      realtyType?: "apartment" | "house";
+    }>;
+  }>;
+};
+
 const aubagneMarketData: CityMarketData = {
+  source: "fallback",
   updatedAt: "2026-07-01",
   apartment: {
     averagePricePerM2: 3751,
@@ -268,6 +333,439 @@ const aubagneMarketData: CityMarketData = {
   },
 };
 
+function getRevalidateSeconds() {
+  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
+  const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
+
+  return Math.round(safeDays * 24 * 60 * 60);
+}
+
+function getImmoDataConfig(): ImmoDataConfig | null {
+  const apiKey = process.env.IMMO_DATA_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  return {
+    apiKey,
+    baseUrl: (process.env.IMMO_DATA_BASE_URL ?? "https://api.immo-data.fr").replace(
+      /\/$/,
+      "",
+    ),
+    revalidateSeconds: getRevalidateSeconds(),
+  };
+}
+
+function previousMonth(monthsAgo: number) {
+  const date = new Date();
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() - monthsAgo);
+
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
+}
+
+async function fetchImmoData<T>(
+  config: ImmoDataConfig,
+  path: string,
+  params?: URLSearchParams,
+): Promise<T> {
+  const query = params ? `?${params}` : "";
+  const response = await fetch(`${config.baseUrl}${path}${query}`, {
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    next: {
+      revalidate: config.revalidateSeconds,
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+
+    throw new Error(`Immo Data ${path} failed (${response.status}): ${message}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function optionalImmoData<T>(callback: () => Promise<T>) {
+  try {
+    return await callback();
+  } catch (error) {
+    console.warn(error);
+
+    return undefined;
+  }
+}
+
+function getTrend1Year(history: PriceHistoryResponse | undefined) {
+  const values =
+    history?.data
+      ?.map((point) => point.value)
+      .filter((value): value is number => typeof value === "number") ?? [];
+
+  if (values.length < 2) {
+    return 0;
+  }
+
+  const start = values[Math.max(0, values.length - 13)];
+  const end = values[values.length - 1];
+
+  if (!start || !end) {
+    return 0;
+  }
+
+  return Number((((end - start) / start) * 100).toFixed(1));
+}
+
+function getRangeFromAverage(value: number | undefined, propertyType: "apartment" | "house") {
+  const fallback =
+    propertyType === "apartment" ? aubagneMarketData.apartment : aubagneMarketData.house;
+
+  if (!value) {
+    return fallback;
+  }
+
+  const lowRatio = propertyType === "apartment" ? 0.61 : 0.47;
+  const highRatio = propertyType === "apartment" ? 1.51 : 1.66;
+
+  return {
+    averagePricePerM2: Math.round(value),
+    lowPricePerM2: Math.round(value * lowRatio),
+    highPricePerM2: Math.round(value * highRatio),
+    confidenceScore: fallback.confidenceScore,
+    trend1Year: fallback.trend1Year,
+  };
+}
+
+function hasPriceValue(response: CurrentPriceResponse | undefined) {
+  return typeof response?.value === "number" && response.value > 0;
+}
+
+function toHistoryPoints(
+  apartmentHistory: PriceHistoryResponse | undefined,
+  houseHistory: PriceHistoryResponse | undefined,
+) {
+  const byPeriod = new Map<string, Partial<CityPriceHistoryPoint>>();
+
+  apartmentHistory?.data?.forEach((point) => {
+    if (typeof point.value === "number") {
+      byPeriod.set(point.period, {
+        ...byPeriod.get(point.period),
+        period: point.period,
+        apartment: Math.round(point.value),
+      });
+    }
+  });
+
+  houseHistory?.data?.forEach((point) => {
+    if (typeof point.value === "number") {
+      byPeriod.set(point.period, {
+        ...byPeriod.get(point.period),
+        period: point.period,
+        house: Math.round(point.value),
+      });
+    }
+  });
+
+  const points = Array.from(byPeriod.values())
+    .filter(
+      (point): point is CityPriceHistoryPoint =>
+        Boolean(point.period) &&
+        typeof point.apartment === "number" &&
+        typeof point.house === "number",
+    )
+    .sort((a, b) => a.period.localeCompare(b.period));
+
+  if (points.length === 0) {
+    return aubagneMarketData.history;
+  }
+
+  return points.filter((_, index) => {
+    if (points.length <= 12) {
+      return true;
+    }
+
+    const stride = Math.ceil(points.length / 12);
+
+    return index % stride === 0 || index === points.length - 1;
+  });
+}
+
+function coordinatesFromDistrict(boundaries: DistrictGeoResponse["boundaries"]) {
+  const firstRing =
+    boundaries?.type === "Polygon" &&
+    Array.isArray(boundaries.coordinates) &&
+    Array.isArray(boundaries.coordinates[0])
+      ? boundaries.coordinates[0]
+      : null;
+
+  if (!firstRing) {
+    return null;
+  }
+
+  const coordinates = firstRing.filter(
+    (point): point is [number, number] =>
+      Array.isArray(point) &&
+      typeof point[0] === "number" &&
+      typeof point[1] === "number",
+  );
+
+  return coordinates.length >= 3 ? coordinates : null;
+}
+
+function priceColor(pricePerM2: number) {
+  if (pricePerM2 < 3200) {
+    return "#9be74d";
+  }
+
+  if (pricePerM2 < 3700) {
+    return "#f5ef55";
+  }
+
+  if (pricePerM2 < 4300) {
+    return "#f5a15b";
+  }
+
+  return "#ff5a52";
+}
+
+function getTransactionStreet(transaction: TransactionResponse) {
+  return transaction.lot?.[0]?.location?.address?.streetName;
+}
+
+function toSalePoint(transaction: TransactionResponse, index: number): CitySalePoint | null {
+  const coordinates = transaction.lot?.[0]?.location?.geometry?.coordinates;
+  const lotRealty = transaction.lot?.[0]?.realty?.[0];
+  const realtyType = transaction.realtyType ?? lotRealty?.realtyType;
+
+  if (
+    !coordinates ||
+    typeof coordinates[0] !== "number" ||
+    typeof coordinates[1] !== "number" ||
+    (realtyType !== "apartment" && realtyType !== "house")
+  ) {
+    return null;
+  }
+
+  return {
+    id: transaction.txId ?? `immo-data-sale-${index}`,
+    label:
+      getTransactionStreet(transaction) ??
+      transaction.lot?.[0]?.location?.address?.cityName ??
+      "Vente recente",
+    propertyType: realtyType === "house" ? "Maison" : "Appartement",
+    rooms: transaction.attributes?.rooms ?? lotRealty?.rooms ?? 0,
+    surfaceM2: transaction.attributes?.livingArea ?? lotRealty?.livingArea ?? 0,
+    soldAt: transaction.txDate ?? "Date NC",
+    longitude: coordinates[0],
+    latitude: coordinates[1],
+  };
+}
+
+function streetsFromTransactions(
+  transactions: TransactionResponse[] | undefined,
+  order: "asc" | "desc",
+) {
+  const streets = new Map<string, number[]>();
+
+  transactions?.forEach((transaction) => {
+    const street = getTransactionStreet(transaction);
+
+    if (!street || typeof transaction.squareMeterPrice !== "number") {
+      return;
+    }
+
+    streets.set(street, [...(streets.get(street) ?? []), transaction.squareMeterPrice]);
+  });
+
+  const values = Array.from(streets.entries()).map(([name, prices]) => ({
+    name,
+    pricePerM2: Math.round(
+      prices.reduce((total, price) => total + price, 0) / prices.length,
+    ),
+  }));
+
+  return values
+    .sort((a, b) =>
+      order === "asc" ? a.pricePerM2 - b.pricePerM2 : b.pricePerM2 - a.pricePerM2,
+    )
+    .slice(0, 5);
+}
+
+async function getAubagneImmoDataMarket(config: ImmoDataConfig): Promise<CityMarketData> {
+  const cityCode = "13005";
+  const baseMarketParams = {
+    code: cityCode,
+    geoLevel: "city",
+    marketType: "sales",
+    metric: "sqm_price",
+  };
+  const currentApartmentParams = new URLSearchParams({
+    ...baseMarketParams,
+    realtyType: "apartment",
+  });
+  const currentHouseParams = new URLSearchParams({
+    ...baseMarketParams,
+    realtyType: "house",
+  });
+  const apartmentHistoryParams = new URLSearchParams({
+    ...baseMarketParams,
+    realtyType: "apartment",
+    startDate: previousMonth(120),
+    endDate: previousMonth(0),
+  });
+  const houseHistoryParams = new URLSearchParams({
+    ...baseMarketParams,
+    realtyType: "house",
+    startDate: previousMonth(120),
+    endDate: previousMonth(0),
+  });
+  const transactionsParams = new URLSearchParams({
+    code: cityCode,
+    geoLevel: "city",
+    txType: "sales",
+    realtyType: "house,apartment",
+    sortBy: "date",
+    sortOrder: "desc",
+    size: "30",
+  });
+
+  const [
+    currentApartment,
+    currentHouse,
+    apartmentHistory,
+    houseHistory,
+    transactions,
+    cityGeo,
+  ] = await Promise.all([
+    optionalImmoData(() =>
+      fetchImmoData<CurrentPriceResponse>(
+        config,
+        "/v1/market/price/current",
+        currentApartmentParams,
+      ),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<CurrentPriceResponse>(
+        config,
+        "/v1/market/price/current",
+        currentHouseParams,
+      ),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<PriceHistoryResponse>(
+        config,
+        "/v1/market/price/history",
+        apartmentHistoryParams,
+      ),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<PriceHistoryResponse>(
+        config,
+        "/v1/market/price/history",
+        houseHistoryParams,
+      ),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionsParams),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<CityGeoResponse>(config, `/v1/geo/cities/${cityCode}`),
+    ),
+  ]);
+
+  const districtCodes = cityGeo?.districtCodes?.slice(0, 7) ?? [];
+  const districts = await Promise.all(
+    districtCodes.map(async (districtCode) => {
+      const [district, price] = await Promise.all([
+        optionalImmoData(() =>
+          fetchImmoData<DistrictGeoResponse>(
+            config,
+            `/v1/geo/districts/${districtCode}`,
+          ),
+        ),
+        optionalImmoData(() =>
+          fetchImmoData<CurrentPriceResponse>(
+            config,
+            "/v1/market/price/current",
+            new URLSearchParams({
+              code: districtCode,
+              geoLevel: "district",
+              marketType: "sales",
+              realtyType: "apartment",
+              metric: "sqm_price",
+            }),
+          ),
+        ),
+      ]);
+      const polygon = coordinatesFromDistrict(district?.boundaries);
+      const pricePerM2 = price?.value ?? undefined;
+
+      if (!district?.districtCode || !polygon || !pricePerM2) {
+        return null;
+      }
+
+      return {
+        id: district.districtCode,
+        name: district.districtName ?? `Quartier ${district.districtCode}`,
+        pricePerM2: Math.round(pricePerM2),
+        color: priceColor(pricePerM2),
+        polygon,
+      } satisfies CityPriceZone;
+    }),
+  );
+
+  const zones = districts.filter((zone): zone is CityPriceZone => Boolean(zone));
+  const salePoints =
+    transactions?.data
+      ?.map(toSalePoint)
+      .filter((salePoint): salePoint is CitySalePoint => Boolean(salePoint))
+      .slice(0, 12) ?? aubagneMarketData.salePoints;
+  const expensiveStreets =
+    streetsFromTransactions(transactions?.data, "desc").length > 0
+      ? streetsFromTransactions(transactions?.data, "desc")
+      : aubagneMarketData.expensiveStreets;
+  const affordableStreets =
+    streetsFromTransactions(transactions?.data, "asc").length > 0
+      ? streetsFromTransactions(transactions?.data, "asc")
+      : aubagneMarketData.affordableStreets;
+
+  const apartment = getRangeFromAverage(currentApartment?.value ?? undefined, "apartment");
+  const house = getRangeFromAverage(currentHouse?.value ?? undefined, "house");
+  const hasImmoDataPrice = hasPriceValue(currentApartment) || hasPriceValue(currentHouse);
+
+  return {
+    ...aubagneMarketData,
+    source: hasImmoDataPrice ? "immo-data" : "fallback",
+    updatedAt: new Date().toISOString().slice(0, 10),
+    apartment: {
+      ...apartment,
+      trend1Year: getTrend1Year(apartmentHistory) || aubagneMarketData.apartment.trend1Year,
+    },
+    house: {
+      ...house,
+      trend1Year: getTrend1Year(houseHistory) || aubagneMarketData.house.trend1Year,
+    },
+    history: toHistoryPoints(apartmentHistory, houseHistory),
+    zones: zones.length > 0 ? zones : aubagneMarketData.zones,
+    salePoints,
+    neighborhoods:
+      zones.length > 0
+        ? zones.map((zone) => ({
+            name: zone.name,
+            pricePerM2: zone.pricePerM2,
+          }))
+        : aubagneMarketData.neighborhoods,
+    expensiveStreets,
+    affordableStreets,
+  };
+}
+
 function shiftMarketData(city: City): CityMarketData {
   const seed = city.inseeCode
     .split("")
@@ -325,10 +823,22 @@ function shiftMarketData(city: City): CityMarketData {
   };
 }
 
-export function getCityMarketData(city: City): CityMarketData {
-  if (city.slug === "aubagne") {
+export function getStaticCityMarketData(city: City): CityMarketData {
+  return shiftMarketData(city);
+}
+
+export async function getCityMarketData(city: City): Promise<CityMarketData> {
+  if (city.slug !== "aubagne") {
+    return getStaticCityMarketData(city);
+  }
+
+  const config = getImmoDataConfig();
+
+  if (!config) {
     return aubagneMarketData;
   }
 
-  return shiftMarketData(city);
+  const market = await optionalImmoData(() => getAubagneImmoDataMarket(config));
+
+  return market ?? aubagneMarketData;
 }
