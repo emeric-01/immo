@@ -1173,7 +1173,32 @@ button:focus-visible {
 .valuation-card {
   display: grid;
   gap: 12px;
+  order: 1;
   padding: 20px;
+}
+
+.result-actions {
+  order: 2;
+}
+
+.summary-card {
+  order: 3;
+}
+
+.comparables-card {
+  order: 4;
+}
+
+.result-side {
+  order: 5;
+}
+
+.meaning-card {
+  order: 6;
+}
+
+.result-privacy {
+  order: 7;
 }
 
 .result-address {
@@ -1362,11 +1387,6 @@ button:focus-visible {
   font-size: 0.86rem;
 }
 
-.result-side {
-  display: grid;
-  gap: 12px;
-}
-
 .market-grid,
 .meaning-grid {
   display: grid;
@@ -1385,6 +1405,11 @@ button:focus-visible {
 .result-actions {
   display: grid;
   gap: 10px;
+}
+
+.result-side {
+  display: grid;
+  gap: 12px;
 }
 
 .report-action,
