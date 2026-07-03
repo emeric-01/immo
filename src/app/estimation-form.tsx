@@ -29,7 +29,7 @@ type FormState = {
 };
 
 const initialForm: FormState = {
-  address: "26 Rue de Beaulieu, 49400 Saumur",
+  address: "",
   propertyType: "apartment",
   surfaceM2: "72",
   rooms: "3",
@@ -82,6 +82,7 @@ export function EstimationForm() {
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasTypedAddress, setHasTypedAddress] = useState(false);
   const addressAbortRef = useRef<AbortController | null>(null);
 
   const canSubmit = useMemo(() => {
@@ -94,6 +95,13 @@ export function EstimationForm() {
 
   useEffect(() => {
     const query = form.address.trim();
+
+    if (!hasTypedAddress) {
+      setSuggestions([]);
+      setAddressError(null);
+      setIsAddressLoading(false);
+      return;
+    }
 
     if (selectedAddress?.label === query) {
       return;
@@ -151,7 +159,7 @@ export function EstimationForm() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [form.address, selectedAddress]);
+  }, [form.address, hasTypedAddress, selectedAddress]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -231,12 +239,13 @@ export function EstimationForm() {
               name="address"
               autoComplete="street-address"
               value={form.address}
-              onChange={(event) =>
+              onChange={(event) => {
+                setHasTypedAddress(true);
                 setForm((current) => ({
                   ...current,
                   address: event.target.value,
-                }))
-              }
+                }));
+              }}
               placeholder="Ex. 26 Rue de Beaulieu, 49400 Saumur"
             />
             <span className="address-status">
@@ -255,6 +264,7 @@ export function EstimationForm() {
                     onClick={() => {
                       setSelectedAddress(suggestion);
                       setSuggestions([]);
+                      setHasTypedAddress(false);
                       setForm((current) => ({
                         ...current,
                         address: suggestion.label,
