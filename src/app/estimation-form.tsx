@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AddressSuggestion,
@@ -75,6 +76,18 @@ const quickCriteria = [
   ["hasCellar", "Cave", "cellar"],
   ["hasNiceView", "Belle vue", "view"],
 ] as const;
+const propertyIconPaths: Record<RealtyType, string> = {
+  apartment: "/icons/estimation/building.svg",
+  house: "/icons/estimation/home.svg",
+};
+const assetIconPaths = {
+  outdoor: "/icons/estimation/trees.svg",
+  parking: "/icons/estimation/car.svg",
+  cellar: "/icons/estimation/basement.svg",
+  view: "/icons/estimation/landscape.svg",
+  pool: "/icons/estimation/swimming-pool.svg",
+  elevator: "/icons/estimation/building.svg",
+} as const;
 const conditionLabels: Record<NonNullable<PropertyEstimationInput["condition"]>, string> = {
   new: "Excellent etat",
   good: "Bon etat",
@@ -475,7 +488,14 @@ export function EstimationForm() {
                   setForm((current) => ({ ...current, propertyType: type }))
                 }
               >
-                <span className={`property-icon ${type}`} aria-hidden="true" />
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className="property-svg"
+                  height={21}
+                  src={propertyIconPaths[type]}
+                  width={21}
+                />
                 {type === "apartment" ? "Appartement" : "Maison"}
               </button>
             ))}
@@ -570,7 +590,14 @@ export function EstimationForm() {
                   className={form[key] ? "asset-pill selected" : "asset-pill"}
                   key={key}
                 >
-                  <span className={`asset-icon ${icon}`} aria-hidden="true" />
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="asset-svg"
+                    height={20}
+                    src={assetIconPaths[icon]}
+                    width={20}
+                  />
                   <span>{label}</span>
                   <input
                     type="checkbox"
@@ -590,7 +617,14 @@ export function EstimationForm() {
                     form.hasElevator ? "asset-pill selected" : "asset-pill"
                   }
                 >
-                  <span className="asset-icon elevator" aria-hidden="true" />
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="asset-svg"
+                    height={20}
+                    src={assetIconPaths.elevator}
+                    width={20}
+                  />
                   <span>Ascenseur</span>
                   <input
                     type="checkbox"
@@ -607,7 +641,14 @@ export function EstimationForm() {
                 <label
                   className={form.hasPool ? "asset-pill selected" : "asset-pill"}
                 >
-                  <span className="asset-icon pool" aria-hidden="true" />
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="asset-svg"
+                    height={20}
+                    src={assetIconPaths.pool}
+                    width={20}
+                  />
                   <span>Piscine</span>
                   <input
                     type="checkbox"

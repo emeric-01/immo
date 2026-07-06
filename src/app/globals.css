@@ -641,7 +641,8 @@ button:focus-visible {
   gap: 10px;
   border: 1px solid transparent;
   border-radius: 7px;
-  color: #4f5f76;
+  color: #121826;
+  font-weight: 700;
 }
 
 .property-switch button.selected {
@@ -651,69 +652,22 @@ button:focus-visible {
   box-shadow: inset 0 0 0 1px #c7dcff;
 }
 
-.property-icon,
-.asset-icon {
-  position: relative;
+.property-svg,
+.asset-svg {
   display: inline-block;
   flex: 0 0 auto;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%);
 }
 
-.property-icon {
-  width: 18px;
-  height: 18px;
-  color: currentColor;
+.property-svg {
+  width: 21px;
+  height: 21px;
 }
 
-.property-icon.apartment {
-  border: 2px solid currentColor;
-  border-radius: 2px;
-}
-
-.property-icon.apartment::before,
-.property-icon.apartment::after {
-  position: absolute;
-  content: "";
-}
-
-.property-icon.apartment::before {
-  inset: 4px 4px auto;
-  height: 2px;
-  background: currentColor;
-  box-shadow: 0 5px 0 currentColor;
-}
-
-.property-icon.apartment::after {
-  left: 6px;
-  bottom: -2px;
-  width: 4px;
-  height: 6px;
-  background: currentColor;
-}
-
-.property-icon.house::before,
-.property-icon.house::after {
-  position: absolute;
-  content: "";
-}
-
-.property-icon.house::before {
-  left: 1px;
-  top: 7px;
-  width: 15px;
-  height: 10px;
-  border: 2px solid currentColor;
-  border-top: 0;
-  border-radius: 1px;
-}
-
-.property-icon.house::after {
-  left: 2px;
-  top: 2px;
-  width: 12px;
-  height: 12px;
-  border-top: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-  transform: rotate(45deg);
+.asset-svg {
+  width: 20px;
+  height: 20px;
 }
 
 .field-title {
@@ -759,7 +713,7 @@ button:focus-visible {
 
 .range-field-header .field-title,
 .room-picker .field-title {
-  color: #5b677a;
+  color: #111827;
   font-size: 0.76rem;
   font-weight: 750;
   letter-spacing: 0;
@@ -852,7 +806,7 @@ button:focus-visible {
 .range-bounds {
   display: flex;
   justify-content: space-between;
-  color: #657286;
+  color: #263244;
   font-size: 0.78rem;
   font-weight: 500;
 }
@@ -1001,135 +955,6 @@ button:focus-visible {
   width: 15px;
   height: 15px;
   accent-color: #2563eb;
-}
-
-.asset-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-}
-
-.asset-icon.outdoor {
-  border-radius: 50% 50% 45% 45%;
-  background: #4ade80;
-}
-
-.asset-icon.outdoor::after {
-  position: absolute;
-  left: 8px;
-  bottom: -4px;
-  width: 3px;
-  height: 8px;
-  border-radius: 999px;
-  background: #2f855a;
-  content: "";
-}
-
-.asset-icon.parking {
-  border: 2px solid #2563eb;
-  background: transparent;
-}
-
-.asset-icon.parking::before,
-.asset-icon.parking::after {
-  position: absolute;
-  content: "";
-}
-
-.asset-icon.parking::before {
-  left: 3px;
-  top: 5px;
-  width: 10px;
-  height: 5px;
-  border-radius: 5px 5px 2px 2px;
-  background: #2563eb;
-}
-
-.asset-icon.parking::after {
-  left: 2px;
-  bottom: 2px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 10px 0 0 #2563eb;
-}
-
-.asset-icon.cellar {
-  border: 1px solid #a66a34;
-  background: #d6a16f;
-}
-
-.asset-icon.cellar::before {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 4px;
-  height: 1px;
-  background: rgba(98, 58, 24, 0.5);
-  box-shadow: 0 5px 0 rgba(98, 58, 24, 0.5);
-  content: "";
-}
-
-.asset-icon.view {
-  overflow: hidden;
-  background: linear-gradient(135deg, #facc15 0 35%, transparent 36%),
-    linear-gradient(135deg, transparent 0 42%, #22c55e 43% 100%);
-}
-
-.asset-icon.view::after {
-  position: absolute;
-  right: 2px;
-  top: 2px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #facc15;
-  content: "";
-}
-
-.asset-icon.elevator {
-  border: 1px solid #94a3b8;
-  background: #e2e8f0;
-}
-
-.asset-icon.elevator::before {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 8px;
-  width: 1px;
-  background: #64748b;
-  content: "";
-}
-
-.asset-icon.elevator::after {
-  position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 3px;
-  height: 9px;
-  border-radius: 999px;
-  background: #64748b;
-  box-shadow: 7px 0 0 #64748b;
-  content: "";
-}
-
-.asset-icon.pool {
-  border-radius: 50%;
-  background: #7dd3fc;
-}
-
-.asset-icon.pool::before {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 7px;
-  height: 2px;
-  border-radius: 999px;
-  background: #0284c7;
-  box-shadow: 0 4px 0 #0284c7;
-  content: "";
 }
 
 .advanced-criteria {
