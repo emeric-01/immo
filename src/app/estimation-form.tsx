@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AddressSuggestion,
   PropertyEstimation,
@@ -37,11 +37,16 @@ type LocationHint = {
   country?: string;
 };
 
+const surfaceMin = 9;
+const surfaceMax = 300;
+const defaultSurface = 75;
+const roomOptions = ["1", "2", "3", "4", "5", "6"] as const;
+
 const initialForm: FormState = {
   address: "",
   propertyType: "apartment",
-  surfaceM2: "",
-  rooms: "",
+  surfaceM2: String(defaultSurface),
+  rooms: "3",
   condition: "",
   dpe: "",
   bathrooms: "",
@@ -85,6 +90,16 @@ function optionalNumber(value: string): number | undefined {
   const number = Number(value);
 
   return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
+function clampSurface(value: string) {
+  const surface = Number(value);
+
+  if (!Number.isFinite(surface)) {
+    return defaultSurface;
+  }
+
+  return Math.min(surfaceMax, Math.max(surfaceMin, Math.round(surface)));
 }
 
 function formatDistance(distance?: number) {
@@ -160,6 +175,12 @@ export function EstimationForm() {
   const addressPlaceholder = locationHint?.city
     ? `Entrez une adresse (ex : 12 rue de la Republique, ${locationHint.city})`
     : "Entrez une adresse (ex : 12 rue de la Paix, 75002 Paris)";
+  const surfaceValue = clampSurface(form.surfaceM2);
+  const surfaceProgress =
+    ((surfaceValue - surfaceMin) / (surfaceMax - surfaceMin)) * 100;
+  const surfaceRangeStyle = {
+    "--range-progress": `${surfaceProgress}%`,
+  } as CSSProperties;
 
   useEffect(() => {
     let ignore = false;
@@ -460,41 +481,62 @@ export function EstimationForm() {
             ))}
           </div>
 
-          <div className="form-grid">
-            <label>
-              <span className="field-title">
-                Surface <span className="field-help" aria-label="Surface habitable">?</span>
-              </span>
-              <span className="input-unit">
-                <input
-                  inputMode="decimal"
-                  name="surface"
-                  value={form.surfaceM2}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      surfaceM2: event.target.value,
-                    }))
-                  }
-                />
-                m2
-              </span>
-            </label>
-
-            <label>
-              Nombre de pieces
+          <div className="property-tuning">
+            <section className="range-field" aria-labelledby="surface-title">
+              <div className="range-field-header">
+                <span className="field-title" id="surface-title">
+                  Surface <span className="field-help" aria-label="Surface habitable">?</span>
+                </span>
+                <strong>
+                  {numberFormatter.format(surfaceValue)} <span>m2</span>
+                </strong>
+              </div>
               <input
-                inputMode="numeric"
-                name="rooms"
-                value={form.rooms}
+                aria-labelledby="surface-title"
+                className="surface-range"
+                max={surfaceMax}
+                min={surfaceMin}
+                name="surface"
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    rooms: event.target.value,
+                    surfaceM2: event.target.value,
                   }))
                 }
+                step="1"
+                style={surfaceRangeStyle}
+                type="range"
+                value={surfaceValue}
               />
-            </label>
+              <div className="range-bounds" aria-hidden="true">
+                <span>{surfaceMin} m2</span>
+                <span>{surfaceMax} m2</span>
+              </div>
+            </section>
+
+            <section className="room-picker" aria-labelledby="rooms-title">
+              <span className="field-title" id="rooms-title">
+                Nombre de pieces
+              </span>
+              <div className="room-options" role="group" aria-labelledby="rooms-title">
+                {roomOptions.map((room) => (
+                  <button
+                    aria-pressed={form.rooms === room}
+                    className={form.rooms === room ? "selected" : ""}
+                    key={room}
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        rooms: room,
+                      }))
+                    }
+                    type="button"
+                  >
+                    {room === "6" ? "6+" : room}
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
 
           <label>
