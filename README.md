@@ -26,6 +26,34 @@ Puis ouvre :
 http://localhost:3001
 ```
 
+Routes utiles :
+
+```text
+http://localhost:3001/                      # module d'estimation existant
+http://localhost:3001/recherche-acheteurs   # demo Phase 1 du design system acheteurs
+```
+
+## Recherche acheteurs
+
+Le cahier des charges du module "Recherche acheteurs" est decoupe en phases. La
+premiere tranche dans ce depot pose le socle sans Supabase ni les huit ecrans
+fonctionnels :
+
+- composants visuels reutilisables pour le parcours public ;
+- barre de progression en 8 etapes ;
+- boutons primaire/retour, champ accessible, cartes de choix, etat selectionne,
+  pastilles pictogrammes, accordions mobiles et message d'information ;
+- route isolee `/recherche-acheteurs` pour ne pas perturber le module
+  d'estimation existant.
+
+Commandes de verification locales :
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
 ## Variables
 
 Les variables locales sont dans `.env.local`.
