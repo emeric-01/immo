@@ -1426,15 +1426,19 @@
   }
 
   .projectOptions {
-    display: flex;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .projectOptions button {
-    min-width: 86px;
-    min-height: 96px;
+    min-height: 78px;
+    gap: 9px;
+    padding: 10px 8px;
     font-size: 0.82rem;
+  }
+
+  .projectOptions button span:first-child {
+    line-height: 1.18;
   }
 
   .summaryCard {
@@ -1568,6 +1572,19 @@
     min-height: 52px;
     justify-content: center;
     text-align: center;
+  }
+
+  .projectQuestion {
+    padding: 14px;
+  }
+
+  .projectOptions {
+    gap: 8px;
+  }
+
+  .projectOptions button {
+    min-height: 70px;
+    padding: 9px 7px;
   }
 
   .navigation {
