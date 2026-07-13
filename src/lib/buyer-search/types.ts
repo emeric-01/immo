@@ -100,9 +100,9 @@ export const defaultBuyerSearchData: BuyerSearchFormData = {
   },
   characteristics: {
     minimumLivingArea: 90,
-    minimumRooms: 4,
-    minimumBedrooms: 3,
-    minimumBathrooms: 1,
+    minimumRooms: 0,
+    minimumBedrooms: 0,
+    minimumBathrooms: 0,
   },
   preferences: {
     parking: ["garage"],

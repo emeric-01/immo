@@ -691,6 +691,12 @@
   color: #56351f;
 }
 
+.iconBubble img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+}
+
 .asideSummary {
   display: grid;
   gap: 0;

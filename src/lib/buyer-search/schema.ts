@@ -148,13 +148,6 @@ export const stepSchemas = {
           path: ["minimumLivingArea"],
         });
       }
-      if (!characteristics.minimumRooms || characteristics.minimumRooms < 1) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Renseignez au moins une piece.",
-          path: ["minimumRooms"],
-        });
-      }
     },
   ),
   preferences: buyerSearchSchema.shape.preferences,

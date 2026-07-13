@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type mapboxgl from "mapbox-gl";
@@ -99,6 +100,16 @@ const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
 };
 
 const DEFAULT_CITY_RADIUS_KM = 2;
+const CHARACTERISTIC_COUNTERS_RESET_KEY = "les-jumelles:buyer-search:counters-reset-v1";
+const EQUIPMENT_ICONS = {
+  parking: "/buyer-search-icons/car-parking.svg",
+  outdoor: "/buyer-search-icons/park.svg",
+  buildingComfort: "/buyer-search-icons/building.svg",
+  houseEquipment: "/buyer-search-icons/home.svg",
+  additionalSpaces: "/buyer-search-icons/parked-car.svg",
+  works: "/buyer-search-icons/home-repair.svg",
+  environment: "/buyer-search-icons/park.svg",
+} as const;
 
 type StepProps = {
   form: ReturnType<typeof useForm<BuyerSearchFormData>>;
@@ -127,7 +138,13 @@ export function BuyerSearchWizard() {
     const draft = loadBuyerSearchDraft();
 
     if (draft) {
-      reset({ ...defaultBuyerSearchData, ...draft });
+      const shouldResetCounters =
+        typeof window !== "undefined" && window.localStorage.getItem(CHARACTERISTIC_COUNTERS_RESET_KEY) !== "done";
+      reset(shouldResetCounters ? resetCharacteristicCounters({ ...defaultBuyerSearchData, ...draft }) : { ...defaultBuyerSearchData, ...draft });
+
+      if (shouldResetCounters) {
+        window.localStorage.setItem(CHARACTERISTIC_COUNTERS_RESET_KEY, "done");
+      }
     }
 
     setDraftReady(true);
@@ -601,9 +618,9 @@ function StepProperty({ form }: StepProps) {
         <div className={styles.compactCounters}>
           <CounterInput
             label="Pieces min."
-            value={characteristics.minimumRooms ?? 1}
-            onMinus={() => updateCounter("minimumRooms", -1, 1)}
-            onPlus={() => updateCounter("minimumRooms", 1, 1)}
+            value={characteristics.minimumRooms ?? 0}
+            onMinus={() => updateCounter("minimumRooms", -1, 0)}
+            onPlus={() => updateCounter("minimumRooms", 1, 0)}
           />
           <CounterInput
             label="Chambres min."
@@ -648,9 +665,9 @@ function StepCharacteristics({ form }: StepProps) {
         </label>
         <CounterInput
           label="Nombre de pieces minimum"
-          value={characteristics.minimumRooms ?? 1}
-          onMinus={() => updateCounter("minimumRooms", -1, 1)}
-          onPlus={() => updateCounter("minimumRooms", 1, 1)}
+          value={characteristics.minimumRooms ?? 0}
+          onMinus={() => updateCounter("minimumRooms", -1, 0)}
+          onPlus={() => updateCounter("minimumRooms", 1, 0)}
         />
         <CounterInput
           label="Nombre de chambres minimum"
@@ -688,19 +705,19 @@ function StepPreferences({ form }: StepProps) {
 
   return (
     <section className={styles.preferenceGrid}>
-      <PreferenceGroup title="Stationnement" icon={Car} options={groups.parking} selected={preferences.parking} onToggle={(key) => toggle("parking", key)} />
-      <PreferenceGroup title={selectedPropertyTypes.length === 1 && selectedPropertyTypes[0] === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
+      <PreferenceGroup title="Stationnement" icon={Car} iconSrc={EQUIPMENT_ICONS.parking} options={groups.parking} selected={preferences.parking} onToggle={(key) => toggle("parking", key)} />
+      <PreferenceGroup title={selectedPropertyTypes.length === 1 && selectedPropertyTypes[0] === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} iconSrc={EQUIPMENT_ICONS.outdoor} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
       {groups.buildingComfort.length > 0 ? (
-        <PreferenceGroup title="Confort de l'immeuble" icon={Building2} options={groups.buildingComfort} selected={preferences.buildingComfort} onToggle={(key) => toggle("buildingComfort", key)} />
+        <PreferenceGroup title="Confort de l'immeuble" icon={Building2} iconSrc={EQUIPMENT_ICONS.buildingComfort} options={groups.buildingComfort} selected={preferences.buildingComfort} onToggle={(key) => toggle("buildingComfort", key)} />
       ) : null}
       {groups.houseEquipment.length > 0 ? (
-        <PreferenceGroup title="Equipements maison" icon={Home} options={groups.houseEquipment} selected={preferences.houseEquipment} onToggle={(key) => toggle("houseEquipment", key)} />
+        <PreferenceGroup title="Equipements maison" icon={Home} iconSrc={EQUIPMENT_ICONS.houseEquipment} options={groups.houseEquipment} selected={preferences.houseEquipment} onToggle={(key) => toggle("houseEquipment", key)} />
       ) : null}
       {groups.additionalSpaces.length > 0 ? (
-        <PreferenceGroup title="Espaces complementaires" icon={WalletCards} options={groups.additionalSpaces} selected={preferences.additionalSpaces} onToggle={(key) => toggle("additionalSpaces", key)} />
+        <PreferenceGroup title="Espaces complementaires" icon={WalletCards} iconSrc={EQUIPMENT_ICONS.additionalSpaces} options={groups.additionalSpaces} selected={preferences.additionalSpaces} onToggle={(key) => toggle("additionalSpaces", key)} />
       ) : null}
-      <PreferenceGroup title="Travaux" icon={Sparkles} options={groups.works} selected={preferences.works} onToggle={(key) => toggle("works", key)} />
-      <PreferenceGroup title="Environnement" icon={Trees} options={groups.environment} selected={preferences.environment} onToggle={(key) => toggle("environment", key)} wide />
+      <PreferenceGroup title="Travaux" icon={Sparkles} iconSrc={EQUIPMENT_ICONS.works} options={groups.works} selected={preferences.works} onToggle={(key) => toggle("works", key)} />
+      <PreferenceGroup title="Environnement" icon={Trees} iconSrc={EQUIPMENT_ICONS.environment} options={groups.environment} selected={preferences.environment} onToggle={(key) => toggle("environment", key)} wide />
     </section>
   );
 }
@@ -1108,6 +1125,18 @@ function formatPropertyTypes(data: BuyerSearchFormData) {
     : "Non renseigne";
 }
 
+function resetCharacteristicCounters(data: BuyerSearchFormData): BuyerSearchFormData {
+  return {
+    ...data,
+    characteristics: {
+      ...data.characteristics,
+      minimumRooms: 0,
+      minimumBedrooms: 0,
+      minimumBathrooms: 0,
+    },
+  };
+}
+
 function formatCityPostalCodes(city: BuyerSearchCity) {
   const postalCodes = city.postalCodes?.length ? city.postalCodes : city.postalCode ? [city.postalCode] : [];
 
@@ -1214,6 +1243,7 @@ function SummaryLine({ icon: Icon, label, value }: { icon: typeof Home; label: s
 function PreferenceGroup({
   title,
   icon,
+  iconSrc,
   options,
   selected,
   onToggle,
@@ -1221,6 +1251,7 @@ function PreferenceGroup({
 }: {
   title: string;
   icon: typeof Home;
+  iconSrc?: string;
   options: Array<{ key: string; label: string; helper?: string }>;
   selected: string[];
   onToggle: (key: string) => void;
@@ -1229,7 +1260,7 @@ function PreferenceGroup({
   return (
     <article className={styles.preferenceGroup} data-wide={wide || undefined}>
       <div className={styles.groupTitle}>
-        <IconBubble icon={icon} />
+        <IconBubble icon={icon} src={iconSrc} />
         <h3>{title}</h3>
       </div>
       <div className={styles.preferenceOptions}>
@@ -1307,10 +1338,10 @@ function CounterInput({ label, value, onMinus, onPlus }: { label: string; value:
   );
 }
 
-function IconBubble({ icon: Icon }: { icon: typeof Home }) {
+function IconBubble({ icon: Icon, src }: { icon: typeof Home; src?: string }) {
   return (
     <span className={styles.iconBubble}>
-      <Icon size={24} strokeWidth={1.7} aria-hidden="true" />
+      {src ? <Image src={src} width={25} height={25} alt="" aria-hidden="true" /> : <Icon size={24} strokeWidth={1.7} aria-hidden="true" />}
     </span>
   );
 }
