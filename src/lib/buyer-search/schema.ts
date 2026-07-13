@@ -28,7 +28,7 @@ export const buyerSearchSchema = z
     }),
     characteristics: z.object({
       minimumLivingArea: nullablePositiveNumber,
-      minimumRooms: z.number().min(1).nullable(),
+      minimumRooms: nullableNonNegativeNumber,
       minimumBedrooms: nullableNonNegativeNumber,
       minimumBathrooms: nullableNonNegativeNumber,
     }),

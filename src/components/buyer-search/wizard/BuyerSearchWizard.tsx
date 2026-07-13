@@ -101,6 +101,7 @@ const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
 
 const DEFAULT_CITY_RADIUS_KM = 2;
 const CHARACTERISTIC_COUNTERS_RESET_KEY = "les-jumelles:buyer-search:counters-reset-v1";
+const PREFERENCES_RESET_KEY = "les-jumelles:buyer-search:preferences-reset-v1";
 const EQUIPMENT_ICONS = {
   parking: "/buyer-search-icons/car-parking.svg",
   outdoor: "/buyer-search-icons/park.svg",
@@ -140,10 +141,26 @@ export function BuyerSearchWizard() {
     if (draft) {
       const shouldResetCounters =
         typeof window !== "undefined" && window.localStorage.getItem(CHARACTERISTIC_COUNTERS_RESET_KEY) !== "done";
-      reset(shouldResetCounters ? resetCharacteristicCounters({ ...defaultBuyerSearchData, ...draft }) : { ...defaultBuyerSearchData, ...draft });
+      const shouldResetPreferences =
+        typeof window !== "undefined" && window.localStorage.getItem(PREFERENCES_RESET_KEY) !== "done";
+      let nextDraft = { ...defaultBuyerSearchData, ...draft };
+
+      if (shouldResetCounters) {
+        nextDraft = resetCharacteristicCounters(nextDraft);
+      }
+
+      if (shouldResetPreferences) {
+        nextDraft = resetPreferenceSelections(nextDraft);
+      }
+
+      reset(nextDraft);
 
       if (shouldResetCounters) {
         window.localStorage.setItem(CHARACTERISTIC_COUNTERS_RESET_KEY, "done");
+      }
+
+      if (shouldResetPreferences) {
+        window.localStorage.setItem(PREFERENCES_RESET_KEY, "done");
       }
     }
 
@@ -1137,6 +1154,22 @@ function resetCharacteristicCounters(data: BuyerSearchFormData): BuyerSearchForm
   };
 }
 
+function resetPreferenceSelections(data: BuyerSearchFormData): BuyerSearchFormData {
+  return {
+    ...data,
+    preferences: {
+      ...data.preferences,
+      parking: [],
+      outdoor: [],
+      buildingComfort: [],
+      additionalSpaces: [],
+      houseEquipment: [],
+      works: [],
+      environment: [],
+    },
+  };
+}
+
 function formatCityPostalCodes(city: BuyerSearchCity) {
   const postalCodes = city.postalCodes?.length ? city.postalCodes : city.postalCode ? [city.postalCode] : [];
 
@@ -1272,8 +1305,10 @@ function PreferenceGroup({
             key={option.key}
             onClick={() => onToggle(option.key)}
           >
-            <span>{option.label}</span>
-            {option.helper ? <small>{option.helper}</small> : null}
+            <span className={styles.preferenceOptionText}>
+              <span>{option.label}</span>
+              {option.helper ? <small>{option.helper}</small> : null}
+            </span>
             <span className={styles.checkCircle}>{selected.includes(option.key) ? <Check size={14} /> : null}</span>
           </button>
         ))}
