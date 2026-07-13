@@ -865,6 +865,7 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
       mapbox.accessToken = accessToken;
 
       const center = getMapCenter(cities);
+      const radiusFeatureCollection = buildRadiusFeatureCollection(cities, radiusKm);
       const map = new mapbox.Map({
         container: containerRef.current,
         style: "mapbox://styles/mapbox/light-v11",
@@ -881,7 +882,7 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
 
         map.addSource("buyer-search-radius", {
           type: "geojson",
-          data: buildRadiusFeature(center, radiusKm),
+          data: radiusFeatureCollection,
         });
 
         map.addLayer({
@@ -923,16 +924,17 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
         markersRef.current.push(marker);
       });
 
-      if (cities.length > 1) {
+      if (radiusFeatureCollection.features.length > 0) {
         const bounds = new mapbox.LngLatBounds();
-        cities.forEach((city) => {
-          if (typeof city.longitude === "number" && typeof city.latitude === "number") {
-            bounds.extend([city.longitude, city.latitude]);
-          }
+
+        radiusFeatureCollection.features.forEach((feature) => {
+          feature.geometry.coordinates[0].forEach((coordinate) => {
+            bounds.extend(coordinate);
+          });
         });
 
         if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { padding: 88, maxZoom: 11, duration: 0 });
+          map.fitBounds(bounds, { padding: 52, maxZoom: 12, duration: 0 });
         }
       }
 
@@ -969,7 +971,7 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
       ) : (
         <div className={styles.mapboxMap} ref={containerRef}>
           <span className={styles.mapBadge}>Zone de recherche : {radiusKm} km</span>
-          <span className={styles.mapFooter}>Carte Mapbox centree sur vos villes</span>
+          <span className={styles.mapFooter}>Rayon applique autour de chaque ville</span>
         </div>
       )}
     </aside>
@@ -1039,6 +1041,20 @@ function buildRadiusFeature(center: [number, number], radiusKm: number) {
       type: "Polygon" as const,
       coordinates: [coordinates],
     },
+  };
+}
+
+function buildRadiusFeatureCollection(cities: BuyerSearchCity[], radiusKm: number) {
+  const geocodedCities = cities.filter(
+    (city) => typeof city.longitude === "number" && typeof city.latitude === "number",
+  );
+  const centers = geocodedCities.length > 0
+    ? geocodedCities.map((city) => [city.longitude ?? 0, city.latitude ?? 0] as [number, number])
+    : [getMapCenter(cities)];
+
+  return {
+    type: "FeatureCollection" as const,
+    features: centers.map((center) => buildRadiusFeature(center, radiusKm)),
   };
 }
 
