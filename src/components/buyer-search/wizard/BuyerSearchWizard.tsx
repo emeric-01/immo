@@ -1,0 +1,1277 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type mapboxgl from "mapbox-gl";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BedDouble,
+  Building2,
+  CalendarDays,
+  Car,
+  Check,
+  ChevronDown,
+  CircleUserRound,
+  Euro,
+  Heart,
+  Home,
+  Info,
+  Lightbulb,
+  Lock,
+  Mail,
+  MapPin,
+  Menu,
+  Minus,
+  Pencil,
+  Phone,
+  Plus,
+  Ruler,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  Trees,
+  WalletCards,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
+import type { ZodIssue } from "zod";
+import {
+  allPreferenceOptions,
+  citySuggestions,
+  financingOptions,
+  getPreferenceOptions,
+  optionLabel,
+  preferredChannelOptions,
+  propertyTypeLabels,
+  purchaseTimelineOptions,
+  radiusOptions,
+  situationOptions,
+} from "@/lib/buyer-search/options";
+import { stepSchemas } from "@/lib/buyer-search/schema";
+import { loadBuyerSearchDraft, saveBuyerSearchDraft } from "@/lib/buyer-search/storage";
+import { submitBuyerSearch } from "@/lib/buyer-search/submit";
+import {
+  buyerSearchSteps,
+  defaultBuyerSearchData,
+  type BuyerSearchCity,
+  type BuyerSearchFormData,
+  type PriorityLevel,
+  type WizardStepId,
+} from "@/lib/buyer-search/types";
+import styles from "./buyer-search-wizard.module.css";
+
+const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
+  location: {
+    title: "Ou recherchez-vous votre futur bien ?",
+    subtitle: "Indiquez une ou plusieurs villes ou secteurs. Vous pourrez ajuster la zone plus tard.",
+  },
+  property: {
+    title: "Quel type de bien recherchez-vous ?",
+    subtitle: "Precisez le type de bien et votre budget. Vous pourrez ajuster ces informations plus tard.",
+  },
+  characteristics: {
+    title: "De combien d'espace avez-vous besoin ?",
+    subtitle: "Precisez les elements essentiels de votre futur bien. Vous pourrez completer vos preferences ensuite.",
+  },
+  preferences: {
+    title: "Quelles sont vos preferences et equipements souhaites ?",
+    subtitle: "Selectionnez les criteres qui comptent pour vous. Vous pourrez les classer plus tard.",
+  },
+  project: {
+    title: "Ou en etes-vous dans votre projet ?",
+    subtitle: "Ces informations nous permettent de vous accompagner au mieux et de vous proposer les biens les plus pertinents.",
+  },
+  summary: {
+    title: "Votre recherche en resume",
+    subtitle: "Verifiez les informations renseignees avant de definir vos priorites.",
+  },
+  priorities: {
+    title: "Qu'est-ce qui est indispensable ou souhaite pour vous ?",
+    subtitle: "Indispensable : critere non negociable. Souhaite : je peux faire une concession.",
+  },
+  contact: {
+    title: "Derniere etape !",
+    subtitle: "Nous avons presque termine. Renseignez vos coordonnees pour enregistrer votre recherche.",
+  },
+};
+
+type StepProps = {
+  form: ReturnType<typeof useForm<BuyerSearchFormData>>;
+  goToStep: (step: WizardStepId) => void;
+};
+
+export function BuyerSearchWizard() {
+  const router = useRouter();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [draftReady, setDraftReady] = useState(false);
+  const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
+  const form = useForm<BuyerSearchFormData>({
+    defaultValues: defaultBuyerSearchData,
+    mode: "onTouched",
+  });
+  const { clearErrors, formState, getValues, handleSubmit, reset, setError, setValue, watch } =
+    form;
+  const activeStep = buyerSearchSteps[stepIndex];
+  const data = watch();
+
+  useEffect(() => {
+    clearErrors();
+  }, [activeStep.id, clearErrors]);
+
+  useEffect(() => {
+    const draft = loadBuyerSearchDraft();
+
+    if (draft) {
+      reset({ ...defaultBuyerSearchData, ...draft });
+    }
+
+    setDraftReady(true);
+  }, [reset]);
+
+  useEffect(() => {
+    if (!draftReady) {
+      return;
+    }
+
+    const subscription = watch((value) => {
+      saveBuyerSearchDraft(value as BuyerSearchFormData);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [draftReady, watch]);
+
+  useEffect(() => {
+    if (activeStep.id !== "priorities") {
+      return;
+    }
+
+    const priorities = buildPriorityItems(getValues());
+    setValue("priorities", priorities, { shouldDirty: true });
+  }, [activeStep.id, getValues, setValue]);
+
+  function setZodErrors(scope: string, issues: ZodIssue[]) {
+    clearErrors();
+    issues.forEach((issue) => {
+      const path = issue.path.length > 0 ? `${scope}.${issue.path.join(".")}` : scope;
+      setError(path as never, { type: "manual", message: issue.message });
+    });
+    window.setTimeout(() => firstErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
+  }
+
+  function validateStep(id: WizardStepId) {
+    if (id === "summary") {
+      return true;
+    }
+
+    const current = getValues();
+    const payload = current[id];
+    const result = stepSchemas[id].safeParse(payload);
+
+    if (!result.success) {
+      setZodErrors(id, result.error.issues);
+      return false;
+    }
+
+    clearErrors();
+    return true;
+  }
+
+  function goToStep(step: WizardStepId) {
+    const nextIndex = buyerSearchSteps.findIndex((candidate) => candidate.id === step);
+
+    if (nextIndex >= 0) {
+      clearErrors();
+      setStepIndex(nextIndex);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  async function nextStep() {
+    if (!validateStep(activeStep.id)) {
+      return;
+    }
+
+    if (stepIndex < buyerSearchSteps.length - 1) {
+      setStepIndex((current) => current + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function previousStep() {
+    clearErrors();
+    setStepIndex((current) => Math.max(0, current - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function onFinalSubmit(values: BuyerSearchFormData) {
+    if (!validateStep("contact")) {
+      return;
+    }
+
+    const finalData = {
+      ...values,
+      priorities: values.priorities.length > 0 ? values.priorities : buildPriorityItems(values),
+    };
+    await submitBuyerSearch(finalData);
+    router.push("/recherche/confirmation");
+  }
+
+  const stepComponent = (
+    {
+      location: <StepLocation form={form} goToStep={goToStep} />,
+      property: <StepProperty form={form} goToStep={goToStep} />,
+      characteristics: <StepCharacteristics form={form} goToStep={goToStep} />,
+      preferences: <StepPreferences form={form} goToStep={goToStep} />,
+      project: <StepProject form={form} goToStep={goToStep} />,
+      summary: <StepSummary form={form} goToStep={goToStep} />,
+      priorities: <StepPriorities form={form} goToStep={goToStep} />,
+      contact: <StepContact form={form} goToStep={goToStep} />,
+    } satisfies Record<WizardStepId, React.ReactNode>
+  )[activeStep.id];
+
+  return (
+    <main className={styles.page}>
+      <SiteHeader />
+      <form className={styles.shell} onSubmit={handleSubmit(onFinalSubmit)}>
+        <ProgressStepper activeIndex={stepIndex} />
+        <header className={styles.stepHeader}>
+          <div>
+            <h1>{activeStep.id === "contact" ? "Derniere etape !" : stepCopy[activeStep.id].title}</h1>
+            {activeStep.id === "contact" ? <h2>Vos coordonnees</h2> : null}
+            {stepCopy[activeStep.id].subtitle ? <p>{stepCopy[activeStep.id].subtitle}</p> : null}
+          </div>
+          {["preferences", "project", "summary", "priorities", "contact"].includes(activeStep.id) ? (
+            <InfoCallout
+              icon={activeStep.id === "contact" ? ShieldCheck : Lightbulb}
+              text={
+                activeStep.id === "contact"
+                  ? "Vos donnees sont securisees et ne seront jamais partagees."
+                  : activeStep.id === "summary"
+                    ? 'Vous pourrez modifier chaque element en cliquant sur "Modifier".'
+                    : activeStep.id === "priorities"
+                      ? "Glissez les criteres pour les classer ou selectionnez Indispensable ou Souhaite."
+                      : "Vos reponses restent confidentielles et ne vous engagent a rien."
+              }
+            />
+          ) : null}
+        </header>
+        {formState.errors ? (
+          <FirstError
+            errors={formState.errors}
+            scope={activeStep.id}
+            refCallback={(node) => (firstErrorRef.current = node)}
+          />
+        ) : null}
+        {stepComponent}
+        <WizardNavigation
+          isFirst={stepIndex === 0}
+          isLast={stepIndex === buyerSearchSteps.length - 1}
+          onBack={previousStep}
+          onNext={nextStep}
+          nextLabel={
+            activeStep.id === "summary"
+              ? "Definir mes priorites"
+              : activeStep.id === "contact"
+                ? "Enregistrer ma recherche"
+                : "Continuer"
+          }
+        />
+        <p className={styles.securityNote}>
+          <Lock size={16} aria-hidden="true" />
+          Vos informations restent confidentielles et ne sont jamais partagees.
+        </p>
+      </form>
+      <LiveDraftDebugger data={data} />
+    </main>
+  );
+}
+
+function SiteHeader() {
+  return (
+    <header className={styles.siteHeader}>
+      <button className={styles.menuButton} type="button" aria-label="Ouvrir le menu">
+        <Menu size={26} aria-hidden="true" />
+      </button>
+      <nav className={styles.desktopNav} aria-label="Navigation principale">
+        <a href="#">Les annonces</a>
+        <a href="#">Estimer et vendre son bien</a>
+        <a href="#">Nos prestations</a>
+        <a href="#">Actualites et conseils</a>
+        <a href="#">Contact</a>
+      </nav>
+      <Link className={styles.logo} href="/" aria-label="Les Jumelles Immo">
+        <span>les jumelles</span>
+        <strong>IMMO</strong>
+      </Link>
+    </header>
+  );
+}
+
+function ProgressStepper({ activeIndex }: { activeIndex: number }) {
+  return (
+    <ol className={styles.progress} aria-label="Progression du formulaire">
+      {buyerSearchSteps.map((step, index) => {
+        const isDone = index < activeIndex;
+        const isActive = index === activeIndex;
+
+        return (
+          <li className={styles.progressItem} data-state={isDone ? "done" : isActive ? "active" : "todo"} key={step.id}>
+            <span className={styles.progressDot} aria-hidden="true">
+              {isDone ? <Check size={14} /> : index + 1}
+            </span>
+            <span>{index + 1}. {step.label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function WizardNavigation({
+  isFirst,
+  isLast,
+  nextLabel,
+  onBack,
+  onNext,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  nextLabel: string;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className={styles.navigation}>
+      <button className={styles.backButton} disabled={isFirst} type="button" onClick={onBack}>
+        <ArrowLeft size={18} aria-hidden="true" />
+        Retour
+      </button>
+      <button className={styles.primaryButton} type={isLast ? "submit" : "button"} onClick={isLast ? undefined : onNext}>
+        {isLast ? <Lock size={18} aria-hidden="true" /> : null}
+        {nextLabel}
+        {!isLast ? <ArrowRight size={18} aria-hidden="true" /> : null}
+      </button>
+    </div>
+  );
+}
+
+function StepLocation({ form }: StepProps) {
+  const { setValue, watch } = form;
+  const location = watch("location");
+  const [query, setQuery] = useState("");
+  const filteredCities = citySuggestions.filter((city) =>
+    city.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  function addCity(city: BuyerSearchCity) {
+    if (location.cities.some((candidate) => candidate.name === city.name)) {
+      return;
+    }
+    setValue("location.cities", [...location.cities, city], { shouldDirty: true, shouldValidate: true });
+    setQuery("");
+  }
+
+  function removeCity(name: string) {
+    setValue(
+      "location.cities",
+      location.cities.filter((city) => city.name !== name),
+      { shouldDirty: true, shouldValidate: true },
+    );
+  }
+
+  return (
+    <section className={styles.twoColumn}>
+      <div className={styles.formColumn}>
+        <label className={styles.field}>
+          Rechercher une ville ou un quartier
+          <span className={styles.searchInput}>
+            <MapPin size={18} aria-hidden="true" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Rechercher une ville, un quartier..."
+            />
+          </span>
+        </label>
+        {query ? (
+          <div className={styles.suggestions} role="listbox">
+            {filteredCities.map((city) => (
+              <button type="button" key={city.name} onClick={() => addCity(city)}>
+                {city.name} <span>{city.postalCode}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <FormError errors={form.formState.errors} path="location.cities" />
+        <div className={styles.optionBlock}>
+          <h3>Villes ou secteurs selectionnes</h3>
+          <div className={styles.tags}>
+            {location.cities.map((city) => (
+              <button className={styles.tag} type="button" key={city.name} onClick={() => removeCity(city.name)}>
+                {city.name}
+                <span aria-hidden="true">x</span>
+              </button>
+            ))}
+          </div>
+          <button className={styles.addButton} type="button" onClick={() => addCity(citySuggestions[0])}>
+            <Plus size={18} aria-hidden="true" />
+            Ajouter une ville ou un secteur
+          </button>
+        </div>
+        <div className={styles.optionBlock}>
+          <h3>Rayon de recherche</h3>
+          <div className={styles.segmented}>
+            {radiusOptions.map((radius) => (
+              <button
+                className={styles.segmentButton}
+                data-selected={location.radiusKm === radius || undefined}
+                type="button"
+                key={radius}
+                onClick={() => setValue("location.radiusKm", radius, { shouldDirty: true, shouldValidate: true })}
+              >
+                {radius} km
+              </button>
+            ))}
+            <button
+              className={styles.segmentButton}
+              data-selected={location.radiusKm === location.customRadius || undefined}
+              type="button"
+              onClick={() => setValue("location.radiusKm", location.customRadius ?? 15, { shouldDirty: true })}
+            >
+              Personnalise
+            </button>
+          </div>
+          <FormError errors={form.formState.errors} path="location.radiusKm" />
+        </div>
+      </div>
+      <LocationMap cities={location.cities} radiusKm={location.radiusKm ?? 10} />
+    </section>
+  );
+}
+
+function StepProperty({ form }: StepProps) {
+  const { setValue, watch, register } = form;
+  const property = watch("property");
+
+  return (
+    <section className={styles.twoColumn}>
+      <div className={styles.formColumn}>
+        <div className={styles.optionBlock}>
+          <h3>Type de bien recherche</h3>
+          <div className={styles.propertyCards}>
+            {(["house", "apartment", "indifferent"] as const).map((type) => (
+              <button
+                className={styles.choiceCard}
+                data-selected={property.type === type || undefined}
+                type="button"
+                key={type}
+                onClick={() => setValue("property.type", type, { shouldDirty: true, shouldValidate: true })}
+              >
+                <IconBubble icon={type === "house" ? Home : type === "apartment" ? Building2 : SlidersHorizontal} />
+                <strong>{propertyTypeLabels[type]}</strong>
+                {property.type === type ? <Check size={18} aria-hidden="true" /> : null}
+              </button>
+            ))}
+          </div>
+          <FormError errors={form.formState.errors} path="property.type" />
+        </div>
+        <div className={styles.fieldGrid}>
+          <label className={styles.field}>
+            Budget ideal
+            <input type="number" inputMode="numeric" {...register("property.idealBudget", { valueAsNumber: true })} />
+            <FormError errors={form.formState.errors} path="property.idealBudget" />
+          </label>
+          <label className={styles.field}>
+            Budget maximum
+            <input type="number" inputMode="numeric" {...register("property.maximumBudget", { valueAsNumber: true })} />
+            <span className={styles.hint}>Hors frais de notaire</span>
+            <FormError errors={form.formState.errors} path="property.maximumBudget" />
+          </label>
+        </div>
+        <InfoLine text="Ces informations nous aident a vous proposer les biens les plus pertinents." />
+      </div>
+      <SearchSummaryAside data={watch()} />
+    </section>
+  );
+}
+
+function StepCharacteristics({ form }: StepProps) {
+  const { register, setValue, watch } = form;
+  const characteristics = watch("characteristics");
+
+  function updateCounter(path: keyof BuyerSearchFormData["characteristics"], delta: number, min: number) {
+    const value = characteristics[path] ?? min;
+    setValue(`characteristics.${path}`, Math.max(min, value + delta), { shouldDirty: true, shouldValidate: true });
+  }
+
+  return (
+    <section className={styles.twoColumn}>
+      <div className={styles.formColumn}>
+        <label className={styles.field}>
+          Surface habitable minimale
+          <input
+            type="number"
+            inputMode="numeric"
+            {...register("characteristics.minimumLivingArea", { valueAsNumber: true })}
+          />
+          <FormError errors={form.formState.errors} path="characteristics.minimumLivingArea" />
+        </label>
+        <CounterInput
+          label="Nombre de pieces minimum"
+          value={characteristics.minimumRooms ?? 1}
+          onMinus={() => updateCounter("minimumRooms", -1, 1)}
+          onPlus={() => updateCounter("minimumRooms", 1, 1)}
+        />
+        <CounterInput
+          label="Nombre de chambres minimum"
+          value={characteristics.minimumBedrooms ?? 0}
+          onMinus={() => updateCounter("minimumBedrooms", -1, 0)}
+          onPlus={() => updateCounter("minimumBedrooms", 1, 0)}
+        />
+        <CounterInput
+          label="Nombre de salles d'eau minimum"
+          value={characteristics.minimumBathrooms ?? 0}
+          onMinus={() => updateCounter("minimumBathrooms", -1, 0)}
+          onPlus={() => updateCounter("minimumBathrooms", 1, 0)}
+        />
+      </div>
+      <SearchSummaryAside data={watch()} />
+    </section>
+  );
+}
+
+function StepPreferences({ form }: StepProps) {
+  const { setValue, watch } = form;
+  const propertyType = watch("property.type");
+  const preferences = watch("preferences");
+  const groups = getPreferenceOptions(propertyType);
+
+  function toggle(group: keyof BuyerSearchFormData["preferences"], key: string) {
+    const current = preferences[group];
+    if (!Array.isArray(current)) {
+      return;
+    }
+    const next = current.includes(key) ? current.filter((value) => value !== key) : [...current, key];
+    setValue(`preferences.${group}`, next, { shouldDirty: true });
+  }
+
+  return (
+    <section className={styles.preferenceGrid}>
+      <PreferenceGroup title="Stationnement" icon={Car} options={groups.parking} selected={preferences.parking} onToggle={(key) => toggle("parking", key)} />
+      <PreferenceGroup title={propertyType === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
+      {groups.buildingComfort.length > 0 ? (
+        <PreferenceGroup title="Confort de l'immeuble" icon={Building2} options={groups.buildingComfort} selected={preferences.buildingComfort} onToggle={(key) => toggle("buildingComfort", key)} />
+      ) : null}
+      {groups.houseEquipment.length > 0 ? (
+        <PreferenceGroup title="Equipements maison" icon={Home} options={groups.houseEquipment} selected={preferences.houseEquipment} onToggle={(key) => toggle("houseEquipment", key)} />
+      ) : null}
+      {groups.additionalSpaces.length > 0 ? (
+        <PreferenceGroup title="Espaces complementaires" icon={WalletCards} options={groups.additionalSpaces} selected={preferences.additionalSpaces} onToggle={(key) => toggle("additionalSpaces", key)} />
+      ) : null}
+      <PreferenceGroup title="Travaux" icon={Sparkles} options={groups.works} selected={preferences.works} onToggle={(key) => toggle("works", key)} />
+      <PreferenceGroup title="Environnement" icon={Trees} options={groups.environment} selected={preferences.environment} onToggle={(key) => toggle("environment", key)} wide />
+    </section>
+  );
+}
+
+function StepProject({ form }: StepProps) {
+  const { setValue, watch } = form;
+  const project = watch("project");
+
+  return (
+    <section className={styles.projectStack}>
+      <ProjectQuestion
+        number="01"
+        icon={CalendarDays}
+        title="Quand souhaitez-vous acheter ?"
+        options={purchaseTimelineOptions}
+        value={project.purchaseTimeline}
+        onSelect={(key) => setValue("project.purchaseTimeline", key, { shouldDirty: true, shouldValidate: true })}
+      />
+      <ProjectQuestion
+        number="02"
+        icon={WalletCards}
+        title="Ou en est votre financement ?"
+        options={financingOptions}
+        value={project.financingStatus}
+        onSelect={(key) => setValue("project.financingStatus", key, { shouldDirty: true, shouldValidate: true })}
+      />
+      <ProjectQuestion
+        number="03"
+        icon={CircleUserRound}
+        title="Quelle est votre situation actuelle ?"
+        options={situationOptions}
+        value={project.currentSituation}
+        onSelect={(key) => setValue("project.currentSituation", key, { shouldDirty: true, shouldValidate: true })}
+      />
+      <FormError errors={form.formState.errors} path="project.purchaseTimeline" />
+      <FormError errors={form.formState.errors} path="project.financingStatus" />
+      <FormError errors={form.formState.errors} path="project.currentSituation" />
+    </section>
+  );
+}
+
+function StepSummary({ form, goToStep }: StepProps) {
+  const data = form.watch();
+  const rows = getSummaryRows(data);
+
+  return (
+    <section className={styles.summaryGrid}>
+      {rows.map((row) => (
+        <article className={styles.summaryCard} key={row.title}>
+          <IconBubble icon={row.icon} />
+          <div>
+            <h3>{row.title}</h3>
+            <p>{row.value}</p>
+          </div>
+          <button type="button" onClick={() => goToStep(row.step)}>
+            <Pencil size={16} aria-hidden="true" />
+            Modifier
+          </button>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function StepPriorities({ form }: StepProps) {
+  const { setValue, watch } = form;
+  const priorities = watch("priorities");
+  const [filter, setFilter] = useState("all");
+  const categories = Array.from(new Set(priorities.map((priority) => priority.category)));
+  const visiblePriorities = filter === "all" ? priorities : priorities.filter((priority) => priority.category === filter);
+
+  function updatePriority(key: string, level: PriorityLevel) {
+    setValue(
+      "priorities",
+      priorities.map((priority) => (priority.key === key ? { ...priority, level } : priority)),
+      { shouldDirty: true },
+    );
+  }
+
+  return (
+    <section className={styles.prioritySection}>
+      <div className={styles.priorityFilters}>
+        <button type="button" data-selected={filter === "all" || undefined} onClick={() => setFilter("all")}>
+          Tous les criteres ({priorities.length})
+        </button>
+        {categories.map((category) => (
+          <button type="button" key={category} data-selected={filter === category || undefined} onClick={() => setFilter(category)}>
+            {category}
+          </button>
+        ))}
+      </div>
+      <div className={styles.priorityList}>
+        {visiblePriorities.map((priority) => (
+          <article className={styles.priorityRow} key={priority.key}>
+            <span className={styles.dragHandle} aria-hidden="true">::</span>
+            <IconBubble icon={iconForCategory(priority.category)} />
+            <strong>{priority.label}</strong>
+            <div className={styles.priorityChoices}>
+              <button
+                type="button"
+                data-selected={priority.level === "essential" || undefined}
+                onClick={() => updatePriority(priority.key, "essential")}
+              >
+                <Star size={20} aria-hidden="true" />
+                Indispensable
+              </button>
+              <button
+                type="button"
+                data-selected={priority.level === "desired" || undefined}
+                onClick={() => updatePriority(priority.key, "desired")}
+              >
+                <Heart size={20} aria-hidden="true" />
+                Souhaite
+              </button>
+            </div>
+            <ChevronDown size={18} aria-hidden="true" />
+          </article>
+        ))}
+        {visiblePriorities.length === 0 ? <InfoLine text="Aucun critere selectionne pour le moment." /> : null}
+      </div>
+      <button className={styles.addDashed} type="button">
+        <Plus size={18} aria-hidden="true" />
+        Ajouter un critere manquant
+      </button>
+    </section>
+  );
+}
+
+function StepContact({ form }: StepProps) {
+  const { register, setValue, watch } = form;
+  const contact = watch("contact");
+
+  return (
+    <section className={styles.contactLayout}>
+      <div className={styles.fieldGrid}>
+        <label className={styles.field}>
+          Prenom *
+          <input placeholder="Ex. : Claire" {...register("contact.firstName")} />
+          <FormError errors={form.formState.errors} path="contact.firstName" />
+        </label>
+        <label className={styles.field}>
+          Nom *
+          <input placeholder="Ex. : Dupont" {...register("contact.lastName")} />
+          <FormError errors={form.formState.errors} path="contact.lastName" />
+        </label>
+      </div>
+      <label className={styles.field}>
+        Email *
+        <input placeholder="exemple@mail.fr" type="email" {...register("contact.email")} />
+        <FormError errors={form.formState.errors} path="contact.email" />
+      </label>
+      <label className={styles.field}>
+        Telephone *
+        <span className={styles.searchInput}>
+          <Phone size={18} aria-hidden="true" />
+          <input placeholder="06 12 34 56 78" type="tel" {...register("contact.phone")} />
+        </span>
+        <FormError errors={form.formState.errors} path="contact.phone" />
+      </label>
+      <div className={styles.optionBlock}>
+        <h3>Contact privilegie *</h3>
+        <div className={styles.channelGrid}>
+          {preferredChannelOptions.map((option) => (
+            <button
+              type="button"
+              className={styles.channelCard}
+              data-selected={contact.preferredChannel === option.key || undefined}
+              key={option.key}
+              onClick={() =>
+                setValue("contact.preferredChannel", option.key as BuyerSearchFormData["contact"]["preferredChannel"], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            >
+              <span className={styles.radioDot} aria-hidden="true" />
+              {option.key === "email" ? <Mail size={24} /> : option.key === "sms" ? <MessageIcon /> : <Phone size={24} />}
+              <span>
+                <strong>{option.label}</strong>
+                <small>{option.helper}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+        <FormError errors={form.formState.errors} path="contact.preferredChannel" />
+      </div>
+      <label className={styles.consentBox}>
+        <input type="checkbox" {...register("contact.consent")} />
+        <span>
+          J&apos;accepte d&apos;etre recontacte au sujet de ma recherche immobiliere et de recevoir des biens correspondant a mes criteres.
+          <a href="#">En savoir plus sur l&apos;utilisation de vos donnees</a>
+        </span>
+      </label>
+      <FormError errors={form.formState.errors} path="contact.consent" />
+    </section>
+  );
+}
+
+function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm: number }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapStatus, setMapStatus] = useState<"ready" | "missing-token" | "error">(
+    process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? "ready" : "missing-token",
+  );
+  const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return;
+    }
+
+    if (!accessToken) {
+      setMapStatus("missing-token");
+      return;
+    }
+
+    let cancelled = false;
+
+    async function initializeMap() {
+      const mapboxModule = await import("mapbox-gl");
+      const mapbox = mapboxModule.default;
+
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      mapbox.accessToken = accessToken;
+
+      const center = getMapCenter(cities);
+      const map = new mapbox.Map({
+        container: containerRef.current,
+        style: "mapbox://styles/mapbox/light-v11",
+        center,
+        zoom: cities.length > 1 ? 9.6 : 11,
+        attributionControl: true,
+      });
+
+      mapRef.current = map;
+      map.addControl(new mapbox.NavigationControl({ showCompass: false }), "top-right");
+
+      map.on("load", () => {
+        setMapStatus("ready");
+
+        map.addSource("buyer-search-radius", {
+          type: "geojson",
+          data: buildRadiusFeature(center, radiusKm),
+        });
+
+        map.addLayer({
+          id: "buyer-search-radius-fill",
+          type: "fill",
+          source: "buyer-search-radius",
+          paint: {
+            "fill-color": "#d6b48c",
+            "fill-opacity": 0.14,
+          },
+        });
+
+        map.addLayer({
+          id: "buyer-search-radius-line",
+          type: "line",
+          source: "buyer-search-radius",
+          paint: {
+            "line-color": "#111111",
+            "line-dasharray": [2, 2],
+            "line-width": 1.5,
+          },
+        });
+      });
+
+      cities.forEach((city) => {
+        if (typeof city.longitude !== "number" || typeof city.latitude !== "number") {
+          return;
+        }
+
+        const markerElement = document.createElement("div");
+        markerElement.className = styles.mapboxMarker;
+        markerElement.setAttribute("aria-label", city.name);
+
+        const marker = new mapbox.Marker({ element: markerElement })
+          .setLngLat([city.longitude, city.latitude])
+          .setPopup(new mapbox.Popup({ offset: 18 }).setText(city.name))
+          .addTo(map);
+
+        markersRef.current.push(marker);
+      });
+
+      if (cities.length > 1) {
+        const bounds = new mapbox.LngLatBounds();
+        cities.forEach((city) => {
+          if (typeof city.longitude === "number" && typeof city.latitude === "number") {
+            bounds.extend([city.longitude, city.latitude]);
+          }
+        });
+
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, { padding: 88, maxZoom: 11, duration: 0 });
+        }
+      }
+
+      map.on("error", () => setMapStatus("error"));
+    }
+
+    initializeMap().catch(() => setMapStatus("error"));
+
+    return () => {
+      cancelled = true;
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [accessToken, cities, radiusKm]);
+
+  return (
+    <aside className={styles.mapPanel} aria-label="Apercu cartographique">
+      {mapStatus === "missing-token" || mapStatus === "error" ? (
+        <div className={styles.fakeMap}>
+          <span className={styles.radiusCircle} />
+          <span className={styles.mapBadge}>Zone de recherche : {radiusKm} km</span>
+          {cities.map((city, index) => (
+            <span className={styles.mapMarker} style={{ left: `${34 + index * 18}%`, top: `${48 - index * 10}%` }} key={city.name}>
+              <MapPin size={28} fill="#111111" aria-hidden="true" />
+              <small>{city.name}</small>
+            </span>
+          ))}
+          <span className={styles.mapFooter}>
+            {mapStatus === "missing-token" ? "Token Mapbox a configurer" : "Carte momentanement indisponible"}
+          </span>
+        </div>
+      ) : (
+        <div className={styles.mapboxMap} ref={containerRef}>
+          <span className={styles.mapBadge}>Zone de recherche : {radiusKm} km</span>
+          <span className={styles.mapFooter}>Carte Mapbox centree sur vos villes</span>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function getMapCenter(cities: BuyerSearchCity[]): [number, number] {
+  const geocodedCities = cities.filter(
+    (city) => typeof city.longitude === "number" && typeof city.latitude === "number",
+  );
+
+  if (geocodedCities.length === 0) {
+    return [5.5707, 43.2928];
+  }
+
+  const sums = geocodedCities.reduce(
+    (accumulator, city) => ({
+      longitude: accumulator.longitude + (city.longitude ?? 0),
+      latitude: accumulator.latitude + (city.latitude ?? 0),
+    }),
+    { longitude: 0, latitude: 0 },
+  );
+
+  return [sums.longitude / geocodedCities.length, sums.latitude / geocodedCities.length];
+}
+
+function buildRadiusFeature(center: [number, number], radiusKm: number) {
+  const [centerLongitude, centerLatitude] = center;
+  const earthRadiusKm = 6371;
+  const points = 96;
+  const coordinates: Array<[number, number]> = [];
+
+  for (let index = 0; index <= points; index += 1) {
+    const bearing = (index / points) * 2 * Math.PI;
+    const angularDistance = radiusKm / earthRadiusKm;
+    const latitudeRad = (centerLatitude * Math.PI) / 180;
+    const longitudeRad = (centerLongitude * Math.PI) / 180;
+
+    const pointLatitude = Math.asin(
+      Math.sin(latitudeRad) * Math.cos(angularDistance) +
+        Math.cos(latitudeRad) * Math.sin(angularDistance) * Math.cos(bearing),
+    );
+    const pointLongitude =
+      longitudeRad +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(latitudeRad),
+        Math.cos(angularDistance) - Math.sin(latitudeRad) * Math.sin(pointLatitude),
+      );
+
+    coordinates.push([(pointLongitude * 180) / Math.PI, (pointLatitude * 180) / Math.PI]);
+  }
+
+  return {
+    type: "Feature" as const,
+    properties: {},
+    geometry: {
+      type: "Polygon" as const,
+      coordinates: [coordinates],
+    },
+  };
+}
+
+function SearchSummaryAside({ data }: { data: BuyerSearchFormData }) {
+  return (
+    <aside className={styles.asideSummary}>
+      <h2>Votre recherche en resume</h2>
+      <div className={styles.houseSketch} aria-hidden="true">
+        <Home size={92} />
+      </div>
+      <SummaryLine icon={Home} label="Type de bien" value={data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne"} />
+      <SummaryLine icon={Euro} label="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
+      <SummaryLine icon={Ruler} label="Surface min." value={data.characteristics.minimumLivingArea ? `${data.characteristics.minimumLivingArea} m2` : "Non renseignee"} />
+      <SummaryLine icon={BedDouble} label="Chambres min." value={String(data.characteristics.minimumBedrooms ?? 0)} />
+    </aside>
+  );
+}
+
+function SummaryLine({ icon: Icon, label, value }: { icon: typeof Home; label: string; value: string }) {
+  return (
+    <div className={styles.summaryLine}>
+      <Icon size={20} aria-hidden="true" />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function PreferenceGroup({
+  title,
+  icon,
+  options,
+  selected,
+  onToggle,
+  wide,
+}: {
+  title: string;
+  icon: typeof Home;
+  options: Array<{ key: string; label: string; helper?: string }>;
+  selected: string[];
+  onToggle: (key: string) => void;
+  wide?: boolean;
+}) {
+  return (
+    <article className={styles.preferenceGroup} data-wide={wide || undefined}>
+      <div className={styles.groupTitle}>
+        <IconBubble icon={icon} />
+        <h3>{title}</h3>
+      </div>
+      <div className={styles.preferenceOptions}>
+        {options.map((option) => (
+          <button
+            className={styles.preferenceOption}
+            data-selected={selected.includes(option.key) || undefined}
+            type="button"
+            key={option.key}
+            onClick={() => onToggle(option.key)}
+          >
+            <span>{option.label}</span>
+            {option.helper ? <small>{option.helper}</small> : null}
+            <span className={styles.checkCircle}>{selected.includes(option.key) ? <Check size={14} /> : null}</span>
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function ProjectQuestion({
+  number,
+  icon,
+  title,
+  options,
+  value,
+  onSelect,
+}: {
+  number: string;
+  icon: typeof Home;
+  title: string;
+  options: Array<{ key: string; label: string }>;
+  value: string | null;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <article className={styles.projectQuestion}>
+      <div className={styles.questionTitle}>
+        <IconBubble icon={icon} />
+        <h3><span>{number}.</span> {title}</h3>
+        <ChevronDown size={22} aria-hidden="true" />
+      </div>
+      <div className={styles.projectOptions}>
+        {options.map((option) => (
+          <button
+            type="button"
+            data-selected={value === option.key || undefined}
+            key={option.key}
+            onClick={() => onSelect(option.key)}
+          >
+            <span>{option.label}</span>
+            <span className={styles.radioDot}>{value === option.key ? <Check size={12} /> : null}</span>
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function CounterInput({ label, value, onMinus, onPlus }: { label: string; value: number; onMinus: () => void; onPlus: () => void }) {
+  return (
+    <div className={styles.counterField}>
+      <span>{label}</span>
+      <div className={styles.counter}>
+        <button type="button" onClick={onMinus} aria-label={`Diminuer ${label}`}>
+          <Minus size={18} />
+        </button>
+        <strong>{value}</strong>
+        <button type="button" onClick={onPlus} aria-label={`Augmenter ${label}`}>
+          <Plus size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function IconBubble({ icon: Icon }: { icon: typeof Home }) {
+  return (
+    <span className={styles.iconBubble}>
+      <Icon size={24} strokeWidth={1.7} aria-hidden="true" />
+    </span>
+  );
+}
+
+function InfoCallout({ icon: Icon, text }: { icon: typeof Home; text: string }) {
+  return (
+    <aside className={styles.infoCallout}>
+      <Icon size={28} strokeWidth={1.6} aria-hidden="true" />
+      <p>{text}</p>
+    </aside>
+  );
+}
+
+function InfoLine({ text }: { text: string }) {
+  return (
+    <p className={styles.infoLine}>
+      <Info size={18} aria-hidden="true" />
+      {text}
+    </p>
+  );
+}
+
+function MessageIcon() {
+  return <span className={styles.messageIcon} aria-hidden="true" />;
+}
+
+function FirstError({
+  errors,
+  scope,
+  refCallback,
+}: {
+  errors: FieldErrors<BuyerSearchFormData>;
+  scope: WizardStepId;
+  refCallback: (node: HTMLParagraphElement | null) => void;
+}) {
+  const message = firstErrorMessage(errors, scope);
+
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p className={styles.errorSummary} ref={refCallback}>
+      {message}
+    </p>
+  );
+}
+
+function FormError({ errors, path }: { errors: FieldErrors<BuyerSearchFormData>; path: string }) {
+  const message = getErrorMessage(errors, path);
+
+  if (!message) {
+    return null;
+  }
+
+  return <span className={styles.fieldError}>{message}</span>;
+}
+
+function getErrorMessage(errors: FieldErrors<BuyerSearchFormData>, path: string): string | null {
+  const value = path.split(".").reduce<unknown>((current, key) => {
+    if (current && typeof current === "object" && key in current) {
+      return (current as Record<string, unknown>)[key];
+    }
+    return null;
+  }, errors);
+
+  if (value && typeof value === "object" && "message" in value) {
+    return String((value as { message?: string }).message ?? "");
+  }
+
+  return null;
+}
+
+function firstErrorMessage(errors: FieldErrors<BuyerSearchFormData>, scope: WizardStepId) {
+  const scopedErrors = (errors as Record<string, unknown>)[scope];
+  const stack: unknown[] = scopedErrors ? [scopedErrors] : [];
+
+  while (stack.length > 0) {
+    const current = stack.shift();
+    if (!current || typeof current !== "object") {
+      continue;
+    }
+    if ("message" in current && typeof (current as { message?: unknown }).message === "string") {
+      return (current as { message: string }).message;
+    }
+    stack.push(...Object.values(current));
+  }
+
+  return null;
+}
+
+function getSummaryRows(data: BuyerSearchFormData) {
+  return [
+    { icon: Home, title: "Bien recherche", value: data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne", step: "property" as const },
+    { icon: MapPin, title: "Localisation", value: `${data.location.cities.map((city) => city.name).join(", ")} et ${data.location.radiusKm ?? 0} km autour`, step: "location" as const },
+    { icon: WalletCards, title: "Budget", value: `Ideal : ${formatCurrency(data.property.idealBudget)} - Max : ${formatCurrency(data.property.maximumBudget)}`, step: "property" as const },
+    { icon: Ruler, title: "Surface", value: `Minimum ${data.characteristics.minimumLivingArea ?? 0} m2`, step: "characteristics" as const },
+    { icon: BedDouble, title: "Pieces et chambres", value: `${data.characteristics.minimumRooms ?? 0} pieces min. - ${data.characteristics.minimumBedrooms ?? 0} chambres min.`, step: "characteristics" as const },
+    { icon: Car, title: "Stationnement", value: labelsFor(data, "parking") || "Non renseigne", step: "preferences" as const },
+    { icon: Trees, title: "Exterieur", value: labelsFor(data, "outdoor") || "Non renseigne", step: "preferences" as const },
+    { icon: Sparkles, title: "Travaux", value: labelsFor(data, "works") || "Non renseigne", step: "preferences" as const },
+    { icon: Trees, title: "Environnement", value: labelsFor(data, "environment") || "Non renseigne", step: "preferences" as const },
+    { icon: CalendarDays, title: "Votre projet", value: optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline), step: "project" as const },
+    { icon: Building2, title: "Financement", value: optionLabel(financingOptions, data.project.financingStatus), step: "project" as const },
+    { icon: CircleUserRound, title: "Situation actuelle", value: optionLabel(situationOptions, data.project.currentSituation), step: "project" as const },
+  ];
+}
+
+function labelsFor(data: BuyerSearchFormData, group: keyof BuyerSearchFormData["preferences"]) {
+  const selected = data.preferences[group];
+  if (!Array.isArray(selected)) {
+    return "";
+  }
+  const options = allPreferenceOptions(data.property.type);
+  return selected.map((key) => optionLabel(options, key)).filter(Boolean).join(", ");
+}
+
+function buildPriorityItems(data: BuyerSearchFormData): BuyerSearchFormData["priorities"] {
+  const options = allPreferenceOptions(data.property.type);
+  const existing = new Map(data.priorities.map((priority) => [priority.key, priority.level]));
+  const selected = Object.entries(data.preferences)
+    .filter(([, value]) => Array.isArray(value))
+    .flatMap(([group, values]) =>
+      (values as string[]).map((value) => {
+        const option = options.find((candidate) => candidate.key === value);
+        return option
+          ? {
+              key: `${group}-${value}`,
+              label: option.label,
+              value,
+              category: option.category,
+              level: existing.get(`${group}-${value}`) ?? "desired",
+            }
+          : null;
+      }),
+    )
+    .filter(Boolean) as BuyerSearchFormData["priorities"];
+
+  if (data.characteristics.minimumLivingArea) {
+    selected.push({
+      key: "characteristics-minimumLivingArea",
+      label: `Surface minimum ${data.characteristics.minimumLivingArea} m2`,
+      value: String(data.characteristics.minimumLivingArea),
+      category: "Logement",
+      level: existing.get("characteristics-minimumLivingArea") ?? "desired",
+    });
+  }
+
+  return selected;
+}
+
+function iconForCategory(category: string) {
+  if (category.includes("Stationnement")) return Car;
+  if (category.includes("Exterieur")) return Trees;
+  if (category.includes("Travaux")) return Sparkles;
+  if (category.includes("Environnement")) return MapPin;
+  if (category.includes("Logement")) return Ruler;
+  return Home;
+}
+
+function formatCurrency(value: number | null) {
+  if (!value) {
+    return "Non renseigne";
+  }
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function LiveDraftDebugger({ data }: { data: BuyerSearchFormData }) {
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.debug("Buyer search draft", data);
+    }
+  }, [data]);
+
+  return null;
+}

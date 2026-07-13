@@ -30,28 +30,69 @@ Routes utiles :
 
 ```text
 http://localhost:3001/                      # module d'estimation existant
+http://localhost:3001/recherche             # formulaire public de recherche acheteurs
 http://localhost:3001/recherche-acheteurs   # demo Phase 1 du design system acheteurs
 ```
 
 ## Recherche acheteurs
 
-Le cahier des charges du module "Recherche acheteurs" est decoupe en phases. La
-premiere tranche dans ce depot pose le socle sans Supabase ni les huit ecrans
-fonctionnels :
+Le module public de recherche acheteurs est disponible sur `/recherche`.
+Cette premiere version reste volontairement front-only : aucune authentification,
+aucune base distante et aucun back-office ne sont branches.
 
-- composants visuels reutilisables pour le parcours public ;
-- barre de progression en 8 etapes ;
-- boutons primaire/retour, champ accessible, cartes de choix, etat selectionne,
-  pastilles pictogrammes, accordions mobiles et message d'information ;
-- route isolee `/recherche-acheteurs` pour ne pas perturber le module
-  d'estimation existant.
+Fonctionnalites incluses :
+
+- formulaire public complet en 8 etapes ;
+- progression, retour et navigation fluide sans rechargement complet ;
+- validation Zod par etape ;
+- persistance du brouillon dans `localStorage` ;
+- soumission locale via `submitBuyerSearch(data)` ;
+- page de confirmation `/recherche/confirmation` ;
+- rendu responsive inspire des maquettes desktop/mobile fournies.
+
+Structure principale :
+
+```text
+src/app/recherche/page.tsx
+src/app/recherche/confirmation/page.tsx
+src/components/buyer-search/wizard/
+src/lib/buyer-search/
+```
+
+Modele de donnees central :
+
+```text
+BuyerSearchFormData
+```
+
+Il se trouve dans :
+
+```text
+src/lib/buyer-search/types.ts
+```
+
+Points prevus pour Supabase en phase suivante :
+
+- remplacer `submitBuyerSearch` par une mutation serveur ;
+- connecter `BuyerSearchFormData` aux tables `buyer_searches`,
+  `search_locations`, `search_criteria` et `consents` ;
+- remplacer le stockage local par un brouillon authentifie ;
+- ajouter RLS, espace client et back-office admin.
 
 Commandes de verification locales :
 
 ```bash
+pnpm test
 pnpm lint
 pnpm typecheck
 pnpm build
+```
+
+Deploiement Vercel :
+
+```bash
+pnpm build
+vercel deploy --prod
 ```
 
 ## Variables
