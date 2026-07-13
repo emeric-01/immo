@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays } from "lucide-react";
 import {
+  normalizePropertyTypes,
   optionLabel,
   propertyTypeLabels,
   purchaseTimelineOptions,
@@ -31,7 +32,7 @@ export function BuyerSearchConfirmation() {
         </div>
         {data ? (
           <div className={styles.summaryGrid}>
-            <ConfirmationItem icon={Home} title="Type de bien" value={data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne"} />
+            <ConfirmationItem icon={Home} title="Type de bien" value={formatPropertyTypes(data)} />
             <ConfirmationItem icon={MapPin} title="Localisation" value={formatLocationSummary(data.location.cities)} />
             <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
             <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
@@ -94,4 +95,12 @@ function formatLocationSummary(cities: BuyerSearchFormData["location"]["cities"]
   }
 
   return cities.map((city) => `${city.name} (${city.radiusKm ?? 2} km)`).join(", ");
+}
+
+function formatPropertyTypes(data: BuyerSearchFormData) {
+  const selectedTypes = normalizePropertyTypes(data.property.types?.length ? data.property.types : data.property.type);
+
+  return selectedTypes.length > 0
+    ? selectedTypes.map((type) => propertyTypeLabels[type]).join(", ")
+    : "Non renseigne";
 }

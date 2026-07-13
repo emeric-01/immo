@@ -1,4 +1,4 @@
-export type PropertyType = "house" | "apartment" | "indifferent";
+export type PropertyType = "house" | "apartment";
 export type PreferredChannel = "email" | "sms" | "phone";
 export type PriorityLevel = "essential" | "desired";
 
@@ -17,7 +17,8 @@ export type BuyerSearchFormData = {
     customRadius?: number | null;
   };
   property: {
-    type: PropertyType | null;
+    type?: PropertyType | "indifferent" | null;
+    types?: PropertyType[];
     idealBudget: number | null;
     maximumBudget: number | null;
   };
@@ -93,6 +94,7 @@ export const defaultBuyerSearchData: BuyerSearchFormData = {
   },
   property: {
     type: "house",
+    types: ["house"],
     idealBudget: 330000,
     maximumBudget: 350000,
   },

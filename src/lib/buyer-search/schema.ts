@@ -21,7 +21,8 @@ export const buyerSearchSchema = z
       customRadius: nullablePositiveNumber.optional(),
     }),
     property: z.object({
-      type: z.enum(["house", "apartment", "indifferent"]).nullable(),
+      type: z.enum(["house", "apartment", "indifferent"]).nullable().optional(),
+      types: z.array(z.enum(["house", "apartment"])).optional(),
       idealBudget: nullablePositiveNumber,
       maximumBudget: nullablePositiveNumber,
     }),
@@ -99,11 +100,17 @@ export const stepSchemas = {
     });
   }),
   property: buyerSearchSchema.shape.property.superRefine((property, ctx) => {
-    if (!property.type) {
+    const selectedTypes = property.types?.length
+      ? property.types
+      : property.type === "house" || property.type === "apartment"
+        ? [property.type]
+        : [];
+
+    if (selectedTypes.length === 0) {
       ctx.addIssue({
         code: "custom",
-        message: "Choisissez un type de bien.",
-        path: ["type"],
+        message: "Choisissez au moins un type de bien.",
+        path: ["types"],
       });
     }
     if (property.idealBudget === null || property.idealBudget <= 0) {

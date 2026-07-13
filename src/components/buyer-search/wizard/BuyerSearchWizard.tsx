@@ -29,7 +29,6 @@ import {
   Plus,
   Ruler,
   ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
   Star,
   Trees,
@@ -43,6 +42,7 @@ import {
   citySuggestions,
   financingOptions,
   getPreferenceOptions,
+  normalizePropertyTypes,
   optionLabel,
   preferredChannelOptions,
   propertyTypeLabels,
@@ -528,6 +528,7 @@ function StepProperty({ form }: StepProps) {
   const { setValue, watch, register } = form;
   const property = watch("property");
   const characteristics = watch("characteristics");
+  const selectedPropertyTypes = normalizePropertyTypes(property.types?.length ? property.types : property.type);
 
   function updateCounter(path: keyof BuyerSearchFormData["characteristics"], delta: number, min: number) {
     const value = characteristics[path] ?? min;
@@ -540,26 +541,34 @@ function StepProperty({ form }: StepProps) {
         <div className={styles.compactSection}>
           <h3>Type de bien recherche</h3>
           <div className={styles.compactPropertyCards}>
-            {(["house", "apartment", "indifferent"] as const).map((type) => (
+            {(["house", "apartment"] as const).map((type) => (
               <button
                 className={styles.compactChoiceCard}
-                data-selected={property.type === type || undefined}
+                data-selected={selectedPropertyTypes.includes(type) || undefined}
                 type="button"
                 key={type}
-                onClick={() => setValue("property.type", type, { shouldDirty: true, shouldValidate: true })}
+                onClick={() => {
+                  const nextTypes = selectedPropertyTypes.includes(type)
+                    ? selectedPropertyTypes.filter((selectedType) => selectedType !== type)
+                    : [...selectedPropertyTypes, type];
+
+                  setValue("property.types", nextTypes, { shouldDirty: true, shouldValidate: true });
+                  setValue("property.type", nextTypes.length === 1 ? nextTypes[0] : null, { shouldDirty: true });
+                }}
               >
-                <IconBubble icon={type === "house" ? Home : type === "apartment" ? Building2 : SlidersHorizontal} />
+                <IconBubble icon={type === "house" ? Home : Building2} />
                 <strong>{propertyTypeLabels[type]}</strong>
-                {property.type === type ? <Check size={18} aria-hidden="true" /> : null}
+                {selectedPropertyTypes.includes(type) ? <Check size={18} aria-hidden="true" /> : null}
               </button>
             ))}
           </div>
-          <FormError errors={form.formState.errors} path="property.type" />
+          <FormError errors={form.formState.errors} path="property.types" />
         </div>
-        <div className={styles.compactFieldGrid}>
+        <div className={`${styles.compactFieldGrid} ${styles.budgetFieldGrid}`}>
           <label className={styles.field}>
             Budget ideal
             <input type="number" inputMode="numeric" {...register("property.idealBudget", { valueAsNumber: true })} />
+            <span className={`${styles.hint} ${styles.invisibleHint}`}>Hors frais de notaire</span>
             <FormError errors={form.formState.errors} path="property.idealBudget" />
           </label>
           <label className={styles.field}>
@@ -663,9 +672,10 @@ function StepCharacteristics({ form }: StepProps) {
 
 function StepPreferences({ form }: StepProps) {
   const { setValue, watch } = form;
-  const propertyType = watch("property.type");
+  const property = watch("property");
   const preferences = watch("preferences");
-  const groups = getPreferenceOptions(propertyType);
+  const selectedPropertyTypes = normalizePropertyTypes(property.types?.length ? property.types : property.type);
+  const groups = getPreferenceOptions(selectedPropertyTypes);
 
   function toggle(group: keyof BuyerSearchFormData["preferences"], key: string) {
     const current = preferences[group];
@@ -679,7 +689,7 @@ function StepPreferences({ form }: StepProps) {
   return (
     <section className={styles.preferenceGrid}>
       <PreferenceGroup title="Stationnement" icon={Car} options={groups.parking} selected={preferences.parking} onToggle={(key) => toggle("parking", key)} />
-      <PreferenceGroup title={propertyType === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
+      <PreferenceGroup title={selectedPropertyTypes.length === 1 && selectedPropertyTypes[0] === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
       {groups.buildingComfort.length > 0 ? (
         <PreferenceGroup title="Confort de l'immeuble" icon={Building2} options={groups.buildingComfort} selected={preferences.buildingComfort} onToggle={(key) => toggle("buildingComfort", key)} />
       ) : null}
@@ -1090,6 +1100,14 @@ function formatLocationSummary(cities: BuyerSearchCity[]) {
   return cities.map((city) => `${city.name} (${city.radiusKm ?? DEFAULT_CITY_RADIUS_KM} km)`).join(", ");
 }
 
+function formatPropertyTypes(data: BuyerSearchFormData) {
+  const selectedTypes = normalizePropertyTypes(data.property.types?.length ? data.property.types : data.property.type);
+
+  return selectedTypes.length > 0
+    ? selectedTypes.map((type) => propertyTypeLabels[type]).join(", ")
+    : "Non renseigne";
+}
+
 function formatCityPostalCodes(city: BuyerSearchCity) {
   const postalCodes = city.postalCodes?.length ? city.postalCodes : city.postalCode ? [city.postalCode] : [];
 
@@ -1175,7 +1193,7 @@ function SearchSummaryAside({ data }: { data: BuyerSearchFormData }) {
       <div className={styles.houseSketch} aria-hidden="true">
         <Home size={92} />
       </div>
-      <SummaryLine icon={Home} label="Type de bien" value={data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne"} />
+      <SummaryLine icon={Home} label="Type de bien" value={formatPropertyTypes(data)} />
       <SummaryLine icon={Euro} label="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
       <SummaryLine icon={Ruler} label="Surface min." value={data.characteristics.minimumLivingArea ? `${data.characteristics.minimumLivingArea} m2` : "Non renseignee"} />
       <SummaryLine icon={BedDouble} label="Chambres min." value={String(data.characteristics.minimumBedrooms ?? 0)} />
@@ -1394,7 +1412,7 @@ function firstErrorMessage(errors: FieldErrors<BuyerSearchFormData>, scope: Wiza
 
 function getSummaryRows(data: BuyerSearchFormData) {
   return [
-    { icon: Home, title: "Bien recherche", value: data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne", step: "property" as const },
+    { icon: Home, title: "Bien recherche", value: formatPropertyTypes(data), step: "property" as const },
     { icon: MapPin, title: "Localisation", value: formatLocationSummary(data.location.cities), step: "location" as const },
     { icon: WalletCards, title: "Budget", value: `Ideal : ${formatCurrency(data.property.idealBudget)} - Max : ${formatCurrency(data.property.maximumBudget)}`, step: "property" as const },
     { icon: Ruler, title: "Surface", value: `Minimum ${data.characteristics.minimumLivingArea ?? 0} m2`, step: "property" as const },
@@ -1414,12 +1432,12 @@ function labelsFor(data: BuyerSearchFormData, group: keyof BuyerSearchFormData["
   if (!Array.isArray(selected)) {
     return "";
   }
-  const options = allPreferenceOptions(data.property.type);
+  const options = allPreferenceOptions(data.property.types?.length ? data.property.types : data.property.type);
   return selected.map((key) => optionLabel(options, key)).filter(Boolean).join(", ");
 }
 
 function buildPriorityItems(data: BuyerSearchFormData): BuyerSearchFormData["priorities"] {
-  const options = allPreferenceOptions(data.property.type);
+  const options = allPreferenceOptions(data.property.types?.length ? data.property.types : data.property.type);
   const existing = new Map(data.priorities.map((priority) => [priority.key, priority.level]));
   const selected = Object.entries(data.preferences)
     .filter(([, value]) => Array.isArray(value))

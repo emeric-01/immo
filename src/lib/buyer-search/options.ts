@@ -28,7 +28,6 @@ export const radiusOptions = [1, 2, 5, 10, 20] as const;
 export const propertyTypeLabels: Record<PropertyType, string> = {
   house: "Maison",
   apartment: "Appartement",
-  indifferent: "Indifferent",
 };
 
 export const parkingApartmentOptions: BuyerSearchOption[] = [
@@ -129,23 +128,54 @@ export function optionLabel(options: BuyerSearchOption[], key?: string | null) {
   return options.find((option) => option.key === key)?.label ?? "";
 }
 
-export function getPreferenceOptions(propertyType: PropertyType | null) {
-  const isApartment = propertyType === "apartment";
-  const isHouse = propertyType === "house";
+export function normalizePropertyTypes(selection?: PropertyType | "indifferent" | PropertyType[] | null) {
+  if (Array.isArray(selection)) {
+    return Array.from(new Set(selection.filter((type): type is PropertyType => type === "house" || type === "apartment")));
+  }
+
+  return selection === "house" || selection === "apartment" ? [selection] : [];
+}
+
+function uniqueOptions(options: BuyerSearchOption[]) {
+  const seen = new Set<string>();
+
+  return options.filter((option) => {
+    if (seen.has(option.key)) {
+      return false;
+    }
+
+    seen.add(option.key);
+    return true;
+  });
+}
+
+export function getPreferenceOptions(propertyTypes?: PropertyType | "indifferent" | PropertyType[] | null) {
+  const selectedTypes = normalizePropertyTypes(propertyTypes);
+  const isApartment = selectedTypes.includes("apartment");
+  const isHouse = selectedTypes.includes("house");
+  const isMixed = isApartment && isHouse;
 
   return {
-    parking: isApartment ? parkingApartmentOptions : parkingHouseOptions,
-    outdoor: isApartment ? outdoorApartmentOptions : outdoorHouseOptions,
-    buildingComfort: isHouse ? [] : buildingComfortOptions,
-    additionalSpaces: isHouse ? [] : additionalSpaceOptions,
-    houseEquipment: isApartment ? [] : houseEquipmentOptions,
+    parking: isMixed
+      ? uniqueOptions([...parkingHouseOptions, ...parkingApartmentOptions])
+      : isApartment
+        ? parkingApartmentOptions
+        : parkingHouseOptions,
+    outdoor: isMixed
+      ? uniqueOptions([...outdoorHouseOptions, ...outdoorApartmentOptions])
+      : isApartment
+        ? outdoorApartmentOptions
+        : outdoorHouseOptions,
+    buildingComfort: isHouse && !isApartment ? [] : buildingComfortOptions,
+    additionalSpaces: isHouse && !isApartment ? [] : additionalSpaceOptions,
+    houseEquipment: isApartment && !isHouse ? [] : houseEquipmentOptions,
     works: worksOptions,
     environment: environmentOptions,
   };
 }
 
-export function allPreferenceOptions(propertyType: PropertyType | null) {
-  const groups = getPreferenceOptions(propertyType);
+export function allPreferenceOptions(propertyTypes?: PropertyType | "indifferent" | PropertyType[] | null) {
+  const groups = getPreferenceOptions(propertyTypes);
   return [
     ...groups.parking,
     ...groups.outdoor,
