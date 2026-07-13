@@ -3,8 +3,6 @@ import type { BuyerSearchFormData } from "./types";
 import type { BuyerSearchSubmissionResult } from "./database";
 
 export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<BuyerSearchSubmissionResult> {
-  saveSubmittedBuyerSearch(data);
-
   const response = await fetch("/api/buyer-searches", {
     body: JSON.stringify(data),
     headers: {
@@ -18,6 +16,8 @@ export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<Buye
   if (!response.ok) {
     throw new Error("error" in result && result.error ? result.error : "La recherche n'a pas pu etre enregistree.");
   }
+
+  saveSubmittedBuyerSearch(data, result as BuyerSearchSubmissionResult);
 
   return result as BuyerSearchSubmissionResult;
 }

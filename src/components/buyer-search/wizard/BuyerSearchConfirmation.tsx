@@ -2,22 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays } from "lucide-react";
+import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, KeyRound } from "lucide-react";
 import {
   normalizePropertyTypes,
   optionLabel,
   propertyTypeLabels,
   purchaseTimelineOptions,
 } from "@/lib/buyer-search/options";
-import { loadSubmittedBuyerSearch } from "@/lib/buyer-search/storage";
+import { loadSubmittedBuyerSearchSnapshot, type BuyerSearchSubmittedSnapshot } from "@/lib/buyer-search/storage";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import styles from "./buyer-search-wizard.module.css";
 
 export function BuyerSearchConfirmation() {
-  const [data, setData] = useState<BuyerSearchFormData | null>(null);
+  const [snapshot, setSnapshot] = useState<BuyerSearchSubmittedSnapshot | null>(null);
+  const data = snapshot?.data ?? null;
+  const clientAccess = snapshot?.result?.clientAccess;
 
   useEffect(() => {
-    setData(loadSubmittedBuyerSearch());
+    setSnapshot(loadSubmittedBuyerSearchSnapshot());
   }, []);
 
   return (
@@ -41,6 +43,25 @@ export function BuyerSearchConfirmation() {
         ) : (
           <p className={styles.infoLine}>Aucune recherche enregistree localement sur ce navigateur.</p>
         )}
+        {clientAccess ? (
+          <section className={styles.clientAccessCard}>
+            <span className={styles.iconBubble}>
+              <KeyRound size={24} aria-hidden="true" />
+            </span>
+            <div>
+              <h2>Votre acces client</h2>
+              <p>
+                Reference : <strong>{clientAccess.reference}</strong>
+                <br />
+                Code : <strong>{clientAccess.code}</strong>
+              </p>
+              <small>Conservez ces informations pour retrouver et modifier votre projet depuis l&apos;espace client.</small>
+            </div>
+            <Link className={styles.primaryButton} href="/client/login">
+              Acceder a mon projet
+            </Link>
+          </section>
+        ) : null}
         <div className={styles.navigation}>
           <Link className={styles.backButton} href="/recherche">
             <ArrowLeft size={18} aria-hidden="true" />

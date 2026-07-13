@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createBuyerSearchRecord } from "@/lib/buyer-search/database";
+import { createBuyerSearchRecord, updateBuyerSearchRecord } from "@/lib/buyer-search/database";
 import { buyerSearchSchema, stepSchemas } from "@/lib/buyer-search/schema";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
+import { getClientSession } from "@/lib/client-access/auth";
 
 type SubmissionValidationResult =
   | { data: BuyerSearchFormData; success: true }
@@ -32,13 +33,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await createBuyerSearchRecord(validation.data, {
+    const session = await getClientSession();
+    const metadata = {
       ipAddress: getClientIp(request),
-      source: "website",
+      source: session ? "client_space" : "website",
       userAgent: request.headers.get("user-agent"),
-    });
+    };
+    const result = session
+      ? await updateBuyerSearchRecord(session.id, validation.data, metadata)
+      : await createBuyerSearchRecord(validation.data, metadata);
 
-    return NextResponse.json(result, { status: result.persisted ? 201 : 202 });
+    return NextResponse.json(result, { status: session ? 200 : result.persisted ? 201 : 202 });
   } catch (error) {
     console.error("Buyer search submission failed", error);
 

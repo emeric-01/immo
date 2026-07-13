@@ -1,9 +1,14 @@
+import { createHmac, randomBytes } from "crypto";
 import { normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData } from "./types";
 
 type BuyerSearchStorage = "database" | "local";
 
 export type BuyerSearchSubmissionResult = {
+  clientAccess?: {
+    code: string;
+    reference: string;
+  };
   id: string;
   persisted: boolean;
   storage: BuyerSearchStorage;
@@ -21,12 +26,12 @@ type SupabaseConfig = {
   url: string;
 };
 
-function getSupabaseConfig(): SupabaseConfig | null {
+function getSupabaseConfig({ requireServiceRole = false }: { requireServiceRole?: boolean } = {}): SupabaseConfig | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const apiKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.SUPABASE_ANON_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const apiKey = requireServiceRole
+    ? serviceRoleKey
+    : serviceRoleKey || process.env.SUPABASE_ANON_KEY?.trim() || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
   if (!url || !apiKey) {
     return null;
@@ -54,8 +59,9 @@ export async function createBuyerSearchRecord(
   }
 
   const buyerSearchId = crypto.randomUUID();
+  const clientAccess = buildClientAccess();
 
-  await insertSupabaseRows(config, "buyer_searches", buildBuyerSearchRow(buyerSearchId, data, metadata));
+  await insertSupabaseRows(config, "buyer_searches", buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccess));
 
   const warnings: string[] = [];
 
@@ -68,6 +74,60 @@ export async function createBuyerSearchRecord(
   } catch (error) {
     console.error("Buyer search secondary rows failed", error);
     warnings.push("La recherche principale est enregistree, mais certaines donnees detaillees devront etre resynchronisees.");
+  }
+
+  return {
+    id: buyerSearchId,
+    clientAccess: {
+      code: clientAccess.code,
+      reference: clientAccess.reference,
+    },
+    persisted: true,
+    storage: "database",
+    warnings: warnings.length > 0 ? warnings : undefined,
+  };
+}
+
+export async function updateBuyerSearchRecord(
+  buyerSearchId: string,
+  data: BuyerSearchFormData,
+  metadata: BuyerSearchSubmissionMetadata = {},
+): Promise<BuyerSearchSubmissionResult> {
+  const config = getSupabaseConfig({ requireServiceRole: true });
+
+  if (!config) {
+    return {
+      id: buyerSearchId,
+      persisted: false,
+      storage: "local",
+      warnings: ["Supabase service role n'est pas configure : la recherche n'a pas ete mise a jour en base."],
+    };
+  }
+
+  const updateRow: Record<string, unknown> = { ...buildBuyerSearchRow(buyerSearchId, data, metadata) };
+  delete updateRow.id;
+  delete updateRow.client_access_code_hash;
+  delete updateRow.client_reference;
+
+  await updateSupabaseRows(config, "buyer_searches", `id=eq.${encodeURIComponent(buyerSearchId)}`, updateRow);
+
+  const warnings: string[] = [];
+
+  try {
+    await Promise.all([
+      deleteSupabaseRows(config, "buyer_search_locations", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
+      deleteSupabaseRows(config, "buyer_search_priorities", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
+      deleteSupabaseRows(config, "buyer_search_consents", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
+    ]);
+
+    await Promise.all([
+      insertLocations(config, buyerSearchId, data),
+      insertPriorities(config, buyerSearchId, data),
+      insertConsent(config, buyerSearchId, data, metadata),
+    ]);
+  } catch (error) {
+    console.error("Buyer search secondary rows update failed", error);
+    warnings.push("La recherche principale est mise a jour, mais certaines donnees detaillees devront etre resynchronisees.");
   }
 
   return {
@@ -166,7 +226,46 @@ async function insertSupabaseRows<T>(
   return (await response.json()) as T[];
 }
 
-function buildBuyerSearchRow(id: string, data: BuyerSearchFormData, metadata: BuyerSearchSubmissionMetadata) {
+async function updateSupabaseRows(config: SupabaseConfig, table: string, query: string, row: unknown) {
+  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+    body: JSON.stringify(row),
+    headers: {
+      apikey: config.apiKey,
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    method: "PATCH",
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Supabase update failed on ${table} (${response.status}): ${error}`);
+  }
+}
+
+async function deleteSupabaseRows(config: SupabaseConfig, table: string, query: string) {
+  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+    headers: {
+      apikey: config.apiKey,
+      Authorization: `Bearer ${config.apiKey}`,
+      Prefer: "return=minimal",
+    },
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Supabase delete failed on ${table} (${response.status}): ${error}`);
+  }
+}
+
+function buildBuyerSearchRow(
+  id: string,
+  data: BuyerSearchFormData,
+  metadata: BuyerSearchSubmissionMetadata,
+  clientAccess?: { code: string; codeHash: string; reference: string },
+) {
   const cities = data.location.cities;
   const postalCodes = Array.from(
     new Set(cities.flatMap((city) => city.postalCodes ?? (city.postalCode ? [city.postalCode] : []))),
@@ -175,6 +274,13 @@ function buildBuyerSearchRow(id: string, data: BuyerSearchFormData, metadata: Bu
   return {
     city_codes: cities.flatMap((city) => (city.cityCode ? [city.cityCode] : [])),
     city_names: cities.map((city) => city.name),
+    ...(clientAccess
+      ? {
+          client_access_code_hash: clientAccess.codeHash,
+          client_access_enabled: true,
+          client_reference: clientAccess.reference,
+        }
+      : {}),
     consent: data.contact.consent,
     consent_at: data.contact.consent ? new Date().toISOString() : null,
     contact_email: data.contact.email.trim().toLowerCase(),
@@ -204,4 +310,31 @@ function buildBuyerSearchRow(id: string, data: BuyerSearchFormData, metadata: Bu
     raw_payload: data,
     source: metadata.source ?? "website",
   };
+}
+
+function buildClientAccess() {
+  const code = randomBytes(4).toString("hex").toUpperCase();
+  const reference = `LJI-${randomBytes(3).toString("hex").toUpperCase()}`;
+
+  return {
+    code,
+    codeHash: hashClientAccessCode(reference, code),
+    reference,
+  };
+}
+
+export function hashClientAccessCode(reference: string, code: string) {
+  const secret =
+    process.env.CLIENT_ACCESS_SECRET?.trim() ||
+    process.env.ADMIN_SESSION_SECRET?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_ANON_KEY?.trim();
+
+  if (!secret) {
+    throw new Error("CLIENT_ACCESS_SECRET or Supabase key is required to hash client access codes.");
+  }
+
+  return createHmac("sha256", secret)
+    .update(`${reference.trim().toUpperCase()}:${code.trim().toUpperCase()}`)
+    .digest("hex");
 }

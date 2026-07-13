@@ -1188,6 +1188,34 @@
   color: #ffffff;
 }
 
+.clientAccessCard {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin-top: 20px;
+  border: 1px solid #e7d1bd;
+  border-radius: 12px;
+  background: #fbf7f2;
+  padding: 18px;
+}
+
+.clientAccessCard h2,
+.clientAccessCard p {
+  margin: 0;
+}
+
+.clientAccessCard p {
+  margin-top: 6px;
+  line-height: 1.55;
+}
+
+.clientAccessCard small {
+  display: block;
+  margin-top: 6px;
+  color: #657083;
+}
+
 @media (max-width: 980px) {
   .siteHeader,
   .shell {

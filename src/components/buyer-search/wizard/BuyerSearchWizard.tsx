@@ -136,6 +136,13 @@ export function BuyerSearchWizard() {
   }, [activeStep.id, clearErrors]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("source") === "client") {
+      void loadClientProjectIntoForm();
+      return;
+    }
+
     const draft = loadBuyerSearchDraft();
 
     if (draft) {
@@ -165,6 +172,25 @@ export function BuyerSearchWizard() {
     }
 
     setDraftReady(true);
+
+    async function loadClientProjectIntoForm() {
+      try {
+        const response = await fetch("/api/client/project", { cache: "no-store" });
+
+        if (!response.ok) {
+          setDraftReady(true);
+          return;
+        }
+
+        const payload = (await response.json()) as { search?: BuyerSearchFormData };
+
+        if (payload.search) {
+          reset({ ...defaultBuyerSearchData, ...payload.search });
+        }
+      } finally {
+        setDraftReady(true);
+      }
+    }
   }, [reset]);
 
   useEffect(() => {
