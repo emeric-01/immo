@@ -3,6 +3,7 @@ import { createBuyerSearchRecord, updateBuyerSearchRecord } from "@/lib/buyer-se
 import { buyerSearchSchema, stepSchemas } from "@/lib/buyer-search/schema";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import { getClientSession } from "@/lib/client-access/auth";
+import { sendBuyerSearchCreatedEmails, sendBuyerSearchUpdatedEmails } from "@/lib/email/buyer-search-emails";
 
 type SubmissionValidationResult =
   | { data: BuyerSearchFormData; success: true }
@@ -42,8 +43,15 @@ export async function POST(request: NextRequest) {
     const result = session
       ? await updateBuyerSearchRecord(session.id, validation.data, metadata)
       : await createBuyerSearchRecord(validation.data, metadata);
+    const emailDelivery = session
+      ? await sendBuyerSearchUpdatedEmails({ data: validation.data, searchId: result.id })
+      : await sendBuyerSearchCreatedEmails({ data: validation.data, result });
+    const responseBody = {
+      ...result,
+      warnings: [...(result.warnings ?? []), ...emailDelivery.warnings],
+    };
 
-    return NextResponse.json(result, { status: session ? 200 : result.persisted ? 201 : 202 });
+    return NextResponse.json(responseBody, { status: session ? 200 : result.persisted ? 201 : 202 });
   } catch (error) {
     console.error("Buyer search submission failed", error);
 
