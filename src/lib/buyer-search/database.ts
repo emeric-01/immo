@@ -26,6 +26,10 @@ type SupabaseConfig = {
   url: string;
 };
 
+type ClientAccountRow = {
+  id: string;
+};
+
 function getSupabaseConfig({ requireServiceRole = false }: { requireServiceRole?: boolean } = {}): SupabaseConfig | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -47,21 +51,26 @@ export async function createBuyerSearchRecord(
   data: BuyerSearchFormData,
   metadata: BuyerSearchSubmissionMetadata = {},
 ): Promise<BuyerSearchSubmissionResult> {
-  const config = getSupabaseConfig();
+  const config = getSupabaseConfig({ requireServiceRole: true });
 
   if (!config) {
     return {
       id: `local-${Date.now()}`,
       persisted: false,
       storage: "local",
-      warnings: ["Supabase n'est pas configure : conservation locale uniquement."],
+      warnings: ["Supabase service role n'est pas configure : compte client et recherche conserves localement uniquement."],
     };
   }
 
   const buyerSearchId = crypto.randomUUID();
   const clientAccess = buildClientAccess();
+  const clientAccount = await upsertClientAccount(config, data);
 
-  await insertSupabaseRows(config, "buyer_searches", buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccess));
+  await insertSupabaseRows(
+    config,
+    "buyer_searches",
+    buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccess, clientAccount.id),
+  );
 
   const warnings: string[] = [];
 
@@ -70,6 +79,7 @@ export async function createBuyerSearchRecord(
       insertLocations(config, buyerSearchId, data),
       insertPriorities(config, buyerSearchId, data),
       insertConsent(config, buyerSearchId, data, metadata),
+      updateClientAccountLastSearch(config, clientAccount.id, buyerSearchId),
     ]);
   } catch (error) {
     console.error("Buyer search secondary rows failed", error);
@@ -109,6 +119,9 @@ export async function updateBuyerSearchRecord(
   delete updateRow.client_access_code_hash;
   delete updateRow.client_reference;
 
+  const clientAccount = await upsertClientAccount(config, data);
+  updateRow.client_account_id = clientAccount.id;
+
   await updateSupabaseRows(config, "buyer_searches", `id=eq.${encodeURIComponent(buyerSearchId)}`, updateRow);
 
   const warnings: string[] = [];
@@ -124,6 +137,7 @@ export async function updateBuyerSearchRecord(
       insertLocations(config, buyerSearchId, data),
       insertPriorities(config, buyerSearchId, data),
       insertConsent(config, buyerSearchId, data, metadata),
+      updateClientAccountLastSearch(config, clientAccount.id, buyerSearchId),
     ]);
   } catch (error) {
     console.error("Buyer search secondary rows update failed", error);
@@ -136,6 +150,42 @@ export async function updateBuyerSearchRecord(
     storage: "database",
     warnings: warnings.length > 0 ? warnings : undefined,
   };
+}
+
+async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData) {
+  const normalizedEmail = data.contact.email.trim().toLowerCase();
+  const payload = {
+    email: normalizedEmail,
+    first_name: data.contact.firstName.trim(),
+    last_name: data.contact.lastName.trim(),
+    phone: data.contact.phone.trim(),
+    preferred_channel: data.contact.preferredChannel,
+  };
+
+  const existing = await fetchSupabaseRows<ClientAccountRow[]>(
+    config,
+    `client_accounts?email=eq.${encodeURIComponent(normalizedEmail)}&limit=1&select=id`,
+  );
+
+  if (existing[0]) {
+    await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}`, payload);
+    return existing[0];
+  }
+
+  const inserted = await insertSupabaseRows<ClientAccountRow>(config, "client_accounts", payload, true);
+  const account = inserted[0];
+
+  if (!account) {
+    throw new Error("Supabase client account insert did not return a row.");
+  }
+
+  return account;
+}
+
+async function updateClientAccountLastSearch(config: SupabaseConfig, clientAccountId: string, buyerSearchId: string) {
+  await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(clientAccountId)}`, {
+    last_search_id: buyerSearchId,
+  });
 }
 
 async function insertLocations(config: SupabaseConfig, buyerSearchId: string, data: BuyerSearchFormData) {
@@ -226,6 +276,22 @@ async function insertSupabaseRows<T>(
   return (await response.json()) as T[];
 }
 
+async function fetchSupabaseRows<T>(config: SupabaseConfig, path: string): Promise<T> {
+  const response = await fetch(`${config.url}/rest/v1/${path}`, {
+    headers: {
+      apikey: config.apiKey,
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Supabase fetch failed (${response.status}): ${error}`);
+  }
+
+  return (await response.json()) as T;
+}
+
 async function updateSupabaseRows(config: SupabaseConfig, table: string, query: string, row: unknown) {
   const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
     body: JSON.stringify(row),
@@ -265,6 +331,7 @@ function buildBuyerSearchRow(
   data: BuyerSearchFormData,
   metadata: BuyerSearchSubmissionMetadata,
   clientAccess?: { code: string; codeHash: string; reference: string },
+  clientAccountId?: string,
 ) {
   const cities = data.location.cities;
   const postalCodes = Array.from(
@@ -274,6 +341,7 @@ function buildBuyerSearchRow(
   return {
     city_codes: cities.flatMap((city) => (city.cityCode ? [city.cityCode] : [])),
     city_names: cities.map((city) => city.name),
+    ...(clientAccountId ? { client_account_id: clientAccountId } : {}),
     ...(clientAccess
       ? {
           client_access_code_hash: clientAccess.codeHash,
