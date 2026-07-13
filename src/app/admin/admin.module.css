@@ -180,6 +180,10 @@
   gap: 12px;
 }
 
+.filterBar[data-compact] {
+  grid-template-columns: minmax(240px, 1fr) 120px;
+}
+
 .searchField {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
@@ -602,6 +606,7 @@
   }
 
   .filterBar,
+  .filterBar[data-compact],
   .statsGrid,
   .contactSummary {
     grid-template-columns: 1fr;
