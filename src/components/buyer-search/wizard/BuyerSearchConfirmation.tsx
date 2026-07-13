@@ -32,7 +32,7 @@ export function BuyerSearchConfirmation() {
         {data ? (
           <div className={styles.summaryGrid}>
             <ConfirmationItem icon={Home} title="Type de bien" value={data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne"} />
-            <ConfirmationItem icon={MapPin} title="Localisation" value={data.location.cities.map((city) => city.name).join(", ")} />
+            <ConfirmationItem icon={MapPin} title="Localisation" value={formatLocationSummary(data.location.cities)} />
             <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
             <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
             <ConfirmationItem icon={CalendarDays} title="Delai d'achat" value={optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline)} />
@@ -86,4 +86,12 @@ function formatCurrency(value: number | null) {
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatLocationSummary(cities: BuyerSearchFormData["location"]["cities"]) {
+  if (cities.length === 0) {
+    return "Non renseigne";
+  }
+
+  return cities.map((city) => `${city.name} (${city.radiusKm ?? 2} km)`).join(", ");
 }

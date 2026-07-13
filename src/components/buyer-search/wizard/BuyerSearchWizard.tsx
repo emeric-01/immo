@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type mapboxgl from "mapbox-gl";
@@ -97,6 +97,8 @@ const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
     subtitle: "Nous avons presque termine. Renseignez vos coordonnees pour enregistrer votre recherche.",
   },
 };
+
+const DEFAULT_CITY_RADIUS_KM = 2;
 
 type StepProps = {
   form: ReturnType<typeof useForm<BuyerSearchFormData>>;
@@ -361,7 +363,10 @@ function WizardNavigation({
 function StepLocation({ form }: StepProps) {
   const { setValue, watch } = form;
   const location = watch("location");
-  const selectedCities = dedupeCities(location.cities);
+  const selectedCities = useMemo(
+    () => normalizeSelectedCities(location.cities, location.radiusKm ?? DEFAULT_CITY_RADIUS_KM),
+    [location.cities, location.radiusKm],
+  );
   const [query, setQuery] = useState("");
   const [cityResults, setCityResults] = useState<BuyerSearchCity[]>([]);
   const [isSearchingCities, setIsSearchingCities] = useState(false);
@@ -370,7 +375,7 @@ function StepLocation({ form }: StepProps) {
   );
 
   useEffect(() => {
-    if (selectedCities.length !== location.cities.length) {
+    if (!areCityListsEqual(selectedCities, location.cities)) {
       setValue("location.cities", selectedCities, { shouldDirty: true, shouldValidate: true });
     }
   }, [location.cities, selectedCities, setValue]);
@@ -425,7 +430,10 @@ function StepLocation({ form }: StepProps) {
     if (selectedCities.some((candidate) => areSameCity(candidate, city))) {
       return;
     }
-    setValue("location.cities", [...selectedCities, city], { shouldDirty: true, shouldValidate: true });
+    setValue("location.cities", [...selectedCities, withCityRadius(city, location.radiusKm ?? DEFAULT_CITY_RADIUS_KM)], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     setQuery("");
     setCityResults([]);
   }
@@ -434,6 +442,14 @@ function StepLocation({ form }: StepProps) {
     setValue(
       "location.cities",
       selectedCities.filter((city) => !areSameCity(city, cityToRemove)),
+      { shouldDirty: true, shouldValidate: true },
+    );
+  }
+
+  function updateCityRadius(cityToUpdate: BuyerSearchCity, radiusKm: number) {
+    setValue(
+      "location.cities",
+      selectedCities.map((city) => (areSameCity(city, cityToUpdate) ? { ...city, radiusKm } : city)),
       { shouldDirty: true, shouldValidate: true },
     );
   }
@@ -477,14 +493,28 @@ function StepLocation({ form }: StepProps) {
         <FormError errors={form.formState.errors} path="location.cities" />
         <div className={styles.optionBlock}>
           <h3>Villes ou secteurs selectionnes</h3>
-          <div className={styles.tags}>
+          <div className={styles.selectedCityList}>
             {selectedCities.map((city) => (
-              <span className={styles.tag} key={getCityKey(city)}>
-                <span>{city.name}</span>
-                <button type="button" onClick={() => removeCity(city)} aria-label={`Supprimer ${city.name}`}>
-                  x
-                </button>
-              </span>
+              <article className={styles.cityRadiusCard} key={getCityKey(city)}>
+                <div className={styles.cityRadiusHeader}>
+                  <span>{city.name}</span>
+                  <button type="button" onClick={() => removeCity(city)} aria-label={`Supprimer ${city.name}`}>
+                    x
+                  </button>
+                </div>
+                <div className={styles.cityRadiusOptions} aria-label={`Rayon autour de ${city.name}`}>
+                  {radiusOptions.map((radius) => (
+                    <button
+                      type="button"
+                      key={radius}
+                      data-selected={(city.radiusKm ?? DEFAULT_CITY_RADIUS_KM) === radius || undefined}
+                      onClick={() => updateCityRadius(city, radius)}
+                    >
+                      {radius} km
+                    </button>
+                  ))}
+                </div>
+              </article>
             ))}
           </div>
           <button className={styles.addButton} type="button" onClick={addSuggestedCity}>
@@ -492,33 +522,8 @@ function StepLocation({ form }: StepProps) {
             Ajouter une ville ou un secteur
           </button>
         </div>
-        <div className={styles.optionBlock}>
-          <h3>Rayon de recherche</h3>
-          <div className={styles.segmented}>
-            {radiusOptions.map((radius) => (
-              <button
-                className={styles.segmentButton}
-                data-selected={location.radiusKm === radius || undefined}
-                type="button"
-                key={radius}
-                onClick={() => setValue("location.radiusKm", radius, { shouldDirty: true, shouldValidate: true })}
-              >
-                {radius} km
-              </button>
-            ))}
-            <button
-              className={styles.segmentButton}
-              data-selected={location.radiusKm === location.customRadius || undefined}
-              type="button"
-              onClick={() => setValue("location.radiusKm", location.customRadius ?? 15, { shouldDirty: true })}
-            >
-              Personnalise
-            </button>
-          </div>
-          <FormError errors={form.formState.errors} path="location.radiusKm" />
-        </div>
       </div>
-      <LocationMap cities={location.cities} radiusKm={location.radiusKm ?? 10} />
+      <LocationMap cities={selectedCities} />
     </section>
   );
 }
@@ -842,7 +847,7 @@ function StepContact({ form }: StepProps) {
   );
 }
 
-function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm: number }) {
+function LocationMap({ cities }: { cities: BuyerSearchCity[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -874,7 +879,7 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
       mapbox.accessToken = accessToken;
 
       const center = getMapCenter(cities);
-      const radiusFeatureCollection = buildRadiusFeatureCollection(cities, radiusKm);
+      const radiusFeatureCollection = buildRadiusFeatureCollection(cities);
       const map = new mapbox.Map({
         container: containerRef.current,
         style: "mapbox://styles/mapbox/light-v11",
@@ -959,18 +964,18 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [accessToken, cities, radiusKm]);
+  }, [accessToken, cities]);
 
   return (
     <aside className={styles.mapPanel} aria-label="Apercu cartographique">
       {mapStatus === "missing-token" || mapStatus === "error" ? (
         <div className={styles.fakeMap}>
           <span className={styles.radiusCircle} />
-          <span className={styles.mapBadge}>Zone de recherche : {radiusKm} km</span>
+          <span className={styles.mapBadge}>Rayon par ville</span>
           {cities.map((city, index) => (
             <span className={styles.mapMarker} style={{ left: `${34 + index * 18}%`, top: `${48 - index * 10}%` }} key={city.name}>
               <MapPin size={28} fill="#111111" aria-hidden="true" />
-              <small>{city.name}</small>
+              <small>{city.name} - {city.radiusKm ?? DEFAULT_CITY_RADIUS_KM} km</small>
             </span>
           ))}
           <span className={styles.mapFooter}>
@@ -979,7 +984,7 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
         </div>
       ) : (
         <div className={styles.mapboxMap} ref={containerRef}>
-          <span className={styles.mapBadge}>Zone de recherche : {radiusKm} km</span>
+          <span className={styles.mapBadge}>Rayon par ville</span>
           <span className={styles.mapFooter}>Rayon applique autour de chaque ville</span>
         </div>
       )}
@@ -989,6 +994,13 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
 
 function getCityKey(city: BuyerSearchCity) {
   return city.cityCode ?? `${city.name}-${city.postalCode ?? ""}`;
+}
+
+function withCityRadius(city: BuyerSearchCity, fallbackRadiusKm = DEFAULT_CITY_RADIUS_KM) {
+  return {
+    ...city,
+    radiusKm: city.radiusKm ?? fallbackRadiusKm,
+  };
 }
 
 function getCityDedupKey(city: BuyerSearchCity) {
@@ -1011,6 +1023,29 @@ function dedupeCities(cities: BuyerSearchCity[]) {
 
     return [...uniqueCities, city];
   }, []);
+}
+
+function normalizeSelectedCities(cities: BuyerSearchCity[], fallbackRadiusKm = DEFAULT_CITY_RADIUS_KM) {
+  return dedupeCities(cities).map((city) => withCityRadius(city, fallbackRadiusKm));
+}
+
+function areCityListsEqual(firstList: BuyerSearchCity[], secondList: BuyerSearchCity[]) {
+  if (firstList.length !== secondList.length) {
+    return false;
+  }
+
+  return firstList.every((city, index) => {
+    const otherCity = secondList[index];
+    return otherCity ? areSameCity(city, otherCity) && city.radiusKm === otherCity.radiusKm : false;
+  });
+}
+
+function formatLocationSummary(cities: BuyerSearchCity[]) {
+  if (cities.length === 0) {
+    return "Non renseigne";
+  }
+
+  return cities.map((city) => `${city.name} (${city.radiusKm ?? DEFAULT_CITY_RADIUS_KM} km)`).join(", ");
 }
 
 function formatCityPostalCodes(city: BuyerSearchCity) {
@@ -1075,17 +1110,19 @@ function buildRadiusFeature(center: [number, number], radiusKm: number) {
   };
 }
 
-function buildRadiusFeatureCollection(cities: BuyerSearchCity[], radiusKm: number) {
+function buildRadiusFeatureCollection(cities: BuyerSearchCity[]) {
   const geocodedCities = cities.filter(
     (city) => typeof city.longitude === "number" && typeof city.latitude === "number",
   );
-  const centers = geocodedCities.length > 0
-    ? geocodedCities.map((city) => [city.longitude ?? 0, city.latitude ?? 0] as [number, number])
-    : [getMapCenter(cities)];
 
   return {
     type: "FeatureCollection" as const,
-    features: centers.map((center) => buildRadiusFeature(center, radiusKm)),
+    features:
+      geocodedCities.length > 0
+        ? geocodedCities.map((city) =>
+            buildRadiusFeature([city.longitude ?? 0, city.latitude ?? 0], city.radiusKm ?? DEFAULT_CITY_RADIUS_KM),
+          )
+        : [buildRadiusFeature(getMapCenter(cities), DEFAULT_CITY_RADIUS_KM)],
   };
 }
 
@@ -1308,7 +1345,7 @@ function firstErrorMessage(errors: FieldErrors<BuyerSearchFormData>, scope: Wiza
 function getSummaryRows(data: BuyerSearchFormData) {
   return [
     { icon: Home, title: "Bien recherche", value: data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne", step: "property" as const },
-    { icon: MapPin, title: "Localisation", value: `${data.location.cities.map((city) => city.name).join(", ")} et ${data.location.radiusKm ?? 0} km autour`, step: "location" as const },
+    { icon: MapPin, title: "Localisation", value: formatLocationSummary(data.location.cities), step: "location" as const },
     { icon: WalletCards, title: "Budget", value: `Ideal : ${formatCurrency(data.property.idealBudget)} - Max : ${formatCurrency(data.property.maximumBudget)}`, step: "property" as const },
     { icon: Ruler, title: "Surface", value: `Minimum ${data.characteristics.minimumLivingArea ?? 0} m2`, step: "characteristics" as const },
     { icon: BedDouble, title: "Pieces et chambres", value: `${data.characteristics.minimumRooms ?? 0} pieces min. - ${data.characteristics.minimumBedrooms ?? 0} chambres min.`, step: "characteristics" as const },

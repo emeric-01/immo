@@ -45,6 +45,7 @@ function normalizeCommune(commune: GeoApiCommune): BuyerSearchCity | null {
     cityCode: commune.code,
     latitude: typeof latitude === "number" ? latitude : undefined,
     longitude: typeof longitude === "number" ? longitude : undefined,
+    radiusKm: 2,
   };
 }
 

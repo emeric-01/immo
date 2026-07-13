@@ -11,8 +11,9 @@ export type BuyerSearchFormData = {
       cityCode?: string;
       latitude?: number;
       longitude?: number;
+      radiusKm?: number;
     }>;
-    radiusKm: number | null;
+    radiusKm?: number | null;
     customRadius?: number | null;
   };
   property: {
@@ -85,10 +86,10 @@ export const buyerSearchSteps: Array<{ id: WizardStepId; label: string }> = [
 export const defaultBuyerSearchData: BuyerSearchFormData = {
   location: {
     cities: [
-      { name: "Aubagne", postalCode: "13400", latitude: 43.2928, longitude: 5.5707 },
-      { name: "Gemenos", postalCode: "13420", latitude: 43.2975, longitude: 5.6286 },
+      { name: "Aubagne", postalCode: "13400", latitude: 43.2928, longitude: 5.5707, radiusKm: 2 },
+      { name: "Gemenos", postalCode: "13420", latitude: 43.2975, longitude: 5.6286, radiusKm: 2 },
     ],
-    radiusKm: 10,
+    radiusKm: 2,
     customRadius: null,
   },
   property: {

@@ -23,7 +23,7 @@ export const citySuggestions: BuyerSearchCity[] = [
   { name: "La Ciotat", postalCode: "13600", latitude: 43.1748, longitude: 5.6043 },
 ];
 
-export const radiusOptions = [2, 5, 10, 20] as const;
+export const radiusOptions = [1, 2, 5, 10, 20] as const;
 
 export const propertyTypeLabels: Record<PropertyType, string> = {
   house: "Maison",

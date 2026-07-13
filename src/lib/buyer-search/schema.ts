@@ -10,11 +10,14 @@ export const buyerSearchSchema = z
         z.object({
           name: z.string().min(1),
           postalCode: z.string().optional(),
+          postalCodes: z.array(z.string()).optional(),
+          cityCode: z.string().optional(),
           latitude: z.number().optional(),
           longitude: z.number().optional(),
+          radiusKm: z.number().positive().optional(),
         }),
       ),
-      radiusKm: nullablePositiveNumber,
+      radiusKm: nullablePositiveNumber.optional(),
       customRadius: nullablePositiveNumber.optional(),
     }),
     property: z.object({
@@ -85,13 +88,15 @@ export const stepSchemas = {
         path: ["cities"],
       });
     }
-    if (location.radiusKm === null) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Choisissez un rayon de recherche.",
-        path: ["radiusKm"],
-      });
-    }
+    location.cities.forEach((city, index) => {
+      if (!city.radiusKm || city.radiusKm <= 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Choisissez un rayon de recherche pour chaque ville.",
+          path: ["cities", index, "radiusKm"],
+        });
+      }
+    });
   }),
   property: buyerSearchSchema.shape.property.superRefine((property, ctx) => {
     if (!property.type) {
