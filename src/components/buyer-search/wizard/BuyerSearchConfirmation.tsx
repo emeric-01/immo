@@ -53,11 +53,16 @@ export function BuyerSearchConfirmation() {
             </span>
             <div>
               <h2>Votre acces client</h2>
-              <p>
-                Reference : <strong>{clientAccess.reference}</strong>
-                <br />
-                Code : <strong>{clientAccess.code}</strong>
-              </p>
+              <dl className={styles.clientAccessCodes}>
+                <div>
+                  <dt>Reference</dt>
+                  <dd>{clientAccess.reference}</dd>
+                </div>
+                <div>
+                  <dt>Code</dt>
+                  <dd>{clientAccess.code}</dd>
+                </div>
+              </dl>
               <small>Conservez ces informations pour retrouver et modifier votre projet depuis l&apos;espace client.</small>
             </div>
             <Link className={styles.primaryButton} href="/client/login">

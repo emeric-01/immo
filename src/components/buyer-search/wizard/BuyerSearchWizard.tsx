@@ -671,18 +671,21 @@ function StepProperty({ form }: StepProps) {
         <div className={styles.compactCounters}>
           <CounterInput
             label="Pieces min."
+            shortLabel="Pieces"
             value={characteristics.minimumRooms ?? 0}
             onMinus={() => updateCounter("minimumRooms", -1, 0)}
             onPlus={() => updateCounter("minimumRooms", 1, 0)}
           />
           <CounterInput
             label="Chambres min."
+            shortLabel="Chambres"
             value={characteristics.minimumBedrooms ?? 0}
             onMinus={() => updateCounter("minimumBedrooms", -1, 0)}
             onPlus={() => updateCounter("minimumBedrooms", 1, 0)}
           />
           <CounterInput
             label="Salles d'eau min."
+            shortLabel="SDE"
             value={characteristics.minimumBathrooms ?? 0}
             onMinus={() => updateCounter("minimumBathrooms", -1, 0)}
             onPlus={() => updateCounter("minimumBathrooms", 1, 0)}
@@ -1445,10 +1448,25 @@ function ProjectQuestion({
   );
 }
 
-function CounterInput({ label, value, onMinus, onPlus }: { label: string; value: number; onMinus: () => void; onPlus: () => void }) {
+function CounterInput({
+  label,
+  onMinus,
+  onPlus,
+  shortLabel,
+  value,
+}: {
+  label: string;
+  onMinus: () => void;
+  onPlus: () => void;
+  shortLabel?: string;
+  value: number;
+}) {
   return (
     <div className={styles.counterField}>
-      <span>{label}</span>
+      <span>
+        <span className={styles.counterLabelFull}>{label}</span>
+        <span className={styles.counterLabelShort}>{shortLabel ?? label}</span>
+      </span>
       <div className={styles.counter}>
         <button type="button" onClick={onMinus} aria-label={`Diminuer ${label}`}>
           <Minus size={18} />

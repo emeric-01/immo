@@ -737,6 +737,10 @@
   font-weight: 700;
 }
 
+.counterLabelShort {
+  display: none;
+}
+
 .counter {
   display: grid;
   min-height: 56px;
@@ -1265,6 +1269,32 @@
   color: #657083;
 }
 
+.clientAccessCodes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.clientAccessCodes div {
+  border: 1px solid #ead8c5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.clientAccessCodes dt {
+  color: #657083;
+  font-size: 0.78rem;
+}
+
+.clientAccessCodes dd {
+  margin: 3px 0 0;
+  color: #111111;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 980px) {
   .siteHeader,
   .shell {
@@ -1443,6 +1473,16 @@
   .backButton {
     min-width: 116px;
   }
+
+  .clientAccessCard {
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .clientAccessCard .primaryButton {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1455,12 +1495,95 @@
     padding-inline: 18px;
   }
 
+  .compactCounters {
+    gap: 8px;
+  }
+
+  .compactCounters .counterField {
+    min-width: 0;
+    gap: 6px;
+    font-size: 0.82rem;
+  }
+
+  .compactCounters .counterField > span:first-child {
+    min-height: 18px;
+    white-space: nowrap;
+  }
+
+  .compactCounters .counterLabelFull {
+    display: none;
+  }
+
+  .compactCounters .counterLabelShort {
+    display: inline;
+  }
+
+  .compactCounters .counter {
+    min-height: 42px;
+    grid-template-columns: 34px minmax(26px, 1fr) 34px;
+  }
+
+  .compactCounters .counter button {
+    padding: 0;
+  }
+
+  .confirmationShell {
+    margin-top: 12px;
+  }
+
+  .confirmationHero {
+    margin-bottom: 22px;
+  }
+
+  .confirmationHero h1 {
+    font-size: 2rem;
+  }
+
+  .clientAccessCard {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .clientAccessCard .iconBubble {
+    width: 48px;
+    height: 48px;
+  }
+
+  .clientAccessCard h2 {
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+
+  .clientAccessCodes {
+    grid-template-columns: 1fr;
+  }
+
+  .clientAccessCard small {
+    max-width: 31ch;
+    line-height: 1.45;
+  }
+
+  .clientAccessCard .primaryButton {
+    min-height: 52px;
+    justify-content: center;
+    text-align: center;
+  }
+
   .navigation {
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .backButton,
   .primaryButton {
+    min-height: 52px;
     padding-inline: 14px;
+  }
+
+  .navigation .backButton,
+  .navigation .primaryButton {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
