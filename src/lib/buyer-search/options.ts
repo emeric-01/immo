@@ -64,6 +64,7 @@ export const buildingComfortOptions: BuyerSearchOption[] = [
   { key: "top_floor", label: "Dernier etage", category: "Confort de l'immeuble" },
   { key: "secure_residence", label: "Residence securisee", category: "Confort de l'immeuble" },
   { key: "concierge", label: "Gardien / Concierge", category: "Confort de l'immeuble" },
+  { key: "air_conditioning", label: "Climatisation", category: "Confort de l'immeuble" },
 ];
 
 export const additionalSpaceOptions: BuyerSearchOption[] = [
@@ -78,6 +79,7 @@ export const houseEquipmentOptions: BuyerSearchOption[] = [
   { key: "single_storey", label: "Plain-pied", category: "Equipements maison" },
   { key: "outbuilding", label: "Dependance / Bureau", category: "Equipements maison" },
   { key: "fireplace", label: "Cheminee", category: "Equipements maison" },
+  { key: "air_conditioning", label: "Climatisation", category: "Equipements maison" },
 ];
 
 export const worksOptions: BuyerSearchOption[] = [
