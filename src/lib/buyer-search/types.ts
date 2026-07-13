@@ -74,8 +74,7 @@ export type BuyerSearchCity = BuyerSearchFormData["location"]["cities"][number];
 
 export const buyerSearchSteps: Array<{ id: WizardStepId; label: string }> = [
   { id: "location", label: "Localisation" },
-  { id: "property", label: "Bien recherche" },
-  { id: "characteristics", label: "Caracteristiques" },
+  { id: "property", label: "Bien & criteres" },
   { id: "preferences", label: "Preferences & equipements" },
   { id: "project", label: "Votre projet" },
   { id: "summary", label: "Recapitulatif" },

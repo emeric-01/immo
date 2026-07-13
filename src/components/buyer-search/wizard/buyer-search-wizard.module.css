@@ -259,6 +259,13 @@
   font-weight: 400;
 }
 
+.fieldNote {
+  color: #697080;
+  font-size: 0.88rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .suggestions {
   display: grid;
   gap: 6px;
@@ -527,6 +534,114 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.compactSearchForm {
+  gap: 16px;
+}
+
+.compactSection {
+  display: grid;
+  gap: 12px;
+}
+
+.compactSection h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.compactPropertyCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compactChoiceCard {
+  position: relative;
+  display: grid;
+  min-height: 86px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+  font: inherit;
+  text-align: left;
+}
+
+.compactChoiceCard[data-selected] {
+  border-color: #d6b48c;
+  background: #fbf7f2;
+}
+
+.compactChoiceCard .iconBubble {
+  width: 42px;
+  height: 42px;
+}
+
+.compactChoiceCard > svg:last-child {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+  padding: 2px;
+}
+
+.compactFieldGrid,
+.compactCounters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compactSearchForm .field {
+  gap: 7px;
+}
+
+.compactSearchForm .field input {
+  min-height: 50px;
+}
+
+.rangeField {
+  display: grid;
+  gap: 10px;
+  color: #111111;
+  font-size: 0.93rem;
+  font-weight: 700;
+}
+
+.rangeField span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rangeField strong {
+  font-size: 1rem;
+}
+
+.rangeField input[type="range"] {
+  width: 100%;
+  accent-color: #111111;
+}
+
+.compactCounters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compactCounters .counter {
+  min-height: 44px;
+  grid-template-columns: 42px 1fr 42px;
+}
+
+.compactCounters .counterField {
+  gap: 7px;
+  font-size: 0.9rem;
 }
 
 .fieldGrid {

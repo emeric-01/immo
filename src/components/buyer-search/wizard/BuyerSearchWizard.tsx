@@ -69,8 +69,8 @@ const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
     subtitle: "Indiquez une ou plusieurs villes ou secteurs. Vous pourrez ajuster la zone plus tard.",
   },
   property: {
-    title: "Quel type de bien recherchez-vous ?",
-    subtitle: "Precisez le type de bien et votre budget. Vous pourrez ajuster ces informations plus tard.",
+    title: "Quel bien recherchez-vous ?",
+    subtitle: "Precisez le type de bien, votre budget et les criteres essentiels.",
   },
   characteristics: {
     title: "De combien d'espace avez-vous besoin ?",
@@ -175,6 +175,15 @@ export function BuyerSearchWizard() {
     if (!result.success) {
       setZodErrors(id, result.error.issues);
       return false;
+    }
+
+    if (id === "property") {
+      const characteristicsResult = stepSchemas.characteristics.safeParse(current.characteristics);
+
+      if (!characteristicsResult.success) {
+        setZodErrors("characteristics", characteristicsResult.error.issues);
+        return false;
+      }
     }
 
     clearErrors();
@@ -454,16 +463,6 @@ function StepLocation({ form }: StepProps) {
     );
   }
 
-  function addSuggestedCity() {
-    const city = filteredCities[0] ?? citySuggestions.find((suggestion) =>
-      selectedCities.every((selectedCity) => !areSameCity(selectedCity, suggestion)),
-    );
-
-    if (city) {
-      addCity(city);
-    }
-  }
-
   return (
     <section className={styles.twoColumn}>
       <div className={styles.formColumn}>
@@ -477,6 +476,7 @@ function StepLocation({ form }: StepProps) {
               placeholder="Rechercher une ville ou un code postal..."
             />
           </span>
+          <span className={styles.fieldNote}>Ajoutez plusieurs villes si vous le souhaitez.</span>
         </label>
         {query.trim().length >= 2 ? (
           <div className={styles.suggestions} role="listbox">
@@ -517,10 +517,6 @@ function StepLocation({ form }: StepProps) {
               </article>
             ))}
           </div>
-          <button className={styles.addButton} type="button" onClick={addSuggestedCity}>
-            <Plus size={18} aria-hidden="true" />
-            Ajouter une ville ou un secteur
-          </button>
         </div>
       </div>
       <LocationMap cities={selectedCities} />
@@ -531,16 +527,22 @@ function StepLocation({ form }: StepProps) {
 function StepProperty({ form }: StepProps) {
   const { setValue, watch, register } = form;
   const property = watch("property");
+  const characteristics = watch("characteristics");
+
+  function updateCounter(path: keyof BuyerSearchFormData["characteristics"], delta: number, min: number) {
+    const value = characteristics[path] ?? min;
+    setValue(`characteristics.${path}`, Math.max(min, value + delta), { shouldDirty: true, shouldValidate: true });
+  }
 
   return (
     <section className={styles.twoColumn}>
-      <div className={styles.formColumn}>
-        <div className={styles.optionBlock}>
+      <div className={`${styles.formColumn} ${styles.compactSearchForm}`}>
+        <div className={styles.compactSection}>
           <h3>Type de bien recherche</h3>
-          <div className={styles.propertyCards}>
+          <div className={styles.compactPropertyCards}>
             {(["house", "apartment", "indifferent"] as const).map((type) => (
               <button
-                className={styles.choiceCard}
+                className={styles.compactChoiceCard}
                 data-selected={property.type === type || undefined}
                 type="button"
                 key={type}
@@ -554,7 +556,7 @@ function StepProperty({ form }: StepProps) {
           </div>
           <FormError errors={form.formState.errors} path="property.type" />
         </div>
-        <div className={styles.fieldGrid}>
+        <div className={styles.compactFieldGrid}>
           <label className={styles.field}>
             Budget ideal
             <input type="number" inputMode="numeric" {...register("property.idealBudget", { valueAsNumber: true })} />
@@ -566,6 +568,46 @@ function StepProperty({ form }: StepProps) {
             <span className={styles.hint}>Hors frais de notaire</span>
             <FormError errors={form.formState.errors} path="property.maximumBudget" />
           </label>
+        </div>
+        <label className={styles.rangeField}>
+          <span>
+            Surface habitable minimale
+            <strong>{characteristics.minimumLivingArea ?? 90} m2</strong>
+          </span>
+          <input
+            type="range"
+            min={20}
+            max={300}
+            step={5}
+            value={characteristics.minimumLivingArea ?? 90}
+            onChange={(event) =>
+              setValue("characteristics.minimumLivingArea", Number(event.target.value), {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
+          <FormError errors={form.formState.errors} path="characteristics.minimumLivingArea" />
+        </label>
+        <div className={styles.compactCounters}>
+          <CounterInput
+            label="Pieces min."
+            value={characteristics.minimumRooms ?? 1}
+            onMinus={() => updateCounter("minimumRooms", -1, 1)}
+            onPlus={() => updateCounter("minimumRooms", 1, 1)}
+          />
+          <CounterInput
+            label="Chambres min."
+            value={characteristics.minimumBedrooms ?? 0}
+            onMinus={() => updateCounter("minimumBedrooms", -1, 0)}
+            onPlus={() => updateCounter("minimumBedrooms", 1, 0)}
+          />
+          <CounterInput
+            label="Salles d'eau min."
+            value={characteristics.minimumBathrooms ?? 0}
+            onMinus={() => updateCounter("minimumBathrooms", -1, 0)}
+            onPlus={() => updateCounter("minimumBathrooms", 1, 0)}
+          />
         </div>
         <InfoLine text="Ces informations nous aident a vous proposer les biens les plus pertinents." />
       </div>
@@ -1328,6 +1370,14 @@ function firstErrorMessage(errors: FieldErrors<BuyerSearchFormData>, scope: Wiza
   const scopedErrors = (errors as Record<string, unknown>)[scope];
   const stack: unknown[] = scopedErrors ? [scopedErrors] : [];
 
+  if (scope === "property") {
+    const characteristicErrors = (errors as Record<string, unknown>).characteristics;
+
+    if (characteristicErrors) {
+      stack.push(characteristicErrors);
+    }
+  }
+
   while (stack.length > 0) {
     const current = stack.shift();
     if (!current || typeof current !== "object") {
@@ -1347,8 +1397,8 @@ function getSummaryRows(data: BuyerSearchFormData) {
     { icon: Home, title: "Bien recherche", value: data.property.type ? propertyTypeLabels[data.property.type] : "Non renseigne", step: "property" as const },
     { icon: MapPin, title: "Localisation", value: formatLocationSummary(data.location.cities), step: "location" as const },
     { icon: WalletCards, title: "Budget", value: `Ideal : ${formatCurrency(data.property.idealBudget)} - Max : ${formatCurrency(data.property.maximumBudget)}`, step: "property" as const },
-    { icon: Ruler, title: "Surface", value: `Minimum ${data.characteristics.minimumLivingArea ?? 0} m2`, step: "characteristics" as const },
-    { icon: BedDouble, title: "Pieces et chambres", value: `${data.characteristics.minimumRooms ?? 0} pieces min. - ${data.characteristics.minimumBedrooms ?? 0} chambres min.`, step: "characteristics" as const },
+    { icon: Ruler, title: "Surface", value: `Minimum ${data.characteristics.minimumLivingArea ?? 0} m2`, step: "property" as const },
+    { icon: BedDouble, title: "Pieces et chambres", value: `${data.characteristics.minimumRooms ?? 0} pieces min. - ${data.characteristics.minimumBedrooms ?? 0} chambres min.`, step: "property" as const },
     { icon: Car, title: "Stationnement", value: labelsFor(data, "parking") || "Non renseigne", step: "preferences" as const },
     { icon: Trees, title: "Exterieur", value: labelsFor(data, "outdoor") || "Non renseigne", step: "preferences" as const },
     { icon: Sparkles, title: "Travaux", value: labelsFor(data, "works") || "Non renseigne", step: "preferences" as const },
