@@ -280,6 +280,14 @@
   color: #77808f;
 }
 
+.suggestions p {
+  margin: 0;
+  padding: 10px 12px;
+  color: #697080;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .optionBlock {
   display: grid;
   gap: 14px;

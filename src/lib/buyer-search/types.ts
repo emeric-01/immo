@@ -7,6 +7,8 @@ export type BuyerSearchFormData = {
     cities: Array<{
       name: string;
       postalCode?: string;
+      postalCodes?: string[];
+      cityCode?: string;
       latitude?: number;
       longitude?: number;
     }>;

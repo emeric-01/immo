@@ -362,47 +362,109 @@ function StepLocation({ form }: StepProps) {
   const { setValue, watch } = form;
   const location = watch("location");
   const [query, setQuery] = useState("");
-  const filteredCities = citySuggestions.filter((city) =>
-    city.name.toLowerCase().includes(query.trim().toLowerCase()),
+  const [cityResults, setCityResults] = useState<BuyerSearchCity[]>([]);
+  const [isSearchingCities, setIsSearchingCities] = useState(false);
+  const filteredCities = cityResults.filter(
+    (city) => !location.cities.some((selectedCity) => getCityKey(selectedCity) === getCityKey(city)),
   );
 
+  useEffect(() => {
+    const normalizedQuery = query.trim();
+
+    if (normalizedQuery.length < 2) {
+      setCityResults([]);
+      setIsSearchingCities(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const debounce = window.setTimeout(async () => {
+      setIsSearchingCities(true);
+
+      try {
+        const response = await fetch(`/api/communes?q=${encodeURIComponent(normalizedQuery)}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("La recherche de communes est indisponible.");
+        }
+
+        const results = (await response.json()) as BuyerSearchCity[];
+        setCityResults(results);
+      } catch {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        const localResults = citySuggestions.filter((city) =>
+          `${city.name} ${city.postalCode ?? ""}`.toLowerCase().includes(normalizedQuery.toLowerCase()),
+        );
+        setCityResults(localResults);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearchingCities(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(debounce);
+    };
+  }, [query]);
+
   function addCity(city: BuyerSearchCity) {
-    if (location.cities.some((candidate) => candidate.name === city.name)) {
+    if (location.cities.some((candidate) => getCityKey(candidate) === getCityKey(city))) {
       return;
     }
     setValue("location.cities", [...location.cities, city], { shouldDirty: true, shouldValidate: true });
     setQuery("");
+    setCityResults([]);
   }
 
-  function removeCity(name: string) {
+  function removeCity(cityToRemove: BuyerSearchCity) {
     setValue(
       "location.cities",
-      location.cities.filter((city) => city.name !== name),
+      location.cities.filter((city) => getCityKey(city) !== getCityKey(cityToRemove)),
       { shouldDirty: true, shouldValidate: true },
     );
+  }
+
+  function addSuggestedCity() {
+    const city = filteredCities[0] ?? citySuggestions.find((suggestion) =>
+      location.cities.every((selectedCity) => getCityKey(selectedCity) !== getCityKey(suggestion)),
+    );
+
+    if (city) {
+      addCity(city);
+    }
   }
 
   return (
     <section className={styles.twoColumn}>
       <div className={styles.formColumn}>
         <label className={styles.field}>
-          Rechercher une ville ou un quartier
+          Rechercher une ville ou un code postal
           <span className={styles.searchInput}>
             <MapPin size={18} aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Rechercher une ville, un quartier..."
+              placeholder="Rechercher une ville ou un code postal..."
             />
           </span>
         </label>
-        {query ? (
+        {query.trim().length >= 2 ? (
           <div className={styles.suggestions} role="listbox">
             {filteredCities.map((city) => (
-              <button type="button" key={city.name} onClick={() => addCity(city)}>
-                {city.name} <span>{city.postalCode}</span>
+              <button type="button" key={getCityKey(city)} onClick={() => addCity(city)}>
+                {city.name} <span>{formatCityPostalCodes(city)}</span>
               </button>
             ))}
+            {filteredCities.length === 0 ? (
+              <p>{isSearchingCities ? "Recherche en cours..." : "Aucune commune trouvee pour cette recherche."}</p>
+            ) : null}
           </div>
         ) : null}
         <FormError errors={form.formState.errors} path="location.cities" />
@@ -410,13 +472,13 @@ function StepLocation({ form }: StepProps) {
           <h3>Villes ou secteurs selectionnes</h3>
           <div className={styles.tags}>
             {location.cities.map((city) => (
-              <button className={styles.tag} type="button" key={city.name} onClick={() => removeCity(city.name)}>
+              <button className={styles.tag} type="button" key={getCityKey(city)} onClick={() => removeCity(city)}>
                 {city.name}
                 <span aria-hidden="true">x</span>
               </button>
             ))}
           </div>
-          <button className={styles.addButton} type="button" onClick={() => addCity(citySuggestions[0])}>
+          <button className={styles.addButton} type="button" onClick={addSuggestedCity}>
             <Plus size={18} aria-hidden="true" />
             Ajouter une ville ou un secteur
           </button>
@@ -912,6 +974,16 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
       )}
     </aside>
   );
+}
+
+function getCityKey(city: BuyerSearchCity) {
+  return city.cityCode ?? `${city.name}-${city.postalCode ?? ""}`;
+}
+
+function formatCityPostalCodes(city: BuyerSearchCity) {
+  const postalCodes = city.postalCodes?.length ? city.postalCodes : city.postalCode ? [city.postalCode] : [];
+
+  return postalCodes.slice(0, 3).join(", ");
 }
 
 function getMapCenter(cities: BuyerSearchCity[]): [number, number] {
