@@ -367,6 +367,7 @@ function buildBuyerSearchRow(
     },
     minimum_bathrooms: data.characteristics.minimumBathrooms,
     minimum_bedrooms: data.characteristics.minimumBedrooms,
+    minimum_land_area: data.preferences.minimumLandArea ?? null,
     minimum_living_area: data.characteristics.minimumLivingArea,
     minimum_rooms: data.characteristics.minimumRooms,
     postal_codes: postalCodes,

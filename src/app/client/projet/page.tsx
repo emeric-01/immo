@@ -59,6 +59,9 @@ function ProjectView({ search }: { search: ClientBuyerSearchRow }) {
             <Metric icon={MapPin} label="Localisation" value={search.location_summary || formatLocationSummary(data)} />
             <Metric icon={Euro} label="Budget maximum" value={formatCurrency(search.maximum_budget ?? data.property.maximumBudget)} />
             <Metric icon={Ruler} label="Surface minimale" value={`${search.minimum_living_area ?? data.characteristics.minimumLivingArea ?? 0} m2`} />
+            {search.minimum_land_area ?? data.preferences.minimumLandArea ? (
+              <Metric icon={Ruler} label="Terrain minimum" value={`${search.minimum_land_area ?? data.preferences.minimumLandArea} m2`} />
+            ) : null}
             <Metric icon={BedDouble} label="Chambres min." value={`${search.minimum_bedrooms ?? data.characteristics.minimumBedrooms ?? 0}`} />
             <Metric
               icon={CalendarDays}

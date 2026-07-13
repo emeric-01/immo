@@ -323,11 +323,12 @@ function buildAdminContactBlock(data: BuyerSearchFormData) {
 }
 
 function buildSearchSummary(data: BuyerSearchFormData) {
-  const rows = [
+  const rows: Array<[string, string]> = [
     ["Type de bien", formatPropertyTypes(data)],
     ["Localisation", formatLocationSummary(data)],
     ["Budget maximum", formatCurrency(data.property.maximumBudget)],
     ["Surface minimale", `${data.characteristics.minimumLivingArea ?? 0} m2`],
+    ...(data.preferences.minimumLandArea ? ([["Terrain minimum", `${data.preferences.minimumLandArea} m2`]] as Array<[string, string]>) : []),
     ["Chambres min.", String(data.characteristics.minimumBedrooms ?? 0)],
     ["Delai d'achat", optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline) || "Non renseigne"],
   ];
@@ -379,7 +380,8 @@ function formatTextSummary(data: BuyerSearchFormData) {
     `Localisation : ${formatLocationSummary(data)}`,
     `Budget maximum : ${formatCurrency(data.property.maximumBudget)}`,
     `Surface minimale : ${data.characteristics.minimumLivingArea ?? 0} m2`,
-  ].join("\n");
+    data.preferences.minimumLandArea ? `Terrain minimum : ${data.preferences.minimumLandArea} m2` : "",
+  ].filter(Boolean).join("\n");
 }
 
 function formatPropertyTypes(data: BuyerSearchFormData) {

@@ -24,6 +24,7 @@ export type ClientBuyerSearchRow = {
   location_summary: string | null;
   maximum_budget: number | null;
   minimum_bedrooms: number | null;
+  minimum_land_area: number | null;
   minimum_living_area: number | null;
   property_types: PropertyType[];
   purchase_timeline: string | null;

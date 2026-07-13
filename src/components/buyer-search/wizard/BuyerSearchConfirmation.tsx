@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, KeyRound } from "lucide-react";
+import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, KeyRound, Ruler } from "lucide-react";
 import {
   normalizePropertyTypes,
   optionLabel,
@@ -37,6 +37,9 @@ export function BuyerSearchConfirmation() {
             <ConfirmationItem icon={Home} title="Type de bien" value={formatPropertyTypes(data)} />
             <ConfirmationItem icon={MapPin} title="Localisation" value={formatLocationSummary(data.location.cities)} />
             <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
+            {data.preferences.minimumLandArea ? (
+              <ConfirmationItem icon={Ruler} title="Terrain minimum" value={`${data.preferences.minimumLandArea} m2`} />
+            ) : null}
             <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
             <ConfirmationItem icon={CalendarDays} title="Delai d'achat" value={optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline)} />
           </div>

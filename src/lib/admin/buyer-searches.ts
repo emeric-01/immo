@@ -27,6 +27,7 @@ export type AdminBuyerSearchRow = {
   metadata: Record<string, unknown>;
   minimum_bathrooms: number | null;
   minimum_bedrooms: number | null;
+  minimum_land_area: number | null;
   minimum_living_area: number | null;
   minimum_rooms: number | null;
   notes: string | null;
@@ -119,7 +120,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to",
+      "id,created_at,updated_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to",
   });
 
   if (filters.status && filters.status !== "all") {
@@ -244,6 +245,7 @@ export function formatAdminPropertyTypes(types: PropertyType[] = []) {
 export function formatAdminPreferences(search: AdminBuyerSearchRow) {
   const labels = new Map(allPreferenceOptions(search.property_types).map((option) => [option.key, option.label]));
   const preferences = search.preferences;
+  const minimumLandArea = search.minimum_land_area ?? preferences.minimumLandArea ?? null;
 
   return [
     ...preferences.parking,
@@ -253,7 +255,13 @@ export function formatAdminPreferences(search: AdminBuyerSearchRow) {
     ...preferences.houseEquipment,
     ...preferences.works,
     ...preferences.environment,
-  ].map((key) => labels.get(key) ?? key);
+  ].map((key) => {
+    if (key === "minimum_land_area" && minimumLandArea) {
+      return `Surface terrain min. ${minimumLandArea} m2`;
+    }
+
+    return labels.get(key) ?? key;
+  });
 }
 
 export function formatPreferredChannel(channel: AdminBuyerSearchRow["preferred_channel"]) {

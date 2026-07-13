@@ -100,6 +100,7 @@ const stepCopy: Record<WizardStepId, { title: string; subtitle?: string }> = {
 };
 
 const DEFAULT_CITY_RADIUS_KM = 2;
+const DEFAULT_MINIMUM_LAND_AREA = 500;
 const CHARACTERISTIC_COUNTERS_RESET_KEY = "les-jumelles:buyer-search:counters-reset-v1";
 const PREFERENCES_RESET_KEY = "les-jumelles:buyer-search:preferences-reset-v1";
 const EQUIPMENT_ICONS = {
@@ -753,12 +754,35 @@ function StepPreferences({ form }: StepProps) {
     }
     const next = current.includes(key) ? current.filter((value) => value !== key) : [...current, key];
     setValue(`preferences.${group}`, next, { shouldDirty: true });
+
+    if (key === "minimum_land_area") {
+      setValue("preferences.minimumLandArea", current.includes(key) ? null : (preferences.minimumLandArea ?? DEFAULT_MINIMUM_LAND_AREA), {
+        shouldDirty: true,
+      });
+    }
+  }
+
+  function updateMinimumLandArea(value: number) {
+    if (!preferences.outdoor.includes("minimum_land_area")) {
+      setValue("preferences.outdoor", [...preferences.outdoor, "minimum_land_area"], { shouldDirty: true });
+    }
+
+    setValue("preferences.minimumLandArea", value, { shouldDirty: true });
   }
 
   return (
     <section className={styles.preferenceGrid}>
       <PreferenceGroup title="Stationnement" icon={Car} iconSrc={EQUIPMENT_ICONS.parking} options={groups.parking} selected={preferences.parking} onToggle={(key) => toggle("parking", key)} />
-      <PreferenceGroup title={selectedPropertyTypes.length === 1 && selectedPropertyTypes[0] === "apartment" ? "Exterieur" : "Exterieur et terrain"} icon={Trees} iconSrc={EQUIPMENT_ICONS.outdoor} options={groups.outdoor} selected={preferences.outdoor} onToggle={(key) => toggle("outdoor", key)} />
+      <PreferenceGroup
+        title={selectedPropertyTypes.length === 1 && selectedPropertyTypes[0] === "apartment" ? "Exterieur" : "Exterieur et terrain"}
+        icon={Trees}
+        iconSrc={EQUIPMENT_ICONS.outdoor}
+        options={groups.outdoor}
+        selected={preferences.outdoor}
+        onToggle={(key) => toggle("outdoor", key)}
+        minimumLandArea={preferences.minimumLandArea}
+        onMinimumLandAreaChange={updateMinimumLandArea}
+      />
       {groups.buildingComfort.length > 0 ? (
         <PreferenceGroup title="Confort de l'immeuble" icon={Building2} iconSrc={EQUIPMENT_ICONS.buildingComfort} options={groups.buildingComfort} selected={preferences.buildingComfort} onToggle={(key) => toggle("buildingComfort", key)} />
       ) : null}
@@ -1201,6 +1225,8 @@ function resetPreferenceSelections(data: BuyerSearchFormData): BuyerSearchFormDa
       houseEquipment: [],
       works: [],
       environment: [],
+      maximumFloor: null,
+      minimumLandArea: null,
     },
   };
 }
@@ -1312,6 +1338,8 @@ function PreferenceGroup({
   title,
   icon,
   iconSrc,
+  minimumLandArea,
+  onMinimumLandAreaChange,
   options,
   selected,
   onToggle,
@@ -1320,6 +1348,8 @@ function PreferenceGroup({
   title: string;
   icon: typeof Home;
   iconSrc?: string;
+  minimumLandArea?: number | null;
+  onMinimumLandAreaChange?: (value: number) => void;
   options: Array<{ key: string; label: string; helper?: string }>;
   selected: string[];
   onToggle: (key: string) => void;
@@ -1333,19 +1363,43 @@ function PreferenceGroup({
       </div>
       <div className={styles.preferenceOptions}>
         {options.map((option) => (
-          <button
-            className={styles.preferenceOption}
-            data-selected={selected.includes(option.key) || undefined}
-            type="button"
-            key={option.key}
-            onClick={() => onToggle(option.key)}
-          >
-            <span className={styles.preferenceOptionText}>
-              <span>{option.label}</span>
-              {option.helper ? <small>{option.helper}</small> : null}
-            </span>
-            <span className={styles.checkCircle}>{selected.includes(option.key) ? <Check size={14} /> : null}</span>
-          </button>
+          <div className={styles.preferenceOptionWrapper} key={option.key}>
+            <button
+              className={styles.preferenceOption}
+              data-selected={selected.includes(option.key) || undefined}
+              type="button"
+              onClick={() => onToggle(option.key)}
+            >
+              <span className={styles.preferenceOptionText}>
+                <span>{option.label}</span>
+                {option.helper ? <small>{option.helper}</small> : null}
+              </span>
+              <span className={styles.checkCircle}>{selected.includes(option.key) ? <Check size={14} /> : null}</span>
+            </button>
+            {option.key === "minimum_land_area" && selected.includes(option.key) && onMinimumLandAreaChange ? (
+              <div className={styles.preferenceRange}>
+                <span>
+                  Surface souhaitee
+                  <strong>{minimumLandArea ?? DEFAULT_MINIMUM_LAND_AREA} m2</strong>
+                </span>
+                <input
+                  aria-label="Surface de terrain minimum souhaitee"
+                  type="range"
+                  min="100"
+                  max="3000"
+                  step="50"
+                  value={minimumLandArea ?? DEFAULT_MINIMUM_LAND_AREA}
+                  onChange={(event) => onMinimumLandAreaChange(Number(event.target.value))}
+                />
+                <span className={styles.rangeTicks} aria-hidden="true">
+                  <small>100</small>
+                  <small>750</small>
+                  <small>1500</small>
+                  <small>3000 m2</small>
+                </span>
+              </div>
+            ) : null}
+          </div>
         ))}
       </div>
     </article>
@@ -1534,7 +1588,16 @@ function labelsFor(data: BuyerSearchFormData, group: keyof BuyerSearchFormData["
     return "";
   }
   const options = allPreferenceOptions(data.property.types?.length ? data.property.types : data.property.type);
-  return selected.map((key) => optionLabel(options, key)).filter(Boolean).join(", ");
+  return selected
+    .map((key) => {
+      if (key === "minimum_land_area" && data.preferences.minimumLandArea) {
+        return `Terrain ${data.preferences.minimumLandArea} m2 min.`;
+      }
+
+      return optionLabel(options, key);
+    })
+    .filter(Boolean)
+    .join(", ");
 }
 
 function buildPriorityItems(data: BuyerSearchFormData): BuyerSearchFormData["priorities"] {
@@ -1545,11 +1608,12 @@ function buildPriorityItems(data: BuyerSearchFormData): BuyerSearchFormData["pri
     .flatMap(([group, values]) =>
       (values as string[]).map((value) => {
         const option = options.find((candidate) => candidate.key === value);
+        const isMinimumLandArea = value === "minimum_land_area" && typeof data.preferences.minimumLandArea === "number";
         return option
           ? {
               key: `${group}-${value}`,
-              label: option.label,
-              value,
+              label: isMinimumLandArea ? `Surface terrain min. ${data.preferences.minimumLandArea} m2` : option.label,
+              value: isMinimumLandArea ? String(data.preferences.minimumLandArea) : value,
               category: option.category,
               level: existing.get(`${group}-${value}`) ?? "desired",
             }

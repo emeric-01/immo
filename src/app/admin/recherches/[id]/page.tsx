@@ -203,8 +203,22 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function formatSpace(search: { minimum_bathrooms: number | null; minimum_bedrooms: number | null; minimum_living_area: number | null; minimum_rooms: number | null }) {
-  return `${search.minimum_living_area ?? 0} m2 - ${search.minimum_rooms ?? 0} pieces - ${search.minimum_bedrooms ?? 0} chambres - ${search.minimum_bathrooms ?? 0} sde`;
+function formatSpace(search: {
+  minimum_bathrooms: number | null;
+  minimum_bedrooms: number | null;
+  minimum_land_area: number | null;
+  minimum_living_area: number | null;
+  minimum_rooms: number | null;
+}) {
+  return [
+    `${search.minimum_living_area ?? 0} m2 hab.`,
+    search.minimum_land_area ? `${search.minimum_land_area} m2 terrain` : null,
+    `${search.minimum_rooms ?? 0} pieces`,
+    `${search.minimum_bedrooms ?? 0} chambres`,
+    `${search.minimum_bathrooms ?? 0} sde`,
+  ]
+    .filter(Boolean)
+    .join(" - ");
 }
 
 function formatProject(search: { current_situation: string | null; financing_status: string | null; purchase_timeline: string | null }) {
