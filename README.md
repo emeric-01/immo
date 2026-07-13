@@ -73,9 +73,12 @@ src/lib/buyer-search/types.ts
 
 Points prevus pour Supabase en phase suivante :
 
-- remplacer `submitBuyerSearch` par une mutation serveur ;
-- connecter `BuyerSearchFormData` aux tables `buyer_searches`,
-  `search_locations`, `search_criteria` et `consents` ;
+- `submitBuyerSearch` appelle maintenant `POST /api/buyer-searches` ;
+- la migration `supabase/migrations/20260713170000_create_buyer_searches.sql`
+  cree les tables `buyer_searches`, `buyer_search_locations`,
+  `buyer_search_priorities` et `buyer_search_consents` ;
+- si Supabase n'est pas configure, la confirmation reste disponible via
+  le stockage local du navigateur ;
 - remplacer le stockage local par un brouillon authentifie ;
 - ajouter RLS, espace client et back-office admin.
 

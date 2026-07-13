@@ -1,14 +1,23 @@
 import { saveSubmittedBuyerSearch } from "./storage";
 import type { BuyerSearchFormData } from "./types";
+import type { BuyerSearchSubmissionResult } from "./database";
 
-export async function submitBuyerSearch(data: BuyerSearchFormData) {
+export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<BuyerSearchSubmissionResult> {
   saveSubmittedBuyerSearch(data);
 
-  if (process.env.NODE_ENV === "development") {
-    console.info("Buyer search submitted", data);
+  const response = await fetch("/api/buyer-searches", {
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+
+  const result = (await response.json()) as BuyerSearchSubmissionResult | { error?: string };
+
+  if (!response.ok) {
+    throw new Error("error" in result && result.error ? result.error : "La recherche n'a pas pu etre enregistree.");
   }
 
-  return {
-    id: `local-${Date.now()}`,
-  };
+  return result as BuyerSearchSubmissionResult;
 }

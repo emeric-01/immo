@@ -260,8 +260,17 @@ export function BuyerSearchWizard() {
       ...values,
       priorities: values.priorities.length > 0 ? values.priorities : buildPriorityItems(values),
     };
-    await submitBuyerSearch(finalData);
-    router.push("/recherche/confirmation");
+
+    try {
+      await submitBuyerSearch(finalData);
+      router.push("/recherche/confirmation");
+    } catch {
+      setError("contact.consent" as never, {
+        type: "manual",
+        message: "La recherche n'a pas pu etre enregistree. Reessayez dans quelques instants.",
+      });
+      window.setTimeout(() => firstErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
+    }
   }
 
   const stepComponent = (
