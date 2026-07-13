@@ -32,6 +32,7 @@ Routes utiles :
 http://localhost:3001/                      # module d'estimation existant
 http://localhost:3001/recherche             # formulaire public de recherche acheteurs
 http://localhost:3001/recherche-acheteurs   # demo Phase 1 du design system acheteurs
+http://localhost:3001/admin/recherches      # espace admin des recherches acheteurs
 ```
 
 ## Recherche acheteurs
@@ -80,7 +81,23 @@ Points prevus pour Supabase en phase suivante :
 - si Supabase n'est pas configure, la confirmation reste disponible via
   le stockage local du navigateur ;
 - remplacer le stockage local par un brouillon authentifie ;
-- ajouter RLS, espace client et back-office admin.
+- ajouter l'espace client.
+
+## Espace admin recherches
+
+L'espace admin est disponible sur `/admin/recherches`.
+
+Variables necessaires :
+
+```env
+ADMIN_ACCESS_TOKEN=""
+NEXT_PUBLIC_SUPABASE_URL=""
+SUPABASE_SERVICE_ROLE_KEY=""
+```
+
+`ADMIN_ACCESS_TOKEN` protege l'acces par cookie HTTP-only.
+`SUPABASE_SERVICE_ROLE_KEY` est utilisee uniquement cote serveur pour lire
+les formulaires et ne doit jamais etre exposee avec le prefixe `NEXT_PUBLIC_`.
 
 Commandes de verification locales :
 

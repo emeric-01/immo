@@ -1,0 +1,516 @@
+.adminPage,
+.detailPage,
+.loginPage {
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at top left, rgba(213, 181, 143, 0.16), transparent 34rem),
+    linear-gradient(180deg, #ffffff 0%, #f7f5f2 100%);
+  color: #121212;
+}
+
+.adminPage {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  flex-direction: column;
+  gap: 44px;
+  border-right: 1px solid #e4ddd5;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 28px 22px;
+}
+
+.brandMark {
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+}
+
+.brandMark span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-style: italic;
+}
+
+.brandMark strong {
+  color: #d2a476;
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar a {
+  border-radius: 8px;
+  color: #6e7280;
+  padding: 12px 14px;
+  text-decoration: none;
+}
+
+.sidebar a[data-active] {
+  background: #111111;
+  color: #ffffff;
+}
+
+.content {
+  display: grid;
+  gap: 24px;
+  padding: 40px;
+}
+
+.pageHeader,
+.detailHeroGrid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.pageHeader h1,
+.detailHero h1,
+.loginPanel h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.pageHeader p,
+.detailHero p,
+.loginPanel p {
+  max-width: 640px;
+  color: #616878;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #d2a476;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.secondaryButton,
+.filterBar button,
+.loginForm button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #111111;
+  color: #ffffff;
+  padding: 0 18px;
+  font-weight: 700;
+}
+
+.secondaryButton {
+  border: 1px solid #e2d8ce;
+  background: #ffffff;
+  color: #111111;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.statCard,
+.infoPanel,
+.emptyState,
+.tablePanel,
+.loginPanel {
+  border: 1px solid #e3dcd4;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
+}
+
+.statCard {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.statCard span,
+.metricRow > span,
+.clientCell > span,
+.loginIcon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f6eee6;
+  color: #70401e;
+}
+
+.statCard p,
+.statCard strong {
+  margin: 0;
+}
+
+.statCard p,
+.metricRow small,
+.tablePanel small,
+.mutedText {
+  color: #707789;
+}
+
+.statCard strong {
+  font-size: 1.45rem;
+}
+
+.filterBar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 220px 120px;
+  gap: 12px;
+}
+
+.searchField {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.searchField,
+.filterBar select,
+.loginForm input {
+  min-height: 48px;
+  border: 1px solid #d7dfe9;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0 14px;
+}
+
+.searchField input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+}
+
+.tablePanel {
+  overflow: hidden;
+}
+
+.tablePanel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tablePanel th {
+  background: #faf8f5;
+  color: #727988;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.tablePanel th,
+.tablePanel td {
+  border-bottom: 1px solid #ebe5df;
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.tablePanel tr:last-child td {
+  border-bottom: 0;
+}
+
+.tablePanel td > strong,
+.tablePanel td > small {
+  display: block;
+}
+
+.clientCell {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid #d9c7b6;
+  border-radius: 999px;
+  background: #fbf7f2;
+  padding: 0 10px;
+  color: #70401e;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.statusBadge[data-status="new"] {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.statusBadge[data-status="matched"] {
+  border-color: #8eb999;
+  background: #eef7f0;
+  color: #246034;
+}
+
+.iconLink,
+.backLink,
+.contactBox a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111111;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.iconLink {
+  width: 38px;
+  height: 38px;
+  justify-content: center;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 54px 24px;
+  text-align: center;
+}
+
+.emptyState h1,
+.emptyState h2,
+.infoPanel h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.emptyState p {
+  max-width: 540px;
+  margin: 0;
+  color: #667085;
+}
+
+.detailPage {
+  padding: 30px;
+}
+
+.detailShell {
+  display: grid;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.detailHero {
+  display: grid;
+  gap: 28px;
+  padding: 22px 0 8px;
+}
+
+.contactBox {
+  display: grid;
+  gap: 10px;
+  min-width: 280px;
+  border: 1px solid #e3dcd4;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.infoPanel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 20px;
+}
+
+.infoPanel[data-wide] {
+  grid-column: 1 / -1;
+}
+
+.metricRow,
+.locationList > div,
+.priorityList > div {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-bottom: 1px solid #eee7df;
+  padding-bottom: 12px;
+}
+
+.metricRow:last-child,
+.locationList > div:last-child,
+.priorityList > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.metricRow div,
+.locationList div div,
+.priorityList div div {
+  display: grid;
+  gap: 3px;
+}
+
+.metricRow strong,
+.locationList strong,
+.priorityList strong {
+  color: #111111;
+}
+
+.locationList,
+.priorityList {
+  display: grid;
+  gap: 12px;
+}
+
+.locationList svg,
+.priorityList svg {
+  color: #70401e;
+}
+
+.tagGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagGrid span {
+  border: 1px solid #dfd5ca;
+  border-radius: 999px;
+  background: #fbf7f2;
+  padding: 8px 10px;
+  color: #4f3725;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.contactSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.consentText {
+  margin: 0;
+  border: 1px solid #ead8c7;
+  border-radius: 8px;
+  background: #fbf7f2;
+  padding: 14px;
+  color: #4d5566;
+}
+
+.loginPage {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.loginPanel {
+  display: grid;
+  width: min(100%, 430px);
+  gap: 18px;
+  justify-items: center;
+  padding: 34px;
+  text-align: center;
+}
+
+.loginIcon {
+  width: 54px;
+  height: 54px;
+}
+
+.loginForm {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  text-align: left;
+}
+
+.noticeBox {
+  border: 1px solid #ead8c7;
+  border-radius: 8px;
+  background: #fbf7f2;
+  padding: 14px;
+  color: #5f4630;
+}
+
+.errorText {
+  margin: 0;
+  color: #a33a2b;
+  font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+  .adminPage {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .statsGrid,
+  .contactSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .content,
+  .detailPage {
+    padding: 22px 14px;
+  }
+
+  .pageHeader,
+  .detailHeroGrid {
+    display: grid;
+  }
+
+  .filterBar,
+  .statsGrid,
+  .contactSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .tablePanel {
+    overflow-x: auto;
+  }
+
+  .tablePanel table {
+    min-width: 820px;
+  }
+}

@@ -1,0 +1,49 @@
+import type { Metadata } from "next";
+import { LockKeyhole } from "lucide-react";
+import { isAdminAccessConfigured } from "@/lib/admin/auth";
+import { loginAdmin } from "./actions";
+import styles from "../admin.module.css";
+
+export const metadata: Metadata = {
+  title: "Admin | Les Jumelles Immo",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const hasError = params.error === "1";
+  const isConfigured = isAdminAccessConfigured();
+
+  return (
+    <main className={styles.loginPage}>
+      <section className={styles.loginPanel}>
+        <div className={styles.brandMark}>
+          <span>les jumelles</span>
+          <strong>IMMO</strong>
+        </div>
+        <div className={styles.loginIcon}>
+          <LockKeyhole size={24} aria-hidden="true" />
+        </div>
+        <h1>Espace admin</h1>
+        <p>Acces reserve a l&apos;equipe Les Jumelles Immo pour suivre les recherches acheteurs.</p>
+        {!isConfigured ? (
+          <div className={styles.noticeBox}>
+          Configurez d&apos;abord <strong>ADMIN_ACCESS_TOKEN</strong> dans les variables d&apos;environnement.
+          </div>
+        ) : (
+          <form action={loginAdmin} className={styles.loginForm}>
+            <label htmlFor="token">Code d&apos;acces</label>
+            <input id="token" name="token" type="password" placeholder="Votre code admin" required />
+            {hasError ? <p className={styles.errorText}>Code incorrect.</p> : null}
+            <button type="submit">Entrer dans l&apos;admin</button>
+          </form>
+        )}
+      </section>
+    </main>
+  );
+}
