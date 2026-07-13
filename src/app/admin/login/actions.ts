@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { clearAdminSession, setAdminSession } from "@/lib/admin/auth";
 
 export async function loginAdmin(formData: FormData) {
-  const token = String(formData.get("token") ?? "");
-  const success = await setAdminSession(token);
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const success = await setAdminSession(email, password);
 
   if (!success) {
     redirect("/admin/login?error=1");

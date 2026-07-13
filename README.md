@@ -91,11 +91,15 @@ Variables necessaires :
 
 ```env
 ADMIN_ACCESS_TOKEN=""
+ADMIN_SESSION_SECRET=""
 NEXT_PUBLIC_SUPABASE_URL=""
 SUPABASE_SERVICE_ROLE_KEY=""
 ```
 
-`ADMIN_ACCESS_TOKEN` protege l'acces par cookie HTTP-only.
+`ADMIN_ACCESS_TOKEN` sert d'acces bootstrap provisoire.
+Les utilisateurs admin sont ensuite geres dans la table `admin_users`
+depuis `/admin/utilisateurs`.
+`ADMIN_SESSION_SECRET` signe le cookie HTTP-only de session.
 `SUPABASE_SERVICE_ROLE_KEY` est utilisee uniquement cote serveur pour lire
 les formulaires et ne doit jamais etre exposee avec le prefixe `NEXT_PUBLIC_`.
 

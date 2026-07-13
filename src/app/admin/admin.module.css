@@ -453,6 +453,13 @@
   text-align: left;
 }
 
+.helpText {
+  margin: 0;
+  color: #707789;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .noticeBox {
   border: 1px solid #ead8c7;
   border-radius: 8px;
@@ -461,10 +468,100 @@
   color: #5f4630;
 }
 
+.successText {
+  margin: 0;
+  color: #246034;
+  font-weight: 700;
+}
+
 .errorText {
   margin: 0;
   color: #a33a2b;
   font-weight: 700;
+}
+
+.sessionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid #e3dcd4;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 14px;
+  color: #4f3725;
+  font-weight: 700;
+}
+
+.userGrid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr);
+  gap: 16px;
+}
+
+.userForm {
+  display: grid;
+  gap: 10px;
+}
+
+.userForm input,
+.userForm select {
+  min-height: 46px;
+  border: 1px solid #d7dfe9;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0 12px;
+}
+
+.userForm button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  background: #111111;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.userList {
+  display: grid;
+  gap: 12px;
+}
+
+.userList > div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid #eee7df;
+  padding-bottom: 12px;
+}
+
+.userList > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.userList span {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f6eee6;
+  color: #70401e;
+}
+
+.userList div div {
+  display: grid;
+  gap: 3px;
+}
+
+.userList small {
+  color: #707789;
 }
 
 @media (max-width: 1080px) {
@@ -485,6 +582,10 @@
   }
 
   .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .userGrid {
     grid-template-columns: 1fr;
   }
 }

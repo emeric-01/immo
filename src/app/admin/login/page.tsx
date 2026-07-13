@@ -33,12 +33,15 @@ export default async function AdminLoginPage({
         <p>Acces reserve a l&apos;equipe Les Jumelles Immo pour suivre les recherches acheteurs.</p>
         {!isConfigured ? (
           <div className={styles.noticeBox}>
-          Configurez d&apos;abord <strong>ADMIN_ACCESS_TOKEN</strong> dans les variables d&apos;environnement.
+            Configurez d&apos;abord <strong>SUPABASE_SERVICE_ROLE_KEY</strong> ou <strong>ADMIN_ACCESS_TOKEN</strong>.
           </div>
         ) : (
           <form action={loginAdmin} className={styles.loginForm}>
-            <label htmlFor="token">Code d&apos;acces</label>
-            <input id="token" name="token" type="password" placeholder="Votre code admin" required />
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="admin@lesjumelles.immo" required />
+            <label htmlFor="password">Mot de passe</label>
+            <input id="password" name="password" type="password" placeholder="Votre mot de passe" required />
+            <p className={styles.helpText}>Le token bootstrap reste accepte tant qu&apos;aucun compte admin n&apos;est cree.</p>
             {hasError ? <p className={styles.errorText}>Code incorrect.</p> : null}
             <button type="submit">Entrer dans l&apos;admin</button>
           </form>
