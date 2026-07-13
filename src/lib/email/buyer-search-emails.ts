@@ -26,6 +26,7 @@ type EmailConfig = {
   apiKey: string;
   appUrl: string;
   from: string;
+  provider: "brevo" | "resend";
 };
 
 export async function sendBuyerSearchCreatedEmails({
@@ -89,22 +90,48 @@ export async function sendBuyerSearchUpdatedEmails({
 }
 
 function getEmailConfig(): EmailConfig | null {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
+  const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "auto";
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const brevoApiKey = process.env.BREVO_API_KEY?.trim();
 
-  if (!apiKey || !from) {
+  if (!from) {
     return null;
   }
 
-  return {
-    adminEmail: process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || null,
-    apiKey,
-    appUrl: getAppUrl(),
-    from,
-  };
+  if ((provider === "brevo" || provider === "auto") && brevoApiKey) {
+    return {
+      adminEmail: process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || null,
+      apiKey: brevoApiKey,
+      appUrl: getAppUrl(),
+      from,
+      provider: "brevo",
+    };
+  }
+
+  if ((provider === "resend" || provider === "auto") && resendApiKey) {
+    return {
+      adminEmail: process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || null,
+      apiKey: resendApiKey,
+      appUrl: getAppUrl(),
+      from,
+      provider: "resend",
+    };
+  }
+
+  return null;
 }
 
 async function sendEmail(config: EmailConfig, message: EmailMessage) {
+  if (config.provider === "brevo") {
+    await sendBrevoEmail(config, message);
+    return;
+  }
+
+  await sendResendEmail(config, message);
+}
+
+async function sendResendEmail(config: EmailConfig, message: EmailMessage) {
   const response = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
       from: config.from,
@@ -124,6 +151,53 @@ async function sendEmail(config: EmailConfig, message: EmailMessage) {
     const error = await response.text();
     throw new Error(`Resend email failed (${response.status}): ${error}`);
   }
+}
+
+async function sendBrevoEmail(config: EmailConfig, message: EmailMessage) {
+  const sender = parseEmailIdentity(config.from);
+  const recipients = (Array.isArray(message.to) ? message.to : [message.to]).map((recipient) => {
+    const parsedRecipient = parseEmailIdentity(recipient);
+
+    return {
+      email: parsedRecipient.email,
+      ...(parsedRecipient.name ? { name: parsedRecipient.name } : {}),
+    };
+  });
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    body: JSON.stringify({
+      htmlContent: message.html,
+      sender,
+      subject: message.subject,
+      textContent: message.text,
+      to: recipients,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": config.apiKey,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Brevo email failed (${response.status}): ${error}`);
+  }
+}
+
+function parseEmailIdentity(value: string) {
+  const match = value.match(/^\s*(?:"?([^"<]*)"?)?\s*<([^>]+)>\s*$/);
+
+  if (!match) {
+    return {
+      email: value.trim(),
+    };
+  }
+
+  return {
+    email: match[2].trim(),
+    name: match[1]?.trim() || undefined,
+  };
 }
 
 function buildClientConfirmationEmail(
