@@ -361,12 +361,19 @@ function WizardNavigation({
 function StepLocation({ form }: StepProps) {
   const { setValue, watch } = form;
   const location = watch("location");
+  const selectedCities = dedupeCities(location.cities);
   const [query, setQuery] = useState("");
   const [cityResults, setCityResults] = useState<BuyerSearchCity[]>([]);
   const [isSearchingCities, setIsSearchingCities] = useState(false);
   const filteredCities = cityResults.filter(
-    (city) => !location.cities.some((selectedCity) => getCityKey(selectedCity) === getCityKey(city)),
+    (city) => !selectedCities.some((selectedCity) => areSameCity(selectedCity, city)),
   );
+
+  useEffect(() => {
+    if (selectedCities.length !== location.cities.length) {
+      setValue("location.cities", selectedCities, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [location.cities, selectedCities, setValue]);
 
   useEffect(() => {
     const normalizedQuery = query.trim();
@@ -415,10 +422,10 @@ function StepLocation({ form }: StepProps) {
   }, [query]);
 
   function addCity(city: BuyerSearchCity) {
-    if (location.cities.some((candidate) => getCityKey(candidate) === getCityKey(city))) {
+    if (selectedCities.some((candidate) => areSameCity(candidate, city))) {
       return;
     }
-    setValue("location.cities", [...location.cities, city], { shouldDirty: true, shouldValidate: true });
+    setValue("location.cities", [...selectedCities, city], { shouldDirty: true, shouldValidate: true });
     setQuery("");
     setCityResults([]);
   }
@@ -426,14 +433,14 @@ function StepLocation({ form }: StepProps) {
   function removeCity(cityToRemove: BuyerSearchCity) {
     setValue(
       "location.cities",
-      location.cities.filter((city) => getCityKey(city) !== getCityKey(cityToRemove)),
+      selectedCities.filter((city) => !areSameCity(city, cityToRemove)),
       { shouldDirty: true, shouldValidate: true },
     );
   }
 
   function addSuggestedCity() {
     const city = filteredCities[0] ?? citySuggestions.find((suggestion) =>
-      location.cities.every((selectedCity) => getCityKey(selectedCity) !== getCityKey(suggestion)),
+      selectedCities.every((selectedCity) => !areSameCity(selectedCity, suggestion)),
     );
 
     if (city) {
@@ -471,11 +478,13 @@ function StepLocation({ form }: StepProps) {
         <div className={styles.optionBlock}>
           <h3>Villes ou secteurs selectionnes</h3>
           <div className={styles.tags}>
-            {location.cities.map((city) => (
-              <button className={styles.tag} type="button" key={getCityKey(city)} onClick={() => removeCity(city)}>
-                {city.name}
-                <span aria-hidden="true">x</span>
-              </button>
+            {selectedCities.map((city) => (
+              <span className={styles.tag} key={getCityKey(city)}>
+                <span>{city.name}</span>
+                <button type="button" onClick={() => removeCity(city)} aria-label={`Supprimer ${city.name}`}>
+                  x
+                </button>
+              </span>
             ))}
           </div>
           <button className={styles.addButton} type="button" onClick={addSuggestedCity}>
@@ -980,6 +989,28 @@ function LocationMap({ cities, radiusKm }: { cities: BuyerSearchCity[]; radiusKm
 
 function getCityKey(city: BuyerSearchCity) {
   return city.cityCode ?? `${city.name}-${city.postalCode ?? ""}`;
+}
+
+function getCityDedupKey(city: BuyerSearchCity) {
+  return city.name.trim().toLowerCase();
+}
+
+function areSameCity(firstCity: BuyerSearchCity, secondCity: BuyerSearchCity) {
+  if (firstCity.cityCode && secondCity.cityCode) {
+    return firstCity.cityCode === secondCity.cityCode;
+  }
+
+  return getCityDedupKey(firstCity) === getCityDedupKey(secondCity);
+}
+
+function dedupeCities(cities: BuyerSearchCity[]) {
+  return cities.reduce<BuyerSearchCity[]>((uniqueCities, city) => {
+    if (uniqueCities.some((candidate) => areSameCity(candidate, city))) {
+      return uniqueCities;
+    }
+
+    return [...uniqueCities, city];
+  }, []);
 }
 
 function formatCityPostalCodes(city: BuyerSearchCity) {
