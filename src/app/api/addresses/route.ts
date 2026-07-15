@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  MIN_ADDRESS_QUERY_LENGTH,
-  searchImmoDataAddresses,
-} from "@/lib/immo-data";
+import { searchBanAddresses } from "@/lib/ban-addresses";
+import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const suggestions = await searchImmoDataAddresses(query);
+    const suggestions = await searchBanAddresses(query);
 
     return NextResponse.json(suggestions);
   } catch (error) {

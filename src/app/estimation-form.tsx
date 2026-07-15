@@ -190,7 +190,7 @@ export function EstimationForm() {
     );
   }, [form.address, form.rooms, form.surfaceM2]);
 
-  const canOpenDetails = form.address.trim().length > 4;
+  const canOpenDetails = selectedAddress?.label === form.address.trim();
   const addressPlaceholder = locationHint?.city
     ? `Entrez une adresse (ex : 12 rue de la Republique, ${locationHint.city})`
     : "Entrez une adresse (ex : 12 rue de la Paix, 75002 Paris)";
@@ -376,7 +376,7 @@ export function EstimationForm() {
             ? "Recherche..."
             : selectedAddress
               ? "Adresse selectionnee"
-              : "Saisie libre possible"}
+              : "Selectionnez une adresse proposee"}
         </span>
         {suggestions.length > 0 && !selectedAddress ? (
           <div className="suggestions-list" role="listbox">
@@ -405,7 +405,7 @@ export function EstimationForm() {
         <span className="field-hint warning">{addressError}</span>
       ) : step === "refine" ? (
         <span className="field-hint">
-          Recherche Immo Data a partir de 10 caracteres.
+          Recherche dans la Base Adresse Nationale a partir de 5 caracteres.
         </span>
       ) : null}
     </label>

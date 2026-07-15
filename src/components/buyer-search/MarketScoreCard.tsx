@@ -7,12 +7,24 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
 import type { BuyerSearchMarketFactorTone, BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import { propertyTypeLabels } from "@/lib/buyer-search/options";
+import { getCityByMarketIdentifier } from "@/lib/cities";
 import styles from "./market-score-card.module.css";
 
-export function MarketScoreCard({ score }: { score: BuyerSearchMarketScore }) {
+export function MarketScoreCard({
+  score,
+  showBestMatch = true,
+}: {
+  score: BuyerSearchMarketScore;
+  showBestMatch?: boolean;
+}) {
   const match = score.bestMatch;
+  const cityPage = getCityByMarketIdentifier({
+    inseeCode: match.cityCode,
+    name: match.cityName,
+  });
   const markerPosition = Math.min(98, Math.max(2, score.score));
   const hasTrends = Boolean(
     score.trends &&
@@ -111,9 +123,16 @@ export function MarketScoreCard({ score }: { score: BuyerSearchMarketScore }) {
         </ul>
       </section>
 
-      <p className={styles.bestMatch}>
-        Meilleure coherence : <strong>{propertyTypeLabels[match.propertyType]} a {match.cityName}</strong>
-      </p>
+      {showBestMatch ? (
+        <p className={styles.bestMatch}>
+          Meilleure coherence : <strong>{propertyTypeLabels[match.propertyType]} a {" "}
+          {cityPage ? (
+            <Link href={`/prix-immobilier/${cityPage.slug}`}>{match.cityName}</Link>
+          ) : (
+            match.cityName
+          )}</strong>
+        </p>
+      ) : null}
     </article>
   );
 }

@@ -80,7 +80,7 @@ export type AddressSuggestion = {
   latitude: number;
 };
 
-export const MIN_ADDRESS_QUERY_LENGTH = 10;
+export const MIN_ADDRESS_QUERY_LENGTH = 5;
 
 type ImmoDataConfig = {
   baseUrl: string;
@@ -297,24 +297,6 @@ async function fetchImmoData<T>(
   return response.json() as Promise<T>;
 }
 
-function toAddressSuggestion(result: ImmoDataGeocodeResult): AddressSuggestion | null {
-  if (!result.label || !result.center || result.center.length !== 2) {
-    return null;
-  }
-
-  return {
-    label: result.label,
-    addressId: result.addressId,
-    inseeCode: result.inseeCode,
-    districtCode: result.districtCode,
-    departmentCode: result.departmentCode,
-    cityName: result.cityName,
-    postCode: result.postCode,
-    longitude: result.center[0],
-    latitude: result.center[1],
-  };
-}
-
 function toComparableSale(
   transaction: ImmoDataTransaction,
   index: number,
@@ -351,31 +333,6 @@ function toComparableSale(
       : undefined,
     soldAt: transaction.txDate,
   };
-}
-
-export async function searchImmoDataAddresses(
-  query: string,
-): Promise<AddressSuggestion[]> {
-  const config = getImmoDataConfig();
-
-  if (!config || query.trim().length < MIN_ADDRESS_QUERY_LENGTH) {
-    return [];
-  }
-
-  const params = new URLSearchParams({
-    q: query.trim(),
-    geoLevel: "address",
-    limit: "5",
-  });
-  const results = await fetchImmoData<ImmoDataGeocodeResult[]>(
-    config,
-    "/v1/geocode",
-    params,
-  );
-
-  return results
-    .map(toAddressSuggestion)
-    .filter((suggestion): suggestion is AddressSuggestion => Boolean(suggestion));
 }
 
 async function geocodeAddress(

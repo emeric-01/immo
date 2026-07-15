@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, UserRound, Ruler } from "lucide-react";
+import type { ReactNode } from "react";
+import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, UserRound, Ruler, Info } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   normalizePropertyTypes,
@@ -12,11 +13,13 @@ import {
 } from "@/lib/buyer-search/options";
 import { loadSubmittedBuyerSearchSnapshot, type BuyerSearchSubmittedSnapshot } from "@/lib/buyer-search/storage";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
+import { getCityByMarketIdentifier } from "@/lib/cities";
 import styles from "./buyer-search-wizard.module.css";
 
 export function BuyerSearchConfirmation() {
   const [snapshot, setSnapshot] = useState<BuyerSearchSubmittedSnapshot | null>(null);
   const data = snapshot?.data ?? null;
+  const marketScore = snapshot?.result?.marketScore ?? null;
   const clientLoginHref = data
     ? `/client/login?email=${encodeURIComponent(data.contact.email.trim().toLowerCase())}`
     : "/client/login";
@@ -36,24 +39,42 @@ export function BuyerSearchConfirmation() {
           <p>Nous vous contacterons lorsqu&apos;un bien correspondant a vos criteres sera identifie.</p>
         </div>
         {data ? (
-          <div className={styles.summaryGrid}>
-            <ConfirmationItem icon={Home} title="Type de bien" value={formatPropertyTypes(data)} />
-            <ConfirmationItem icon={MapPin} title="Localisation" value={formatLocationSummary(data.location.cities)} />
-            <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
-            {data.preferences.minimumLandArea ? (
-              <ConfirmationItem icon={Ruler} title="Terrain minimum" value={`${data.preferences.minimumLandArea} m2`} />
+          <div className={`${styles.confirmationContent} ${marketScore ? "" : styles.confirmationContentSingle}`}>
+            <section className={styles.confirmationSearchColumn}>
+              <header className={styles.confirmationColumnHeader}>
+                <p>Votre recherche</p>
+                <h2>Les criteres enregistres</h2>
+              </header>
+              <div className={styles.confirmationSummaryGrid}>
+                <ConfirmationItem icon={Home} title="Type de bien" value={formatPropertyTypes(data)} />
+                <ConfirmationItem icon={MapPin} title="Localisation" value={<ConfirmationLocations cities={data.location.cities} />} />
+                <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
+                {data.preferences.minimumLandArea ? (
+                  <ConfirmationItem icon={Ruler} title="Terrain minimum" value={`${data.preferences.minimumLandArea} m2`} />
+                ) : null}
+                <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
+                <ConfirmationItem icon={CalendarDays} title="Delai d'achat" value={optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline)} />
+              </div>
+            </section>
+            {marketScore ? (
+              <section className={styles.confirmationScoreColumn}>
+                <header className={styles.confirmationScoreIntro}>
+                  <Info size={20} aria-hidden="true" />
+                  <div>
+                    <h2>Pertinence de votre projet</h2>
+                    <p>Ce score permet de verifier la coherence de votre recherche face aux prix observes sur le marche immobilier local.</p>
+                  </div>
+                </header>
+                <MarketScoreCard
+                  score={marketScore}
+                  showBestMatch={data.location.cities.length > 1}
+                />
+              </section>
             ) : null}
-            <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
-            <ConfirmationItem icon={CalendarDays} title="Delai d'achat" value={optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline)} />
           </div>
         ) : (
           <p className={styles.infoLine}>Aucune recherche enregistree localement sur ce navigateur.</p>
         )}
-        {snapshot?.result?.marketScore ? (
-          <div className={styles.confirmationMarketScore}>
-            <MarketScoreCard score={snapshot.result.marketScore} />
-          </div>
-        ) : null}
         {snapshot?.result?.persisted && data ? (
           <section className={styles.clientAccessCard}>
             <span className={styles.iconBubble}>
@@ -89,7 +110,7 @@ function ConfirmationItem({
 }: {
   icon: typeof Home;
   title: string;
-  value: string;
+  value: ReactNode;
 }) {
   return (
     <article className={styles.summaryCard}>
@@ -98,10 +119,28 @@ function ConfirmationItem({
       </span>
       <div>
         <h3>{title}</h3>
-        <p>{value || "Non renseigne"}</p>
+        <p>{typeof value === "string" ? value || "Non renseigne" : value}</p>
       </div>
     </article>
   );
+}
+
+function ConfirmationLocations({ cities }: { cities: BuyerSearchFormData["location"]["cities"] }) {
+  if (cities.length === 0) {
+    return "Non renseigne";
+  }
+
+  return cities.map((city, index) => {
+    const cityPage = getCityByMarketIdentifier({ inseeCode: city.cityCode, name: city.name });
+    const label = `${city.name} (${city.radiusKm ?? 2} km)`;
+
+    return (
+      <span key={`${city.cityCode ?? city.name}-${index}`}>
+        {index > 0 ? ", " : null}
+        {cityPage ? <Link href={`/prix-immobilier/${cityPage.slug}`}>{label}</Link> : label}
+      </span>
+    );
+  });
 }
 
 function formatCurrency(value: number | null) {
@@ -114,14 +153,6 @@ function formatCurrency(value: number | null) {
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function formatLocationSummary(cities: BuyerSearchFormData["location"]["cities"]) {
-  if (cities.length === 0) {
-    return "Non renseigne";
-  }
-
-  return cities.map((city) => `${city.name} (${city.radiusKm ?? 2} km)`).join(", ");
 }
 
 function formatPropertyTypes(data: BuyerSearchFormData) {

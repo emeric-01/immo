@@ -320,6 +320,16 @@
   color: #111111;
 }
 
+.bestMatch a {
+  color: inherit;
+  text-decoration-color: #d2a476;
+  text-underline-offset: 3px;
+}
+
+.bestMatch a:hover {
+  text-decoration-thickness: 2px;
+}
+
 @media (max-width: 560px) {
   .card {
     gap: 15px;

@@ -204,8 +204,40 @@ export function getCityBySlug(slug: string) {
   return southCities.find((city) => city.slug === slug);
 }
 
+export function getCityByMarketIdentifier({
+  inseeCode,
+  name,
+}: {
+  inseeCode?: string;
+  name?: string;
+}) {
+  if (inseeCode) {
+    const cityByCode = southCities.find((city) => city.inseeCode === inseeCode);
+
+    if (cityByCode) {
+      return cityByCode;
+    }
+  }
+
+  if (!name) {
+    return undefined;
+  }
+
+  const normalizedName = normalizeCityName(name);
+
+  return southCities.find((city) => normalizeCityName(city.name) === normalizedName);
+}
+
 export function getNearbyCities(city: City) {
   return city.nearbySlugs
     .map((slug) => getCityBySlug(slug))
     .filter((nearbyCity): nearbyCity is City => Boolean(nearbyCity));
+}
+
+function normalizeCityName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
