@@ -1,0 +1,158 @@
+.site {
+  min-height: 100svh;
+  background: #ffffff;
+  color: #111111;
+}
+
+.header {
+  position: relative;
+  z-index: 30;
+  display: grid;
+  width: min(1420px, calc(100% - 28px));
+  margin: 12px auto 0;
+  padding: 24px 48px 20px;
+  border: 1px solid #e7e2dc;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 10px 30px rgba(17, 17, 17, 0.035);
+  justify-items: center;
+  gap: 18px;
+  backdrop-filter: blur(14px);
+}
+
+.logo,
+.footerLogo {
+  color: #111111;
+  text-align: center;
+  text-decoration: none;
+}
+
+.logo span,
+.footerLogo span {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.8rem;
+  font-style: italic;
+  line-height: 0.82;
+}
+
+.logo strong,
+.footerLogo strong {
+  display: block;
+  color: #d6b48c;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.nav,
+.footerNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 6vw, 92px);
+}
+
+.nav a,
+.footerNav a {
+  color: #111111;
+  font-size: 0.8rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.nav a:hover,
+.nav a:focus-visible,
+.footerNav a:hover,
+.footerNav a:focus-visible {
+  color: #9a704a;
+}
+
+.content {
+  min-height: 55svh;
+}
+
+.footer {
+  width: min(1420px, calc(100% - 28px));
+  margin: 0 auto 14px;
+  border: 1px solid #e7e2dc;
+  border-radius: 16px;
+  background: #fbf8f4;
+  padding: 38px 48px 26px;
+}
+
+.footerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.footerLogo span {
+  font-size: 2rem;
+}
+
+.footerLogo strong {
+  font-size: 0.78rem;
+}
+
+.footerBottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 30px;
+  border-top: 1px solid #e6ddd4;
+  padding-top: 18px;
+  color: #6b6f78;
+  font-size: 0.78rem;
+}
+
+.footerBottom p {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .header,
+  .footer {
+    width: min(100% - 20px, 1420px);
+  }
+
+  .header {
+    margin-top: 8px;
+    padding: 22px 16px 16px;
+  }
+
+  .logo span {
+    font-size: 2.25rem;
+  }
+
+  .nav {
+    width: 100%;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .nav a {
+    font-size: 0.67rem;
+  }
+
+  .nav a:first-child,
+  .nav a:last-child {
+    display: none;
+  }
+
+  .footer {
+    padding: 30px 20px 22px;
+  }
+
+  .footerTop,
+  .footerBottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footerNav {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}

@@ -6,6 +6,7 @@ import { optionLabel, propertyTypeLabels, purchaseTimelineOptions } from "@/lib/
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import { requireClientSession } from "@/lib/client-access/auth";
 import { getClientBuyerSearch, type ClientBuyerSearchRow } from "@/lib/client-access/project";
+import { DeleteSearchButton } from "../../DeleteSearchButton";
 import styles from "../../client.module.css";
 
 export const metadata: Metadata = { title: "Ma recherche | Les Jumelles Immo" };
@@ -39,7 +40,10 @@ function SearchDetail({ search }: { search: ClientBuyerSearchRow }) {
         <Link className={styles.backLink} href="/client"><ArrowLeft size={17} /> Retour à mon espace</Link>
         <header className={styles.detailHeader}>
           <div><p className={styles.eyebrow}>Recherche du {formatDate(search.created_at)}</p><h1>Mon projet d&apos;achat</h1><p>{search.location_summary}</p></div>
-          <Link className={styles.primaryButton} href={`/recherche?source=client&searchId=${search.id}`}>Modifier cette recherche <ArrowRight size={18} /></Link>
+          <div className={styles.detailActions}>
+            <DeleteSearchButton searchId={search.id} />
+            <Link className={styles.primaryButton} href={`/recherche?source=client&searchId=${search.id}`}>Modifier cette recherche <ArrowRight size={18} /></Link>
+          </div>
         </header>
         <section className={styles.detailGrid}>
           <article className={styles.summaryPanel}>

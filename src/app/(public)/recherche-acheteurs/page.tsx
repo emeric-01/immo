@@ -4,7 +4,7 @@ import { BuyerSearchDesignSystemDemo } from "@/components/buyer-search/design-sy
 export const metadata: Metadata = {
   title: "Recherche acheteurs | Les Jumelles Immo",
   description:
-    "Socle de composants pour le module de recherche acheteurs Les Jumelles Immo.",
+    "Socle de composants du module de recherche acheteurs Les Jumelles Immo.",
 };
 
 export default function BuyerSearchPage() {

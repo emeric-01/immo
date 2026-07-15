@@ -7,66 +7,11 @@
     sans-serif;
 }
 
-.siteHeader {
-  position: relative;
-  display: grid;
-  width: min(1420px, calc(100% - 28px));
-  margin: 12px auto 0;
-  padding: 26px 48px 22px;
-  border: 1px solid #e7e2dc;
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-  justify-items: center;
-  gap: 18px;
-}
-
-.logo {
-  order: -1;
-  color: #111111;
-  text-align: center;
-  text-decoration: none;
-}
-
-.logo span {
-  display: block;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.8rem;
-  font-style: italic;
-  line-height: 0.82;
-}
-
-.logo strong {
-  display: block;
-  color: #d6b48c;
-  font-size: 1rem;
-  letter-spacing: 0;
-}
-
-.desktopNav {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-around;
-  gap: 20px;
-}
-
-.desktopNav a {
-  color: #111111;
-  font-size: 0.82rem;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-.menuButton {
-  display: none;
-}
-
 .shell {
   width: min(1420px, calc(100% - 28px));
-  margin: 0 auto 22px;
+  margin: 18px auto 22px;
   border: 1px solid #e7e2dc;
-  border-top: 0;
-  border-radius: 0 0 16px 16px;
+  border-radius: 16px;
   padding: 22px 48px 32px;
 }
 
@@ -1402,44 +1347,13 @@
 }
 
 @media (max-width: 980px) {
-  .siteHeader,
   .shell {
     width: min(100% - 18px, 440px);
     border-radius: 22px;
   }
 
-  .siteHeader {
-    display: flex;
-    min-height: 86px;
-    align-items: center;
-    justify-content: center;
-    border-bottom: 0;
-    padding: 20px 24px 8px;
-  }
-
-  .desktopNav {
-    display: none;
-  }
-
-  .menuButton {
-    position: absolute;
-    left: 24px;
-    top: 28px;
-    display: inline-flex;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    background: transparent;
-  }
-
-  .logo span {
-    font-size: 2.1rem;
-  }
-
   .shell {
-    border-top: 0;
+    margin-top: 10px;
     padding: 14px 24px 28px;
   }
 
@@ -1613,8 +1527,7 @@
 }
 
 @media (max-width: 420px) {
-  .shell,
-  .siteHeader {
+  .shell {
     width: min(100% - 12px, 420px);
   }
 

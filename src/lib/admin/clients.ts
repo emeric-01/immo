@@ -17,7 +17,6 @@ export type AdminClientAccount = {
   id: string;
   last_login_at: string | null;
   last_name: string;
-  last_search_id: string | null;
   metadata: Record<string, unknown>;
   phone: string;
   preferred_channel: BuyerSearchFormData["contact"]["preferredChannel"];
@@ -26,15 +25,15 @@ export type AdminClientAccount = {
 
 export type AdminClientSearch = {
   client_account_id: string | null;
-  client_last_access_at: string | null;
   contact_email: string;
   created_at: string;
+  deleted_at: string | null;
   id: string;
   location_summary: string | null;
   maximum_budget: number | null;
   minimum_living_area: number | null;
   property_types: PropertyType[];
-  status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed";
+  status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed" | "deleted_by_client";
   updated_at: string;
 };
 
@@ -89,7 +88,7 @@ export async function getAdminClients(
     limit: "1000",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_last_access_at",
+      "id,created_at,updated_at,deleted_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id",
   });
 
   const [clientsResult, searchesResult] = await Promise.all([
@@ -120,7 +119,7 @@ export async function getAdminClients(
 
     return {
       ...client,
-      lastSearch: searches[0] ?? null,
+      lastSearch: searches.find((search) => search.status !== "deleted_by_client") ?? null,
       searchesCount: searches.length,
     };
   });
@@ -170,7 +169,7 @@ export async function getAdminClient(id: string): Promise<AdminDataState<AdminCl
     client_account_id: `eq.${id}`,
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_last_access_at",
+      "id,created_at,updated_at,deleted_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id",
   });
   const searchesResult = await supabaseAdminFetch<AdminClientSearch[]>(
     config,

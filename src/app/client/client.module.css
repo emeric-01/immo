@@ -281,7 +281,9 @@
 }
 
 .iconButton,
-.iconLink {
+.iconLink,
+.deleteIconButton,
+.dialogClose {
   display: inline-flex;
   width: 42px;
   height: 42px;
@@ -296,6 +298,28 @@
 
 .iconButton {
   cursor: pointer;
+}
+
+.deleteIconButton,
+.dialogClose {
+  cursor: pointer;
+}
+
+.deleteIconButton {
+  color: #8f2f25;
+}
+
+.deleteIconButton:hover,
+.deleteIconButton:focus-visible {
+  border-color: #d6a29a;
+  background: #fff6f4;
+}
+
+.projectActions,
+.detailActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dashboardHero,
@@ -443,6 +467,110 @@
   gap: 5px;
 }
 
+.dialogBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 17, 17, 0.48);
+  padding: 20px;
+}
+
+.confirmDialog {
+  position: relative;
+  display: grid;
+  width: min(100%, 480px);
+  gap: 14px;
+  border: 1px solid #e3dcd4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(17, 17, 17, 0.2);
+  padding: 30px;
+}
+
+.confirmDialog h2,
+.confirmDialog p {
+  margin: 0;
+}
+
+.confirmDialog h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.confirmDialog > p {
+  color: #616878;
+  line-height: 1.55;
+}
+
+.dialogClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.dialogIcon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff0ed;
+  color: #9b3428;
+}
+
+.dialogError {
+  color: #9b3428 !important;
+  font-weight: 700;
+}
+
+.dialogActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dialogActions button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #e2d8ce;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dialogActions button:last-child {
+  border-color: #9b3428;
+  background: #9b3428;
+  color: #ffffff;
+}
+
+.dialogActions button:disabled,
+.dialogClose:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.spin {
+  animation: clientSpin 0.8s linear infinite;
+}
+
+@keyframes clientSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .scorePill {
   border: 1px solid #dec4a8;
   border-radius: 999px;
@@ -561,7 +689,7 @@
     justify-content: flex-start;
   }
 
-  .iconLink {
+  .projectActions {
     grid-column: 2;
     grid-row: 1;
   }
@@ -612,6 +740,14 @@
     grid-template-columns: 1fr;
   }
 
+  .detailActions {
+    align-items: stretch;
+  }
+
+  .detailActions .primaryButton {
+    flex: 1;
+  }
+
   .projectCardMain .metricIcon {
     display: none;
   }
@@ -621,5 +757,15 @@
   .estimateMetric:nth-child(3n) {
     border-right: 0;
     border-bottom: 1px solid #e3dcd4;
+  }
+}
+
+@media (max-width: 420px) {
+  .confirmDialog {
+    padding: 24px 20px;
+  }
+
+  .dialogActions {
+    grid-template-columns: 1fr;
   }
 }

@@ -13,6 +13,7 @@ export type ClientBuyerSearchRow = {
   contact_first_name: string;
   contact_last_name: string;
   created_at: string;
+  deleted_at: string | null;
   id: string;
   location_summary: string | null;
   maximum_budget: number | null;
@@ -38,7 +39,7 @@ export type ClientProjectResult =
 export async function getClientBuyerSearches(session: ClientSession) {
   try {
     return await clientSupabaseRequest<ClientBuyerSearchRow[]>(
-      `buyer_searches?client_account_id=eq.${encodeURIComponent(session.id)}&select=*&order=created_at.desc`,
+      `buyer_searches?client_account_id=eq.${encodeURIComponent(session.id)}&status=neq.deleted_by_client&select=*&order=created_at.desc`,
     );
   } catch (error) {
     console.error("Client searches load failed", error);
@@ -52,7 +53,7 @@ export async function getClientBuyerSearch(
 ): Promise<ClientProjectResult> {
   try {
     const searches = await clientSupabaseRequest<ClientBuyerSearchRow[]>(
-      `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(session.id)}&select=*&limit=1`,
+      `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(session.id)}&status=neq.deleted_by_client&select=*&limit=1`,
     );
     const search = searches[0];
 
@@ -98,7 +99,26 @@ export async function getClientBuyerSearch(
 
 export async function clientOwnsBuyerSearch(clientAccountId: string, searchId: string) {
   const searches = await clientSupabaseRequest<Array<{ id: string }>>(
-    `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(clientAccountId)}&select=id&limit=1`,
+    `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(clientAccountId)}&status=neq.deleted_by_client&select=id&limit=1`,
+  );
+
+  return Boolean(searches[0]);
+}
+
+export async function softDeleteClientBuyerSearch(
+  clientAccountId: string,
+  searchId: string,
+) {
+  const searches = await clientSupabaseRequest<Array<{ id: string }>>(
+    `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(clientAccountId)}&status=neq.deleted_by_client&select=id`,
+    {
+      body: JSON.stringify({
+        deleted_at: new Date().toISOString(),
+        status: "deleted_by_client",
+      }),
+      headers: { Prefer: "return=representation" },
+      method: "PATCH",
+    },
   );
 
   return Boolean(searches[0]);

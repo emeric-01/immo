@@ -16,6 +16,7 @@ import { requireClientSession } from "@/lib/client-access/auth";
 import { getClientEstimations } from "@/lib/client-access/estimations";
 import { getClientBuyerSearches } from "@/lib/client-access/project";
 import { logoutClient } from "./login/actions";
+import { DeleteSearchButton } from "./DeleteSearchButton";
 import styles from "./client.module.css";
 
 export const metadata: Metadata = {
@@ -93,9 +94,12 @@ export default async function ClientDashboardPage() {
                       <span className={styles.scorePill}>{search.market_score}/100</span>
                     ) : null}
                   </div>
-                  <Link className={styles.iconLink} href={`/client/recherches/${search.id}`} aria-label="Voir la recherche">
-                    <ArrowRight size={20} aria-hidden="true" />
-                  </Link>
+                  <div className={styles.projectActions}>
+                    <DeleteSearchButton searchId={search.id} />
+                    <Link className={styles.iconLink} href={`/client/recherches/${search.id}`} aria-label="Voir la recherche">
+                      <ArrowRight size={20} aria-hidden="true" />
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>

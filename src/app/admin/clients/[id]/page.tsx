@@ -50,7 +50,7 @@ export default async function AdminClientDetailPage({
   }
 
   const { client, estimations, searches } = result.data;
-  const latestSearch = searches[0] ?? null;
+  const latestSearch = searches.find((search) => search.status !== "deleted_by_client") ?? null;
 
   return (
     <DetailFrame>
@@ -166,7 +166,7 @@ function SearchRow({ search }: { search: AdminClientSearch }) {
     <tr>
       <td>
         <strong>{formatDate(search.created_at)}</strong>
-        <small>{search.client_last_access_at ? `Dernier acces ${formatDate(search.client_last_access_at)}` : "Pas encore consulte"}</small>
+        <small>Mis à jour {formatDate(search.updated_at)}</small>
       </td>
       <td>
         <strong>{formatAdminClientPropertyTypes(search.property_types)}</strong>
@@ -180,6 +180,7 @@ function SearchRow({ search }: { search: AdminClientSearch }) {
         <span className={styles.statusBadge} data-status={search.status}>
           {formatStatus(search.status)}
         </span>
+        {search.deleted_at ? <small>Le {formatDate(search.deleted_at)}</small> : null}
       </td>
       <td>
         <Link className={styles.iconLink} href={`/admin/recherches/${search.id}`}>
@@ -249,6 +250,7 @@ function formatStatus(status: string) {
       new: "Nouveau",
       paused: "Pause",
       qualified: "Qualifie",
+      deleted_by_client: "Supprimee par l'utilisateur",
     }[status] ?? status
   );
 }

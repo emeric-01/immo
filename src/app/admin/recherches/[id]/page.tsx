@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BedDouble, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, Star, UserRound } from "lucide-react";
+import { ArrowLeft, BedDouble, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
@@ -80,6 +80,16 @@ export default async function AdminBuyerSearchDetailPage({
           </div>
         </div>
       </section>
+
+      {search.status === "deleted_by_client" ? (
+        <section className={styles.deletedNotice}>
+          <Trash2 size={20} aria-hidden="true" />
+          <div>
+            <strong>Recherche supprimee par l&apos;utilisateur</strong>
+            <p>Elle reste conservee dans l&apos;historique administratif{search.deleted_at ? ` depuis le ${formatDate(search.deleted_at)}` : ""}.</p>
+          </div>
+        </section>
+      ) : null}
 
       <section className={styles.detailGrid}>
         {search.market_score_payload ? <MarketScoreCard score={search.market_score_payload} /> : null}

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type mapboxgl from "mapbox-gl";
 import {
@@ -23,7 +22,6 @@ import {
   Lock,
   Mail,
   MapPin,
-  Menu,
   Minus,
   Pencil,
   Phone,
@@ -334,7 +332,6 @@ export function BuyerSearchWizard() {
 
   return (
     <main className={styles.page}>
-      <SiteHeader />
       <form className={styles.shell} onSubmit={(event) => event.preventDefault()}>
         <ProgressStepper activeIndex={stepIndex} />
         <header className={styles.stepHeader}>
@@ -387,27 +384,6 @@ export function BuyerSearchWizard() {
       </form>
       <LiveDraftDebugger data={data} />
     </main>
-  );
-}
-
-function SiteHeader() {
-  return (
-    <header className={styles.siteHeader}>
-      <button className={styles.menuButton} type="button" aria-label="Ouvrir le menu">
-        <Menu size={26} aria-hidden="true" />
-      </button>
-      <nav className={styles.desktopNav} aria-label="Navigation principale">
-        <a href="#">Les annonces</a>
-        <a href="#">Estimer et vendre son bien</a>
-        <a href="#">Nos prestations</a>
-        <a href="#">Actualites et conseils</a>
-        <a href="#">Contact</a>
-      </nav>
-      <Link className={styles.logo} href="/" aria-label="Les Jumelles Immo">
-        <span>les jumelles</span>
-        <strong>IMMO</strong>
-      </Link>
-    </header>
   );
 }
 

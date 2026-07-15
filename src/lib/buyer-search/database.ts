@@ -76,7 +76,6 @@ export async function createBuyerSearchRecord(
       insertLocations(config, buyerSearchId, data),
       insertPriorities(config, buyerSearchId, data),
       insertConsent(config, buyerSearchId, data, metadata),
-      updateClientAccountLastSearch(config, clientAccount.id, buyerSearchId),
     ]);
   } catch (error) {
     console.error("Buyer search secondary rows failed", error);
@@ -136,7 +135,6 @@ export async function updateBuyerSearchRecord(
       insertLocations(config, buyerSearchId, data),
       insertPriorities(config, buyerSearchId, data),
       insertConsent(config, buyerSearchId, data, metadata),
-      updateClientAccountLastSearch(config, clientAccount.id, buyerSearchId),
     ]);
   } catch (error) {
     console.error("Buyer search secondary rows update failed", error);
@@ -212,12 +210,6 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
   }
 
   return account;
-}
-
-async function updateClientAccountLastSearch(config: SupabaseConfig, clientAccountId: string, buyerSearchId: string) {
-  await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(clientAccountId)}`, {
-    last_search_id: buyerSearchId,
-  });
 }
 
 async function insertLocations(config: SupabaseConfig, buyerSearchId: string, data: BuyerSearchFormData) {
@@ -373,7 +365,6 @@ function buildBuyerSearchRow(
     city_codes: cities.flatMap((city) => (city.cityCode ? [city.cityCode] : [])),
     city_names: cities.map((city) => city.name),
     ...(clientAccountId ? { client_account_id: clientAccountId } : {}),
-    client_access_enabled: false,
     consent: data.contact.consent,
     consent_at: data.contact.consent ? new Date().toISOString() : null,
     contact_email: data.contact.email.trim().toLowerCase(),

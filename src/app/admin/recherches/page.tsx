@@ -26,6 +26,7 @@ const statusOptions = [
   { label: "Qualifie", value: "qualified" },
   { label: "En pause", value: "paused" },
   { label: "Clos", value: "closed" },
+  { label: "Supprimee par l'utilisateur", value: "deleted_by_client" },
 ];
 
 export default async function AdminBuyerSearchesPage({
@@ -185,6 +186,7 @@ function SearchTable({
                 <span className={styles.statusBadge} data-status={search.status}>
                   {formatStatus(search.status)}
                 </span>
+                {search.deleted_at ? <small>Le {formatDate(search.deleted_at)}</small> : null}
               </td>
               <td>
                 <Link className={styles.iconLink} href={`/admin/recherches/${search.id}`}>
@@ -237,6 +239,7 @@ function formatStatus(status: string) {
       new: "Nouveau",
       paused: "Pause",
       qualified: "Qualifie",
+      deleted_by_client: "Supprimee par l'utilisateur",
     }[status] ?? status
   );
 }

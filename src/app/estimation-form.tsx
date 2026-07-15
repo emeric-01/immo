@@ -167,22 +167,6 @@ function buildTrendPath(points: Array<{ value: number }>) {
     .join(" ");
 }
 
-function EstimationSiteHeader() {
-  return (
-    <header className="estimation-site-header">
-      <Link className="estimation-logo" href="/" aria-label="Les Jumelles Immo">
-        <span>les jumelles</span>
-        <strong>IMMO</strong>
-      </Link>
-      <nav className="estimation-nav" aria-label="Navigation principale">
-        <Link href="/">Estimer et vendre</Link>
-        <Link href="/recherche">Déposer une recherche</Link>
-        <Link href="/client">Espace client</Link>
-      </nav>
-    </header>
-  );
-}
-
 export function EstimationForm() {
   const [step, setStep] = useState<FlowStep>("address");
   const [form, setForm] = useState<FormState>(initialForm);
@@ -430,7 +414,6 @@ export function EstimationForm() {
   if (step === "address") {
     return (
       <main className="estimation-page">
-        <EstimationSiteHeader />
         <section className="address-step estimation-shell" aria-labelledby="address-step-title">
 
         <div className="address-hero">
@@ -472,7 +455,6 @@ export function EstimationForm() {
   if (step === "essential") {
     return (
       <main className="estimation-page">
-        <EstimationSiteHeader />
         <section className="details-step essential-step estimation-shell" aria-labelledby="essential-title">
         <div className="stepper" aria-label="Progression de l'estimation">
           <div className="stepper-item active">
@@ -737,10 +719,36 @@ export function EstimationForm() {
     const trendPath = buildTrendPath(priceHistory);
     const firstTrendPoint = priceHistory[0];
     const lastTrendPoint = priceHistory[priceHistory.length - 1];
+    const sectorPrice = market?.sectorPricePerM2;
+    const sectorDifference = sectorPrice
+      ? ((estimation.pricePerM2 - sectorPrice) / sectorPrice) * 100
+      : undefined;
+    const rangeWidth = Math.max(1, estimation.highPrice - estimation.lowPrice);
+    const medianPosition = Math.min(
+      100,
+      Math.max(0, ((estimation.medianPrice - estimation.lowPrice) / rangeWidth) * 100),
+    );
+    const strategyScenarios = [
+      {
+        label: "Vente dynamique",
+        price: Math.round(estimation.lowPrice + rangeWidth * 0.18),
+        detail: "Maximiser les contacts dès le lancement",
+      },
+      {
+        label: "Prix recommandé",
+        price: estimation.medianPrice,
+        detail: "Le meilleur équilibre prix / délai",
+        recommended: true,
+      },
+      {
+        label: "Positionnement ambitieux",
+        price: Math.round(estimation.highPrice - rangeWidth * 0.12),
+        detail: "Tester le haut du marché avec exigence",
+      },
+    ];
 
     return (
       <main className="estimation-page">
-        <EstimationSiteHeader />
         <section className="result-page estimation-shell" aria-labelledby="result-title">
         <header className="result-topbar">
           <button
@@ -768,40 +776,35 @@ export function EstimationForm() {
 
         <div className="result-layout">
           <section className="valuation-card" aria-labelledby="result-title">
-            <span className="result-source">
-              {estimation.source === "immo-data" ? "Immo Data" : "Mode demonstration"}
-            </span>
-            <p className="result-address">{estimation.addressLabel}</p>
-            <h1 id="result-title">Votre estimation est prete</h1>
-            <strong className="result-price">
-              {currencyFormatter.format(estimation.medianPrice)}
-            </strong>
-            <p className="result-range">
-              Fourchette estimee : {currencyFormatter.format(estimation.lowPrice)} -{" "}
-              {currencyFormatter.format(estimation.highPrice)}
-            </p>
-
-            <div className="result-kpis">
-              <article>
-                <span className="kpi-icon tag" aria-hidden="true" />
-                <div>
-                  <span>Prix / m2</span>
-                  <strong>{numberFormatter.format(estimation.pricePerM2)} EUR/m2</strong>
+            <div className="valuation-main">
+              <span className="result-source">
+                {estimation.source === "immo-data" ? "Analyse Immo Data" : "Mode démonstration"}
+              </span>
+              <p className="result-address">{estimation.addressLabel}</p>
+              <p className="valuation-kicker">Notre avis de valeur</p>
+              <h1 id="result-title">Un prix juste, défendable sur le marché</h1>
+              <strong className="result-price">
+                {currencyFormatter.format(estimation.medianPrice)}
+              </strong>
+              <p className="result-range">
+                Fourchette de marché : {currencyFormatter.format(estimation.lowPrice)} à{" "}
+                {currencyFormatter.format(estimation.highPrice)}
+              </p>
+              <div className="valuation-scale" aria-label="Position du prix recommandé dans la fourchette">
+                <div className="valuation-track">
+                  <span className="valuation-fill" style={{ width: `${medianPosition}%` }} />
+                  <span className="valuation-marker" style={{ left: `${medianPosition}%` }} />
                 </div>
-              </article>
-              <article>
-                <span className="kpi-icon shield" aria-hidden="true" />
-                <div>
-                  <span>Confiance</span>
-                  <strong>{estimation.confidenceScore}/5</strong>
-                </div>
-              </article>
+                <div><span>{currencyFormatter.format(estimation.lowPrice)}</span><strong>Prix recommandé</strong><span>{currencyFormatter.format(estimation.highPrice)}</span></div>
+              </div>
             </div>
-
-            <p className="result-note">
-              Estimation basee sur l&apos;adresse, les caracteristiques du bien et
-              les donnees comparables disponibles sur le secteur.
-            </p>
+            <aside className="valuation-proof">
+              <p>Pourquoi ce prix ?</p>
+              <article><strong>{numberFormatter.format(estimation.pricePerM2)} €</strong><span>Prix estimé au m²</span></article>
+              <article><strong>{estimation.comparables.length}</strong><span>Ventes comparables analysées</span></article>
+              <article><strong>{estimation.confidenceScore}/5</strong><span>Indice de fiabilité</span></article>
+              <small>Données locales, caractéristiques du bien et ventes enregistrées sur le secteur.</small>
+            </aside>
           </section>
 
           <section className="result-card summary-card" aria-labelledby="summary-title">
@@ -817,8 +820,8 @@ export function EstimationForm() {
 
           <section className="result-card comparables-card" aria-labelledby="comparables-title">
             <div className="section-heading inline">
-              <h2 id="comparables-title">Biens comparables vendus</h2>
-              <span>Voir tout</span>
+              <div><span className="section-index">02 — PREUVES DE MARCHÉ</span><h2 id="comparables-title">Les ventes qui fondent notre estimation</h2></div>
+              <span>{estimation.comparables.length} références à proximité</span>
             </div>
             <div className="comparable-list">
               {estimation.comparables.length > 0 ? (
@@ -841,6 +844,11 @@ export function EstimationForm() {
                       <strong>{currencyFormatter.format(sale.price)}</strong>
                       <span>{formatSoldAt(sale.soldAt)}</span>
                     </div>
+                    {sale.pricePerM2 ? (
+                      <div className="comparable-bar" aria-hidden="true">
+                        <span style={{ width: `${Math.min(100, Math.max(18, (sale.pricePerM2 / Math.max(estimation.pricePerM2, sectorPrice ?? 0, sale.pricePerM2)) * 100))}%` }} />
+                      </div>
+                    ) : null}
                   </article>
                 ))
               ) : (
@@ -851,10 +859,12 @@ export function EstimationForm() {
 
           <aside className="result-side">
             <section className="result-card market-card" aria-labelledby="market-title">
-              <h2 id="market-title">Marche local</h2>
+              <span className="section-index">01 — VOTRE MICRO-MARCHÉ</span>
+              <h2 id="market-title">Le marché en un coup d&apos;œil</h2>
+              <p className="market-intro">Ce que les acheteurs voient aujourd&apos;hui autour de votre bien.</p>
               <div className="price-trend">
                 <div className="price-trend-heading">
-                  <span>Evolution des prix</span>
+                  <span>Évolution sur 12 mois</span>
                   <strong>
                     {market?.priceEvolution12Months !== undefined
                       ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
@@ -883,7 +893,7 @@ export function EstimationForm() {
               </div>
               <div className="market-grid">
                 <article>
-                  <span>Prix moyen</span>
+                  <span>Prix du secteur</span>
                   <strong>
                     {market?.sectorPricePerM2
                       ? `${numberFormatter.format(market.sectorPricePerM2)} EUR/m2`
@@ -891,11 +901,11 @@ export function EstimationForm() {
                   </strong>
                 </article>
                 <article>
-                  <span>Offre</span>
-                  <strong>{market?.supplyLevel ?? "Indisponible"}</strong>
+                  <span>Demande locale</span>
+                  <strong>{market?.demandLevel ?? "Indisponible"}</strong>
                 </article>
                 <article>
-                  <span>Delai moyen</span>
+                  <span>Délai observé</span>
                   <strong>
                     {market?.saleDurationDays
                       ? `${market.saleDurationDays} jours`
@@ -903,43 +913,42 @@ export function EstimationForm() {
                   </strong>
                 </article>
               </div>
+              {sectorDifference !== undefined ? (
+                <div className="market-verdict">
+                  <strong>{sectorDifference >= 0 ? "+" : ""}{sectorDifference.toFixed(1)} %</strong>
+                  <span>Votre bien vs prix moyen du secteur</span>
+                </div>
+              ) : null}
             </section>
           </aside>
 
           <section className="result-card meaning-card" aria-labelledby="meaning-title">
-            <h2 id="meaning-title">Ce que cela signifie pour vous</h2>
-            <div className="meaning-grid">
-              <article>
-                <span>Conseil du prix</span>
-                <strong>{priceAdvice}</strong>
-              </article>
-              <article>
-                <span>Potentiel de valorisation</span>
-                <strong>
-                  {refreshPotential
-                    ? `+${currencyFormatter.format(refreshPotential)}`
-                    : "A confirmer"}
-                </strong>
-              </article>
-              <article>
-                <span>Delai estime</span>
-                <strong>
-                  {market?.saleDurationDays
-                    ? `${market.saleDurationDays} jours`
-                    : "A qualifier"}
-                </strong>
-              </article>
+            <div className="section-heading strategy-heading">
+              <span className="section-index">03 — STRATÉGIE DE VENTE</span>
+              <h2 id="meaning-title">À quel prix lancer votre bien ?</h2>
+              <p>Trois positionnements possibles. Notre recommandation privilégie la valeur sans ralentir la vente.</p>
             </div>
+            <div className="strategy-grid">
+              {strategyScenarios.map((scenario) => (
+                <article className={scenario.recommended ? "recommended" : ""} key={scenario.label}>
+                  {scenario.recommended ? <span className="recommendation-badge">Recommandé</span> : null}
+                  <span>{scenario.label}</span>
+                  <strong>{currencyFormatter.format(scenario.price)}</strong>
+                  <p>{scenario.detail}</p>
+                </article>
+              ))}
+            </div>
+            <div className="seller-takeaway"><span>Notre lecture</span><strong>{priceAdvice}</strong><p>{market?.saleDurationDays ? `Le marché local absorbe actuellement les biens en environ ${market.saleDurationDays} jours.` : "Le délai sera précisé après l'analyse terrain de nos expertes."} {refreshPotential ? `Un potentiel de valorisation d'environ ${currencyFormatter.format(refreshPotential)} reste à confirmer sur place.` : "La présentation et le lancement seront déterminants pour défendre ce prix."}</p></div>
           </section>
 
           <div className="result-actions">
             <button className="primary-action report-action">
-              Recevoir le rapport complet
-              <span>Analyse detaillee, photos, carte et recommandations</span>
+              Recevoir mon avis de valeur complet
+              <span>Analyse détaillée, ventes témoins et stratégie</span>
             </button>
             <button className="secondary-action">
-              Confier ma vente aux Jumelles Immo
-              <span>Un expert local vous accompagne</span>
+              Échanger avec une experte locale
+              <span>15 minutes pour challenger cette estimation</span>
             </button>
           </div>
 
@@ -955,7 +964,6 @@ export function EstimationForm() {
 
   return (
     <main className="estimation-page">
-      <EstimationSiteHeader />
       <section className="details-step estimation-shell" aria-labelledby="estimation-title">
       <div className="details-header">
         <button

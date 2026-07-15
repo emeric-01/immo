@@ -21,6 +21,7 @@ export type AdminBuyerSearchRow = {
   contact_last_name: string;
   contact_phone: string;
   created_at: string;
+  deleted_at: string | null;
   current_situation: string | null;
   financing_status: string | null;
   ideal_budget: number | null;
@@ -45,7 +46,7 @@ export type AdminBuyerSearchRow = {
   purchase_timeline: string | null;
   raw_payload: BuyerSearchFormData;
   source: string;
-  status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed";
+  status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed" | "deleted_by_client";
   updated_at: string;
 };
 
@@ -127,7 +128,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
+      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
 
   if (filters.status && filters.status !== "all") {

@@ -1,0 +1,163 @@
+.page {
+  width: min(1420px, calc(100% - 28px));
+  margin: 18px auto 22px;
+}
+
+.hero {
+  display: grid;
+  min-height: 620px;
+  align-content: center;
+  justify-items: center;
+  border: 1px solid #e7e2dc;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(214, 180, 140, 0.18), transparent 36%),
+    #fbf8f4;
+  padding: 70px 32px;
+  text-align: center;
+}
+
+.eyebrow,
+.sectionHeading p {
+  margin: 0 0 14px;
+  color: #a06f45;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 980px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.intro {
+  max-width: 680px;
+  margin: 28px 0 0;
+  color: #666d79;
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.primaryAction,
+.secondaryAction {
+  min-width: 190px;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  padding: 15px 22px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primaryAction {
+  background: #111111;
+  color: #ffffff;
+}
+
+.secondaryAction {
+  background: transparent;
+  color: #111111;
+}
+
+.paths {
+  padding: 90px 0 30px;
+}
+
+.sectionHeading h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  font-weight: 500;
+}
+
+.pathGrid {
+  display: grid;
+  margin-top: 36px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.pathGrid article {
+  display: grid;
+  min-height: 320px;
+  align-content: start;
+  border: 1px solid #e7e2dc;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 36px;
+}
+
+.pathGrid article > span {
+  color: #b48256;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.pathGrid h3 {
+  margin: 40px 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.pathGrid p {
+  max-width: 520px;
+  margin: 0;
+  color: #697080;
+  line-height: 1.65;
+}
+
+.pathGrid a {
+  align-self: end;
+  margin-top: 34px;
+  color: #111111;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .page {
+    width: min(100% - 20px, 1420px);
+    margin-top: 10px;
+  }
+
+  .hero {
+    min-height: 520px;
+    padding: 54px 20px;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+  }
+
+  .actions,
+  .pathGrid {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    display: grid;
+  }
+
+  .paths {
+    padding-top: 64px;
+  }
+
+  .pathGrid article {
+    min-height: 290px;
+    padding: 28px 22px;
+  }
+}

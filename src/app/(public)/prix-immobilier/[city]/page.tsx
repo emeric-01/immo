@@ -218,19 +218,6 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
 
   return (
     <main className="city-price-page">
-      <header className="city-price-header">
-        <Link className="city-brand" href="/" aria-label="Les Jumelles Immo">
-          <span className="city-brand-wordmark">
-            <em>les jumelles</em>
-            <strong>IMMO</strong>
-          </span>
-        </Link>
-        <nav aria-label="Navigation principale">
-          <Link href="/">Estimer un bien</Link>
-          <Link href={`/prix-immobilier/${city.slug}`}>Prix immobilier</Link>
-        </nav>
-      </header>
-
       <form className="city-search-bar" action={`/prix-immobilier/${city.slug}`}>
         <input
           aria-label="Rechercher une adresse ou une ville"

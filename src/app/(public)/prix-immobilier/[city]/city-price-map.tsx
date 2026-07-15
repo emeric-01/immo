@@ -2,10 +2,7 @@
 
 import mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type {
-  CityPriceZone,
-  CitySalePoint,
-} from "@/lib/city-market-data";
+import type { CityPriceZone, CitySalePoint } from "@/lib/city-market-data";
 
 type CityPriceMapProps = {
   accessToken: string;
