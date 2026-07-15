@@ -4275,3 +4275,309 @@ button:focus-visible {
     padding: 58px 20px;
   }
 }
+
+/* Page ville — composition compacte validée */
+.city-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.city-price-modern .city-market-overview {
+  padding-top: 18px;
+}
+
+.city-price-modern .city-overview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.city-price-modern .city-market-price-card,
+.city-price-modern .city-market-signal-card {
+  min-height: 108px;
+  align-content: center;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.city-price-modern .city-market-price-card strong,
+.city-price-modern .city-market-signal-card strong {
+  font-size: 1.65rem;
+}
+
+.city-price-modern .city-market-signal-card {
+  background: #ffffff;
+  color: var(--city-ink);
+}
+
+.city-price-modern .city-market-signal-card > span,
+.city-price-modern .city-market-signal-card p {
+  color: var(--city-muted);
+}
+
+.city-price-modern .city-market-signal-card strong {
+  color: var(--city-ink);
+}
+
+.city-market-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.8fr);
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.city-dashboard-chart,
+.city-sale-duration-card,
+.city-compact-sales,
+.city-analysis-strip {
+  border: 1px solid var(--city-line);
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.city-dashboard-chart {
+  min-width: 0;
+  padding: 20px 18px 8px;
+}
+
+.city-dashboard-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 8px 8px;
+}
+
+.city-dashboard-title .city-section-kicker {
+  margin-bottom: 5px;
+}
+
+.city-dashboard-title h2,
+.city-compact-sales h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.city-dashboard-chart .city-interactive-chart {
+  border: 0;
+  background: transparent;
+  padding-bottom: 0;
+}
+
+.city-dashboard-side {
+  display: grid;
+  gap: 12px;
+}
+
+.city-sale-duration-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+}
+
+.city-sale-duration-card > span {
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f2e9df;
+  color: var(--city-copper);
+}
+
+.city-sale-duration-card > div {
+  display: grid;
+  gap: 3px;
+}
+
+.city-sale-duration-card small,
+.city-sale-duration-card p {
+  margin: 0;
+  color: var(--city-muted);
+  font-size: 0.7rem;
+}
+
+.city-sale-duration-card strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.65rem;
+  font-weight: 500;
+}
+
+.city-compact-sales {
+  padding: 16px 18px;
+}
+
+.city-compact-sales > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 9px;
+}
+
+.city-compact-sales > div:first-child > span {
+  color: var(--city-muted);
+  font-size: 0.68rem;
+}
+
+.city-compact-sale-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  border-top: 1px solid var(--city-line);
+  padding: 10px 0;
+}
+
+.city-compact-sale-row > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.city-compact-sale-row > div:last-child {
+  text-align: right;
+}
+
+.city-compact-sale-row span,
+.city-compact-sale-row small {
+  overflow: hidden;
+  color: var(--city-muted);
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-compact-sale-row strong {
+  overflow: hidden;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-analysis-strip {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 3px minmax(180px, 0.55fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 18px;
+}
+
+.city-analysis-strip > i {
+  align-self: stretch;
+  border-radius: 999px;
+  background: var(--city-copper);
+}
+
+.city-analysis-strip > div {
+  display: grid;
+  gap: 4px;
+}
+
+.city-analysis-strip > div > span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+}
+
+.city-analysis-strip > div > strong {
+  font-size: 0.72rem;
+}
+
+.city-analysis-strip p,
+.city-analysis-strip > small {
+  margin: 0;
+  color: var(--city-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.city-analysis-strip > small {
+  max-width: 220px;
+  text-align: right;
+}
+
+@media (max-width: 980px) {
+  .city-market-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .city-analysis-strip {
+    grid-template-columns: 3px 1fr;
+  }
+
+  .city-analysis-strip p,
+  .city-analysis-strip > small {
+    grid-column: 2;
+    max-width: none;
+    text-align: left;
+  }
+}
+
+@media (max-width: 760px) {
+  .city-price-modern .city-market-overview {
+    width: 100%;
+    overflow: hidden;
+    padding-top: 12px;
+  }
+
+  .city-price-modern .city-overview-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 0 10px 8px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .city-price-modern .city-market-price-card,
+  .city-price-modern .city-market-signal-card {
+    min-width: 245px;
+    scroll-snap-align: start;
+  }
+
+  .city-market-dashboard {
+    width: 100%;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .city-dashboard-chart {
+    padding: 15px 4px 4px;
+  }
+
+  .city-dashboard-title {
+    display: grid;
+    padding: 0 12px 6px;
+  }
+
+  .city-dashboard-chart .city-chart-controls > span,
+  .city-dashboard-chart .city-chart-legend {
+    display: none;
+  }
+
+  .city-dashboard-chart .recharts-responsive-container {
+    height: 190px !important;
+  }
+
+  .city-dashboard-side {
+    gap: 10px;
+  }
+
+  .city-sale-duration-card,
+  .city-compact-sales,
+  .city-analysis-strip {
+    border-radius: 9px;
+  }
+
+  .city-analysis-strip {
+    grid-template-columns: 3px 1fr;
+    gap: 12px;
+  }
+}

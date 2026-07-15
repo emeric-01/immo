@@ -906,12 +906,6 @@ export function getStaticCityMarketData(city: City): CityMarketData {
 }
 
 export async function getCityMarketData(city: City): Promise<CityMarketData> {
-  const immoDataCitySlugs = new Set(["aubagne", "gemenos", "marseille"]);
-
-  if (!immoDataCitySlugs.has(city.slug)) {
-    return getStaticCityMarketData(city);
-  }
-
   const config = getImmoDataConfig();
 
   if (!config) {

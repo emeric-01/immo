@@ -3,13 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowRight,
-  BarChart3,
   Building2,
   CalendarDays,
   CheckCircle2,
+  Clock3,
   Home,
   MapPin,
-  Search,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
@@ -114,10 +113,6 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
   const averageTrend = Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
   );
-  const maxNeighborhoodPrice = Math.max(
-    ...market.neighborhoods.map((neighborhood) => neighborhood.pricePerM2),
-    1,
-  );
   const sourceLabel = market.source === "immo-data" ? "Données Immo Data" : "Données indicatives";
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const cacheDays = getMarketCacheDays();
@@ -169,17 +164,8 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         </div>
       </section>
 
-      <section className="city-intents city-modern-container" aria-label="Votre projet immobilier">
-        <Link href="/estimation"><Home size={20} /><span><strong>Estimer mon bien</strong><small>Obtenir un avis de valeur personnalisé</small></span><ArrowRight size={18} /></Link>
-        <Link href="/recherche"><Search size={20} /><span><strong>Préparer mon achat</strong><small>Définir les secteurs adaptés à mon budget</small></span><ArrowRight size={18} /></Link>
-        <Link href="#ventes"><BarChart3 size={20} /><span><strong>Vérifier une annonce</strong><small>Comparer avec les ventes enregistrées</small></span><ArrowRight size={18} /></Link>
-      </section>
-
       <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
-        <div className="city-modern-heading">
-          <div><p className="city-section-kicker">Les chiffres essentiels</p><h2 id="overview-title">Le marché en un coup d&apos;œil</h2></div>
-          <p>{sourceLabel}, mises en cache côté serveur pendant {cacheDays} jours.</p>
-        </div>
+        <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
         <div className="city-overview-grid">
           <MarketPriceCard icon={Building2} label="Appartement" stat={market.apartment} />
           <MarketPriceCard icon={Home} label="Maison" stat={market.house} />
@@ -188,76 +174,40 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             <strong>{formatPercent(averageTrend)}</strong>
             <p>{Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
           </article>
-          <article className="city-market-signal-card">
-            <span>Délai de vente observé</span>
-            <strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong>
-            <p>{market.transactionCount ? `${euroFormatter.format(market.transactionCount)} transactions disponibles` : "Donnée locale selon disponibilité"}</p>
-          </article>
         </div>
       </section>
 
-      <section className="city-analysis-section city-modern-container" aria-labelledby="trend-title">
-        <div className="city-modern-heading">
-          <div><p className="city-section-kicker">Depuis 2014</p><h2 id="trend-title">Comment les prix ont évolué</h2></div>
-          <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div>
-        </div>
-        <div className="city-analysis-grid">
-          <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
-          <aside className="city-analysis-note">
-            <span>Notre lecture</span>
-            <h3>{Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</h3>
-            <p>La moyenne communale donne une tendance. L&apos;adresse, l&apos;état du bien, l&apos;extérieur et le stationnement restent déterminants pour établir un prix défendable.</p>
-            <Link href="/estimation">Calculer la valeur de mon bien <ArrowRight size={16} /></Link>
-          </aside>
-        </div>
-      </section>
-
-      <section className="city-neighborhood-section city-modern-container" aria-labelledby="neighborhood-title">
-        <div className="city-modern-heading">
-          <div><p className="city-section-kicker">Lecture micro-locale</p><h2 id="neighborhood-title">Les prix secteur par secteur</h2></div>
-          <p>Les secteurs suivent le découpage statistique disponible chez Immo Data.</p>
-        </div>
-        <div className="city-neighborhood-layout">
-          <div className="city-neighborhood-ranking">
-            {market.neighborhoods
-              .slice()
-              .sort((a, b) => b.pricePerM2 - a.pricePerM2)
-              .map((neighborhood, index) => {
-                const difference = ((neighborhood.pricePerM2 - averagePrice) / averagePrice) * 100;
-                return (
-                  <article key={neighborhood.name}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div><strong>{neighborhood.name}</strong><i><b style={{ width: `${(neighborhood.pricePerM2 / maxNeighborhoodPrice) * 100}%` }} /></i></div>
-                    <div><strong>{formatPrice(neighborhood.pricePerM2)}<small>/m²</small></strong><span>{difference > 0 ? "+" : ""}{decimalFormatter.format(difference)} % vs ville</span></div>
-                  </article>
-                );
-              })}
+      <section className="city-market-dashboard city-modern-container" aria-labelledby="trend-title">
+        <div className="city-dashboard-chart">
+          <div className="city-dashboard-title">
+            <div><p className="city-section-kicker">Historique depuis 2014</p><h2 id="trend-title">Évolution des prix</h2></div>
+            <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div>
           </div>
-          <aside className="city-streets-card">
-            <p className="city-section-kicker">Repères par rue</p>
-            <h3>Les écarts les plus marqués</h3>
-            <div>
-              {market.expensiveStreets.slice(0, 3).map((street) => <p key={street.name}><span>{street.name}</span><strong>{formatPrice(street.pricePerM2)}/m²</strong></p>)}
-            </div>
-            <small>Les prix par rue sont calculés à partir des transactions disponibles et doivent être interprétés selon le nombre de ventes.</small>
-          </aside>
+          <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
         </div>
-      </section>
 
-      <section className="city-sales-modern city-modern-container" id="ventes" aria-labelledby="sales-title">
-        <div className="city-modern-heading">
-          <div><p className="city-section-kicker">Transactions réelles</p><h2 id="sales-title">Dernières ventes enregistrées</h2></div>
-          <p>Jusqu&apos;à 100 transactions récupérées par appel, filtrées pour la lecture.</p>
-        </div>
-        <div className="city-sales-list">
-          {market.salePoints.slice(0, 6).map((sale) => (
-            <article key={sale.id}>
-              <span className="city-sale-icon">{sale.propertyType === "Maison" ? <Home size={19} /> : <Building2 size={19} />}</span>
-              <div><span>Vendu · {sale.soldAt}</span><h3>{sale.label}</h3><p>{sale.propertyType} · {sale.rooms || "—"} pièces · {sale.surfaceM2 || "—"} m²</p></div>
-              <div>{sale.pricePerM2 ? <strong>{formatPrice(sale.pricePerM2)}<small>/m²</small></strong> : <strong>Prix sur demande</strong>}{sale.price ? <span>{formatPrice(sale.price)} au total</span> : null}</div>
-            </article>
-          ))}
-        </div>
+        <aside className="city-dashboard-side" id="ventes">
+          <article className="city-sale-duration-card">
+            <span><Clock3 size={22} /></span>
+            <div><small>Délai moyen de vente</small><strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong><p>Moyenne observée à {city.name}</p></div>
+          </article>
+          <article className="city-compact-sales" aria-labelledby="sales-title">
+            <div><h2 id="sales-title">Dernières ventes</h2><span>{market.transactionCount ? `${euroFormatter.format(market.transactionCount)} disponibles` : sourceLabel}</span></div>
+            {market.salePoints.slice(0, 3).map((sale) => (
+              <div className="city-compact-sale-row" key={sale.id}>
+                <div><span>{sale.propertyType}</span><strong>{sale.label}</strong><small>{sale.rooms || "—"} pièces · {sale.surfaceM2 || "—"} m²</small></div>
+                <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{sale.soldAt}</small></div>
+              </div>
+            ))}
+          </article>
+        </aside>
+
+        <article className="city-analysis-strip">
+          <i />
+          <div><span>Notre analyse</span><strong>{Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</strong></div>
+          <p>La moyenne communale donne une tendance. L&apos;adresse, l&apos;état, l&apos;extérieur et le stationnement restent déterminants pour établir un prix précis.</p>
+          <small>{sourceLabel} · Mise à jour le {formatDate(market.updatedAt)} · Cache {cacheDays} jours</small>
+        </article>
       </section>
 
       <section className="city-local-modern city-modern-container">

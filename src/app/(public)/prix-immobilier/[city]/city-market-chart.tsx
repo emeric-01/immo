@@ -86,7 +86,7 @@ export function CityMarketChart({ averagePrice, cityName, points }: CityMarketCh
         data={data}
         margin={{ bottom: 4, left: 0, right: 12, top: 18 }}
         responsive
-        style={{ height: 390, width: "100%" }}
+        style={{ height: 250, width: "100%" }}
       >
         <defs>
           <linearGradient id="apartmentGradient" x1="0" x2="0" y1="0" y2="1">
