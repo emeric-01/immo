@@ -219,11 +219,11 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
   return (
     <main className="city-price-page">
       <header className="city-price-header">
-        <Link className="city-brand" href="/">
-          <span className="brand-shield" aria-hidden="true" />
-          <strong>
-            Immo<span>Safe</span>
-          </strong>
+        <Link className="city-brand" href="/" aria-label="Les Jumelles Immo">
+          <span className="city-brand-wordmark">
+            <em>les jumelles</em>
+            <strong>IMMO</strong>
+          </span>
         </Link>
         <nav aria-label="Navigation principale">
           <Link href="/">Estimer un bien</Link>
@@ -260,7 +260,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             Prix immobilier a {city.name} ({city.postalCode})
           </h1>
           <p>
-            Estimations ImmoSafe au {formatDate(market.updatedAt)}. {sourceText}
+            Estimations Les Jumelles Immo au {formatDate(market.updatedAt)}. {sourceText}
           </p>
 
           <div className="city-price-types">
@@ -425,7 +425,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
       <section className="city-content-section city-seo-text">
         <h2>Quels sont les prix de l&apos;immobilier en detail a {city.name} ?</h2>
         <p>
-          L&apos;estimation ImmoSafe du prix immobilier a {city.name} au{" "}
+          L&apos;estimation Les Jumelles Immo du prix immobilier a {city.name} au{" "}
           {formatDate(market.updatedAt)} est de {formatPrice(averagePrice)} / m2
           en moyenne, tous types de biens confondus. Pour connaitre le prix
           d&apos;un bien precis, le plus fiable reste de lancer une estimation

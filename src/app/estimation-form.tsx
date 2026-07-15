@@ -167,6 +167,22 @@ function buildTrendPath(points: Array<{ value: number }>) {
     .join(" ");
 }
 
+function EstimationSiteHeader() {
+  return (
+    <header className="estimation-site-header">
+      <Link className="estimation-logo" href="/" aria-label="Les Jumelles Immo">
+        <span>les jumelles</span>
+        <strong>IMMO</strong>
+      </Link>
+      <nav className="estimation-nav" aria-label="Navigation principale">
+        <Link href="/">Estimer et vendre</Link>
+        <Link href="/recherche">Déposer une recherche</Link>
+        <Link href="/client">Espace client</Link>
+      </nav>
+    </header>
+  );
+}
+
 export function EstimationForm() {
   const [step, setStep] = useState<FlowStep>("address");
   const [form, setForm] = useState<FormState>(initialForm);
@@ -405,7 +421,7 @@ export function EstimationForm() {
         <span className="field-hint warning">{addressError}</span>
       ) : step === "refine" ? (
         <span className="field-hint">
-          Recherche dans la Base Adresse Nationale a partir de 5 caracteres.
+          Recherche dans la Base Adresse Nationale des les 3 premiers caracteres.
         </span>
       ) : null}
     </label>
@@ -413,19 +429,16 @@ export function EstimationForm() {
 
   if (step === "address") {
     return (
-      <section className="address-step" aria-labelledby="address-step-title">
-        <div className="brand-lockup" aria-label="ImmoSafe">
-          <span className="brand-shield" />
-          <strong>
-            Immo<span>Safe</span>
-          </strong>
-        </div>
+      <main className="estimation-page">
+        <EstimationSiteHeader />
+        <section className="address-step estimation-shell" aria-labelledby="address-step-title">
 
         <div className="address-hero">
+          <p className="estimation-kicker">Estimation immobilière</p>
           <h1 id="address-step-title">
-            Estimez votre bien immobilier en toute confiance
+            Estimez votre bien avec Les Jumelles Immo
           </h1>
-          <p>Rapide, gratuit et sans engagement.</p>
+          <p>Une première estimation rapide, gratuite et sans engagement.</p>
         </div>
 
         <form
@@ -451,13 +464,16 @@ export function EstimationForm() {
           <span className="privacy-lock" aria-hidden="true" />
           Vos donnees sont protegees (RGPD) et ne seront jamais revendues.
         </p>
-      </section>
+        </section>
+      </main>
     );
   }
 
   if (step === "essential") {
     return (
-      <section className="details-step essential-step" aria-labelledby="essential-title">
+      <main className="estimation-page">
+        <EstimationSiteHeader />
+        <section className="details-step essential-step estimation-shell" aria-labelledby="essential-title">
         <div className="stepper" aria-label="Progression de l'estimation">
           <div className="stepper-item active">
             <span>1</span>
@@ -686,7 +702,8 @@ export function EstimationForm() {
             Vos donnees sont protegees et ne seront jamais revendues.
           </p>
         </form>
-      </section>
+        </section>
+      </main>
     );
   }
 
@@ -722,14 +739,10 @@ export function EstimationForm() {
     const lastTrendPoint = priceHistory[priceHistory.length - 1];
 
     return (
-      <section className="result-page" aria-labelledby="result-title">
+      <main className="estimation-page">
+        <EstimationSiteHeader />
+        <section className="result-page estimation-shell" aria-labelledby="result-title">
         <header className="result-topbar">
-          <div className="brand-lockup compact" aria-label="ImmoSafe">
-            <span className="brand-shield" />
-            <strong>
-              Immo<span>Safe</span>
-            </strong>
-          </div>
           <button
             type="button"
             className="back-button"
@@ -925,7 +938,7 @@ export function EstimationForm() {
               <span>Analyse detaillee, photos, carte et recommandations</span>
             </button>
             <button className="secondary-action">
-              Confier ma vente a ImmoSafe
+              Confier ma vente aux Jumelles Immo
               <span>Un expert local vous accompagne</span>
             </button>
           </div>
@@ -935,12 +948,15 @@ export function EstimationForm() {
             Vos donnees sont protegees. Aucune revente de donnees.
           </p>
         </div>
-      </section>
+        </section>
+      </main>
     );
   }
 
   return (
-    <section className="details-step" aria-labelledby="estimation-title">
+    <main className="estimation-page">
+      <EstimationSiteHeader />
+      <section className="details-step estimation-shell" aria-labelledby="estimation-title">
       <div className="details-header">
         <button
           type="button"
@@ -949,12 +965,6 @@ export function EstimationForm() {
         >
           Retour
         </button>
-        <div className="brand-lockup compact" aria-label="ImmoSafe">
-          <span className="brand-shield" />
-          <strong>
-            Immo<span>Safe</span>
-          </strong>
-        </div>
       </div>
 
       <section className="estimation-module" aria-labelledby="estimation-title">
@@ -1256,6 +1266,7 @@ export function EstimationForm() {
         )}
       </aside>
     </section>
-    </section>
+      </section>
+    </main>
   );
 }

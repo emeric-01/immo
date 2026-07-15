@@ -3,8 +3,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Immo Backoffice",
-  description: "Backoffice local pour l'activite immo",
+  title: "Les Jumelles Immo",
+  description: "Estimez votre bien et confiez votre projet immobilier aux Jumelles Immo.",
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AddressSuggestion } from "@/lib/immo-data";
+import { MIN_ADDRESS_QUERY_LENGTH, type AddressSuggestion } from "@/lib/immo-data";
 
 const BAN_GEOCODING_URL = "https://data.geopf.fr/geocodage/search";
 const MIN_BAN_SCORE = 0.3;
@@ -32,7 +32,7 @@ type BanFeatureCollection = {
 export async function searchBanAddresses(query: string): Promise<AddressSuggestion[]> {
   const normalizedQuery = query.trim();
 
-  if (normalizedQuery.length < 5) {
+  if (normalizedQuery.length < MIN_ADDRESS_QUERY_LENGTH) {
     return [];
   }
 

@@ -66,65 +66,6 @@ strong {
   justify-items: center;
 }
 
-.brand-lockup {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #10233a;
-}
-
-.brand-lockup strong {
-  font-size: 2rem;
-  font-weight: 650;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.brand-lockup span {
-  color: #2563eb;
-}
-
-.brand-lockup.compact {
-  gap: 8px;
-}
-
-.brand-lockup.compact strong {
-  font-size: 1.15rem;
-}
-
-.brand-shield {
-  position: relative;
-  width: 36px;
-  height: 41px;
-  border: 3px solid #1c4b86;
-  border-bottom: 0;
-  border-radius: 16px 16px 12px 12px;
-  color: #1c4b86;
-}
-
-.brand-shield::before,
-.brand-shield::after {
-  position: absolute;
-  content: "";
-  background: currentColor;
-}
-
-.brand-shield::before {
-  left: 50%;
-  bottom: -7px;
-  width: 22px;
-  height: 3px;
-  transform: translateX(-50%) rotate(28deg);
-}
-
-.brand-shield::after {
-  left: 50%;
-  bottom: -7px;
-  width: 22px;
-  height: 3px;
-  transform: translateX(-50%) rotate(-28deg);
-}
-
 .address-hero {
   display: grid;
   gap: 12px;
@@ -1600,27 +1541,6 @@ button:focus-visible {
     padding: 64px 0 32px;
   }
 
-  .brand-lockup {
-    gap: 12px;
-  }
-
-  .brand-lockup strong {
-    font-size: 2.75rem;
-  }
-
-  .brand-shield {
-    width: 46px;
-    height: 52px;
-    border-width: 4px;
-  }
-
-  .brand-shield::before,
-  .brand-shield::after {
-    bottom: -9px;
-    width: 28px;
-    height: 4px;
-  }
-
   .address-hero {
     gap: 14px;
     margin: 38px 0 28px;
@@ -1732,6 +1652,376 @@ button:focus-visible {
   }
 }
 
+/* Estimation — direction artistique Les Jumelles Immo */
+.estimation-page {
+  --background: #ffffff;
+  --foreground: #111111;
+  --muted: #697080;
+  --panel: #ffffff;
+  --line: #e7e2dc;
+  --primary: #111111;
+  --primary-hover: #2a2a2a;
+  --accent: #d6a97a;
+  --accent-soft: #fbf7f2;
+  --shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
+  --shadow-soft: 0 10px 26px rgba(17, 17, 17, 0.05);
+  --focus-ring: 0 0 0 3px #f6efe7;
+  min-height: 100svh;
+  background: #ffffff;
+  color: #111111;
+}
+
+.estimation-site-header {
+  position: relative;
+  display: grid;
+  width: min(1420px, calc(100% - 28px));
+  margin: 12px auto 0;
+  padding: 26px 48px 22px;
+  border: 1px solid #e7e2dc;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  justify-items: center;
+  gap: 18px;
+}
+
+.estimation-logo {
+  color: #111111;
+  text-align: center;
+  text-decoration: none;
+}
+
+.estimation-logo span {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.8rem;
+  font-style: italic;
+  line-height: 0.82;
+}
+
+.estimation-logo strong {
+  display: block;
+  color: #d6b48c;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.estimation-nav {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 7vw, 100px);
+}
+
+.estimation-nav a {
+  color: #111111;
+  font-size: 0.82rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.estimation-nav a:hover,
+.estimation-nav a:focus-visible {
+  color: #9a704a;
+}
+
+.estimation-page .estimation-shell {
+  width: min(1420px, calc(100% - 28px));
+  min-height: auto;
+  margin: 0 auto 22px;
+  border: 1px solid #e7e2dc;
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  background: #ffffff;
+  padding: 42px 48px 48px;
+}
+
+.estimation-page .address-step {
+  align-content: start;
+  padding-top: 62px;
+}
+
+.estimation-page .address-hero {
+  margin: 0 0 34px;
+}
+
+.estimation-page .estimation-kicker {
+  margin: 0 0 2px;
+  color: #b48256;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.estimation-page .address-hero h1,
+.estimation-page .module-heading h2,
+.estimation-page .valuation-card h1,
+.estimation-page .result-card h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.estimation-page .address-hero h1 {
+  max-width: 780px;
+  color: #111111;
+  font-size: clamp(2.7rem, 5vw, 4.6rem);
+  line-height: 0.98;
+}
+
+.estimation-page .address-hero p:not(.estimation-kicker) {
+  color: #616878;
+  font-size: 1.08rem;
+}
+
+.estimation-page .address-search-card,
+.estimation-page .essential-card,
+.estimation-page .estimation-form,
+.estimation-page .valuation-card,
+.estimation-page .result-card {
+  border-color: #e7e2dc;
+  box-shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
+}
+
+.estimation-page .address-search-card {
+  border-radius: 10px;
+}
+
+.estimation-page .estimate-button,
+.estimation-page .continue-action,
+.estimation-page .primary-action {
+  background: #111111;
+  box-shadow: none;
+}
+
+.estimation-page .estimate-button:hover:not(:disabled),
+.estimation-page .continue-action:hover:not(:disabled),
+.estimation-page .primary-action:hover:not(:disabled) {
+  background: #2a2a2a;
+}
+
+.estimation-page .estimate-button:disabled {
+  background: #d7d2cc;
+  color: #ffffff;
+  opacity: 1;
+}
+
+.estimation-page .suggestions-list button:hover,
+.estimation-page .suggestions-list button:focus-visible {
+  background: #fbf7f2;
+}
+
+.estimation-page .privacy-note {
+  color: #616878;
+}
+
+.estimation-page .stepper {
+  width: min(720px, 100%);
+  margin-right: auto;
+  margin-bottom: 34px;
+  margin-left: auto;
+}
+
+.estimation-page .stepper::before {
+  background: #e7e2dc;
+}
+
+.estimation-page .stepper::after {
+  background: #111111;
+}
+
+.estimation-page .stepper-item > span {
+  border-color: #d8d2cb;
+  background: #fbf7f2;
+  color: #111111;
+}
+
+.estimation-page .stepper-item.active > span {
+  border-color: #111111;
+  background: #111111;
+  box-shadow: none;
+}
+
+.estimation-page .essential-card {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 30px;
+}
+
+.estimation-page .module-heading h2 {
+  color: #111111;
+  font-size: 2.2rem;
+}
+
+.estimation-page .module-heading p {
+  color: #697080;
+}
+
+.estimation-page input:focus,
+.estimation-page select:focus,
+.estimation-page button:focus-visible {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px #f6efe7;
+}
+
+.estimation-page .property-switch {
+  border-color: #e7e2dc;
+  background: #faf8f5;
+}
+
+.estimation-page .property-switch button.selected {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.estimation-page .property-switch button.selected .property-svg {
+  filter: invert(1);
+}
+
+.estimation-page .property-tuning,
+.estimation-page .advanced-criteria,
+.estimation-page .price-trend {
+  background: #fbf9f6;
+}
+
+.estimation-page .surface-range::-webkit-slider-runnable-track {
+  border-color: #d8d2cb;
+  background: linear-gradient(90deg, #111111 0%, #b48256 var(--range-progress), #ede9e4 var(--range-progress), #ede9e4 100%);
+}
+
+.estimation-page .surface-range::-webkit-slider-thumb,
+.estimation-page .surface-range::-moz-range-thumb {
+  background: #111111;
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.18);
+}
+
+.estimation-page .surface-range::-moz-range-progress {
+  background: linear-gradient(90deg, #111111 0%, #b48256 100%);
+}
+
+.estimation-page .room-options button:hover {
+  border-color: #bca287;
+}
+
+.estimation-page .room-options button.selected {
+  border-color: #111111;
+  background: #111111;
+  box-shadow: none;
+}
+
+.estimation-page .asset-pill.selected {
+  border-color: #d6b48c;
+  background: #fbf7f2;
+  box-shadow: inset 0 0 0 1px #ead8c6;
+}
+
+.estimation-page .asset-pill input {
+  accent-color: #111111;
+}
+
+.estimation-page .details-header,
+.estimation-page .result-topbar {
+  margin-bottom: 24px;
+}
+
+.estimation-page .result-topbar {
+  justify-content: flex-end;
+}
+
+.estimation-page .back-button {
+  border-color: #e2d8ce;
+  color: #111111;
+}
+
+.estimation-page .back-button:hover {
+  background: #fbf7f2;
+}
+
+.estimation-page .result-status {
+  color: #8a5a34;
+}
+
+.estimation-page .status-check {
+  border-color: #b48256;
+}
+
+.estimation-page .status-check::after {
+  border-color: #b48256;
+}
+
+.estimation-page .result-source {
+  background: #fbf7f2;
+  color: #70401e;
+}
+
+.estimation-page .valuation-card h1,
+.estimation-page .result-price,
+.estimation-page .result-address {
+  color: #111111;
+}
+
+.estimation-page .kpi-icon {
+  background: #111111;
+}
+
+.estimation-page .section-heading > span,
+.estimation-page .price-trend-heading strong {
+  color: #9a704a;
+}
+
+.estimation-page .price-trend-chart path:last-child {
+  stroke: #b48256;
+}
+
+.estimation-page .secondary-action {
+  border-color: #111111;
+  color: #111111;
+}
+
+.estimation-page .result-privacy {
+  background: #fbf7f2;
+}
+
+@media (max-width: 760px) {
+  .estimation-site-header {
+    width: min(100% - 20px, 1420px);
+    margin-top: 8px;
+    padding: 24px 18px 18px;
+  }
+
+  .estimation-logo span {
+    font-size: 2.35rem;
+  }
+
+  .estimation-nav {
+    display: none;
+  }
+
+  .estimation-page .estimation-shell {
+    width: min(100% - 20px, 1420px);
+    padding: 30px 16px 34px;
+  }
+
+  .estimation-page .address-step {
+    padding-top: 42px;
+  }
+
+  .estimation-page .address-hero h1 {
+    font-size: 2.65rem;
+  }
+
+  .estimation-page .essential-card {
+    padding: 20px 16px;
+  }
+
+  .estimation-page .stepper-item strong {
+    font-size: 0.78rem;
+  }
+}
+
 .city-price-page {
   min-height: 100svh;
   background: #f2f4f7;
@@ -1761,26 +2051,23 @@ button:focus-visible {
   text-decoration: none;
 }
 
-.city-brand .brand-shield {
-  width: 30px;
-  height: 34px;
-  border-width: 3px;
-}
-
-.city-brand .brand-shield::before,
-.city-brand .brand-shield::after {
-  bottom: -7px;
-  width: 20px;
-  height: 3px;
-}
-
-.city-brand strong {
-  font-size: 1.15rem;
+.city-brand-wordmark {
+  display: grid;
+  justify-items: center;
+  color: #111111;
   line-height: 1;
 }
 
-.city-brand span {
-  color: #2563eb;
+.city-brand-wordmark em {
+  color: #111111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.city-brand-wordmark strong {
+  color: #d6b48c;
+  font-size: 0.72rem;
 }
 
 .city-price-header nav {

@@ -80,7 +80,7 @@ export type AddressSuggestion = {
   latitude: number;
 };
 
-export const MIN_ADDRESS_QUERY_LENGTH = 5;
+export const MIN_ADDRESS_QUERY_LENGTH = 3;
 
 type ImmoDataConfig = {
   baseUrl: string;
