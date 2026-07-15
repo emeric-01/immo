@@ -4,12 +4,9 @@ import { notFound } from "next/navigation";
 import {
   ArrowRight,
   Building2,
-  CalendarDays,
   CheckCircle2,
   Clock3,
   Home,
-  MapPin,
-  ShieldCheck,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -21,6 +18,7 @@ import {
 } from "@/lib/city-market-data";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
+import { CityAddressSearch } from "./city-address-search";
 
 type CityPricePageProps = {
   params: Promise<{ city: string }>;
@@ -126,30 +124,16 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
       <section className="city-modern-hero" aria-labelledby="city-price-title">
         <div className="city-modern-container city-modern-hero-grid">
           <div className="city-modern-hero-copy">
-            <p className="city-section-kicker">Observatoire local · {city.postalCode}</p>
             <h1 id="city-price-title">Prix immobilier<br />à {city.name}</h1>
             <div className="city-hero-price">
               <strong>{formatPrice(averagePrice)}</strong><span>/m²</span>
             </div>
             <p className="city-hero-intro">
-              Une lecture claire du marché local pour estimer, acheter ou vérifier
-              le prix d&apos;un bien à {city.name}.
+              Prix moyen tous biens confondus
             </p>
 
-            <form action="/estimation" className="city-address-form">
-              <MapPin aria-hidden="true" size={20} />
-              <input
-                aria-label={`Adresse du bien à ${city.name}`}
-                name="address"
-                placeholder={`Saisissez votre adresse à ${city.name}`}
-              />
-              <button type="submit">Estimer mon bien <ArrowRight size={17} /></button>
-            </form>
+            <CityAddressSearch cityName={city.name} inseeCode={city.inseeCode} postalCode={city.postalCode} />
 
-            <div className="city-trust-row">
-              <span><ShieldCheck size={16} /> Données sécurisées</span>
-              <span><CalendarDays size={16} /> Actualisé le {formatDate(market.updatedAt)}</span>
-            </div>
           </div>
 
           <div className="city-modern-map-wrap">

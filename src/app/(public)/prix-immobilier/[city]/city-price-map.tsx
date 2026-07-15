@@ -436,7 +436,7 @@ export function CityPriceMap({
           />
           Biens vendus
         </label>
-        <span>{filteredSalePoints.length} transactions visibles</span>
+        <span>{filteredSalePoints.length} dernières transactions affichées</span>
       </div>
     </div>
   );

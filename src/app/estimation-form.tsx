@@ -167,11 +167,14 @@ function buildTrendPath(points: Array<{ value: number }>) {
     .join(" ");
 }
 
-export function EstimationForm() {
-  const [step, setStep] = useState<FlowStep>("address");
-  const [form, setForm] = useState<FormState>(initialForm);
+export function EstimationForm({ initialAddress }: { initialAddress?: AddressSuggestion }) {
+  const [step, setStep] = useState<FlowStep>(initialAddress ? "essential" : "address");
+  const [form, setForm] = useState<FormState>(() => ({
+    ...initialForm,
+    address: initialAddress?.label ?? "",
+  }));
   const [selectedAddress, setSelectedAddress] =
-    useState<AddressSuggestion | null>(null);
+    useState<AddressSuggestion | null>(initialAddress ?? null);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [locationHint, setLocationHint] = useState<LocationHint | null>(null);
   const [estimation, setEstimation] = useState<PropertyEstimationResponse | null>(null);

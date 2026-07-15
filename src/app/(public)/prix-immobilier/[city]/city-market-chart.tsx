@@ -20,7 +20,7 @@ type CityMarketChartProps = {
   points: CityPriceHistoryPoint[];
 };
 
-type Period = "5y" | "all";
+type Period = "1y" | "2y" | "5y";
 
 const priceFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
@@ -50,13 +50,10 @@ function MarketTooltip({
 }
 
 export function CityMarketChart({ averagePrice, cityName, points }: CityMarketChartProps) {
-  const [period, setPeriod] = useState<Period>("all");
+  const [period, setPeriod] = useState<Period>("2y");
   const data = useMemo(() => {
-    if (period === "all") {
-      return points;
-    }
-
-    return points.slice(-6);
+    const monthCount = period === "1y" ? 13 : period === "2y" ? 25 : 61;
+    return points.slice(-monthCount);
   }, [period, points]);
 
   return (
@@ -64,18 +61,25 @@ export function CityMarketChart({ averagePrice, cityName, points }: CityMarketCh
       <div className="city-chart-controls">
         <div aria-label="Période du graphique" role="group">
           <button
+            className={period === "1y" ? "active" : ""}
+            onClick={() => setPeriod("1y")}
+            type="button"
+          >
+            1 an
+          </button>
+          <button
+            className={period === "2y" ? "active" : ""}
+            onClick={() => setPeriod("2y")}
+            type="button"
+          >
+            2 ans
+          </button>
+          <button
             className={period === "5y" ? "active" : ""}
             onClick={() => setPeriod("5y")}
             type="button"
           >
             5 ans
-          </button>
-          <button
-            className={period === "all" ? "active" : ""}
-            onClick={() => setPeriod("all")}
-            type="button"
-          >
-            Depuis 2014
           </button>
         </div>
         <span>Survolez la courbe pour afficher les prix</span>

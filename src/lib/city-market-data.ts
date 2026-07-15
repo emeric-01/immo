@@ -496,15 +496,7 @@ function toHistoryPoints(
     return fallbackHistory;
   }
 
-  return points.filter((_, index) => {
-    if (points.length <= 12) {
-      return true;
-    }
-
-    const stride = Math.ceil(points.length / 12);
-
-    return index % stride === 0 || index === points.length - 1;
-  });
+  return points;
 }
 
 function coordinatesFromDistrict(boundaries: DistrictGeoResponse["boundaries"]) {
@@ -785,7 +777,7 @@ async function getCityImmoDataMarket(
     transactions?.data
       ?.map(toSalePoint)
       .filter((salePoint): salePoint is CitySalePoint => Boolean(salePoint))
-      .slice(0, 12) ?? [];
+      .slice(0, 30) ?? [];
   const salePoints =
     salePointsFromTransactions.length > 0
       ? salePointsFromTransactions
