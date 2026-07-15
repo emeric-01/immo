@@ -1,4 +1,4 @@
-import type { BuyerSearchFormData } from "./types";
+import { defaultBuyerSearchData, type BuyerSearchFormData } from "./types";
 import type { BuyerSearchSubmissionResult } from "./database";
 
 export const buyerSearchDraftKey = "les-jumelles:buyer-search:draft";
@@ -22,7 +22,7 @@ export function loadBuyerSearchDraft(): BuyerSearchFormData | null {
   }
 
   try {
-    return JSON.parse(raw) as BuyerSearchFormData;
+    return withoutContactDetails(JSON.parse(raw) as BuyerSearchFormData);
   } catch {
     return null;
   }
@@ -33,7 +33,14 @@ export function saveBuyerSearchDraft(data: BuyerSearchFormData) {
     return;
   }
 
-  window.localStorage.setItem(buyerSearchDraftKey, JSON.stringify(data));
+  window.localStorage.setItem(buyerSearchDraftKey, JSON.stringify(withoutContactDetails(data)));
+}
+
+function withoutContactDetails(data: BuyerSearchFormData): BuyerSearchFormData {
+  return {
+    ...data,
+    contact: { ...defaultBuyerSearchData.contact },
+  };
 }
 
 export function saveSubmittedBuyerSearch(data: BuyerSearchFormData, result?: BuyerSearchSubmissionResult) {

@@ -122,6 +122,7 @@ export function BuyerSearchWizard() {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [draftReady, setDraftReady] = useState(false);
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
   const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
   const form = useForm<BuyerSearchFormData>({
     defaultValues: defaultBuyerSearchData,
@@ -193,6 +194,7 @@ export function BuyerSearchWizard() {
 
         if (payload.search) {
           reset({ ...defaultBuyerSearchData, ...payload.search });
+          setClientEmail(payload.search.contact.email);
         } else if (payload.profile) {
           reset({
             ...defaultBuyerSearchData,
@@ -203,6 +205,7 @@ export function BuyerSearchWizard() {
               lastName: payload.profile.lastName,
             },
           });
+          setClientEmail(payload.profile.email);
         }
       } finally {
         setDraftReady(true);
@@ -325,14 +328,14 @@ export function BuyerSearchWizard() {
       project: <StepProject form={form} goToStep={goToStep} />,
       summary: <StepSummary form={form} goToStep={goToStep} />,
       priorities: <StepPriorities form={form} goToStep={goToStep} />,
-      contact: <StepContact form={form} goToStep={goToStep} />,
+      contact: <StepContact clientEmail={clientEmail} form={form} goToStep={goToStep} />,
     } satisfies Record<WizardStepId, React.ReactNode>
   )[activeStep.id];
 
   return (
     <main className={styles.page}>
       <SiteHeader />
-      <form className={styles.shell} onSubmit={handleSubmit(onFinalSubmit)}>
+      <form className={styles.shell} onSubmit={(event) => event.preventDefault()}>
         <ProgressStepper activeIndex={stepIndex} />
         <header className={styles.stepHeader}>
           <div>
@@ -368,6 +371,7 @@ export function BuyerSearchWizard() {
           isLast={stepIndex === buyerSearchSteps.length - 1}
           onBack={previousStep}
           onNext={nextStep}
+          onSubmit={handleSubmit(onFinalSubmit)}
           nextLabel={
             activeStep.id === "summary"
               ? "Definir mes priorites"
@@ -433,12 +437,14 @@ function WizardNavigation({
   nextLabel,
   onBack,
   onNext,
+  onSubmit,
 }: {
   isFirst: boolean;
   isLast: boolean;
   nextLabel: string;
   onBack: () => void;
   onNext: () => void;
+  onSubmit: () => void | Promise<void>;
 }) {
   return (
     <div className={styles.navigation}>
@@ -446,7 +452,7 @@ function WizardNavigation({
         <ArrowLeft size={18} aria-hidden="true" />
         Retour
       </button>
-      <button className={styles.primaryButton} type={isLast ? "submit" : "button"} onClick={isLast ? undefined : onNext}>
+      <button className={styles.primaryButton} type="button" onClick={isLast ? onSubmit : onNext}>
         {isLast ? <Lock size={18} aria-hidden="true" /> : null}
         {nextLabel}
         {!isLast ? <ArrowRight size={18} aria-hidden="true" /> : null}
@@ -941,7 +947,7 @@ function StepPriorities({ form }: StepProps) {
   );
 }
 
-function StepContact({ form }: StepProps) {
+function StepContact({ clientEmail, form }: StepProps & { clientEmail: string | null }) {
   const { register, setValue, watch } = form;
   const contact = watch("contact");
 
@@ -961,7 +967,13 @@ function StepContact({ form }: StepProps) {
       </div>
       <label className={styles.field}>
         Email *
-        <input placeholder="exemple@mail.fr" type="email" {...register("contact.email")} />
+        <input
+          placeholder="exemple@mail.fr"
+          readOnly={Boolean(clientEmail)}
+          type="email"
+          {...register("contact.email")}
+        />
+        {clientEmail ? <small>Adresse liee a votre compte client.</small> : null}
         <FormError errors={form.formState.errors} path="contact.email" />
       </label>
       <label className={styles.field}>
