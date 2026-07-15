@@ -42,7 +42,7 @@ describe("MarketScoreCard", () => {
 
     expect(screen.getByRole("link", { name: "Aubagne" })).toHaveAttribute(
       "href",
-      "/prix-immobilier/aubagne",
+      "/prix-m2/aubagne",
     );
   });
 });

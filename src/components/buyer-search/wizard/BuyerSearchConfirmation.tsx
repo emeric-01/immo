@@ -137,7 +137,7 @@ function ConfirmationLocations({ cities }: { cities: BuyerSearchFormData["locati
     return (
       <span key={`${city.cityCode ?? city.name}-${index}`}>
         {index > 0 ? ", " : null}
-        {cityPage ? <Link href={`/prix-immobilier/${cityPage.slug}`}>{label}</Link> : label}
+        {cityPage ? <Link href={`/prix-m2/${cityPage.slug}`}>{label}</Link> : label}
       </span>
     );
   });

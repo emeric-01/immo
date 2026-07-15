@@ -127,7 +127,7 @@ export function MarketScoreCard({
         <p className={styles.bestMatch}>
           Meilleure coherence : <strong>{propertyTypeLabels[match.propertyType]} a {" "}
           {cityPage ? (
-            <Link href={`/prix-immobilier/${cityPage.slug}`}>{match.cityName}</Link>
+            <Link href={`/prix-m2/${cityPage.slug}`}>{match.cityName}</Link>
           ) : (
             match.cityName
           )}</strong>

@@ -4917,3 +4917,197 @@ button:focus-visible {
   .city-modern-map-wrap .city-map-shell { min-height: 360px; }
   .city-price-modern .city-map-footer { right: 10px; bottom: 10px; }
 }
+
+/* Retour à la direction éditoriale précédente. */
+.city-price-modern > .city-breadcrumb {
+  display: block;
+}
+
+.city-modern-hero-grid {
+  width: min(1320px, calc(100% - 36px));
+  min-height: 650px;
+  grid-template-columns: minmax(0, .92fr) minmax(520px, 1.08fr);
+}
+
+.city-modern-hero-copy {
+  padding: 58px 58px 58px 0;
+}
+
+.city-modern-hero h1 {
+  max-width: 680px;
+  font-size: clamp(3.8rem, 6vw, 6.6rem);
+  line-height: .88;
+}
+
+.city-hero-price {
+  margin-top: 28px;
+}
+
+.city-hero-price strong {
+  font-size: clamp(3rem, 5vw, 5rem);
+}
+
+.city-hero-intro {
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+.city-address-search {
+  max-width: none;
+  margin-top: 0;
+}
+
+.city-address-form {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  margin-top: 28px;
+  border: 1px solid #d9cec2;
+  background: #fff;
+  padding: 7px 7px 7px 15px;
+  box-shadow: 0 16px 38px rgba(54, 42, 31, .07);
+}
+
+.city-address-form > svg,
+.city-address-input-wrap {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+}
+
+.city-address-form > svg {
+  width: 20px;
+  height: 20px;
+  border-radius: 0;
+  padding: 0;
+}
+
+.city-address-input-wrap {
+  border-radius: 0;
+}
+
+.city-address-form button[type="submit"] {
+  grid-column: auto;
+  width: auto;
+  margin-top: 0;
+}
+
+.city-address-suggestions {
+  left: -43px;
+}
+
+.city-modern-map-wrap .city-map-shell {
+  min-height: 650px;
+}
+
+.city-price-modern .city-map-toolbar {
+  display: flex;
+}
+
+.city-price-modern .city-map-inspector {
+  display: grid;
+}
+
+.city-price-modern .city-map-footer {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  width: auto;
+  grid-template-columns: 1fr 1fr;
+  border: 0;
+  border-top: 1px solid #dfe4eb;
+  border-radius: 0;
+  background: rgba(255, 255, 255, .95);
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.city-price-modern .city-map-footer label {
+  display: inline-flex;
+}
+
+.city-price-modern .city-map-footer span {
+  min-height: 46px;
+  color: #5d6370;
+  font-size: inherit;
+}
+
+.city-price-modern .city-market-overview {
+  padding-top: 18px;
+}
+
+.city-price-modern .city-overview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.city-price-modern .city-market-price-card,
+.city-price-modern .city-market-signal-card {
+  min-height: 108px;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.city-market-dashboard {
+  padding-top: 16px;
+}
+
+.city-dashboard-chart {
+  padding: 20px 18px 8px;
+}
+
+.city-dashboard-title .city-section-kicker,
+.city-dashboard-title .city-chart-legend,
+.city-interactive-chart .city-chart-controls > span {
+  display: initial;
+}
+
+.city-interactive-chart .city-chart-controls {
+  justify-content: space-between;
+}
+
+@media (max-width: 1100px) {
+  .city-modern-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-modern-hero-copy {
+    padding-right: 0;
+  }
+
+  .city-modern-map-wrap .city-map-shell {
+    min-height: 570px;
+  }
+}
+
+@media (max-width: 760px) {
+  .city-modern-hero-grid {
+    width: min(100% - 20px, 1320px);
+  }
+
+  .city-modern-hero-copy {
+    padding: 46px 0;
+  }
+
+  .city-modern-hero h1 {
+    font-size: 3.7rem;
+  }
+
+  .city-address-form {
+    grid-template-columns: auto 1fr;
+  }
+
+  .city-address-form button[type="submit"] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .city-modern-map-wrap .city-map-shell {
+    min-height: 430px;
+  }
+
+  .city-price-modern .city-map-footer {
+    right: 0;
+    bottom: 0;
+  }
+}

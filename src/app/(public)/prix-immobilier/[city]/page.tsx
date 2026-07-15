@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import {
   ArrowRight,
   Building2,
+  CalendarDays,
   CheckCircle2,
   Clock3,
   Home,
+  ShieldCheck,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -91,8 +93,11 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
   if (!city) return {};
 
   return {
-    title: `Prix immobilier à ${city.name} (${city.postalCode}) | Les Jumelles Immo`,
-    description: `Prix immobilier à ${city.name} : prix au m², évolution depuis 2014, quartiers, rues et dernières ventes enregistrées.`,
+    title: `Prix au m² à ${city.name} (${city.postalCode}) | Les Jumelles Immo`,
+    description: `Prix au m² à ${city.name} pour les appartements et maisons : évolution du marché et dernières ventes enregistrées.`,
+    alternates: {
+      canonical: `/prix-m2/${city.slug}`,
+    },
   };
 }
 
@@ -118,21 +123,28 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
   return (
     <main className="city-price-page city-price-modern">
       <nav className="city-breadcrumb city-modern-container" aria-label="Fil d’Ariane">
-        <Link href="/">Accueil</Link><span>Prix immobilier</span><span>{city.name}</span>
+        <Link href="/">Accueil</Link><span>Prix au m²</span><span>{city.name}</span>
       </nav>
 
       <section className="city-modern-hero" aria-labelledby="city-price-title">
         <div className="city-modern-container city-modern-hero-grid">
           <div className="city-modern-hero-copy">
-            <h1 id="city-price-title">Prix immobilier<br />à {city.name}</h1>
+            <p className="city-section-kicker">Observatoire local · {city.postalCode}</p>
+            <h1 id="city-price-title">Prix au m²<br />à {city.name}</h1>
             <div className="city-hero-price">
               <strong>{formatPrice(averagePrice)}</strong><span>/m²</span>
             </div>
             <p className="city-hero-intro">
-              Prix moyen tous biens confondus
+              Une lecture claire du marché local pour estimer, acheter ou vérifier
+              le prix d&apos;un bien à {city.name}.
             </p>
 
             <CityAddressSearch cityName={city.name} inseeCode={city.inseeCode} postalCode={city.postalCode} />
+
+            <div className="city-trust-row">
+              <span><ShieldCheck size={16} /> Données sécurisées</span>
+              <span><CalendarDays size={16} /> Actualisé le {formatDate(market.updatedAt)}</span>
+            </div>
 
           </div>
 
@@ -210,7 +222,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             {nearbyCities.map((nearbyCity) => {
               const nearby = getStaticCityMarketData(nearbyCity);
               const price = getAverageMarketPrice(nearby.apartment.averagePricePerM2, nearby.house.averagePricePerM2);
-              return <Link href={`/prix-immobilier/${nearbyCity.slug}`} key={nearbyCity.slug}><span>{nearbyCity.name}</span><strong>{formatPrice(price)}/m²</strong><ArrowRight size={15} /></Link>;
+              return <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug}><span>{nearbyCity.name}</span><strong>{formatPrice(price)}/m²</strong><ArrowRight size={15} /></Link>;
             })}
           </div>
         </article>
