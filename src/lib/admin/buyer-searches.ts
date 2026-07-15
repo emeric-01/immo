@@ -1,6 +1,7 @@
 import "server-only";
 
 import { allPreferenceOptions, optionLabel, preferredChannelOptions, propertyTypeLabels } from "@/lib/buyer-search/options";
+import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 
 type AdminSupabaseConfig = {
@@ -24,6 +25,11 @@ export type AdminBuyerSearchRow = {
   ideal_budget: number | null;
   location_summary: string | null;
   maximum_budget: number | null;
+  market_score: number | null;
+  market_score_label: string | null;
+  market_score_payload: BuyerSearchMarketScore | null;
+  market_score_status: string | null;
+  market_scored_at: string | null;
   metadata: Record<string, unknown>;
   minimum_bathrooms: number | null;
   minimum_bedrooms: number | null;
@@ -120,7 +126,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to",
+      "id,created_at,updated_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
 
   if (filters.status && filters.status !== "all") {

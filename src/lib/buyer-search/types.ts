@@ -86,8 +86,8 @@ export const buyerSearchSteps: Array<{ id: WizardStepId; label: string }> = [
 export const defaultBuyerSearchData: BuyerSearchFormData = {
   location: {
     cities: [
-      { name: "Aubagne", postalCode: "13400", latitude: 43.2928, longitude: 5.5707, radiusKm: 2 },
-      { name: "Gemenos", postalCode: "13420", latitude: 43.2975, longitude: 5.6286, radiusKm: 2 },
+      { name: "Aubagne", postalCode: "13400", cityCode: "13005", latitude: 43.2928, longitude: 5.5707, radiusKm: 2 },
+      { name: "Gemenos", postalCode: "13420", cityCode: "13042", latitude: 43.2975, longitude: 5.6286, radiusKm: 2 },
     ],
     radiusKm: 2,
     customRadius: null,

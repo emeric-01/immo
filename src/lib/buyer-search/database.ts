@@ -1,4 +1,6 @@
 import { createHmac, randomBytes } from "crypto";
+import { analyzeBuyerSearchMarket } from "./market-score";
+import type { BuyerSearchMarketScore } from "./market-score-types";
 import { normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData } from "./types";
 
@@ -10,6 +12,7 @@ export type BuyerSearchSubmissionResult = {
     reference: string;
   };
   id: string;
+  marketScore?: BuyerSearchMarketScore;
   persisted: boolean;
   storage: BuyerSearchStorage;
   warnings?: string[];
@@ -86,6 +89,8 @@ export async function createBuyerSearchRecord(
     warnings.push("La recherche principale est enregistree, mais certaines donnees detaillees devront etre resynchronisees.");
   }
 
+  const marketScore = await calculateAndStoreMarketScore(config, buyerSearchId, data, warnings);
+
   return {
     id: buyerSearchId,
     clientAccess: {
@@ -93,6 +98,7 @@ export async function createBuyerSearchRecord(
       reference: clientAccess.reference,
     },
     persisted: true,
+    marketScore,
     storage: "database",
     warnings: warnings.length > 0 ? warnings : undefined,
   };
@@ -118,6 +124,11 @@ export async function updateBuyerSearchRecord(
   delete updateRow.id;
   delete updateRow.client_access_code_hash;
   delete updateRow.client_reference;
+  updateRow.market_score = null;
+  updateRow.market_score_label = null;
+  updateRow.market_score_payload = null;
+  updateRow.market_score_status = null;
+  updateRow.market_scored_at = null;
 
   const clientAccount = await upsertClientAccount(config, data);
   updateRow.client_account_id = clientAccount.id;
@@ -144,12 +155,45 @@ export async function updateBuyerSearchRecord(
     warnings.push("La recherche principale est mise a jour, mais certaines donnees detaillees devront etre resynchronisees.");
   }
 
+  const marketScore = await calculateAndStoreMarketScore(config, buyerSearchId, data, warnings);
+
   return {
     id: buyerSearchId,
+    marketScore,
     persisted: true,
     storage: "database",
     warnings: warnings.length > 0 ? warnings : undefined,
   };
+}
+
+async function calculateAndStoreMarketScore(
+  config: SupabaseConfig,
+  buyerSearchId: string,
+  data: BuyerSearchFormData,
+  warnings: string[],
+) {
+  try {
+    const marketScore = await analyzeBuyerSearchMarket(data);
+
+    if (!marketScore) {
+      warnings.push("L'analyse de coherence marche n'est pas disponible pour cette recherche.");
+      return undefined;
+    }
+
+    await updateSupabaseRows(config, "buyer_searches", `id=eq.${encodeURIComponent(buyerSearchId)}`, {
+      market_score: marketScore.score,
+      market_score_label: marketScore.label,
+      market_score_payload: marketScore,
+      market_score_status: marketScore.status,
+      market_scored_at: marketScore.computedAt,
+    });
+
+    return marketScore;
+  } catch (error) {
+    console.error("Buyer search market score failed", error);
+    warnings.push("La recherche est enregistree, mais son score de coherence n'a pas pu etre calcule.");
+    return undefined;
+  }
 }
 
 async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData) {

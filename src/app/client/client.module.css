@@ -181,6 +181,10 @@
   gap: 18px;
 }
 
+.grid > .infoPanel:last-child {
+  grid-column: 1 / -1;
+}
+
 .summaryPanel,
 .infoPanel {
   display: grid;

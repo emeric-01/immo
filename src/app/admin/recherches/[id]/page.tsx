@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, BedDouble, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, Star, UserRound } from "lucide-react";
+import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
   formatAdminPropertyTypes,
@@ -81,6 +82,8 @@ export default async function AdminBuyerSearchDetailPage({
       </section>
 
       <section className={styles.detailGrid}>
+        {search.market_score_payload ? <MarketScoreCard score={search.market_score_payload} /> : null}
+
         <InfoPanel title="Synthese">
           <Metric icon={Home} label="Type de bien" value={formatAdminPropertyTypes(search.property_types)} />
           <Metric icon={Euro} label="Budget maximum" value={formatCurrency(search.maximum_budget)} />

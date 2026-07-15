@@ -272,6 +272,37 @@
   color: #246034;
 }
 
+.marketScoreBadge {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid #d9c7b6;
+  border-radius: 999px;
+  background: #fbf7f2;
+  padding: 0 10px;
+  color: #70401e;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.marketScoreBadge[data-score="positive"] {
+  border-color: #a8cdb0;
+  background: #eef7f0;
+  color: #246034;
+}
+
+.marketScoreBadge[data-score="warning"] {
+  border-color: #e4c292;
+  background: #fff8eb;
+  color: #82501c;
+}
+
+.marketScoreBadge[data-score="difficult"] {
+  border-color: #e6b0a8;
+  background: #fff2ef;
+  color: #8b2e21;
+}
+
 .iconLink,
 .backLink,
 .contactBox a {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BedDouble, CalendarDays, Euro, Home, LogOut, MapPin, Ruler } from "lucide-react";
+import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import { optionLabel, propertyTypeLabels, purchaseTimelineOptions } from "@/lib/buyer-search/options";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import { requireClientSession } from "@/lib/client-access/auth";
@@ -70,6 +71,7 @@ function ProjectView({ search }: { search: ClientBuyerSearchRow }) {
             />
           </div>
         </article>
+        {search.market_score_payload ? <MarketScoreCard score={search.market_score_payload} /> : null}
         <aside className={styles.infoPanel}>
           <h2>Acces projet</h2>
           <p className={styles.muted}>

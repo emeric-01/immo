@@ -1255,6 +1255,11 @@
   color: #ffffff;
 }
 
+.confirmationMarketScore {
+  width: min(100%, 760px);
+  margin: 24px auto 0;
+}
+
 .clientAccessCard {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr) auto;

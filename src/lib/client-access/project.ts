@@ -2,6 +2,7 @@ import "server-only";
 
 import { timingSafeEqual } from "crypto";
 import { hashClientAccessCode } from "@/lib/buyer-search/database";
+import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 import type { ClientSession } from "./auth";
 
@@ -23,6 +24,11 @@ export type ClientBuyerSearchRow = {
   id: string;
   location_summary: string | null;
   maximum_budget: number | null;
+  market_score: number | null;
+  market_score_label: string | null;
+  market_score_payload: BuyerSearchMarketScore | null;
+  market_score_status: string | null;
+  market_scored_at: string | null;
   minimum_bedrooms: number | null;
   minimum_land_area: number | null;
   minimum_living_area: number | null;

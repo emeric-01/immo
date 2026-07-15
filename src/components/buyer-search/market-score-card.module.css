@@ -1,0 +1,183 @@
+.card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  border: 1px solid #e3dcd4;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 22px;
+  color: #111111;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.scoreLine {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.scoreLine strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 4.4rem;
+  font-weight: 500;
+  line-height: 0.95;
+}
+
+.scoreLine span {
+  color: #d2a476;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+}
+
+.statusPill {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 999px;
+  background: #f6eee6;
+  padding: 0 13px;
+  color: #5f402b;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.marketMetrics {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid #e8e1da;
+}
+
+.marketMetrics > div {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: center;
+  border-bottom: 1px solid #e8e1da;
+  padding: 12px 0;
+}
+
+.marketMetrics dt {
+  color: #687084;
+}
+
+.marketMetrics dd {
+  margin: 0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.marketMetrics dd[data-tone="positive"] {
+  color: #2d6d3d;
+}
+
+.marketMetrics dd[data-tone="warning"] {
+  color: #9a5d1f;
+}
+
+.comparables {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #5f4630;
+  font-weight: 700;
+}
+
+.factors {
+  display: grid;
+  gap: 12px;
+}
+
+.factors h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.factors ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factors li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.factors li[data-tone="positive"] svg {
+  color: #3f8050;
+}
+
+.factors li[data-tone="warning"] svg {
+  color: #a66b2d;
+}
+
+.factors li[data-tone="info"] svg {
+  color: #6c513a;
+}
+
+.factors svg {
+  flex: 0 0 auto;
+}
+
+.bestMatch {
+  margin: 0;
+  border-top: 1px solid #e8e1da;
+  padding-top: 14px;
+  color: #687084;
+  font-size: 0.9rem;
+}
+
+.bestMatch strong {
+  color: #111111;
+}
+
+@media (max-width: 560px) {
+  .card {
+    gap: 15px;
+    padding: 18px;
+  }
+
+  .header {
+    display: grid;
+    gap: 12px;
+  }
+
+  .scoreLine strong {
+    font-size: 3.8rem;
+  }
+
+  .statusPill {
+    width: fit-content;
+  }
+
+  .marketMetrics > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .marketMetrics dd {
+    text-align: left;
+  }
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, KeyRound, Ruler } from "lucide-react";
+import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   normalizePropertyTypes,
   optionLabel,
@@ -17,6 +18,7 @@ export function BuyerSearchConfirmation() {
   const [snapshot, setSnapshot] = useState<BuyerSearchSubmittedSnapshot | null>(null);
   const data = snapshot?.data ?? null;
   const clientAccess = snapshot?.result?.clientAccess;
+  const clientLoginHref = clientAccess && data ? buildClientLoginHref(data, clientAccess) : "/client/login";
 
   useEffect(() => {
     setSnapshot(loadSubmittedBuyerSearchSnapshot());
@@ -46,6 +48,11 @@ export function BuyerSearchConfirmation() {
         ) : (
           <p className={styles.infoLine}>Aucune recherche enregistree localement sur ce navigateur.</p>
         )}
+        {snapshot?.result?.marketScore ? (
+          <div className={styles.confirmationMarketScore}>
+            <MarketScoreCard score={snapshot.result.marketScore} />
+          </div>
+        ) : null}
         {clientAccess ? (
           <section className={styles.clientAccessCard}>
             <span className={styles.iconBubble}>
@@ -65,7 +72,7 @@ export function BuyerSearchConfirmation() {
               </dl>
               <small>Conservez ces informations pour retrouver et modifier votre projet depuis l&apos;espace client.</small>
             </div>
-            <Link className={styles.primaryButton} href="/client/login">
+            <Link className={styles.primaryButton} href={clientLoginHref}>
               Acceder a mon projet
             </Link>
           </section>
@@ -132,4 +139,21 @@ function formatPropertyTypes(data: BuyerSearchFormData) {
   return selectedTypes.length > 0
     ? selectedTypes.map((type) => propertyTypeLabels[type]).join(", ")
     : "Non renseigne";
+}
+
+function buildClientLoginHref(
+  data: BuyerSearchFormData,
+  clientAccess: NonNullable<BuyerSearchSubmittedSnapshot["result"]>["clientAccess"],
+) {
+  if (!clientAccess) {
+    return "/client/login";
+  }
+
+  const params = new URLSearchParams({
+    code: clientAccess.code,
+    email: data.contact.email,
+    reference: clientAccess.reference,
+  });
+
+  return `/client/login?${params.toString()}`;
 }

@@ -8,11 +8,17 @@ export async function loginClient(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const reference = String(formData.get("reference") ?? "");
   const code = String(formData.get("code") ?? "");
+  const loginParams = new URLSearchParams({
+    code,
+    email,
+    reference,
+  });
 
   const result = await authenticateClientProject({ code, email, reference });
 
   if (result.status !== "ready") {
-    redirect(`/client/login?error=${encodeURIComponent(result.status)}`);
+    loginParams.set("error", result.status);
+    redirect(`/client/login?${loginParams.toString()}`);
   }
 
   const sessionCreated = await setClientSession({
@@ -24,7 +30,8 @@ export async function loginClient(formData: FormData) {
   });
 
   if (!sessionCreated) {
-    redirect("/client/login?error=missing_config");
+    loginParams.set("error", "missing_config");
+    redirect(`/client/login?${loginParams.toString()}`);
   }
 
   redirect("/client/projet");

@@ -11,9 +11,14 @@ export const metadata: Metadata = {
 export default async function ClientLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ code?: string; email?: string; error?: string; reference?: string }>;
 }) {
   const params = await searchParams;
+  const defaults = {
+    code: params.code ?? "",
+    email: params.email ?? "",
+    reference: params.reference ?? "",
+  };
 
   return (
     <main className={styles.loginPage}>
@@ -34,15 +39,15 @@ export default async function ClientLoginPage({
         <form className={styles.loginForm} action={loginClient}>
           <label>
             Email
-            <input name="email" type="email" autoComplete="email" required />
+            <input name="email" type="email" autoComplete="email" defaultValue={defaults.email} required />
           </label>
           <label>
             Reference
-            <input name="reference" placeholder="LJI-ABC123" required />
+            <input name="reference" placeholder="LJI-ABC123" defaultValue={defaults.reference} required />
           </label>
           <label>
             Code d&apos;acces
-            <input name="code" autoComplete="one-time-code" required />
+            <input name="code" autoComplete="one-time-code" defaultValue={defaults.code} required />
           </label>
           <button type="submit">
             <LockKeyhole size={18} aria-hidden="true" />

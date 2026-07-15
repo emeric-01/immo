@@ -137,6 +137,7 @@ function SearchTable({
             <th>Client</th>
             <th>Recherche</th>
             <th>Budget</th>
+            <th>Coherence</th>
             <th>Contact</th>
             <th>Statut</th>
             <th aria-label="Detail" />
@@ -165,6 +166,15 @@ function SearchTable({
               <td>
                 <strong>{formatCurrency(search.maximum_budget)}</strong>
                 <small>{search.minimum_living_area ? `${search.minimum_living_area} m2 min.` : "Surface non renseignee"}</small>
+              </td>
+              <td>
+                {search.market_score !== null ? (
+                  <span className={styles.marketScoreBadge} data-score={scoreTone(search.market_score)}>
+                    {search.market_score}/100
+                  </span>
+                ) : (
+                  <small>Non calcule</small>
+                )}
               </td>
               <td>
                 <strong>{formatPreferredChannel(search.preferred_channel)}</strong>
@@ -228,4 +238,16 @@ function formatStatus(status: string) {
       qualified: "Qualifie",
     }[status] ?? status
   );
+}
+
+function scoreTone(score: number) {
+  if (score >= 70) {
+    return "positive";
+  }
+
+  if (score >= 55) {
+    return "warning";
+  }
+
+  return "difficult";
 }
