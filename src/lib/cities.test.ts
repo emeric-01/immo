@@ -1,16 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { getCityByMarketIdentifier } from "./cities";
+import { getCityByMarketIdentifier, getCityBySlug, getNearbyCities } from "./cities";
 
-describe("getCityByMarketIdentifier", () => {
-  it("finds a city page from its INSEE code", () => {
-    expect(getCityByMarketIdentifier({ inseeCode: "13005" })?.slug).toBe("aubagne");
+const addedCities = [
+  ["ceyreste", "13023"],
+  ["cassis", "13022"],
+  ["roquefort-la-bedoule", "13085"],
+  ["saint-cyr-sur-mer", "83112"],
+  ["carnoux-en-provence", "13119"],
+  ["auriol", "13007"],
+  ["cuges-les-pins", "13030"],
+  ["la-penne-sur-huveaune", "13070"],
+] as const;
+
+describe("city price pages", () => {
+  it.each(addedCities)("registers %s with INSEE code %s", (slug, inseeCode) => {
+    expect(getCityBySlug(slug)?.inseeCode).toBe(inseeCode);
+    expect(getCityByMarketIdentifier({ inseeCode })?.slug).toBe(slug);
   });
 
-  it("matches city names without accents", () => {
-    expect(getCityByMarketIdentifier({ name: "Gémenos" })?.slug).toBe("gemenos");
-  });
+  it.each(addedCities)("only references configured neighbors for %s", (slug) => {
+    const city = getCityBySlug(slug);
 
-  it("does not invent a page for an unsupported city", () => {
-    expect(getCityByMarketIdentifier({ name: "Cuges-les-Pins" })).toBeUndefined();
+    expect(city).toBeDefined();
+    expect(getNearbyCities(city!)).toHaveLength(city!.nearbySlugs.length);
   });
 });

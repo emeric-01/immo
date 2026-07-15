@@ -603,15 +603,55 @@ function streetsFromTransactions(
 }
 
 const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
+  auriol: {
+    population: 13037,
+    density: 292,
+    areaKm2: 44.61,
+  },
+  "carnoux-en-provence": {
+    population: 6873,
+    density: 1847,
+    areaKm2: 3.72,
+  },
+  cassis: {
+    population: 6661,
+    density: 256,
+    areaKm2: 26.01,
+  },
+  ceyreste: {
+    population: 4863,
+    density: 210,
+    areaKm2: 23.16,
+  },
+  "cuges-les-pins": {
+    population: 6236,
+    density: 157,
+    areaKm2: 39.64,
+  },
   gemenos: {
     population: 6579,
     density: 200,
     areaKm2: 32.9,
   },
+  "la-penne-sur-huveaune": {
+    population: 6605,
+    density: 1813,
+    areaKm2: 3.64,
+  },
   marseille: {
     population: 886040,
     density: 3724,
     areaKm2: 237.9,
+  },
+  "roquefort-la-bedoule": {
+    population: 5798,
+    density: 187,
+    areaKm2: 30.93,
+  },
+  "saint-cyr-sur-mer": {
+    population: 11658,
+    density: 544,
+    areaKm2: 21.43,
   },
 };
 
