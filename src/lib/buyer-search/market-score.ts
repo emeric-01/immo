@@ -22,6 +22,13 @@ type TransactionsResponse = {
   total?: number;
 };
 
+type PriceHistoryResponse = {
+  data?: Array<{
+    period: string;
+    value: number | null;
+  }>;
+};
+
 const MAX_SCORING_CITIES = 5;
 const REQUEST_TIMEOUT_MS = 8_000;
 const CURRENT_PRICE_REVALIDATE_SECONDS = 90 * 24 * 60 * 60;
@@ -74,11 +81,19 @@ export async function analyzeBuyerSearchMarket(
   candidates.sort((left, right) => right.preliminaryScore - left.preliminaryScore);
   const candidate = candidates[0];
   const transactionParams = buildTransactionParams(data, candidate.city, candidate.propertyType);
-  const transactions = transactionParams
-    ? await optionalImmoData(() =>
-        fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionParams),
-      )
-    : undefined;
+  const historyParams = buildPriceHistoryParams(candidate.city, candidate.propertyType);
+  const [transactions, priceHistory] = await Promise.all([
+    transactionParams
+      ? optionalImmoData(() =>
+          fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionParams),
+        )
+      : undefined,
+    optionalImmoData(() =>
+      fetchImmoData<PriceHistoryResponse>(config, "/v1/market/price/history", historyParams, {
+        revalidateSeconds: CURRENT_PRICE_REVALIDATE_SECONDS,
+      }),
+    ),
+  ]);
   const comparableTransactions = Math.max(0, transactions?.total ?? 0);
   const bestMatch: BuyerSearchMarketCombination = {
     cityCode: candidate.city.cityCode,
@@ -101,7 +116,7 @@ export async function analyzeBuyerSearchMarket(
     computedAt: new Date().toISOString(),
     factors: buildFactors(data, bestMatch),
     label: marketScoreLabel(score),
-    methodVersion: "price-sqm-v2",
+    methodVersion: "price-sqm-v3",
     score,
     source: "immo-data",
     status: marketScoreStatus(score),
@@ -112,6 +127,43 @@ export async function analyzeBuyerSearchMarket(
       maximumCapacityPerM2,
       minimumLivingArea,
     },
+    trends: buildMarketTrends(priceHistory),
+  };
+}
+
+export async function enrichMarketScoreTrends(
+  score: BuyerSearchMarketScore,
+): Promise<BuyerSearchMarketScore> {
+  if (score.trends || !score.bestMatch.cityCode) {
+    return score;
+  }
+
+  const config = getImmoDataConfig();
+
+  if (!config) {
+    return score;
+  }
+
+  const history = await optionalImmoData(() =>
+    fetchImmoData<PriceHistoryResponse>(
+      config,
+      "/v1/market/price/history",
+      buildPriceHistoryParamsFromCode(
+        score.bestMatch.cityCode ?? "",
+        score.bestMatch.propertyType,
+      ),
+      { revalidateSeconds: CURRENT_PRICE_REVALIDATE_SECONDS },
+    ),
+  );
+
+  if (!history) {
+    return score;
+  }
+
+  return {
+    ...score,
+    methodVersion: "price-sqm-v3",
+    trends: buildMarketTrends(history),
   };
 }
 
@@ -205,6 +257,74 @@ function buildTransactionParams(
   }
 
   return params;
+}
+
+function buildPriceHistoryParams(
+  city: BuyerSearchFormData["location"]["cities"][number],
+  propertyType: PropertyType,
+) {
+  return buildPriceHistoryParamsFromCode(city.cityCode ?? "", propertyType);
+}
+
+function buildPriceHistoryParamsFromCode(
+  cityCode: string,
+  propertyType: PropertyType,
+) {
+  return new URLSearchParams({
+    code: cityCode,
+    endDate: monthKey(new Date()),
+    geoLevel: "city",
+    marketType: "sales",
+    metric: "sqm_price",
+    realtyType: propertyType,
+    startDate: monthKey(monthsAgo(13)),
+  });
+}
+
+function buildMarketTrends(history: PriceHistoryResponse | undefined) {
+  const points =
+    history?.data
+      ?.filter(
+        (point): point is { period: string; value: number } =>
+          typeof point.value === "number" && point.value > 0,
+      )
+      .sort((left, right) => left.period.localeCompare(right.period)) ?? [];
+
+  return {
+    latestPeriod: points.at(-1)?.period,
+    sixMonthsPercent: calculatePriceTrend(points, 6),
+    twelveMonthsPercent: calculatePriceTrend(points, 12),
+  };
+}
+
+export function calculatePriceTrend(
+  points: Array<{ period: string; value: number | null }>,
+  months: number,
+) {
+  const validPoints = points
+    .filter(
+      (point): point is { period: string; value: number } =>
+        typeof point.value === "number" && point.value > 0,
+    )
+    .sort((left, right) => left.period.localeCompare(right.period));
+  const latest = validPoints.at(-1);
+
+  if (!latest) {
+    return null;
+  }
+
+  const targetDate = new Date(`${latest.period}-01T00:00:00.000Z`);
+  targetDate.setUTCMonth(targetDate.getUTCMonth() - months);
+  const targetPeriod = monthKey(targetDate);
+  const baseline =
+    [...validPoints].reverse().find((point) => point.period <= targetPeriod) ??
+    validPoints[0];
+
+  if (!baseline || baseline.period === latest.period) {
+    return null;
+  }
+
+  return Number((((latest.value - baseline.value) / baseline.value) * 100).toFixed(1));
 }
 
 export function calculateMarketCombinationScore(
@@ -381,6 +501,10 @@ function monthsAgo(months: number) {
 
 function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
+}
+
+function monthKey(date: Date) {
+  return date.toISOString().slice(0, 7);
 }
 
 function clamp(value: number, min: number, max: number) {

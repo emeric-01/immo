@@ -1,5 +1,6 @@
 import "server-only";
 
+import { enrichMarketScoreTrends } from "@/lib/buyer-search/market-score";
 import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 import type { ClientSession } from "./auth";
@@ -62,7 +63,31 @@ export async function getClientBuyerSearch(
       };
     }
 
-    return { data: search, status: "ready" };
+    const enrichedScore = search.market_score_payload
+      ? await enrichMarketScoreTrends(search.market_score_payload)
+      : null;
+
+    if (
+      enrichedScore &&
+      enrichedScore !== search.market_score_payload
+    ) {
+      await clientSupabaseRequest(
+        `buyer_searches?id=eq.${encodeURIComponent(search.id)}`,
+        {
+          body: JSON.stringify({ market_score_payload: enrichedScore }),
+          headers: { Prefer: "return=minimal" },
+          method: "PATCH",
+        },
+      );
+    }
+
+    return {
+      data: {
+        ...search,
+        market_score_payload: enrichedScore,
+      },
+      status: "ready",
+    };
   } catch (error) {
     return {
       message: error instanceof Error ? error.message : "Lecture Supabase impossible.",

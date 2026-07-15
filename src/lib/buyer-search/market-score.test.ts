@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { analyzeBuyerSearchMarket, calculateMarketCombinationScore } from "./market-score";
+import {
+  analyzeBuyerSearchMarket,
+  calculateMarketCombinationScore,
+  calculatePriceTrend,
+} from "./market-score";
 import type { BuyerSearchFormData } from "./types";
 
 vi.mock("server-only", () => ({}));
@@ -68,6 +72,18 @@ describe("buyer search market score", () => {
     expect(calculateMarketCombinationScore(3000, 5000, 0)).toBe(25);
   });
 
+  it("calculates six and twelve month trends from monthly market prices", () => {
+    const points = [
+      { period: "2025-01", value: 4000 },
+      { period: "2025-07", value: 4200 },
+      { period: "2026-01", value: 4400 },
+    ];
+
+    expect(calculatePriceTrend(points, 6)).toBe(4.8);
+    expect(calculatePriceTrend(points, 12)).toBe(10);
+    expect(calculatePriceTrend([], 6)).toBeNull();
+  });
+
   it("queries current prices and comparable transactions for the selected candidate", async () => {
     vi.stubEnv("IMMO_DATA_API_KEY", "test-token");
     vi.stubEnv("IMMO_DATA_BASE_URL", "https://api.example.test");
@@ -78,6 +94,16 @@ describe("buyer search market score", () => {
 
       if (url.includes("/v1/market/price/current")) {
         return Response.json({ value: 4200 });
+      }
+
+      if (url.includes("/v1/market/price/history")) {
+        return Response.json({
+          data: [
+            { period: "2025-01", value: 4000 },
+            { period: "2025-07", value: 4200 },
+            { period: "2026-01", value: 4400 },
+          ],
+        });
       }
 
       return Response.json({ total: 14 });
@@ -95,7 +121,13 @@ describe("buyer search market score", () => {
       marketPricePerM2: 4200,
       propertyType: "house",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result?.trends).toEqual({
+      latestPeriod: "2026-01",
+      sixMonthsPercent: 4.8,
+      twelveMonthsPercent: 10,
+    });
+    expect(result?.methodVersion).toBe("price-sqm-v3");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
 
     const transactionUrl = fetchMock.mock.calls
       .map(([input]) => String(input))
@@ -105,6 +137,10 @@ describe("buyer search market score", () => {
     );
 
     expect(currentPriceCall?.[1]).toMatchObject({ next: { revalidate: 7_776_000 } });
+    const historyCall = fetchMock.mock.calls.find(([input]) =>
+      String(input).includes("/v1/market/price/history"),
+    );
+    expect(historyCall?.[1]).toMatchObject({ next: { revalidate: 7_776_000 } });
     expect(transactionUrl).toContain("radius=5000");
     expect(transactionUrl).toContain("priceMax=400000");
     expect(transactionUrl).toContain("livingAreaMin=100");
@@ -140,6 +176,15 @@ describe("buyer search market score", () => {
         return Response.json({ total: 14 });
       }
 
+      if (url.includes("/v1/market/price/history")) {
+        return Response.json({
+          data: [
+            { period: "2025-01", value: 4000 },
+            { period: "2026-01", value: 4400 },
+          ],
+        });
+      }
+
       return Response.json({ value: url.includes("code=13005") ? 4200 : 5600 });
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -150,7 +195,7 @@ describe("buyer search market score", () => {
     );
 
     expect(result?.bestMatch.cityName).toBe("Aubagne");
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(transactionCalls).toHaveLength(1);
     expect(String(transactionCalls[0][0])).toContain("latitude=43.2928");
   });

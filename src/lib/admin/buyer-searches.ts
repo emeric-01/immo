@@ -1,5 +1,6 @@
 import "server-only";
 
+import { enrichMarketScoreTrends } from "@/lib/buyer-search/market-score";
 import { allPreferenceOptions, optionLabel, preferredChannelOptions, propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
@@ -212,15 +213,55 @@ export async function getAdminBuyerSearch(id: string): Promise<AdminDataState<Ad
     return consents;
   }
 
+  const enrichedScore = search.market_score_payload
+    ? await enrichMarketScoreTrends(search.market_score_payload)
+    : null;
+
+  if (enrichedScore && enrichedScore !== search.market_score_payload) {
+    await patchAdminBuyerSearchScore(config, search.id, enrichedScore);
+  }
+
   return {
     data: {
       consents: consents.data,
       locations: locations.data,
       priorities: priorities.data,
-      search,
+      search: {
+        ...search,
+        market_score_payload: enrichedScore,
+      },
     },
     status: "ready",
   };
+}
+
+async function patchAdminBuyerSearchScore(
+  config: AdminSupabaseConfig,
+  searchId: string,
+  score: BuyerSearchMarketScore,
+) {
+  try {
+    const response = await fetch(
+      `${config.url}/rest/v1/buyer_searches?id=eq.${encodeURIComponent(searchId)}`,
+      {
+        body: JSON.stringify({ market_score_payload: score }),
+        cache: "no-store",
+        headers: {
+          apikey: config.serviceRoleKey,
+          Authorization: `Bearer ${config.serviceRoleKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        method: "PATCH",
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Buyer search trend persistence failed", await response.text());
+    }
+  } catch (error) {
+    console.error("Buyer search trend persistence failed", error);
+  }
 }
 
 export function getBuyerSearchAdminStats(searches: AdminBuyerSearchRow[]) {

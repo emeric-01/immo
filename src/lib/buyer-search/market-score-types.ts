@@ -18,13 +18,19 @@ export type BuyerSearchMarketCombination = {
   score: number;
 };
 
+export type BuyerSearchMarketTrends = {
+  latestPeriod?: string;
+  sixMonthsPercent: number | null;
+  twelveMonthsPercent: number | null;
+};
+
 export type BuyerSearchMarketScore = {
   bestMatch: BuyerSearchMarketCombination;
   combinations: BuyerSearchMarketCombination[];
   computedAt: string;
   factors: BuyerSearchMarketFactor[];
   label: string;
-  methodVersion: "price-sqm-v1" | "price-sqm-v2";
+  methodVersion: "price-sqm-v1" | "price-sqm-v2" | "price-sqm-v3";
   score: number;
   source: "immo-data";
   status: BuyerSearchMarketScoreStatus;
@@ -35,6 +41,7 @@ export type BuyerSearchMarketScore = {
     maximumCapacityPerM2: number;
     minimumLivingArea: number;
   };
+  trends?: BuyerSearchMarketTrends;
 };
 
 export function isBuyerSearchMarketScore(value: unknown): value is BuyerSearchMarketScore {
@@ -48,7 +55,11 @@ export function isBuyerSearchMarketScore(value: unknown): value is BuyerSearchMa
     typeof candidate.score === "number" &&
     typeof candidate.label === "string" &&
     typeof candidate.computedAt === "string" &&
-    (candidate.methodVersion === "price-sqm-v1" || candidate.methodVersion === "price-sqm-v2") &&
+    (
+      candidate.methodVersion === "price-sqm-v1" ||
+      candidate.methodVersion === "price-sqm-v2" ||
+      candidate.methodVersion === "price-sqm-v3"
+    ) &&
     Boolean(candidate.bestMatch) &&
     Boolean(candidate.target)
   );

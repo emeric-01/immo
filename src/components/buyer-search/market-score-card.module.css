@@ -56,6 +56,89 @@
   font-weight: 800;
 }
 
+.scoreGauge {
+  display: grid;
+  gap: 9px;
+}
+
+.gaugeHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gaugeHeading span {
+  color: #687084;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.gaugeHeading strong {
+  color: #5d3d29;
+  font-size: 0.86rem;
+  text-align: right;
+}
+
+.gaugeTrack {
+  position: relative;
+  height: 12px;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #b64233 0%,
+    #cf6635 32%,
+    #d6a548 58%,
+    #8ca95e 76%,
+    #3f8050 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(17, 17, 17, 0.12);
+}
+
+.gaugeMarker {
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #3f8050;
+  box-shadow: 0 1px 5px rgba(17, 17, 17, 0.28);
+  transform: translate(-50%, -50%);
+}
+
+.gaugeMarker::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.gaugeMarker[data-negative] {
+  background: #b53227;
+}
+
+.gaugeLabels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  color: #7a8190;
+  font-size: 0.72rem;
+}
+
+.gaugeLabels span:nth-child(2) {
+  text-align: center;
+}
+
+.gaugeLabels span:last-child {
+  text-align: right;
+}
+
 .marketMetrics {
   display: grid;
   margin: 0;
@@ -87,6 +170,90 @@
 
 .marketMetrics dd[data-tone="warning"] {
   color: #9a5d1f;
+}
+
+.trends {
+  display: grid;
+  gap: 13px;
+  border-top: 1px solid #e8e1da;
+  border-bottom: 1px solid #e8e1da;
+  padding: 15px 0;
+}
+
+.trendsHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trendsHeading p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.trendsHeading span,
+.trendsHeading small {
+  color: #687084;
+  font-size: 0.78rem;
+}
+
+.trendsHeading small {
+  text-align: right;
+}
+
+.trendGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trendMetric {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 2px 16px 2px 0;
+}
+
+.trendMetric + .trendMetric {
+  border-left: 1px solid #e8e1da;
+  padding-right: 0;
+  padding-left: 16px;
+}
+
+.trendMetric > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f7f1eb;
+  color: #6c513a;
+}
+
+.trendMetric div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trendMetric small {
+  color: #687084;
+}
+
+.trendMetric strong {
+  font-size: 1.05rem;
+}
+
+.trendMetric[data-tone="up"] > span {
+  background: #f8eee2;
+  color: #9a5d1f;
+}
+
+.trendMetric[data-tone="down"] > span {
+  background: #edf5ef;
+  color: #3f8050;
 }
 
 .comparables {
@@ -172,6 +339,15 @@
     width: fit-content;
   }
 
+  .gaugeHeading {
+    display: grid;
+    gap: 3px;
+  }
+
+  .gaugeHeading strong {
+    text-align: left;
+  }
+
   .marketMetrics > div {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -179,5 +355,29 @@
 
   .marketMetrics dd {
     text-align: left;
+  }
+
+  .trendsHeading {
+    display: grid;
+    gap: 4px;
+  }
+
+  .trendsHeading small {
+    text-align: left;
+  }
+
+  .trendGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .trendMetric {
+    padding: 0;
+  }
+
+  .trendMetric + .trendMetric {
+    border-top: 1px solid #e8e1da;
+    border-left: 0;
+    padding: 12px 0 0;
   }
 }
