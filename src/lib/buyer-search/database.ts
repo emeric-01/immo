@@ -1,4 +1,3 @@
-import { createHmac, randomBytes } from "crypto";
 import { analyzeBuyerSearchMarket } from "./market-score";
 import type { BuyerSearchMarketScore } from "./market-score-types";
 import { normalizePropertyTypes } from "./options";
@@ -7,10 +6,6 @@ import type { BuyerSearchFormData } from "./types";
 type BuyerSearchStorage = "database" | "local";
 
 export type BuyerSearchSubmissionResult = {
-  clientAccess?: {
-    code: string;
-    reference: string;
-  };
   id: string;
   marketScore?: BuyerSearchMarketScore;
   persisted: boolean;
@@ -66,13 +61,12 @@ export async function createBuyerSearchRecord(
   }
 
   const buyerSearchId = crypto.randomUUID();
-  const clientAccess = buildClientAccess();
   const clientAccount = await upsertClientAccount(config, data);
 
   await insertSupabaseRows(
     config,
     "buyer_searches",
-    buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccess, clientAccount.id),
+    buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccount.id),
   );
 
   const warnings: string[] = [];
@@ -93,10 +87,6 @@ export async function createBuyerSearchRecord(
 
   return {
     id: buyerSearchId,
-    clientAccess: {
-      code: clientAccess.code,
-      reference: clientAccess.reference,
-    },
     persisted: true,
     marketScore,
     storage: "database",
@@ -122,8 +112,6 @@ export async function updateBuyerSearchRecord(
 
   const updateRow: Record<string, unknown> = { ...buildBuyerSearchRow(buyerSearchId, data, metadata) };
   delete updateRow.id;
-  delete updateRow.client_access_code_hash;
-  delete updateRow.client_reference;
   updateRow.market_score = null;
   updateRow.market_score_label = null;
   updateRow.market_score_payload = null;
@@ -374,7 +362,6 @@ function buildBuyerSearchRow(
   id: string,
   data: BuyerSearchFormData,
   metadata: BuyerSearchSubmissionMetadata,
-  clientAccess?: { code: string; codeHash: string; reference: string },
   clientAccountId?: string,
 ) {
   const cities = data.location.cities;
@@ -386,13 +373,7 @@ function buildBuyerSearchRow(
     city_codes: cities.flatMap((city) => (city.cityCode ? [city.cityCode] : [])),
     city_names: cities.map((city) => city.name),
     ...(clientAccountId ? { client_account_id: clientAccountId } : {}),
-    ...(clientAccess
-      ? {
-          client_access_code_hash: clientAccess.codeHash,
-          client_access_enabled: true,
-          client_reference: clientAccess.reference,
-        }
-      : {}),
+    client_access_enabled: false,
     consent: data.contact.consent,
     consent_at: data.contact.consent ? new Date().toISOString() : null,
     contact_email: data.contact.email.trim().toLowerCase(),
@@ -423,31 +404,4 @@ function buildBuyerSearchRow(
     raw_payload: data,
     source: metadata.source ?? "website",
   };
-}
-
-function buildClientAccess() {
-  const code = randomBytes(4).toString("hex").toUpperCase();
-  const reference = `LJI-${randomBytes(3).toString("hex").toUpperCase()}`;
-
-  return {
-    code,
-    codeHash: hashClientAccessCode(reference, code),
-    reference,
-  };
-}
-
-export function hashClientAccessCode(reference: string, code: string) {
-  const secret =
-    process.env.CLIENT_ACCESS_SECRET?.trim() ||
-    process.env.ADMIN_SESSION_SECRET?.trim() ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.SUPABASE_ANON_KEY?.trim();
-
-  if (!secret) {
-    throw new Error("CLIENT_ACCESS_SECRET or Supabase key is required to hash client access codes.");
-  }
-
-  return createHmac("sha256", secret)
-    .update(`${reference.trim().toUpperCase()}:${code.trim().toUpperCase()}`)
-    .digest("hex");
 }

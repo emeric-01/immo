@@ -68,11 +68,12 @@ describe("buyer search market score", () => {
     expect(calculateMarketCombinationScore(3000, 5000, 0)).toBe(25);
   });
 
-  it("queries current prices and comparable transactions once per city and property type", async () => {
+  it("queries current prices and comparable transactions for the selected candidate", async () => {
     vi.stubEnv("IMMO_DATA_API_KEY", "test-token");
     vi.stubEnv("IMMO_DATA_BASE_URL", "https://api.example.test");
 
-    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const fetchMock = vi.fn(async (input: string | URL | Request, _init?: RequestInit) => {
+      void _init;
       const url = String(input);
 
       if (url.includes("/v1/market/price/current")) {
@@ -99,11 +100,58 @@ describe("buyer search market score", () => {
     const transactionUrl = fetchMock.mock.calls
       .map(([input]) => String(input))
       .find((url) => url.includes("/v1/transactions"));
+    const currentPriceCall = fetchMock.mock.calls.find(([input]) =>
+      String(input).includes("/v1/market/price/current"),
+    );
 
+    expect(currentPriceCall?.[1]).toMatchObject({ next: { revalidate: 7_776_000 } });
     expect(transactionUrl).toContain("radius=5000");
     expect(transactionUrl).toContain("priceMax=400000");
     expect(transactionUrl).toContain("livingAreaMin=100");
     expect(transactionUrl).toContain("landAreaMin=350");
     expect(transactionUrl).toContain("minRoom=4");
+  });
+
+  it("only queries comparable transactions for the most affordable city", async () => {
+    vi.stubEnv("IMMO_DATA_API_KEY", "test-token");
+    vi.stubEnv("IMMO_DATA_BASE_URL", "https://api.example.test");
+
+    const multiCitySearch: BuyerSearchFormData = {
+      ...search,
+      location: {
+        ...search.location,
+        cities: [
+          ...search.location.cities,
+          {
+            cityCode: "13055",
+            latitude: 43.2965,
+            longitude: 5.3698,
+            name: "Marseille",
+            postalCode: "13001",
+            radiusKm: 5,
+          },
+        ],
+      },
+    };
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes("/v1/transactions")) {
+        return Response.json({ total: 14 });
+      }
+
+      return Response.json({ value: url.includes("code=13005") ? 4200 : 5600 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await analyzeBuyerSearchMarket(multiCitySearch);
+    const transactionCalls = fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes("/v1/transactions"),
+    );
+
+    expect(result?.bestMatch.cityName).toBe("Aubagne");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(transactionCalls).toHaveLength(1);
+    expect(String(transactionCalls[0][0])).toContain("latitude=43.2928");
   });
 });

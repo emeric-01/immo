@@ -1156,6 +1156,27 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.result-account-note {
+  margin-bottom: 14px;
+  border: 1px solid #ded7cf;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 11px 14px;
+  color: #626b7b;
+  font-size: 0.86rem;
+}
+
+.result-account-note[data-saved] {
+  border-color: #d9c1a9;
+  background: #fbf7f2;
+  color: #5f4630;
+}
+
+.result-account-note a {
+  color: #111111;
+  font-weight: 800;
+}
+
 .status-check {
   position: relative;
   display: inline-flex;

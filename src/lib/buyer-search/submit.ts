@@ -3,7 +3,14 @@ import type { BuyerSearchFormData } from "./types";
 import type { BuyerSearchSubmissionResult } from "./database";
 
 export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<BuyerSearchSubmissionResult> {
-  const response = await fetch("/api/buyer-searches", {
+  const searchId =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("searchId");
+  const endpoint = searchId
+    ? `/api/buyer-searches?searchId=${encodeURIComponent(searchId)}`
+    : "/api/buyer-searches";
+  const response = await fetch(endpoint, {
     body: JSON.stringify(data),
     headers: {
       "Content-Type": "application/json",

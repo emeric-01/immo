@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AddressSuggestion,
@@ -31,6 +32,11 @@ type FormState = {
 };
 
 type FlowStep = "address" | "essential" | "refine" | "result";
+
+type PropertyEstimationResponse = PropertyEstimation & {
+  clientEstimationId?: string | null;
+  savedToClientAccount?: boolean;
+};
 
 type LocationHint = {
   city?: string;
@@ -168,7 +174,7 @@ export function EstimationForm() {
     useState<AddressSuggestion | null>(null);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [locationHint, setLocationHint] = useState<LocationHint | null>(null);
-  const [estimation, setEstimation] = useState<PropertyEstimation | null>(null);
+  const [estimation, setEstimation] = useState<PropertyEstimationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
@@ -335,7 +341,7 @@ export function EstimationForm() {
         throw new Error(data.error ?? "Estimation indisponible.");
       }
 
-      setEstimation(data as PropertyEstimation);
+      setEstimation(data as PropertyEstimationResponse);
       setStep("result");
     } catch (submitError) {
       setError(
@@ -736,6 +742,15 @@ export function EstimationForm() {
         <div className="result-status">
           <span className="status-check" aria-hidden="true" />
           Resultat de l&apos;estimation
+        </div>
+        <div className="result-account-note" data-saved={estimation.savedToClientAccount || undefined}>
+          {estimation.savedToClientAccount ? (
+            <span>Cette estimation est enregistrée dans votre espace client.</span>
+          ) : (
+            <span>
+              <Link href="/client/login">Connectez-vous à votre espace client</Link> avant une prochaine estimation pour la conserver.
+            </span>
+          )}
         </div>
 
         <div className="result-layout">

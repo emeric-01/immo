@@ -24,6 +24,15 @@ type TransactionsResponse = {
 
 const MAX_SCORING_CITIES = 5;
 const REQUEST_TIMEOUT_MS = 8_000;
+const CURRENT_PRICE_REVALIDATE_SECONDS = 90 * 24 * 60 * 60;
+
+type MarketPriceCandidate = {
+  city: BuyerSearchFormData["location"]["cities"][number];
+  gapPercent: number;
+  marketPricePerM2: number;
+  preliminaryScore: number;
+  propertyType: PropertyType;
+};
 
 export async function analyzeBuyerSearchMarket(
   data: BuyerSearchFormData,
@@ -48,31 +57,51 @@ export async function analyzeBuyerSearchMarket(
 
   const idealCapacityPerM2 = Math.round(idealBudget / minimumLivingArea);
   const maximumCapacityPerM2 = Math.round(maximumBudget / minimumLivingArea);
-  const combinations = (
+  const candidates = (
     await Promise.all(
       cities.flatMap((city) =>
         propertyTypes.map((propertyType) =>
-          analyzeCombination(config, data, city, propertyType, maximumCapacityPerM2),
+          analyzePriceCandidate(config, city, propertyType, maximumCapacityPerM2),
         ),
       ),
     )
-  ).filter((combination): combination is BuyerSearchMarketCombination => Boolean(combination));
+  ).filter((candidate): candidate is MarketPriceCandidate => Boolean(candidate));
 
-  if (combinations.length === 0) {
+  if (candidates.length === 0) {
     return null;
   }
 
-  combinations.sort((left, right) => right.score - left.score);
-  const bestMatch = combinations[0];
+  candidates.sort((left, right) => right.preliminaryScore - left.preliminaryScore);
+  const candidate = candidates[0];
+  const transactionParams = buildTransactionParams(data, candidate.city, candidate.propertyType);
+  const transactions = transactionParams
+    ? await optionalImmoData(() =>
+        fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionParams),
+      )
+    : undefined;
+  const comparableTransactions = Math.max(0, transactions?.total ?? 0);
+  const bestMatch: BuyerSearchMarketCombination = {
+    cityCode: candidate.city.cityCode,
+    cityName: candidate.city.name,
+    comparableTransactions,
+    gapPercent: candidate.gapPercent,
+    marketPricePerM2: candidate.marketPricePerM2,
+    propertyType: candidate.propertyType,
+    score: calculateMarketCombinationScore(
+      maximumCapacityPerM2,
+      candidate.marketPricePerM2,
+      comparableTransactions,
+    ),
+  };
   const score = bestMatch.score;
 
   return {
     bestMatch,
-    combinations,
+    combinations: [bestMatch],
     computedAt: new Date().toISOString(),
     factors: buildFactors(data, bestMatch),
     label: marketScoreLabel(score),
-    methodVersion: "price-sqm-v1",
+    methodVersion: "price-sqm-v2",
     score,
     source: "immo-data",
     status: marketScoreStatus(score),
@@ -86,13 +115,12 @@ export async function analyzeBuyerSearchMarket(
   };
 }
 
-async function analyzeCombination(
+async function analyzePriceCandidate(
   config: ImmoDataConfig,
-  data: BuyerSearchFormData,
   city: BuyerSearchFormData["location"]["cities"][number],
   propertyType: PropertyType,
   maximumCapacityPerM2: number,
-): Promise<BuyerSearchMarketCombination | null> {
+): Promise<MarketPriceCandidate | null> {
   if (!city.cityCode) {
     return null;
   }
@@ -104,40 +132,31 @@ async function analyzeCombination(
     metric: "sqm_price",
     realtyType: propertyType,
   });
-  const transactionParams = buildTransactionParams(data, city, propertyType);
-  const [currentPrice, transactions] = await Promise.all([
-    optionalImmoData(() =>
-      fetchImmoData<CurrentPriceResponse>(config, "/v1/market/price/current", priceParams),
-    ),
-    transactionParams
-      ? optionalImmoData(() =>
-          fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionParams),
-        )
-      : undefined,
-  ]);
+  const currentPrice = await optionalImmoData(() =>
+    fetchImmoData<CurrentPriceResponse>(config, "/v1/market/price/current", priceParams, {
+      revalidateSeconds: CURRENT_PRICE_REVALIDATE_SECONDS,
+    }),
+  );
   const marketPricePerM2 = currentPrice?.value;
 
   if (!marketPricePerM2 || marketPricePerM2 <= 0) {
     return null;
   }
 
-  const comparableTransactions = Math.max(0, transactions?.total ?? 0);
   const gapPercent = Number(
     (((maximumCapacityPerM2 - marketPricePerM2) / marketPricePerM2) * 100).toFixed(1),
   );
 
   return {
-    cityCode: city.cityCode,
-    cityName: city.name,
-    comparableTransactions,
+    city,
     gapPercent,
     marketPricePerM2: Math.round(marketPricePerM2),
-    propertyType,
-    score: calculateMarketCombinationScore(
+    preliminaryScore: calculateMarketCombinationScore(
       maximumCapacityPerM2,
       marketPricePerM2,
-      comparableTransactions,
+      0,
     ),
+    propertyType,
   };
 }
 
@@ -333,9 +352,12 @@ async function fetchImmoData<T>(
   config: ImmoDataConfig,
   path: string,
   params: URLSearchParams,
+  options: { revalidateSeconds?: number } = {},
 ): Promise<T> {
   const response = await fetch(`${config.baseUrl}${path}?${params.toString()}`, {
-    cache: "no-store",
+    ...(options.revalidateSeconds
+      ? { next: { revalidate: options.revalidateSeconds } }
+      : { cache: "no-store" as const }),
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
     },

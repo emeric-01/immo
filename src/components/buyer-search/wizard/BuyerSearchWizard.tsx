@@ -140,7 +140,7 @@ export function BuyerSearchWizard() {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get("source") === "client") {
-      void loadClientProjectIntoForm();
+      void loadClientProjectIntoForm(params.get("searchId"));
       return;
     }
 
@@ -174,19 +174,35 @@ export function BuyerSearchWizard() {
 
     setDraftReady(true);
 
-    async function loadClientProjectIntoForm() {
+    async function loadClientProjectIntoForm(searchId: string | null) {
       try {
-        const response = await fetch("/api/client/project", { cache: "no-store" });
+        const endpoint = searchId
+          ? `/api/client/project?id=${encodeURIComponent(searchId)}`
+          : "/api/client/project";
+        const response = await fetch(endpoint, { cache: "no-store" });
 
         if (!response.ok) {
           setDraftReady(true);
           return;
         }
 
-        const payload = (await response.json()) as { search?: BuyerSearchFormData };
+        const payload = (await response.json()) as {
+          profile?: { email: string; firstName: string; lastName: string };
+          search?: BuyerSearchFormData;
+        };
 
         if (payload.search) {
           reset({ ...defaultBuyerSearchData, ...payload.search });
+        } else if (payload.profile) {
+          reset({
+            ...defaultBuyerSearchData,
+            contact: {
+              ...defaultBuyerSearchData.contact,
+              email: payload.profile.email,
+              firstName: payload.profile.firstName,
+              lastName: payload.profile.lastName,
+            },
+          });
         }
       } finally {
         setDraftReady(true);

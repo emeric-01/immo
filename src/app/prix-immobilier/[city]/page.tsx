@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import {
   getCityBySlug,
   getNearbyCities,
-  southCities,
 } from "@/lib/cities";
 import {
   getCityMarketData,
@@ -51,9 +50,9 @@ function getAverageMarketPrice(apartment: number, house: number) {
 }
 
 function getMarketCacheDays() {
-  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
+  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "90");
 
-  return Number.isFinite(days) && days > 0 ? Math.round(days) : 30;
+  return Number.isFinite(days) && days > 0 ? Math.round(days) : 90;
 }
 
 function ConfidenceDots({ score }: { score: number }) {
@@ -169,10 +168,11 @@ function TrendChart({ points }: { points: CityPriceHistoryPoint[] }) {
   );
 }
 
+export const revalidate = 7_776_000;
+
 export function generateStaticParams() {
-  return southCities.map((city) => ({
-    city: city.slug,
-  }));
+  // Generate market pages on first visit so deployments do not trigger paid API calls.
+  return [];
 }
 
 export async function generateMetadata({

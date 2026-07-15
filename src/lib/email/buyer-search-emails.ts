@@ -45,7 +45,7 @@ export async function sendBuyerSearchCreatedEmails({
   }
 
   const warnings: string[] = [];
-  const messages: EmailMessage[] = [buildClientConfirmationEmail(config, data, result)];
+  const messages: EmailMessage[] = [buildClientConfirmationEmail(config, data)];
 
   if (config.adminEmail) {
     messages.push(buildAdminNewSearchEmail(config, data, result.id));
@@ -87,6 +87,37 @@ export async function sendBuyerSearchUpdatedEmails({
       warnings: ["Notification admin non envoyee pour la modification client."],
     };
   }
+}
+
+export async function sendClientLoginCodeEmail({
+  code,
+  email,
+  firstName,
+}: {
+  code: string;
+  email: string;
+  firstName: string;
+}) {
+  const config = getEmailConfig();
+
+  if (!config) {
+    throw new Error("Emails transactionnels non configures.");
+  }
+
+  await sendEmail(config, {
+    html: emailLayout(
+      "Votre code de connexion",
+      `
+        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Bonjour ${escapeHtml(firstName || "")},</p>
+        <p style="margin:0 0 18px;color:#555f70;line-height:1.6;">Utilisez ce code pour acceder a votre espace client Les Jumelles Immo :</p>
+        <p style="margin:0 0 18px;border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:18px;text-align:center;font-size:30px;font-weight:800;letter-spacing:.18em;color:#111;">${escapeHtml(code)}</p>
+        <p style="margin:0;color:#687084;font-size:13px;line-height:1.5;">Ce code est valable 10 minutes et ne peut etre utilise qu'une seule fois.</p>
+      `,
+    ),
+    subject: "Votre code de connexion Les Jumelles Immo",
+    text: `Votre code de connexion est ${code}. Il est valable 10 minutes.`,
+    to: email,
+  });
 }
 
 function getEmailConfig(): EmailConfig | null {
@@ -203,24 +234,10 @@ function parseEmailIdentity(value: string) {
 function buildClientConfirmationEmail(
   config: EmailConfig,
   data: BuyerSearchFormData,
-  result: BuyerSearchSubmissionResult,
 ): EmailMessage {
-  const access = result.clientAccess;
-  const projectUrl = `${config.appUrl}/client/login`;
+  const projectUrl = `${config.appUrl}/client/login?email=${encodeURIComponent(data.contact.email.trim().toLowerCase())}`;
   const title = "Votre recherche Les Jumelles Immo est bien enregistree";
   const summary = buildSearchSummary(data);
-  const accessBlock = access
-    ? `
-      <div style="border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:18px;margin:24px 0;">
-        <p style="margin:0 0 8px;font-weight:700;color:#111;">Votre acces client</p>
-        <p style="margin:0;color:#333;line-height:1.55;">
-          Reference : <strong>${escapeHtml(access.reference)}</strong><br />
-          Code : <strong>${escapeHtml(access.code)}</strong>
-        </p>
-        <p style="margin:10px 0 0;color:#687084;font-size:13px;">Conservez ces informations pour revoir ou modifier votre projet.</p>
-      </div>
-    `
-    : "";
 
   return {
     html: emailLayout(
@@ -228,10 +245,9 @@ function buildClientConfirmationEmail(
       `
         <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Bonjour ${escapeHtml(data.contact.firstName)},</p>
         <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Votre recherche immobiliere est bien enregistree. Nous reviendrons vers vous des qu'un bien correspondra a vos criteres.</p>
-        ${accessBlock}
         ${summary}
         <p style="margin:24px 0 0;">
-          <a href="${escapeHtml(projectUrl)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700;">Acceder a mon projet</a>
+          <a href="${escapeHtml(projectUrl)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700;">Acceder a mon espace client</a>
         </p>
       `,
     ),
@@ -239,8 +255,6 @@ function buildClientConfirmationEmail(
     text: [
       `Bonjour ${data.contact.firstName},`,
       "Votre recherche immobiliere est bien enregistree.",
-      access ? `Reference : ${access.reference}` : "",
-      access ? `Code : ${access.code}` : "",
       `Espace client : ${projectUrl}`,
       formatTextSummary(data),
     ]

@@ -334,8 +334,8 @@ const aubagneMarketData: CityMarketData = {
 };
 
 function getRevalidateSeconds() {
-  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
-  const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
+  const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "90");
+  const safeDays = Number.isFinite(days) && days > 0 ? days : 90;
 
   return Math.round(safeDays * 24 * 60 * 60);
 }

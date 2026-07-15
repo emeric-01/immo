@@ -3,6 +3,7 @@ import { createBuyerSearchRecord, updateBuyerSearchRecord } from "@/lib/buyer-se
 import { buyerSearchSchema, stepSchemas } from "@/lib/buyer-search/schema";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import { getClientSession } from "@/lib/client-access/auth";
+import { clientOwnsBuyerSearch } from "@/lib/client-access/project";
 import { sendBuyerSearchCreatedEmails, sendBuyerSearchUpdatedEmails } from "@/lib/email/buyer-search-emails";
 
 type SubmissionValidationResult =
@@ -35,23 +36,46 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await getClientSession();
+    const requestedSearchId = request.nextUrl.searchParams.get("searchId")?.trim() || null;
+
+    if (
+      requestedSearchId &&
+      (!session || !(await clientOwnsBuyerSearch(session.id, requestedSearchId)))
+    ) {
+      return NextResponse.json(
+        { error: "Cette recherche ne peut pas etre modifiee depuis ce compte." },
+        { status: 403 },
+      );
+    }
+
+    const data: BuyerSearchFormData = session
+      ? {
+          ...validation.data,
+          contact: {
+            ...validation.data.contact,
+            email: session.email,
+          },
+        }
+      : validation.data;
     const metadata = {
       ipAddress: getClientIp(request),
       source: session ? "client_space" : "website",
       userAgent: request.headers.get("user-agent"),
     };
-    const result = session
-      ? await updateBuyerSearchRecord(session.id, validation.data, metadata)
-      : await createBuyerSearchRecord(validation.data, metadata);
-    const emailDelivery = session
-      ? await sendBuyerSearchUpdatedEmails({ data: validation.data, searchId: result.id })
-      : await sendBuyerSearchCreatedEmails({ data: validation.data, result });
+    const result = requestedSearchId
+      ? await updateBuyerSearchRecord(requestedSearchId, data, metadata)
+      : await createBuyerSearchRecord(data, metadata);
+    const emailDelivery = requestedSearchId
+      ? await sendBuyerSearchUpdatedEmails({ data, searchId: result.id })
+      : await sendBuyerSearchCreatedEmails({ data, result });
     const responseBody = {
       ...result,
       warnings: [...(result.warnings ?? []), ...emailDelivery.warnings],
     };
 
-    return NextResponse.json(responseBody, { status: session ? 200 : result.persisted ? 201 : 202 });
+    return NextResponse.json(responseBody, {
+      status: requestedSearchId ? 200 : result.persisted ? 201 : 202,
+    });
   } catch (error) {
     console.error("Buyer search submission failed", error);
 

@@ -1,22 +1,13 @@
 import "server-only";
 
-import { timingSafeEqual } from "crypto";
-import { hashClientAccessCode } from "@/lib/buyer-search/database";
 import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 import type { ClientSession } from "./auth";
-
-type ClientSupabaseConfig = {
-  serviceRoleKey: string;
-  url: string;
-};
+import { clientSupabaseRequest } from "./supabase";
 
 export type ClientBuyerSearchRow = {
   city_names: string[];
-  client_access_code_hash: string | null;
-  client_access_enabled: boolean;
-  client_last_access_at: string | null;
-  client_reference: string | null;
+  client_account_id: string | null;
   contact_email: string;
   contact_first_name: string;
   contact_last_name: string;
@@ -43,156 +34,47 @@ export type ClientProjectResult =
   | { data: ClientBuyerSearchRow; status: "ready" }
   | { message: string; status: "missing_config" | "not_found" | "error" };
 
-function getClientSupabaseConfig(): ClientSupabaseConfig | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-
-  if (!url || !serviceRoleKey) {
-    return null;
-  }
-
-  return {
-    serviceRoleKey,
-    url: url.replace(/\/$/, ""),
-  };
-}
-
-export async function authenticateClientProject({
-  code,
-  email,
-  reference,
-}: {
-  code: string;
-  email: string;
-  reference: string;
-}): Promise<ClientProjectResult> {
-  const normalizedEmail = email.trim().toLowerCase();
-  const normalizedReference = reference.trim().toUpperCase();
-
-  const result = await fetchClientSearches({
-    client_access_enabled: "eq.true",
-    client_reference: `eq.${normalizedReference}`,
-    contact_email: `eq.${normalizedEmail}`,
-    limit: "1",
-    select: "*",
-  });
-
-  if (result.status !== "ready") {
-    return result;
-  }
-
-  const search = result.data[0];
-
-  if (!search?.client_access_code_hash) {
-    return {
-      message: "Aucun projet ne correspond a ces informations.",
-      status: "not_found",
-    };
-  }
-
-  const expected = Buffer.from(search.client_access_code_hash);
-  const received = Buffer.from(hashClientAccessCode(normalizedReference, code));
-
-  if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
-    return {
-      message: "Aucun projet ne correspond a ces informations.",
-      status: "not_found",
-    };
-  }
-
-  await patchClientSearch(search.id, {
-    client_last_access_at: new Date().toISOString(),
-  });
-
-  return {
-    data: search,
-    status: "ready",
-  };
-}
-
-export async function getClientBuyerSearch(session: ClientSession): Promise<ClientProjectResult> {
-  const result = await fetchClientSearches({
-    id: `eq.${session.id}`,
-    limit: "1",
-    select: "*",
-  });
-
-  if (result.status !== "ready") {
-    return result;
-  }
-
-  const search = result.data[0];
-
-  if (!search || search.client_reference !== session.reference || search.contact_email !== session.email) {
-    return {
-      message: "Projet introuvable ou acces expire.",
-      status: "not_found",
-    };
-  }
-
-  return {
-    data: search,
-    status: "ready",
-  };
-}
-
-async function fetchClientSearches(filters: Record<string, string>) {
-  const config = getClientSupabaseConfig();
-
-  if (!config) {
-    return {
-      message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour activer l'espace client.",
-      status: "missing_config" as const,
-    };
-  }
-
-  const params = new URLSearchParams(filters);
-
+export async function getClientBuyerSearches(session: ClientSession) {
   try {
-    const response = await fetch(`${config.url}/rest/v1/buyer_searches?${params.toString()}`, {
-      cache: "no-store",
-      headers: {
-        apikey: config.serviceRoleKey,
-        Authorization: `Bearer ${config.serviceRoleKey}`,
-      },
-    });
+    return await clientSupabaseRequest<ClientBuyerSearchRow[]>(
+      `buyer_searches?client_account_id=eq.${encodeURIComponent(session.id)}&select=*&order=created_at.desc`,
+    );
+  } catch (error) {
+    console.error("Client searches load failed", error);
+    return [];
+  }
+}
 
-    if (!response.ok) {
-      const error = await response.text();
+export async function getClientBuyerSearch(
+  session: ClientSession,
+  searchId: string,
+): Promise<ClientProjectResult> {
+  try {
+    const searches = await clientSupabaseRequest<ClientBuyerSearchRow[]>(
+      `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(session.id)}&select=*&limit=1`,
+    );
+    const search = searches[0];
+
+    if (!search) {
       return {
-        message: `Lecture Supabase impossible (${response.status}) : ${error}`,
-        status: "error" as const,
+        message: "Cette recherche n'existe pas ou ne vous appartient pas.",
+        status: "not_found",
       };
     }
 
-    return {
-      data: (await response.json()) as ClientBuyerSearchRow[],
-      status: "ready" as const,
-    };
+    return { data: search, status: "ready" };
   } catch (error) {
     return {
       message: error instanceof Error ? error.message : "Lecture Supabase impossible.",
-      status: "error" as const,
+      status: "error",
     };
   }
 }
 
-async function patchClientSearch(id: string, payload: Record<string, unknown>) {
-  const config = getClientSupabaseConfig();
+export async function clientOwnsBuyerSearch(clientAccountId: string, searchId: string) {
+  const searches = await clientSupabaseRequest<Array<{ id: string }>>(
+    `buyer_searches?id=eq.${encodeURIComponent(searchId)}&client_account_id=eq.${encodeURIComponent(clientAccountId)}&select=id&limit=1`,
+  );
 
-  if (!config) {
-    return;
-  }
-
-  await fetch(`${config.url}/rest/v1/buyer_searches?id=eq.${encodeURIComponent(id)}`, {
-    body: JSON.stringify(payload),
-    cache: "no-store",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    method: "PATCH",
-  });
+  return Boolean(searches[0]);
 }

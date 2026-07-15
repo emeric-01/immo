@@ -3,6 +3,8 @@ import {
   createImmoDataEstimation,
   type PropertyEstimationInput,
 } from "@/lib/immo-data";
+import { getClientSession } from "@/lib/client-access/auth";
+import { saveClientEstimation } from "@/lib/client-access/estimations";
 
 function isValidEstimationInput(
   input: Partial<PropertyEstimationInput>,
@@ -32,8 +34,16 @@ export async function POST(request: Request) {
     }
 
     const estimation = await createImmoDataEstimation(input);
+    const session = await getClientSession();
+    const estimationId = session
+      ? await saveClientEstimation(session, input, estimation)
+      : null;
 
-    return NextResponse.json(estimation);
+    return NextResponse.json({
+      ...estimation,
+      clientEstimationId: estimationId,
+      savedToClientAccount: Boolean(estimationId),
+    });
   } catch (error) {
     console.error(error);
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, KeyRound, Ruler } from "lucide-react";
+import { ArrowLeft, Check, Home, MapPin, WalletCards, BedDouble, CalendarDays, UserRound, Ruler } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   normalizePropertyTypes,
@@ -17,8 +17,9 @@ import styles from "./buyer-search-wizard.module.css";
 export function BuyerSearchConfirmation() {
   const [snapshot, setSnapshot] = useState<BuyerSearchSubmittedSnapshot | null>(null);
   const data = snapshot?.data ?? null;
-  const clientAccess = snapshot?.result?.clientAccess;
-  const clientLoginHref = clientAccess && data ? buildClientLoginHref(data, clientAccess) : "/client/login";
+  const clientLoginHref = data
+    ? `/client/login?email=${encodeURIComponent(data.contact.email.trim().toLowerCase())}`
+    : "/client/login";
 
   useEffect(() => {
     setSnapshot(loadSubmittedBuyerSearchSnapshot());
@@ -53,27 +54,17 @@ export function BuyerSearchConfirmation() {
             <MarketScoreCard score={snapshot.result.marketScore} />
           </div>
         ) : null}
-        {clientAccess ? (
+        {snapshot?.result?.persisted && data ? (
           <section className={styles.clientAccessCard}>
             <span className={styles.iconBubble}>
-              <KeyRound size={24} aria-hidden="true" />
+              <UserRound size={24} aria-hidden="true" />
             </span>
             <div>
-              <h2>Votre acces client</h2>
-              <dl className={styles.clientAccessCodes}>
-                <div>
-                  <dt>Reference</dt>
-                  <dd>{clientAccess.reference}</dd>
-                </div>
-                <div>
-                  <dt>Code</dt>
-                  <dd>{clientAccess.code}</dd>
-                </div>
-              </dl>
-              <small>Conservez ces informations pour retrouver et modifier votre projet depuis l&apos;espace client.</small>
+              <h2>Votre espace client</h2>
+              <p>Cette recherche est rattachée à {data.contact.email}. Connectez-vous par email pour la retrouver avec vos autres projets.</p>
             </div>
             <Link className={styles.primaryButton} href={clientLoginHref}>
-              Acceder a mon projet
+              Accéder à mon espace
             </Link>
           </section>
         ) : null}
@@ -139,21 +130,4 @@ function formatPropertyTypes(data: BuyerSearchFormData) {
   return selectedTypes.length > 0
     ? selectedTypes.map((type) => propertyTypeLabels[type]).join(", ")
     : "Non renseigne";
-}
-
-function buildClientLoginHref(
-  data: BuyerSearchFormData,
-  clientAccess: NonNullable<BuyerSearchSubmittedSnapshot["result"]>["clientAccess"],
-) {
-  if (!clientAccess) {
-    return "/client/login";
-  }
-
-  const params = new URLSearchParams({
-    code: clientAccess.code,
-    email: data.contact.email,
-    reference: clientAccess.reference,
-  });
-
-  return `/client/login?${params.toString()}`;
 }

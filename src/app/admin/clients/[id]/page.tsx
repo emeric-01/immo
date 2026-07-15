@@ -91,7 +91,7 @@ export default async function AdminClientDetailPage({
           <Metric icon={Home} label="Derniere recherche" value={latestSearch ? formatAdminClientPropertyTypes(latestSearch.property_types) : "Aucune"} />
           <Metric icon={MapPin} label="Secteur" value={latestSearch?.location_summary || "Non renseigne"} />
           <Metric icon={Euro} label="Budget maximum" value={formatCurrency(latestSearch?.maximum_budget)} />
-          <Metric icon={ShieldCheck} label="Reference client" value={latestSearch?.client_reference || "Non generee"} />
+          <Metric icon={ShieldCheck} label="Connexion client" value="Code temporaire par email" />
         </InfoPanel>
 
         <InfoPanel title={`Demandes liees (${searches.length})`} wide>

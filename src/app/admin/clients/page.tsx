@@ -147,7 +147,7 @@ function ClientTable({ clients }: { clients: AdminClientListItem[] }) {
                 <span className={styles.statusBadge} data-status={client.access_enabled ? "matched" : "paused"}>
                   {client.access_enabled ? "Actif" : "Desactive"}
                 </span>
-                <small>{client.lastSearch?.client_reference ? `Ref. ${client.lastSearch.client_reference}` : "Reference non generee"}</small>
+                <small>Connexion par email</small>
               </td>
               <td>
                 <strong>{client.searchesCount} demande(s)</strong>

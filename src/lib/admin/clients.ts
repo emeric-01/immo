@@ -26,7 +26,6 @@ export type AdminClientAccount = {
 export type AdminClientSearch = {
   client_account_id: string | null;
   client_last_access_at: string | null;
-  client_reference: string | null;
   contact_email: string;
   created_at: string;
   id: string;
@@ -88,7 +87,7 @@ export async function getAdminClients(
     limit: "1000",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_reference,client_last_access_at",
+      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_last_access_at",
   });
 
   const [clientsResult, searchesResult] = await Promise.all([
@@ -169,7 +168,7 @@ export async function getAdminClient(id: string): Promise<AdminDataState<AdminCl
     client_account_id: `eq.${id}`,
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_reference,client_last_access_at",
+      "id,created_at,updated_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id,client_last_access_at",
   });
   const searchesResult = await supabaseAdminFetch<AdminClientSearch[]>(
     config,
