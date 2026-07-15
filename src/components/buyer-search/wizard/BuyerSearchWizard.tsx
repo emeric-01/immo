@@ -333,7 +333,7 @@ export function BuyerSearchWizard() {
                   : activeStep.id === "summary"
                     ? 'Vous pourrez modifier chaque element en cliquant sur "Modifier".'
                     : activeStep.id === "priorities"
-                      ? "Glissez les criteres pour les classer ou selectionnez Indispensable ou Souhaite."
+                      ? "Basculez chaque critere en Souhaite ou Indispensable selon votre priorite."
                       : "Vos reponses restent confidentielles et ne vous engagent a rien."
               }
             />
@@ -894,22 +894,22 @@ function StepPriorities({ form }: StepProps) {
             <span className={styles.dragHandle} aria-hidden="true">::</span>
             <IconBubble icon={iconForCategory(priority.category)} />
             <strong>{priority.label}</strong>
-            <div className={styles.priorityChoices}>
-              <button
-                type="button"
-                data-selected={priority.level === "essential" || undefined}
-                onClick={() => updatePriority(priority.key, "essential")}
-              >
-                <Star size={20} aria-hidden="true" />
-                Indispensable
-              </button>
+            <div className={styles.prioritySwitch} role="group" aria-label={`${priority.label} : niveau de priorite`}>
               <button
                 type="button"
                 data-selected={priority.level === "desired" || undefined}
                 onClick={() => updatePriority(priority.key, "desired")}
               >
-                <Heart size={20} aria-hidden="true" />
+                <Heart size={16} aria-hidden="true" />
                 Souhaite
+              </button>
+              <button
+                type="button"
+                data-selected={priority.level === "essential" || undefined}
+                onClick={() => updatePriority(priority.key, "essential")}
+              >
+                <Star size={16} aria-hidden="true" />
+                Indispensable
               </button>
             </div>
             <ChevronDown size={18} aria-hidden="true" />
