@@ -673,14 +673,18 @@ function StepProperty({ form }: StepProps) {
         <label className={styles.rangeField}>
           <span>
             Surface habitable minimale
-            <strong>{characteristics.minimumLivingArea ?? 90} m2</strong>
+            <strong>
+              {characteristics.minimumLivingArea
+                ? `${characteristics.minimumLivingArea} m2`
+                : "Non renseignee"}
+            </strong>
           </span>
           <input
             type="range"
             min={20}
             max={300}
             step={5}
-            value={characteristics.minimumLivingArea ?? 90}
+            value={characteristics.minimumLivingArea ?? 20}
             onChange={(event) =>
               setValue("characteristics.minimumLivingArea", Number(event.target.value), {
                 shouldDirty: true,

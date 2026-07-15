@@ -85,21 +85,18 @@ export const buyerSearchSteps: Array<{ id: WizardStepId; label: string }> = [
 
 export const defaultBuyerSearchData: BuyerSearchFormData = {
   location: {
-    cities: [
-      { name: "Aubagne", postalCode: "13400", cityCode: "13005", latitude: 43.2928, longitude: 5.5707, radiusKm: 2 },
-      { name: "Gemenos", postalCode: "13420", cityCode: "13042", latitude: 43.2975, longitude: 5.6286, radiusKm: 2 },
-    ],
-    radiusKm: 2,
+    cities: [],
+    radiusKm: null,
     customRadius: null,
   },
   property: {
-    type: "house",
-    types: ["house"],
-    idealBudget: 330000,
-    maximumBudget: 350000,
+    type: null,
+    types: [],
+    idealBudget: null,
+    maximumBudget: null,
   },
   characteristics: {
-    minimumLivingArea: 90,
+    minimumLivingArea: null,
     minimumRooms: 0,
     minimumBedrooms: 0,
     minimumBathrooms: 0,
@@ -116,9 +113,9 @@ export const defaultBuyerSearchData: BuyerSearchFormData = {
     maximumFloor: null,
   },
   project: {
-    purchaseTimeline: "m3_6",
-    financingStatus: "budget_defined",
-    currentSituation: "tenant",
+    purchaseTimeline: null,
+    financingStatus: null,
+    currentSituation: null,
   },
   priorities: [],
   contact: {
@@ -126,7 +123,7 @@ export const defaultBuyerSearchData: BuyerSearchFormData = {
     lastName: "",
     email: "",
     phone: "",
-    preferredChannel: "email",
+    preferredChannel: null,
     consent: false,
   },
 };

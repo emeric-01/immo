@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, UserRound } from "lucide-react";
+import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import { requireAdminSession } from "@/lib/admin/auth";
 import {
   formatAdminClientName,
@@ -48,7 +49,7 @@ export default async function AdminClientDetailPage({
     );
   }
 
-  const { client, searches } = result.data;
+  const { client, estimations, searches } = result.data;
   const latestSearch = searches[0] ?? null;
 
   return (
@@ -118,8 +119,45 @@ export default async function AdminClientDetailPage({
             <p className={styles.mutedText}>Aucune demande rattachee a ce client.</p>
           )}
         </InfoPanel>
+
+        <InfoPanel title={`Estimations liees (${estimations.length})`} wide>
+          {estimations.length > 0 ? (
+            <div className={styles.tablePanel}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Bien</th>
+                    <th>Surface</th>
+                    <th>Valeur estimee</th>
+                    <th aria-label="Detail" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {estimations.map((estimation) => (
+                    <EstimationRow estimation={estimation} key={estimation.id} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className={styles.mutedText}>Aucune estimation rattachee a ce client.</p>
+          )}
+        </InfoPanel>
       </section>
     </DetailFrame>
+  );
+}
+
+function EstimationRow({ estimation }: { estimation: ClientEstimationRow }) {
+  return (
+    <tr>
+      <td><strong>{formatDate(estimation.created_at)}</strong><small>{estimation.source === "immo-data" ? "Immo Data" : "Démonstration"}</small></td>
+      <td><strong>{estimation.property_type === "house" ? "Maison" : "Appartement"}</strong><small>{estimation.address_label}</small></td>
+      <td><strong>{estimation.surface_m2} m2</strong><small>{estimation.rooms} pièces</small></td>
+      <td><strong>{formatCurrency(estimation.median_price)}</strong><small>{estimation.price_per_m2.toLocaleString("fr-FR")} €/m2</small></td>
+      <td><Link className={styles.iconLink} href={`/admin/estimations/${estimation.id}`}><ArrowRight size={18} aria-hidden="true" /></Link></td>
+    </tr>
   );
 }
 

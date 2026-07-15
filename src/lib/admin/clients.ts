@@ -2,6 +2,7 @@ import "server-only";
 
 import { propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
+import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -44,6 +45,7 @@ export type AdminClientListItem = AdminClientAccount & {
 
 export type AdminClientDetail = {
   client: AdminClientAccount;
+  estimations: ClientEstimationRow[];
   searches: AdminClientSearch[];
 };
 
@@ -179,9 +181,24 @@ export async function getAdminClient(id: string): Promise<AdminDataState<AdminCl
     return searchesResult;
   }
 
+  const estimationParams = new URLSearchParams({
+    client_account_id: `eq.${id}`,
+    order: "created_at.desc",
+    select: "*",
+  });
+  const estimationsResult = await supabaseAdminFetch<ClientEstimationRow[]>(
+    config,
+    `property_estimations?${estimationParams.toString()}`,
+  );
+
+  if (estimationsResult.status !== "ready") {
+    return estimationsResult;
+  }
+
   return {
     data: {
       client,
+      estimations: estimationsResult.data,
       searches: searchesResult.data,
     },
     status: "ready",
