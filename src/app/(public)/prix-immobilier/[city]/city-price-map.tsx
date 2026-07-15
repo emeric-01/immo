@@ -199,7 +199,7 @@ export function CityPriceMap({
           "line-color": [
             "case",
             ["==", ["get", "id"], activeZoneIdRef.current],
-            "#1f3ecb",
+            "#171612",
             "#ffffff",
           ],
           "line-width": [
@@ -226,8 +226,8 @@ export function CityPriceMap({
             "match",
             ["get", "propertyType"],
             "Maison",
-            "#10b981",
-            "#2588ff",
+            "#72775a",
+            "#b77b4c",
           ],
           "circle-radius": 7.5,
           "circle-stroke-color": "#ffffff",
@@ -334,7 +334,7 @@ export function CityPriceMap({
     map.setPaintProperty("price-zones-line", "line-color", [
       "case",
       ["==", ["get", "id"], activeZoneId],
-      "#1f3ecb",
+      "#171612",
       "#ffffff",
     ]);
     map.setPaintProperty("price-zones-line", "line-width", [

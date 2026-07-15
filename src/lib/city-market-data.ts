@@ -29,6 +29,8 @@ export type CitySalePoint = {
   rooms: number;
   surfaceM2: number;
   soldAt: string;
+  price?: number;
+  pricePerM2?: number;
   longitude: number;
   latitude: number;
 };
@@ -45,6 +47,8 @@ export type CityMarketData = {
   history: CityPriceHistoryPoint[];
   zones: CityPriceZone[];
   salePoints: CitySalePoint[];
+  transactionCount?: number;
+  saleDurationDays?: number;
   neighborhoods: Array<{
     name: string;
     pricePerM2: number;
@@ -77,6 +81,10 @@ type CurrentPriceResponse = {
   value: number | null;
 };
 
+type SaleDurationResponse = {
+  value: number | null;
+};
+
 type PriceHistoryResponse = {
   data?: Array<{
     period: string;
@@ -98,6 +106,7 @@ type DistrictGeoResponse = {
 };
 
 type TransactionsResponse = {
+  total?: number;
   data?: TransactionResponse[];
 };
 
@@ -170,7 +179,7 @@ const aubagneMarketData: CityMarketData = {
       id: "centre-ville",
       name: "Centre-ville",
       pricePerM2: 4107,
-      color: "#3ecf5a",
+      color: "#777b58",
       polygon: [
         [5.561, 43.295],
         [5.57, 43.302],
@@ -185,7 +194,7 @@ const aubagneMarketData: CityMarketData = {
       id: "charrel",
       name: "Charrel",
       pricePerM2: 3536,
-      color: "#f5ef55",
+      color: "#b9b78e",
       polygon: [
         [5.545, 43.296],
         [5.558, 43.304],
@@ -200,7 +209,7 @@ const aubagneMarketData: CityMarketData = {
       id: "paluds",
       name: "Les Paluds",
       pricePerM2: 3674,
-      color: "#f5a15b",
+      color: "#a5a477",
       polygon: [
         [5.581, 43.297],
         [5.604, 43.302],
@@ -214,7 +223,7 @@ const aubagneMarketData: CityMarketData = {
       id: "peripherie-est",
       name: "Peripherie est",
       pricePerM2: 2997,
-      color: "#9be74d",
+      color: "#d8d5bd",
       polygon: [
         [5.596, 43.283],
         [5.614, 43.292],
@@ -228,7 +237,7 @@ const aubagneMarketData: CityMarketData = {
       id: "secteur-prime",
       name: "Secteur premium",
       pricePerM2: 4908,
-      color: "#ff5a52",
+      color: "#646a48",
       polygon: [
         [5.548, 43.289],
         [5.568, 43.286],
@@ -522,18 +531,18 @@ function coordinatesFromDistrict(boundaries: DistrictGeoResponse["boundaries"]) 
 
 function priceColor(pricePerM2: number) {
   if (pricePerM2 < 3200) {
-    return "#9be74d";
+    return "#d8d5bd";
   }
 
   if (pricePerM2 < 3700) {
-    return "#f5ef55";
+    return "#b9b78e";
   }
 
   if (pricePerM2 < 4300) {
-    return "#f5a15b";
+    return "#96986d";
   }
 
-  return "#ff5a52";
+  return "#6f7452";
 }
 
 function getTransactionStreet(transaction: TransactionResponse) {
@@ -564,6 +573,8 @@ function toSalePoint(transaction: TransactionResponse, index: number): CitySaleP
     rooms: transaction.attributes?.rooms ?? lotRealty?.rooms ?? 0,
     surfaceM2: transaction.attributes?.livingArea ?? lotRealty?.livingArea ?? 0,
     soldAt: transaction.txDate ?? "Date NC",
+    price: transaction.price,
+    pricePerM2: transaction.squareMeterPrice,
     longitude: coordinates[0],
     latitude: coordinates[1],
   };
@@ -651,13 +662,13 @@ async function getCityImmoDataMarket(
   const apartmentHistoryParams = new URLSearchParams({
     ...baseMarketParams,
     realtyType: "apartment",
-    startDate: previousMonth(120),
+    startDate: "2014-01",
     endDate: previousMonth(0),
   });
   const houseHistoryParams = new URLSearchParams({
     ...baseMarketParams,
     realtyType: "house",
-    startDate: previousMonth(120),
+    startDate: "2014-01",
     endDate: previousMonth(0),
   });
   const transactionsParams = new URLSearchParams({
@@ -667,7 +678,13 @@ async function getCityImmoDataMarket(
     realtyType: "house,apartment",
     sortBy: "date",
     sortOrder: "desc",
-    size: "30",
+    dateMin: "2014-01-01",
+    size: "100",
+  });
+  const saleDurationParams = new URLSearchParams({
+    code: cityCode,
+    geoLevel: "city",
+    unit: "days",
   });
 
   const [
@@ -677,6 +694,7 @@ async function getCityImmoDataMarket(
     houseHistory,
     transactions,
     cityGeo,
+    saleDuration,
   ] = await Promise.all([
     optionalImmoData(() =>
       fetchImmoData<CurrentPriceResponse>(
@@ -711,6 +729,13 @@ async function getCityImmoDataMarket(
     ),
     optionalImmoData(() =>
       fetchImmoData<CityGeoResponse>(config, `/v1/geo/cities/${cityCode}`),
+    ),
+    optionalImmoData(() =>
+      fetchImmoData<SaleDurationResponse>(
+        config,
+        "/v1/market/sale-duration/current",
+        saleDurationParams,
+      ),
     ),
   ]);
 
@@ -801,6 +826,9 @@ async function getCityImmoDataMarket(
     history: toHistoryPoints(apartmentHistory, houseHistory, fallbackData.history),
     zones: zones.length > 0 ? zones : fallbackData.zones,
     salePoints,
+    transactionCount: transactions?.total,
+    saleDurationDays:
+      typeof saleDuration?.value === "number" ? Math.round(saleDuration.value) : undefined,
     neighborhoods:
       zones.length > 0
         ? zones.map((zone) => ({
