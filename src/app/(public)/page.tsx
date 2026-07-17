@@ -30,6 +30,10 @@ export const metadata: Metadata = {
 const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "saint-cyr-sur-mer"];
 
 const cityImages: Record<string, { src: string; alt: string }> = {
+  "aix-en-provence": {
+    src: "/images/cities/aix-en-provence.webp",
+    alt: "Tour de l’Horloge de l’hôtel de ville d’Aix-en-Provence",
+  },
   aubagne: {
     src: "/images/cities/aubagne.webp",
     alt: "Vue d’Aubagne et du massif du Garlaban",
@@ -80,14 +84,14 @@ export default async function HomePage() {
         <div className={styles.heroVisual}>
           <div className={styles.visualFrame}>
             <Image
-              alt="Tour de l’Horloge de l’hôtel de ville d’Aix-en-Provence sous un ciel bleu"
+              alt="Intérieur méditerranéen lumineux représentatif de l’univers Les Jumelles Immo"
               className={styles.heroImage}
               fill
               fetchPriority="high"
               priority
-              quality={76}
+              quality={82}
               sizes="(max-width: 720px) calc(100vw - 52px), (max-width: 1100px) 42vw, 47vw"
-              src="/images/aix-en-provence-hotel-de-ville.webp"
+              src="/images/agence-jumelles-immo-hero.webp"
             />
           </div>
         </div>
