@@ -9,10 +9,9 @@
 .primaryAction,.secondaryAction { display:inline-flex; min-height:52px; align-items:center; justify-content:center; gap:12px; border:1px solid #171511; border-radius:8px; padding:0 24px; font-weight:700; text-decoration:none; }
 .primaryAction { background:#171511; color:#fff; }.secondaryAction { border-color:#d8baa3; background:#fff; color:#9c6038; }
 .heroVisual { min-height:590px; padding:28px 28px 28px 0; }
-.visualFrame { position:relative; height:100%; overflow:hidden; border-radius:0 14px 14px 0; background:linear-gradient(150deg,rgba(240,221,203,.9),rgba(185,151,116,.45)),radial-gradient(circle at 70% 35%,#fff 0 9%,transparent 10%),linear-gradient(135deg,#d4c2ad,#8b7a66); }
-.visualFrame::before,.visualFrame::after { position:absolute; content:""; background:rgba(255,255,255,.42); }
-.visualFrame::before { inset:0 54% 0 auto; width:2px; }.visualFrame::after { right:0; bottom:16%; width:100%; height:1px; }
-.visualFrame span,.cityVisual span { position:absolute; right:18px; bottom:16px; border-radius:999px; background:rgba(255,255,255,.86); padding:7px 11px; color:#6e6256; font-size:.7rem; }
+.visualFrame { position:relative; height:100%; overflow:hidden; border-radius:0 14px 14px 0; background:#d6c0aa; }
+.heroImage { object-fit:cover; object-position:center center; }
+.cityVisual span { position:absolute; right:18px; bottom:16px; border-radius:999px; background:rgba(255,255,255,.86); padding:7px 11px; color:#6e6256; font-size:.7rem; }
 .services { display:grid; position:relative; z-index:2; grid-template-columns:repeat(3,1fr); gap:20px; width:calc(100% - 72px); margin:-54px auto 0; }
 .services article { display:flex; min-height:260px; flex-direction:column; border:1px solid #e9e1d8; border-radius:14px; background:#fff; padding:28px; box-shadow:0 16px 40px rgba(44,35,27,.07); }
 .iconBadge { display:inline-flex; width:52px; height:52px; flex:0 0 auto; align-items:center; justify-content:center; border-radius:50%; background:#f6ede4; color:#171511; }.iconBadge svg { width:25px; }

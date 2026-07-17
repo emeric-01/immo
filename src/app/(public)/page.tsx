@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -52,8 +53,18 @@ export default function HomePage() {
             <Link className={styles.secondaryAction} href="#secteurs">Voir les prix au m²</Link>
           </div>
         </div>
-        <div className={styles.heroVisual} aria-label="Emplacement du visuel principal">
-          <div className={styles.visualFrame}><span>Votre visuel principal</span></div>
+        <div className={styles.heroVisual}>
+          <div className={styles.visualFrame}>
+            <Image
+              alt="Intérieur méditerranéen lumineux représentatif de l’univers Les Jumelles Immo"
+              className={styles.heroImage}
+              fill
+              priority
+              quality={82}
+              sizes="(max-width: 720px) calc(100vw - 52px), (max-width: 1100px) 42vw, 47vw"
+              src="/images/agence-jumelles-immo-hero.webp"
+            />
+          </div>
         </div>
       </section>
 

@@ -9,10 +9,10 @@ export function PublicHeader() {
       <Link className={styles.logo} href="/" aria-label="Les Jumelles Immo — accueil">
         <Image
           alt="Les Jumelles Immo"
-          height={80}
+          height={314}
           priority
-          src="/brand/les-jumelles-logo-noir.png"
-          width={180}
+          src="/brand/logo-jumelles-immo-black.svg"
+          width={790}
         />
       </Link>
       <nav className={styles.nav} aria-label="Navigation principale">
