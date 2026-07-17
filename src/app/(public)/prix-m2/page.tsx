@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Building2, MapPin, Search } from "lucide-react";
+import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { southCities } from "@/lib/cities";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
+import { CityHeroSearch } from "./city-hero-search";
 import styles from "./prix-m2.module.css";
 
 export const metadata: Metadata = {
@@ -38,9 +39,6 @@ const directoryCities: DirectoryCity[] = southCities
   })
   .sort((cityA, cityB) => cityA.name.localeCompare(cityB.name, "fr"));
 
-const department13Count = directoryCities.filter((city) => city.departmentCode === "13").length;
-const department83Count = directoryCities.filter((city) => city.departmentCode === "83").length;
-
 const itemListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
@@ -71,26 +69,21 @@ export default function PriceDirectoryPage() {
       </nav>
 
       <section className={styles.hero} aria-labelledby="directory-title">
-        <div className={styles.heroLines} aria-hidden="true" />
+        <div className={`${styles.heroParcel} ${styles.heroParcelLeft}`} aria-hidden="true" />
+        <div className={`${styles.heroParcel} ${styles.heroParcelRight}`} aria-hidden="true" />
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Observatoire immobilier local</p>
-          <h1 id="directory-title">
-            Prix au m² par ville <em>dans le 13 et le 83</em>
-          </h1>
+          <p className={`${styles.eyebrow} ${styles.heroEyebrow}`}>Observatoire immobilier local</p>
+          <h1 id="directory-title">Prix au m² par ville dans le 13 et le 83</h1>
           <p>
             Consultez les prix immobiliers, les tendances du marché et les
             repères essentiels dans chaque ville des Bouches-du-Rhône et du Var.
           </p>
-          <a className={styles.heroSearchLink} href="#villes">
-            <Search size={18} /> Rechercher une ville
-          </a>
+          <CityHeroSearch cities={directoryCities} />
+          <dl className={styles.heroStats}>
+            <div><dd>2</dd><dt>départements</dt></div>
+            <div><dd>{directoryCities.length}</dd><dt>villes analysées</dt></div>
+          </dl>
         </div>
-        <dl className={styles.heroStats}>
-          <div><dt>Départements</dt><dd>2</dd></div>
-          <div><dt>Villes analysées</dt><dd>{directoryCities.length}</dd></div>
-          <div><dt>Bouches-du-Rhône</dt><dd>{department13Count}</dd></div>
-          <div><dt>Var</dt><dd>{department83Count}</dd></div>
-        </dl>
       </section>
 
       <section className={styles.directorySection} id="villes" aria-labelledby="cities-title">
