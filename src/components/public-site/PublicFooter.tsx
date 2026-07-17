@@ -9,15 +9,15 @@ export function PublicFooter() {
           <span>les jumelles</span>
           <strong>IMMO</strong>
         </Link>
-        <nav className={styles.footerNav} aria-label="Navigation de pied de page">
-          <Link href="/estimation">Estimer un bien</Link>
-          <Link href="/recherche">Déposer une recherche</Link>
-          <Link href="/client">Espace client</Link>
-        </nav>
+        <div className={styles.footerColumns} id="a-propos">
+          <nav aria-label="Services"><strong>Services</strong><Link href="/prix-m2/aubagne">Prix immobilier</Link><Link href="/estimation">Estimer mon bien</Link><Link href="/recherche">Recherche accompagnée</Link></nav>
+          <nav aria-label="Ressources"><strong>Ressources</strong><Link href="/#conseils">Conseils & analyses</Link><Link href="/#secteurs">Nos secteurs</Link><Link href="/client">Espace client</Link></nav>
+          <nav aria-label="L'agence"><strong>L’agence</strong><Link href="/recherche">Nous confier un projet</Link><Link href="/estimation">Nous contacter</Link></nav>
+        </div>
       </div>
       <div className={styles.footerBottom}>
         <p>© {new Date().getFullYear()} Les Jumelles Immo</p>
-        <p>Vos projets immobiliers, suivis avec attention.</p>
+        <p>Immobilier local, données utiles et accompagnement humain.</p>
       </div>
     </footer>
   );

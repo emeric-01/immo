@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserRound } from "lucide-react";
 import styles from "./public-site.module.css";
 
 export function PublicHeader() {
@@ -9,11 +10,14 @@ export function PublicHeader() {
         <strong>IMMO</strong>
       </Link>
       <nav className={styles.nav} aria-label="Navigation principale">
-        <Link href="/">Accueil</Link>
-        <Link href="/estimation">Estimer et vendre</Link>
-        <Link href="/recherche">Déposer une recherche</Link>
-        <Link href="/client">Espace client</Link>
+        <Link href="/prix-m2/aubagne">Prix immobilier</Link>
+        <Link href="/estimation">Estimer</Link>
+        <Link href="/recherche">Rechercher</Link>
+        <Link href="/#conseils">Conseils</Link>
+        <Link href="/#secteurs">Nos secteurs</Link>
+        <Link href="/#a-propos">À propos</Link>
       </nav>
+      <Link className={styles.accountLink} href="/client"><UserRound size={18} /> Mon compte</Link>
     </header>
   );
 }
