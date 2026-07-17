@@ -15,6 +15,7 @@ import {
   UserRoundSearch,
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
+import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
@@ -23,10 +24,10 @@ import styles from "./home.module.css";
 export const metadata: Metadata = {
   title: "Les Jumelles Immo | Estimer, vendre et acheter avec méthode",
   description:
-    "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos et Aix-en-Provence.",
+    "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos, Saint-Cyr-sur-Mer et Aix-en-Provence.",
 };
 
-const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "carnoux-en-provence"];
+const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "saint-cyr-sur-mer"];
 
 const cityImages: Record<string, { src: string; alt: string }> = {
   aubagne: {
@@ -41,20 +42,27 @@ const cityImages: Record<string, { src: string; alt: string }> = {
     src: "/images/cities/gemenos.webp",
     alt: "L’hôtel de ville de Gémenos",
   },
+  "saint-cyr-sur-mer": {
+    src: "/images/cities/saint-cyr-sur-mer.webp",
+    alt: "La plage et le littoral de Saint-Cyr-sur-Mer",
+  },
 };
-
-const featuredCities = featuredSlugs.flatMap((slug) => {
-  const city = getCityBySlug(slug);
-  if (!city) return [];
-  const market = getStaticCityMarketData(city);
-  const average = Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2);
-  const trend = getStoredCityMarketTrend(city);
-  return [{ city, market, average, trend }];
-});
 
 const formatPrice = (value: number) => new Intl.NumberFormat("fr-FR").format(value);
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cities = featuredSlugs.flatMap((slug) => {
+    const city = getCityBySlug(slug);
+    return city ? [city] : [];
+  });
+  const cachedTrends = await readCityMarketTrends(cities);
+  const featuredCities = cities.map((city) => {
+    const market = getStaticCityMarketData(city);
+    const average = Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2);
+    const trend = cachedTrends.get(city.inseeCode) ?? getStoredCityMarketTrend(city);
+    return { city, market, average, trend };
+  });
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -72,13 +80,14 @@ export default function HomePage() {
         <div className={styles.heroVisual}>
           <div className={styles.visualFrame}>
             <Image
-              alt="Intérieur méditerranéen lumineux représentatif de l’univers Les Jumelles Immo"
+              alt="Tour de l’Horloge de l’hôtel de ville d’Aix-en-Provence sous un ciel bleu"
               className={styles.heroImage}
               fill
+              fetchPriority="high"
               priority
-              quality={82}
+              quality={76}
               sizes="(max-width: 720px) calc(100vw - 52px), (max-width: 1100px) 42vw, 47vw"
-              src="/images/agence-jumelles-immo-hero.webp"
+              src="/images/aix-en-provence-hotel-de-ville.webp"
             />
           </div>
         </div>

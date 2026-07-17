@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { southCities } from "@/lib/cities";
+import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
@@ -17,14 +18,18 @@ export const metadata: Metadata = {
   },
 };
 
-const directoryCities: DirectoryCity[] = southCities
-  .filter((city) => city.department === "Bouches-du-Rhone" || city.department === "Var")
-  .map((city) => {
+async function getDirectoryCities(): Promise<DirectoryCity[]> {
+  const cities = southCities.filter(
+    (city) => city.department === "Bouches-du-Rhone" || city.department === "Var",
+  );
+  const cachedTrends = await readCityMarketTrends(cities);
+
+  return cities.map((city) => {
     const market = getStaticCityMarketData(city);
     const averagePrice = Math.round(
       (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
     );
-    const trend = getStoredCityMarketTrend(city);
+    const trend = cachedTrends.get(city.inseeCode) ?? getStoredCityMarketTrend(city);
 
     return {
       averagePrice,
@@ -36,23 +41,24 @@ const directoryCities: DirectoryCity[] = southCities
       slug: city.slug,
       trend,
     };
-  })
-  .sort((cityA, cityB) => cityA.name.localeCompare(cityB.name, "fr"));
+  }).sort((cityA, cityB) => cityA.name.localeCompare(cityB.name, "fr"));
+}
 
-const itemListJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  name: "Prix au m² par ville dans les Bouches-du-Rhône et le Var",
-  numberOfItems: directoryCities.length,
-  itemListElement: directoryCities.map((city, index) => ({
-    "@type": "ListItem",
-    position: index + 1,
-    name: `Prix au m² à ${city.name}`,
-    url: `https://immo-rho.vercel.app/prix-m2/${city.slug}`,
-  })),
-};
+export default async function PriceDirectoryPage() {
+  const directoryCities = await getDirectoryCities();
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Prix au m² par ville dans les Bouches-du-Rhône et le Var",
+    numberOfItems: directoryCities.length,
+    itemListElement: directoryCities.map((city, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: `Prix au m² à ${city.name}`,
+      url: `https://immo-rho.vercel.app/prix-m2/${city.slug}`,
+    })),
+  };
 
-export default function PriceDirectoryPage() {
   return (
     <main className={styles.page}>
       <script

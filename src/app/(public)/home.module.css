@@ -10,7 +10,7 @@
 .primaryAction { background:#171511; color:#fff; }.secondaryAction { border-color:#d8baa3; background:#fff; color:#9c6038; }
 .heroVisual { min-height:590px; padding:28px 28px 28px 0; }
 .visualFrame { position:relative; height:100%; overflow:hidden; border-radius:0 14px 14px 0; background:#d6c0aa; }
-.heroImage { object-fit:cover; object-position:center center; }
+.heroImage { object-fit:cover; object-position:center 10%; }
 .cityVisual span { position:absolute; right:18px; bottom:16px; border-radius:999px; background:rgba(255,255,255,.86); padding:7px 11px; color:#6e6256; font-size:.7rem; }
 .services { display:grid; position:relative; z-index:2; grid-template-columns:repeat(3,1fr); gap:20px; width:calc(100% - 72px); margin:-54px auto 0; }
 .services article { display:flex; min-height:260px; flex-direction:column; border:1px solid #e9e1d8; border-radius:14px; background:#fff; padding:28px; box-shadow:0 16px 40px rgba(44,35,27,.07); }

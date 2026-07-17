@@ -22,6 +22,7 @@ export function CityHeroSearch({ cities }: { cities: DirectoryCity[] }) {
 
     if (!city) {
       setError("Sélectionnez une ville proposée ou saisissez un code postal disponible.");
+      void recordMissingCitySearch(query);
       return;
     }
 
@@ -59,4 +60,16 @@ export function CityHeroSearch({ cities }: { cities: DirectoryCity[] }) {
       {error ? <p className={styles.heroSearchError} id={`${suggestionsId}-error`}>{error}</p> : null}
     </div>
   );
+}
+
+async function recordMissingCitySearch(query: string) {
+  try {
+    await fetch("/api/city-search-misses", {
+      body: JSON.stringify({ query }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+  } catch {
+    // This metric should never block the public search experience.
+  }
 }

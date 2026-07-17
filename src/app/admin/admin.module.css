@@ -633,6 +633,11 @@
     justify-content: space-between;
   }
 
+  .sidebar nav {
+    grid-template-columns: repeat(5, max-content);
+    overflow-x: auto;
+  }
+
   .statsGrid,
   .contactSummary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -671,5 +676,13 @@
 
   .tablePanel table {
     min-width: 820px;
+  }
+
+  .sidebar {
+    display: grid;
+  }
+
+  .sidebar nav {
+    grid-template-columns: 1fr;
   }
 }

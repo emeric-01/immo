@@ -1,4 +1,5 @@
 import type { City } from "./cities";
+import { readCityMarketCache, writeCityMarketCache } from "./city-market-cache";
 
 export type PropertyMarketStat = {
   averagePricePerM2: number;
@@ -1077,14 +1078,47 @@ export function getStaticCityMarketData(city: City): CityMarketData {
   return shiftMarketData(city);
 }
 
-export async function getCityMarketData(city: City): Promise<CityMarketData> {
+export async function refreshCityMarketData(city: City): Promise<CityMarketData> {
   const config = getImmoDataConfig();
 
   if (!config) {
-    return getStaticCityMarketData(city);
+    throw new Error("Configuration Immo Data absente.");
+  }
+
+  const market = await getCityImmoDataMarket(config, city);
+
+  if (market.source !== "immo-data") {
+    throw new Error(`Immo Data n'a retourné aucun prix pour ${city.name}.`);
+  }
+
+  const stored = await writeCityMarketCache(city, market);
+
+  if (!stored) {
+    throw new Error(`Enregistrement Supabase impossible pour ${city.name}.`);
+  }
+
+  return market;
+}
+
+export async function getCityMarketData(city: City): Promise<CityMarketData> {
+  const cached = await readCityMarketCache(city);
+
+  if (cached?.fresh) {
+    return cached.data;
+  }
+
+  const config = getImmoDataConfig();
+
+  if (!config) {
+    return cached?.data ?? getStaticCityMarketData(city);
   }
 
   const market = await optionalImmoData(() => getCityImmoDataMarket(config, city));
 
-  return market ?? getStaticCityMarketData(city);
+  if (market?.source === "immo-data") {
+    await writeCityMarketCache(city, market);
+    return market;
+  }
+
+  return cached?.data ?? market ?? getStaticCityMarketData(city);
 }
