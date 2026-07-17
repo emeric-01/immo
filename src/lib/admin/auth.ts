@@ -89,7 +89,7 @@ export async function setAdminSession(email: string, password: string) {
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.delete(adminCookieName);
+  cookieStore.set(adminCookieName, "", { httpOnly: true, maxAge: 0, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
 }
 
 async function writeSessionCookie(session: AdminSession) {
@@ -103,7 +103,7 @@ async function writeSessionCookie(session: AdminSession) {
   cookieStore.set(adminCookieName, signSession(session, secret), {
     httpOnly: true,
     maxAge: sessionDurationSeconds,
-    path: "/admin",
+    path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   });

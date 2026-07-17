@@ -9,6 +9,8 @@ export type Property = {
   condominium_charges_monthly: number | null; property_tax_annual: number | null; condominium_lots: number | null;
   terrace_m2: number | null; heating: string | null; exposure: string | null; construction_year: number | null;
   parking_details: string | null; amenities: string[]; fees_paid_by: string | null; contact_name: string | null;
+  land_area_m2: number | null; bathrooms: number | null; levels: number | null; parking_spaces: number | null;
+  property_condition: string | null; kitchen_type: string | null; land_is_buildable: boolean | null; land_is_serviced: boolean | null;
   contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; images: PropertyImage[];
 };
 
