@@ -53,5 +53,10 @@ export async function getAdminProperty(id: string) {
   return (await attachImages(rows))[0] ?? null;
 }
 
+export async function getAdminPropertyBySlug(slug: string) {
+  const rows = await request<Omit<Property, "images">[]>(`properties?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`);
+  return (await attachImages(rows))[0] ?? null;
+}
+
 export function getSupabaseAdminConfig() { return config(); }
 export async function adminRest<T>(path: string, init?: RequestInit) { return request<T>(path, init); }
