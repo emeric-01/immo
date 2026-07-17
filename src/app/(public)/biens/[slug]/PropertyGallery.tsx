@@ -36,6 +36,7 @@ export function PropertyGallery({ images, title }: { images: GalleryImage[]; tit
       </button>
       <div className={styles.thumbs}>{images.slice(1,4).map((image, index) => <button aria-label={`Voir la photo ${index + 2}`} key={image.id} onClick={() => setSelected(index + 1)} type="button"><Image alt={image.alt_text || title} fill sizes="20vw" src={image.public_url}/>{index === 2 && images.length > 4 ? <span>+{images.length - 4}</span> : null}</button>)}</div>
     </div>
+    <div aria-label={`Galerie de ${images.length} photos, faites défiler horizontalement`} className={styles.mobileGallery}>{images.map((image, index) => <figure key={image.id}><Image alt={image.alt_text || `${title} — photo ${index + 1}`} fill priority={index === 0} sizes="100vw" src={image.public_url}/><span>{index + 1} / {images.length}</span></figure>)}</div>
     {selected !== null ? <div aria-label="Galerie photos" aria-modal="true" className={styles.lightbox} role="dialog" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
       <header><span>{selected + 1} / {images.length}</span><button aria-label="Fermer" onClick={close} type="button"><X/></button></header>
       {images.length > 1 ? <button aria-label="Photo précédente" className={styles.lightboxPrevious} onClick={previous} type="button"><ChevronLeft/></button> : null}
