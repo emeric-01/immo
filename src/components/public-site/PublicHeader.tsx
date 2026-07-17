@@ -21,7 +21,7 @@ export function PublicHeader() {
         <Link href="/recherche">Rechercher</Link>
         <Link href="/#conseils">Conseils</Link>
         <Link href="/#secteurs">Nos secteurs</Link>
-        <Link href="/#a-propos">À propos</Link>
+        <Link href="/qui-sommes-nous">Qui sommes-nous</Link>
       </nav>
       <Link className={styles.accountLink} href="/client"><UserRound size={18} /> Mon compte</Link>
     </header>
