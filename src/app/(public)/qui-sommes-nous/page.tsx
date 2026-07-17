@@ -14,29 +14,29 @@ import styles from "./qui-sommes-nous.module.css";
 export const metadata: Metadata = {
   title: "Qui sommes-nous ? | Les Jumelles Immo",
   description:
-    "Découvrez Laure et Séverine Masfrand et l’approche Les Jumelles Immo : immobilier, urbanisme, architecture intérieure, IA et data au service de votre projet.",
+    "Découvrez l’approche des Jumelles Immo : une estimation juste, une lecture urbanistique et un regard d’architecte pour révéler tout le potentiel de votre bien.",
 };
 
 const expertises = [
   {
     icon: Scale,
-    title: "Droit & urbanisme",
-    text: "Nous identifions les règles, contraintes et possibilités qui peuvent influencer un achat, une vente ou une transformation.",
-  },
-  {
-    icon: DraftingCompass,
-    title: "Architecture intérieure",
-    text: "Nous révélons le potentiel d’un lieu par les usages, les volumes, la lumière et des projections d’aménagement réalistes.",
+    title: "Le prix juste",
+    text: "Nous confrontons les caractéristiques du bien aux ventes réelles et à la dynamique locale. Pas de prix d’appel : une valeur argumentée et défendable.",
   },
   {
     icon: Building2,
-    title: "Data immobilière",
-    text: "Nous croisons les données du marché et la connaissance locale pour donner des repères concrets, lisibles et contextualisés.",
+    title: "Le potentiel du terrain",
+    text: "Division parcellaire, extension, constructibilité : nous examinons les possibilités urbanistiques susceptibles de transformer la lecture du bien.",
   },
   {
-    icon: BrainCircuit,
-    title: "IA & projection",
-    text: "Nos outils accélèrent l’analyse et la visualisation d’un projet. L’expertise humaine reste au centre de chaque recommandation.",
+    icon: DraftingCompass,
+    title: "Les m² qui comptent",
+    text: "Circulations, volumes, lumière, agrandissement : nous cherchons comment mieux utiliser l’existant et créer des espaces de vie qui donnent envie.",
+  },
+  {
+    icon: Sparkles,
+    title: "La mise en désir",
+    text: "Un acheteur doit comprendre le bien, mais aussi s’y projeter. Nous construisons une présentation qui révèle ses qualités sans masquer sa réalité.",
   },
 ];
 
@@ -47,17 +47,18 @@ export default function QuiSommesNousPage() {
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Qui sommes-nous ?</p>
           <h1 id="about-title">
-            Deux sœurs, deux expertises, <em>une vision globale.</em>
+            Votre bien a une histoire. <em>Nous révélons sa valeur.</em>
           </h1>
           <p className={styles.heroIntro}>
-            Les Jumelles Immo réunit l’immobilier, l’urbanisme, l’architecture
-            intérieure et les outils IA & Data pour mieux comprendre un bien,
-            révéler son potentiel et sécuriser chaque décision.
+            Notre ambition n’est pas de vous promettre le prix le plus haut.
+            C’est de défendre le meilleur prix que le marché peut réellement
+            porter, en examinant tout ce qui rend votre bien unique — aujourd’hui
+            et demain.
           </p>
-          <div className={styles.heroTags} aria-label="Nos domaines d’expertise">
-            <span>Immobilier & urbanisme</span>
-            <span>Architecture intérieure</span>
-            <span>IA & Data</span>
+          <div className={styles.heroTags} aria-label="Notre promesse">
+            <span>Une estimation sincère</span>
+            <span>Un potentiel révélé</span>
+            <span>Une vente mieux préparée</span>
           </div>
         </div>
 
@@ -76,47 +77,46 @@ export default function QuiSommesNousPage() {
 
       <section className={styles.story} aria-labelledby="story-title">
         <div className={styles.storyHeading}>
-          <p className={styles.eyebrow}>Notre histoire</p>
-          <h2 id="story-title">Une complicité devenue projet d’entreprise.</h2>
+          <p className={styles.eyebrow}>Deux regards, un même bien</p>
+          <h2 id="story-title">Là où certains voient une maison, nous voyons des possibilités.</h2>
           <blockquote>
-            « Même dans nos cabanes de fortune, nous pensions déjà au côté
-            agréable et accueillant. »
+            « Pas de promesse gonflée pour décrocher un mandat. Une stratégie
+            concrète pour aller chercher la meilleure valeur réelle. »
           </blockquote>
         </div>
         <div className={styles.storyText}>
           <p>
-            Nous sommes Laure et Séverine, deux sœurs jumelles. Bien avant la
-            création de notre entreprise, nous partagions déjà une passion pour
-            la décoration, la peinture et le dessin. Enfants, les cabanes que
-            nous construisions dans le jardin devenaient déjà des lieux à
-            aménager et à faire vivre.
+            Devant une même maison, nous ne regardons jamais tout à fait la même
+            chose. Séverine observe la parcelle, le PLU, les règles et les droits
+            à construire. Elle se demande si le terrain peut être divisé, si une
+            extension est envisageable ou si un potentiel invisible peut changer
+            la valeur du projet.
           </p>
           <p>
-            En grandissant, nous avons suivi des chemins différents et vécu
-            éloignées pendant plus de dix ans, sans jamais perdre notre
-            complicité. Laure s’est formée à l’École Boulle et a développé son
-            expérience sur de nombreux projets et chantiers comme architecte
-            d’intérieur au sein d’un cabinet reconnu. Séverine a suivi une voie
-            juridique, spécialisée en urbanisme et immobilier.
+            Laure entre dans le bien et imagine aussitôt une autre circulation,
+            une pièce de vie plus généreuse, des mètres carrés mieux utilisés ou
+            un agrandissement qui change tout. Elle ne cherche pas à maquiller le
+            lieu : elle donne à voir ce qu’il pourrait devenir, avec des idées
+            réalistes et désirables.
           </p>
           <p>
-            En 2020, nous avons concrétisé un rêve : nous retrouver autour d’un
-            projet commun. Aujourd’hui, Les Jumelles Immo prolonge cette
-            aventure avec la même intention : mettre nos regards complémentaires
-            au service de projets immobiliers plus clairs, plus cohérents et
-            plus humains.
+            C’est de cette double lecture qu’est née Les Jumelles Immo. Deux
+            sœurs, une expertise immobilière commune et une conviction : pour
+            bien vendre, il faut d’abord comprendre tout ce que l’on vend. Le
+            prix, bien sûr, mais aussi les usages, le foncier, les possibilités
+            d’évolution et l’émotion que le bien peut provoquer.
           </p>
         </div>
       </section>
 
       <section className={styles.expertiseSection} aria-labelledby="expertise-title">
         <div className={styles.sectionIntro}>
-          <p className={styles.eyebrow}>Notre approche</p>
-          <h2 id="expertise-title">Regarder le bien au-delà de ses mètres carrés.</h2>
+          <p className={styles.eyebrow}>Révéler avant de vendre</p>
+          <h2 id="expertise-title">La valeur n’est pas un chiffre posé sur une annonce.</h2>
           <p>
-            Une adresse et un prix ne racontent jamais toute l’histoire. Nous
-            réunissons quatre lectures complémentaires pour construire une
-            vision utile du projet.
+            Elle se construit à partir du marché, mais aussi de tous les leviers
+            propres au bien. Notre méthode les met à plat pour choisir la bonne
+            stratégie, sans surévaluer et sans passer à côté d’une opportunité.
           </p>
         </div>
         <div className={styles.expertiseGrid}>
@@ -133,8 +133,8 @@ export default function QuiSommesNousPage() {
 
       <section className={styles.teamSection} aria-labelledby="team-title">
         <div className={styles.sectionIntro}>
-          <p className={styles.eyebrow}>L’équipe</p>
-          <h2 id="team-title">Des compétences qui se répondent.</h2>
+          <p className={styles.eyebrow}>Les Jumelles Immo</p>
+          <h2 id="team-title">L’immobilier au croisement du marché et du possible.</h2>
         </div>
 
         <div className={styles.teamGrid}>
@@ -150,68 +150,70 @@ export default function QuiSommesNousPage() {
             </div>
             <div className={styles.sistersProfiles}>
               <div>
-                <span>Architecture intérieure & design</span>
+                <span>Architecture intérieure & potentiel d’usage</span>
                 <h3>Laure Masfrand</h3>
                 <p>
-                  Formée à l’École Boulle, Laure imagine les usages, les volumes
-                  et les transformations capables de révéler la valeur d’un lieu.
+                  Formée à l’École Boulle, Laure repère les mètres carrés mal
+                  exploités, imagine des volumes plus fluides et transforme les
+                  contraintes du lieu en scénarios capables de séduire.
                 </p>
               </div>
               <div>
-                <span>Droit, urbanisme & immobilier</span>
+                <span>Immobilier, droit & urbanisme</span>
                 <h3>Séverine Masfrand</h3>
                 <p>
-                  Séverine analyse le cadre juridique, le potentiel urbain et les
-                  réalités immobilières pour accompagner les projets avec méthode.
+                  Séverine relie la réalité du marché au cadre urbanistique. Son
+                  regard révèle les possibilités foncières et sécurise une
+                  stratégie de vente solide, précise et argumentée.
                 </p>
               </div>
             </div>
           </article>
 
-          <article className={styles.emericCard}>
-            <div className={styles.emericPortrait}>
-              <Image
-                alt="Emeric Legros"
-                className={styles.emericImage}
-                fill
-                sizes="(max-width: 860px) 100vw, 28vw"
-                src="/images/emeric-legros.png"
-              />
-            </div>
-            <span>IA, Data & expérience digitale</span>
-            <h3>Emeric Legros</h3>
+          <aside className={styles.dataNote} aria-labelledby="data-title">
+            <span className={styles.dataIcon} aria-hidden="true"><BrainCircuit /></span>
+            <p className={styles.eyebrow}>La technologie en renfort</p>
+            <h3 id="data-title">Plus de données. Moins de discours creux.</h3>
             <p>
-              Emeric développe les outils d’analyse, de projection et
-              d’immersion 3D qui rendent les données immobilières plus simples à
-              comprendre et à utiliser.
+              Nous croisons les données de transactions, les dynamiques locales
+              et les caractéristiques du bien. L’IA nous aide à challenger nos
+              analyses, à détecter des écarts et à explorer plus vite différents
+              scénarios de valorisation.
             </p>
-          </article>
+            <strong>
+              La technologie ne décide jamais à notre place : elle rend notre
+              conseil plus documenté, plus réactif et plus juste.
+            </strong>
+          </aside>
         </div>
       </section>
 
       <section className={styles.vision} aria-labelledby="vision-title">
         <div>
-          <p className={styles.eyebrow}>Une vision à 360°</p>
-          <h2 id="vision-title">Vendre avec justesse. Acheter avec projection.</h2>
+          <p className={styles.eyebrow}>Notre promesse</p>
+          <h2 id="vision-title">Pas de prix gonflé. Une valeur révélée.</h2>
+          <Link className={styles.visionCta} href="/estimation">
+            Découvrir le potentiel de mon bien <ArrowRight size={18} />
+          </Link>
         </div>
         <div className={styles.visionColumns}>
           <article>
-            <Sparkles aria-hidden="true" />
-            <h3>Pour une vente</h3>
+            <Scale aria-hidden="true" />
+            <h3>Une estimation que l’on peut défendre</h3>
             <p>
-              Estimer le bien, comprendre son marché, identifier ses forces et
-              présenter son potentiel pour créer une mise en vente cohérente.
+              Un prix cohérent avec le marché, expliqué par des faits et enrichi
+              par une lecture complète du bien. Vous savez où vous allez — et
+              pourquoi.
             </p>
-            <Link href="/estimation">Estimer mon bien <ArrowRight size={17} /></Link>
           </article>
           <article>
-            <Building2 aria-hidden="true" />
-            <h3>Pour un achat</h3>
+            <Sparkles aria-hidden="true" />
+            <h3>Une stratégie qui crée l’envie</h3>
             <p>
-              Rechercher au bon endroit, mesurer la faisabilité et se projeter
-              dans les usages et les transformations avant de s’engager.
+              Nous ne vendons pas seulement une surface. Nous racontons les
+              usages, les évolutions et la vie possible dans le lieu pour que les
+              bons acheteurs puissent réellement s’y projeter.
             </p>
-            <Link href="/recherche">Nous confier ma recherche <ArrowRight size={17} /></Link>
           </article>
         </div>
       </section>

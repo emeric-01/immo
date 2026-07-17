@@ -252,7 +252,7 @@
 }
 
 .sistersCard,
-.emericCard {
+.dataNote {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -290,8 +290,7 @@
   border-top: 1px solid var(--line);
 }
 
-.sistersProfiles span,
-.emericCard > span {
+.sistersProfiles span {
   color: var(--copper);
   font-size: .66rem;
   font-weight: 800;
@@ -299,44 +298,60 @@
   text-transform: uppercase;
 }
 
-.sistersProfiles h3,
-.emericCard h3 {
+.sistersProfiles h3 {
   margin: 10px 0 13px;
   font: 400 1.7rem Georgia, "Times New Roman", serif;
 }
 
-.sistersProfiles p,
-.emericCard p {
+.sistersProfiles p {
   margin: 0;
   color: #625b54;
   font-size: .88rem;
   line-height: 1.7;
 }
 
-.emericCard {
-  padding: 18px 18px 31px;
+.dataNote {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(145deg, #f7eee5, #fff);
+  padding: clamp(30px, 4vw, 48px);
 }
 
-.emericPortrait {
-  position: relative;
-  aspect-ratio: 1 / .97;
-  margin-bottom: 27px;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #eeeae5;
+.dataIcon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 35px;
+  place-items: center;
+  border-radius: 50%;
+  background: #171511;
+  color: #d4a27e;
 }
 
-.emericImage {
-  object-fit: cover;
-  object-position: center top;
+.dataIcon svg {
+  width: 25px;
 }
 
-.emericCard > span,
-.emericCard h3,
-.emericCard p {
-  display: block;
-  margin-right: 13px;
-  margin-left: 13px;
+.dataNote h3 {
+  margin: 7px 0 18px;
+  font: 400 clamp(1.8rem, 2.5vw, 2.55rem)/1.07 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.dataNote > p:not(.eyebrow) {
+  margin: 0;
+  color: #625b54;
+  font-size: .88rem;
+  line-height: 1.72;
+}
+
+.dataNote strong {
+  margin-top: 30px;
+  border-top: 1px solid #dfd0c2;
+  padding-top: 25px;
+  color: #845539;
+  font: italic 1rem/1.55 Georgia, "Times New Roman", serif;
 }
 
 .vision {
@@ -388,6 +403,21 @@
   margin-top: auto;
   padding-top: 26px;
   color: #875334;
+  font-size: .79rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.visionCta {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  border-radius: 8px;
+  background: #171511;
+  padding: 0 21px;
+  color: #fff;
   font-size: .79rem;
   font-weight: 800;
   text-decoration: none;
@@ -498,9 +528,6 @@
     min-height: 480px;
   }
 
-  .emericPortrait {
-    max-height: 440px;
-  }
 }
 
 @media (max-width: 430px) {
