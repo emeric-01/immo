@@ -1,55 +1,27 @@
 "use client";
-
 import { useState } from "react";
 import { ImagePlus, LoaderCircle } from "lucide-react";
+import type { Property } from "@/lib/properties";
 import styles from "../properties.module.css";
 
-const amenities = ["Terrasse", "Balcon", "Parking", "Garage", "Ascenseur", "Cave", "Jardin", "Piscine", "Vue mer", "Résidence sécurisée"];
+const options = ["Terrasse","Balcon","Parking","Garage","Ascenseur","Cave","Jardin","Piscine","Vue mer","Résidence sécurisée"];
+async function optimize(file: File) { if (!file.type.startsWith("image/") || file.size < 500000) return file; try { const bitmap=await createImageBitmap(file); const ratio=Math.min(1,1800/Math.max(bitmap.width,bitmap.height)); const canvas=document.createElement("canvas"); canvas.width=Math.round(bitmap.width*ratio); canvas.height=Math.round(bitmap.height*ratio); canvas.getContext("2d")?.drawImage(bitmap,0,0,canvas.width,canvas.height); const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,"image/webp",.82)); bitmap.close(); return blob?new File([blob],file.name.replace(/\.[^.]+$/,".webp"),{type:"image/webp"}):file; } catch{return file;} }
 
-async function optimizeImage(file: File) {
-  if (!file.type.startsWith("image/") || file.size < 500_000) return file;
-  try {
-    const bitmap = await createImageBitmap(file); const max = 1800; const ratio = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas"); canvas.width = Math.round(bitmap.width * ratio); canvas.height = Math.round(bitmap.height * ratio);
-    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", .82));
-    bitmap.close(); return blob ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
-  } catch { return file; }
-}
-
-export function PropertyForm() {
-  const [busy, setBusy] = useState(false); const [message, setMessage] = useState(""); const [photos, setPhotos] = useState<File[]>([]);
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setMessage("Optimisation et envoi des photos…");
-    const form = new FormData(event.currentTarget); form.delete("photos");
-    for (const photo of photos) form.append("photos", await optimizeImage(photo));
-    const response = await fetch("/api/admin/properties", { method: "POST", body: form }); const result = await response.json();
-    if (!response.ok) { setMessage(result.error || "Création impossible."); setBusy(false); return; }
-    window.location.href = `/admin/biens?created=${result.slug}`;
-  }
-  return (
-    <form className={styles.form} onSubmit={submit}>
-      <div className={styles.formHeader}><div><span>Nouvelle annonce</span><h2>Créer une fiche bien</h2></div><select name="status"><option value="draft">Brouillon</option><option value="published">Publier immédiatement</option></select></div>
-      <section><h3>Informations essentielles</h3><div className={styles.grid}>
-        <label className={styles.wide}>Titre du bien<input name="title" required placeholder="Appartement T3 avec terrasse" /></label>
-        <label>Ville<input name="city_name" required placeholder="Aix-en-Provence" /></label><label>Code postal<input name="postal_code" placeholder="13100" /></label>
-        <label>Quartier<input name="neighborhood" placeholder="Les Platanes" /></label><label>Type<select name="property_type"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="land">Terrain</option><option value="other">Autre</option></select></label>
-        <label>Prix (€)<input name="price" type="number" required min="0" /></label><label>Surface (m²)<input name="surface_m2" type="number" min="0" step="0.1" /></label>
-        <label>Pièces<input name="rooms" type="number" min="0" /></label><label>Chambres<input name="bedrooms" type="number" min="0" /></label>
-        <label>Étage<input name="floor_label" placeholder="1er sur 3" /></label><label>Adresse<input name="address" placeholder="Masquée sur la fiche publique" /></label>
-        <label className={styles.wide}>Accroche<input name="short_description" placeholder="Proche centre-ville, calme et lumineux" /></label>
-        <label className={styles.wide}>Description<textarea name="description" rows={7} placeholder="Présentez le bien, ses volumes et son environnement…" /></label>
-      </div></section>
-      <section><h3>Photos</h3><label className={styles.dropzone}><ImagePlus /><strong>Ajouter les photos</strong><span>JPG, PNG ou WebP — compression automatique avant envoi</span><input accept="image/jpeg,image/png,image/webp" multiple name="photos" onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} type="file" /></label>{photos.length ? <p className={styles.photoCount}>{photos.length} photo{photos.length > 1 ? "s" : ""} sélectionnée{photos.length > 1 ? "s" : ""}. La première sera la couverture.</p> : null}</section>
-      <section><h3>Caractéristiques</h3><div className={styles.grid}>
-        <label>Terrasse (m²)<input name="terrace_m2" type="number" min="0" /></label><label>Exposition<input name="exposure" placeholder="Sud-Ouest" /></label>
-        <label>Chauffage<input name="heating" placeholder="Individuel gaz" /></label><label>Année de construction<input name="construction_year" type="number" /></label>
-        <label>Charges / mois<input name="condominium_charges_monthly" type="number" /></label><label>Taxe foncière / an<input name="property_tax_annual" type="number" /></label>
-        <label>Lots de copropriété<input name="condominium_lots" type="number" /></label><label>DPE<select name="energy_rating"><option value="">Non renseigné</option>{["A","B","C","D","E","F","G"].map(v => <option key={v}>{v}</option>)}</select></label>
-        <label className={styles.wide}>Stationnement<input name="parking_details" placeholder="Parking en sous-sol" /></label>
-      </div><div className={styles.checks}>{amenities.map(item => <label key={item}><input name="amenities" type="checkbox" value={item} />{item}</label>)}</div></section>
-      <section><h3>Contact</h3><div className={styles.grid}><label>Nom<input name="contact_name" defaultValue="Les Jumelles Immo" /></label><label>Téléphone<input name="contact_phone" /></label><label>Email<input name="contact_email" type="email" /></label><label>Honoraires à la charge de<select name="fees_paid_by"><option>Vendeur</option><option>Acquéreur</option></select></label></div></section>
-      <div className={styles.actions}><p aria-live="polite">{message}</p><button disabled={busy} type="submit">{busy ? <LoaderCircle className={styles.spin} /> : null} Enregistrer le bien</button></div>
-    </form>
-  );
+export function PropertyForm({ property }: { property?: Property }) {
+  const [busy,setBusy]=useState(false); const [message,setMessage]=useState(""); const [photos,setPhotos]=useState<File[]>([]);
+  async function submit(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setMessage("Optimisation et envoi…"); const form=new FormData(event.currentTarget); form.delete("photos"); for(const photo of photos) form.append("photos",await optimize(photo)); const response=await fetch(property?`/api/admin/properties/${property.id}`:"/api/admin/properties",{method:property?"PATCH":"POST",body:form}); const result=await response.json(); if(!response.ok){setMessage(result.error||"Enregistrement impossible.");setBusy(false);return;} window.location.href=`/admin/biens?${property?"updated":"created"}=${result.slug}`; }
+  const val=(key:keyof Property)=>property?.[key] ?? "";
+  return <form className={styles.form} onSubmit={submit}>
+    <div className={styles.formHeader}><div><span>{property?"Modification":"Nouvelle annonce"}</span><h2>{property?"Modifier la fiche":"Créer une fiche bien"}</h2></div><select defaultValue={property?.status??"draft"} name="status"><option value="draft">Brouillon</option><option value="published">Publié</option><option value="archived">Archivé</option></select></div>
+    <section><h3>Informations essentielles</h3><div className={styles.grid}>
+      <label className={styles.wide}>Titre<input defaultValue={property?.title} name="title" required /></label><label>Ville<input defaultValue={property?.city_name} name="city_name" required /></label><label>Code postal<input defaultValue={String(val("postal_code"))} name="postal_code" /></label>
+      <label>Quartier<input defaultValue={String(val("neighborhood"))} name="neighborhood" /></label><label>Type<select defaultValue={property?.property_type??"apartment"} name="property_type"><option value="apartment">Appartement</option><option value="house">Maison</option><option value="land">Terrain</option><option value="other">Autre</option></select></label>
+      <label>Prix (€)<input defaultValue={property?.price} name="price" required type="number" min="0" /></label><label>Surface (m²)<input defaultValue={String(val("surface_m2"))} name="surface_m2" type="number" step="0.1" /></label><label>Pièces<input defaultValue={String(val("rooms"))} name="rooms" type="number" /></label><label>Chambres<input defaultValue={String(val("bedrooms"))} name="bedrooms" type="number" /></label>
+      <label>Étage<input defaultValue={String(val("floor_label"))} name="floor_label" /></label><label>Adresse<input defaultValue={String(val("address"))} name="address" /></label><label className={styles.wide}>Accroche<input defaultValue={String(val("short_description"))} name="short_description" /></label><label className={styles.wide}>Description<textarea defaultValue={String(val("description"))} name="description" rows={7}/></label>
+    </div></section>
+    <section><h3>Photos</h3>{property?.images.length?<div className={styles.currentPhotos}>{property.images.map(image=><label key={image.id}><img alt={image.alt_text??"Photo du bien"} src={image.public_url}/><span><input name="remove_images" type="checkbox" value={image.id}/> Supprimer</span></label>)}</div>:null}<label className={styles.dropzone}><ImagePlus/><strong>{property?"Ajouter des photos":"Ajouter les photos"}</strong><span>Compression WebP automatique — la première photo devient la couverture</span><input accept="image/jpeg,image/png,image/webp" multiple name="photos" onChange={e=>setPhotos(Array.from(e.target.files??[]))} type="file"/></label>{photos.length?<p>{photos.length} nouvelle(s) photo(s)</p>:null}</section>
+    <section><h3>Caractéristiques</h3><div className={styles.grid}><label>Terrasse (m²)<input defaultValue={String(val("terrace_m2"))} name="terrace_m2" type="number"/></label><label>Exposition<input defaultValue={String(val("exposure"))} name="exposure"/></label><label>Chauffage<input defaultValue={String(val("heating"))} name="heating"/></label><label>Année<input defaultValue={String(val("construction_year"))} name="construction_year" type="number"/></label><label>Charges / mois<input defaultValue={String(val("condominium_charges_monthly"))} name="condominium_charges_monthly" type="number"/></label><label>Taxe foncière / an<input defaultValue={String(val("property_tax_annual"))} name="property_tax_annual" type="number"/></label><label>Lots<input defaultValue={String(val("condominium_lots"))} name="condominium_lots" type="number"/></label><label>DPE<select defaultValue={property?.energy_rating??""} name="energy_rating"><option value="">Non renseigné</option>{["A","B","C","D","E","F","G"].map(v=><option key={v}>{v}</option>)}</select></label><label className={styles.wide}>Stationnement<input defaultValue={String(val("parking_details"))} name="parking_details"/></label></div><div className={styles.checks}>{options.map(item=><label key={item}><input defaultChecked={property?.amenities.includes(item)} name="amenities" type="checkbox" value={item}/>{item}</label>)}</div></section>
+    <section><h3>Contact</h3><div className={styles.grid}><label>Nom<input defaultValue={property?.contact_name??"Les Jumelles Immo"} name="contact_name"/></label><label>Téléphone<input defaultValue={String(val("contact_phone"))} name="contact_phone"/></label><label>Email<input defaultValue={String(val("contact_email"))} name="contact_email" type="email"/></label><label>Honoraires<select defaultValue={property?.fees_paid_by??"Vendeur"} name="fees_paid_by"><option>Vendeur</option><option>Acquéreur</option></select></label></div></section>
+    <div className={styles.actions}><p aria-live="polite">{message}</p><button disabled={busy}>{busy?<LoaderCircle className={styles.spin}/>:null}{property?"Enregistrer les modifications":"Enregistrer le bien"}</button></div>
+  </form>;
 }
