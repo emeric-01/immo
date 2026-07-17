@@ -2,6 +2,22 @@ import { describe, expect, it } from "vitest";
 import { getCityByMarketIdentifier, getCityBySlug, getNearbyCities } from "./cities";
 
 const addedCities = [
+  ["la-ciotat", "13028"],
+  ["allauch", "13002"],
+  ["gardanne", "13041"],
+  ["bouc-bel-air", "13015"],
+  ["roquevaire", "13086"],
+  ["la-destrousse", "13031"],
+  ["cadolive", "13020"],
+  ["saint-savournin", "13101"],
+  ["belcodene", "13013"],
+  ["mimet", "13062"],
+  ["simiane-collongue", "13107"],
+  ["la-bouilladisse", "13016"],
+  ["peypin", "13073"],
+  ["plan-de-cuques", "13075"],
+  ["marseille-11e", "13211"],
+  ["marseille-12e", "13212"],
   ["ceyreste", "13023"],
   ["cassis", "13022"],
   ["roquefort-la-bedoule", "13085"],

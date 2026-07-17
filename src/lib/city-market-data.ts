@@ -603,6 +603,11 @@ function streetsFromTransactions(
 }
 
 const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
+  allauch: {
+    population: 21443,
+    density: 426,
+    areaKm2: 50.37,
+  },
   auriol: {
     population: 13037,
     density: 292,
@@ -618,6 +623,21 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 914,
     areaKm2: 9.04,
   },
+  belcodene: {
+    population: 2009,
+    density: 153,
+    areaKm2: 13.1,
+  },
+  "bouc-bel-air": {
+    population: 15381,
+    density: 703,
+    areaKm2: 21.89,
+  },
+  cadolive: {
+    population: 2236,
+    density: 534,
+    areaKm2: 4.19,
+  },
   cassis: {
     population: 6661,
     density: 256,
@@ -627,6 +647,11 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     population: 4863,
     density: 210,
     areaKm2: 23.16,
+  },
+  gardanne: {
+    population: 21597,
+    density: 795,
+    areaKm2: 27.17,
   },
   "cuges-les-pins": {
     population: 6236,
@@ -647,6 +672,21 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     population: 5739,
     density: 153,
     areaKm2: 37.56,
+  },
+  "la-bouilladisse": {
+    population: 6547,
+    density: 515,
+    areaKm2: 12.72,
+  },
+  "la-ciotat": {
+    population: 38477,
+    density: 1201,
+    areaKm2: 32.03,
+  },
+  "la-destrousse": {
+    population: 4133,
+    density: 1380,
+    areaKm2: 2.99,
   },
   "la-seyne-sur-mer": {
     population: 63732,
@@ -678,6 +718,21 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 3724,
     areaKm2: 237.9,
   },
+  "marseille-11e": {
+    population: 59883,
+    density: 1788,
+    areaKm2: 33.5,
+  },
+  "marseille-12e": {
+    population: 64399,
+    density: 4589,
+    areaKm2: 14.03,
+  },
+  mimet: {
+    population: 4241,
+    density: 225,
+    areaKm2: 18.87,
+  },
   "roquefort-la-bedoule": {
     population: 5798,
     density: 187,
@@ -688,6 +743,21 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 718,
     areaKm2: 20.29,
   },
+  peypin: {
+    population: 5771,
+    density: 435,
+    areaKm2: 13.27,
+  },
+  "plan-de-cuques": {
+    population: 11632,
+    density: 1369,
+    areaKm2: 8.5,
+  },
+  roquevaire: {
+    population: 8915,
+    density: 372,
+    areaKm2: 23.97,
+  },
   "sanary-sur-mer": {
     population: 18538,
     density: 938,
@@ -697,6 +767,16 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     population: 11658,
     density: 544,
     areaKm2: 21.43,
+  },
+  "saint-savournin": {
+    population: 3397,
+    density: 575,
+    areaKm2: 5.91,
+  },
+  "simiane-collongue": {
+    population: 5780,
+    density: 191,
+    areaKm2: 30.19,
   },
   signes: {
     population: 3126,
