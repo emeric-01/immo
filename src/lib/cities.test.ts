@@ -10,6 +10,18 @@ const addedCities = [
   ["auriol", "13007"],
   ["cuges-les-pins", "13030"],
   ["la-penne-sur-huveaune", "13070"],
+  ["la-cadiere-d-azur", "83027"],
+  ["le-castellet", "83035"],
+  ["bandol", "83009"],
+  ["le-beausset", "83016"],
+  ["sanary-sur-mer", "83123"],
+  ["evenos", "83053"],
+  ["ollioules", "83090"],
+  ["signes", "83127"],
+  ["six-fours-les-plages", "83129"],
+  ["la-seyne-sur-mer", "83126"],
+  ["toulon", "83137"],
+  ["la-valette-du-var", "83144"],
 ] as const;
 
 describe("city price pages", () => {

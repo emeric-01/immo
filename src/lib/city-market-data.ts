@@ -613,6 +613,11 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 1847,
     areaKm2: 3.72,
   },
+  bandol: {
+    population: 8267,
+    density: 914,
+    areaKm2: 9.04,
+  },
   cassis: {
     population: 6661,
     density: 256,
@@ -633,10 +638,40 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 200,
     areaKm2: 32.9,
   },
+  evenos: {
+    population: 2406,
+    density: 57,
+    areaKm2: 42.04,
+  },
+  "la-cadiere-d-azur": {
+    population: 5739,
+    density: 153,
+    areaKm2: 37.56,
+  },
+  "la-seyne-sur-mer": {
+    population: 63732,
+    density: 2714,
+    areaKm2: 23.48,
+  },
+  "la-valette-du-var": {
+    population: 23719,
+    density: 1537,
+    areaKm2: 15.43,
+  },
   "la-penne-sur-huveaune": {
     population: 6605,
     density: 1813,
     areaKm2: 3.64,
+  },
+  "le-beausset": {
+    population: 10219,
+    density: 283,
+    areaKm2: 36.15,
+  },
+  "le-castellet": {
+    population: 6040,
+    density: 133,
+    areaKm2: 45.29,
   },
   marseille: {
     population: 886040,
@@ -648,10 +683,35 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
     density: 187,
     areaKm2: 30.93,
   },
+  ollioules: {
+    population: 14568,
+    density: 718,
+    areaKm2: 20.29,
+  },
+  "sanary-sur-mer": {
+    population: 18538,
+    density: 938,
+    areaKm2: 19.77,
+  },
   "saint-cyr-sur-mer": {
     population: 11658,
     density: 544,
     areaKm2: 21.43,
+  },
+  signes: {
+    population: 3126,
+    density: 23,
+    areaKm2: 133.25,
+  },
+  "six-fours-les-plages": {
+    population: 37109,
+    density: 1391,
+    areaKm2: 26.69,
+  },
+  toulon: {
+    population: 179116,
+    density: 4065,
+    areaKm2: 44.06,
   },
 };
 
