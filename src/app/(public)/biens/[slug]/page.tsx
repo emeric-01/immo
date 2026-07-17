@@ -8,7 +8,7 @@ import styles from "./property.module.css";
 
 export const dynamic = "force-dynamic";
 const money = (value: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> { const property = await getPublishedProperty((await params).slug).catch(() => null); return { title: property ? `${property.title} à ${property.city_name}` : "Bien immobilier", description: property?.short_description }; }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> { const property = await getPublishedProperty((await params).slug).catch(() => null); if(!property)return {title:"Bien immobilier"};const title=property.seo_title||`${property.title} à ${property.city_name}`;const description=property.seo_description||property.short_description||undefined;return {title,description,robots:property.seo_noindex?{index:false,follow:false}:{index:true,follow:true},openGraph:{title,description,images:property.images[0]?.public_url?[property.images[0].public_url]:[]}}; }
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
   const property = await getPublishedProperty((await params).slug).catch(() => null); if (!property) notFound();

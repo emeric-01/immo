@@ -11,6 +11,7 @@ export type Property = {
   parking_details: string | null; amenities: string[]; fees_paid_by: string | null; contact_name: string | null;
   land_area_m2: number | null; bathrooms: number | null; levels: number | null; parking_spaces: number | null;
   property_condition: string | null; kitchen_type: string | null; land_is_buildable: boolean | null; land_is_serviced: boolean | null;
+  seo_title: string | null; seo_description: string | null; seo_noindex: boolean;
   contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; images: PropertyImage[];
 };
 

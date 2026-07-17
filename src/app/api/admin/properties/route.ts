@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       amenities: form.getAll("amenities").map(String), fees_paid_by: text(form, "fees_paid_by") || "Vendeur",
       contact_name: text(form, "contact_name") || "Les Jumelles Immo", contact_phone: text(form, "contact_phone") || null,
       contact_email: text(form, "contact_email") || null, published_at: text(form, "status") === "published" ? new Date().toISOString() : null,
+      seo_title: text(form, "seo_title") || null, seo_description: text(form, "seo_description") || null, seo_noindex: form.has("seo_noindex"),
     };
     const [property] = await adminRest<{ id: string; slug: string }[]>("properties", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
     const config = getSupabaseAdminConfig(); const files = form.getAll("photos").filter((item): item is File => item instanceof File && item.size > 0);
