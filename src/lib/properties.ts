@@ -26,7 +26,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!value) throw new Error("Configuration Supabase absente.");
   const response = await fetch(`${value.url}/rest/v1/${path}`, { ...init, cache: "no-store", headers: { apikey: value.key, Authorization: `Bearer ${value.key}`, "Content-Type": "application/json", ...(init?.headers || {}) } });
   if (!response.ok) throw new Error(await response.text());
-  return response.status === 204 ? (undefined as T) : response.json();
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return body ? JSON.parse(body) as T : undefined as T;
 }
 
 async function attachImages(rows: Omit<Property, "images">[]): Promise<Property[]> {
