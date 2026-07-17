@@ -80,11 +80,9 @@ function MarketPriceCard({
   );
 }
 
-export const revalidate = 7_776_000;
-
-export function generateStaticParams() {
-  return [];
-}
+// This page reads and may refresh the persistent Supabase cache at request time.
+// Immo Data remains protected by the 90-day rule inside getCityMarketData.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: CityPricePageProps): Promise<Metadata> {
   const { city: citySlug } = await params;

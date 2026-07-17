@@ -1,9 +1,6 @@
-import CityPricePage, {
-  generateMetadata,
-  generateStaticParams,
-} from "../../prix-immobilier/[city]/page";
+import CityPricePage, { generateMetadata } from "../../prix-immobilier/[city]/page";
 
-export const revalidate = 7_776_000;
+export const dynamic = "force-dynamic";
 
-export { generateMetadata, generateStaticParams };
+export { generateMetadata };
 export default CityPricePage;
