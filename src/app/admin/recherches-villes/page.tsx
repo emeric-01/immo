@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarClock, Inbox, MapPin, Search, TrendingUp } from "lucide-react";
+import { CalendarClock, CheckCircle2, CircleDashed, Inbox, Search, TrendingUp } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminCitySearchMisses, type AdminCitySearchMisses } from "@/lib/admin/city-search-misses";
 import { logoutAdmin } from "../login/actions";
@@ -15,11 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminCitySearchMissesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
   await requireAdminSession();
   const params = await searchParams;
-  const result = await getAdminCitySearchMisses({ q: params.q });
+  const result = await getAdminCitySearchMisses({ q: params.q, status: params.status });
 
   return (
     <main className={styles.adminPage}>
@@ -29,7 +29,7 @@ export default async function AdminCitySearchMissesPage({
           <div>
             <p className={styles.eyebrow}>Observatoire SEO</p>
             <h1>Villes recherchées</h1>
-            <p>Repérez les villes tapées par les visiteurs lorsqu’elles ne disposent pas encore d’une page prix au m².</p>
+            <p>Mesurez les recherches vers les villes déjà disponibles et repérez celles qui méritent une nouvelle page prix au m².</p>
           </div>
           <form action={logoutAdmin}>
             <button className={styles.secondaryButton} type="submit">
@@ -73,14 +73,14 @@ function CitySearchMissContent({
   params,
 }: {
   data: AdminCitySearchMisses;
-  params: { q?: string };
+  params: { q?: string; status?: string };
 }) {
   const cards = [
     { icon: Search, label: "Recherches", value: data.stats.totalEvents },
-    { icon: MapPin, label: "Villes uniques", value: data.stats.uniqueQueries },
+    { icon: CheckCircle2, label: "Référencées", value: data.stats.referencedEvents },
+    { icon: CircleDashed, label: "Non référencées", value: data.stats.unreferencedEvents },
     { icon: CalendarClock, label: "7 derniers jours", value: data.stats.recentCount },
     { icon: TrendingUp, label: "Top demande", value: data.stats.topQuery },
-    { icon: Inbox, label: "Volume top", value: data.stats.topQueryCount },
   ];
 
   return (
@@ -97,11 +97,16 @@ function CitySearchMissContent({
         ))}
       </div>
 
-      <form className={styles.filterBar} data-compact>
+      <form className={styles.filterBar}>
         <label className={styles.searchField}>
           <Search aria-hidden="true" size={18} />
           <input defaultValue={params.q ?? ""} name="q" placeholder="Filtrer par ville ou variante..." />
         </label>
+        <select defaultValue={params.status ?? "all"} name="status">
+          <option value="all">Toutes les recherches</option>
+          <option value="referenced">Villes référencées</option>
+          <option value="unreferenced">Villes non référencées</option>
+        </select>
         <button type="submit">Filtrer</button>
       </form>
 
@@ -119,7 +124,7 @@ function CitySearchMissContent({
             </thead>
             <tbody>
               {data.rows.map((row) => (
-                <tr key={row.normalizedQuery}>
+                <tr key={`${row.normalizedQuery}-${row.isReferenced ? "referenced" : "missing"}`}>
                   <td>
                     <strong>{row.displayQuery}</strong>
                     <small>{row.normalizedQuery}</small>
@@ -131,7 +136,9 @@ function CitySearchMissContent({
                   <td>{formatDate(row.firstSearchedAt)}</td>
                   <td>{formatDate(row.lastSearchedAt)}</td>
                   <td>
-                    <span className={styles.statusBadge}>Non référencée</span>
+                    <span className={styles.statusBadge} data-status={row.isReferenced ? "matched" : undefined}>
+                      {row.isReferenced ? "Référencée" : "Non référencée"}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -139,7 +146,7 @@ function CitySearchMissContent({
           </table>
         </div>
       ) : (
-        <EmptyState title="Aucune ville manquante" text="Aucune recherche inconnue ne correspond aux filtres actuels." />
+        <EmptyState title="Aucune recherche" text="Aucune ville ne correspond aux filtres actuels." />
       )}
     </>
   );

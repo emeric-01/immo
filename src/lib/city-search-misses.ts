@@ -1,16 +1,20 @@
 export type CitySearchMissEvent = {
+  city_slug: string | null;
   created_at: string;
   id: number;
+  is_referenced: boolean;
   query_display: string;
   query_normalized: string;
   source: string;
 };
 
 export type CitySearchMissSummary = {
+  citySlug: string | null;
   displayQuery: string;
   firstSearchedAt: string;
   lastSearchedAt: string;
   normalizedQuery: string;
+  isReferenced: boolean;
   searchCount: number;
 };
 
@@ -52,14 +56,17 @@ export function aggregateCitySearchMisses(rows: CitySearchMissEvent[]) {
   const summaries = new Map<string, CitySearchMissSummary>();
 
   for (const row of rows) {
-    const current = summaries.get(row.query_normalized);
+    const summaryKey = `${row.query_normalized}:${row.is_referenced ? "referenced" : "missing"}`;
+    const current = summaries.get(summaryKey);
 
     if (!current) {
-      summaries.set(row.query_normalized, {
+      summaries.set(summaryKey, {
+        citySlug: row.city_slug,
         displayQuery: row.query_display,
         firstSearchedAt: row.created_at,
         lastSearchedAt: row.created_at,
         normalizedQuery: row.query_normalized,
+        isReferenced: row.is_referenced,
         searchCount: 1,
       });
       continue;

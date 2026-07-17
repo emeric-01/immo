@@ -13,10 +13,14 @@ type AdminSupabaseConfig = {
 };
 
 export type AdminCitySearchMissStats = {
+  referencedEvents: number;
+  referencedQueries: number;
   recentCount: number;
   topQuery: string;
   topQueryCount: number;
   totalEvents: number;
+  unreferencedEvents: number;
+  unreferencedQueries: number;
   uniqueQueries: number;
 };
 
@@ -34,23 +38,28 @@ function getConfig(): AdminSupabaseConfig | null {
     : null;
 }
 
-export async function getAdminCitySearchMisses(filters: { q?: string } = {}): Promise<AdminDataState<AdminCitySearchMisses>> {
+export async function getAdminCitySearchMisses(filters: { q?: string; status?: string } = {}): Promise<AdminDataState<AdminCitySearchMisses>> {
   const config = getConfig();
   if (!config) return missingConfig();
 
   const params = new URLSearchParams({
     limit: "2000",
     order: "created_at.desc",
-    select: "id,query_display,query_normalized,source,created_at",
+    select: "id,query_display,query_normalized,source,created_at,is_referenced,city_slug",
   });
   const result = await fetchAdmin<CitySearchMissEvent[]>(config, `city_search_misses?${params.toString()}`);
   if (result.status !== "ready") return result;
 
   const summaries = aggregateCitySearchMisses(result.data);
   const query = filters.q?.trim().toLowerCase();
-  const rows = query
+  const matchingRows = query
     ? summaries.filter((row) => [row.displayQuery, row.normalizedQuery].join(" ").toLowerCase().includes(query))
     : summaries;
+  const rows = filters.status === "referenced"
+    ? matchingRows.filter((row) => row.isReferenced)
+    : filters.status === "unreferenced"
+      ? matchingRows.filter((row) => !row.isReferenced)
+      : matchingRows;
 
   return {
     data: {
@@ -65,12 +74,18 @@ function getStats(events: CitySearchMissEvent[], summaries: CitySearchMissSummar
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const topQuery = summaries[0];
+  const referencedEvents = events.filter((event) => event.is_referenced).length;
+  const referencedQueries = summaries.filter((summary) => summary.isReferenced).length;
 
   return {
+    referencedEvents,
+    referencedQueries,
     recentCount: events.filter((event) => new Date(event.created_at) >= sevenDaysAgo).length,
     topQuery: topQuery?.displayQuery ?? "—",
     topQueryCount: topQuery?.searchCount ?? 0,
     totalEvents: events.length,
+    unreferencedEvents: events.length - referencedEvents,
+    unreferencedQueries: summaries.length - referencedQueries,
     uniqueQueries: summaries.length,
   };
 }

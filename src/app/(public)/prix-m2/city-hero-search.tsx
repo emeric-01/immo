@@ -22,10 +22,11 @@ export function CityHeroSearch({ cities }: { cities: DirectoryCity[] }) {
 
     if (!city) {
       setError("Sélectionnez une ville proposée ou saisissez un code postal disponible.");
-      void recordMissingCitySearch(query);
+      void recordCitySearch(query);
       return;
     }
 
+    void recordCitySearch(query, city.slug);
     router.push(`/prix-m2/${city.slug}`);
   }
 
@@ -62,11 +63,12 @@ export function CityHeroSearch({ cities }: { cities: DirectoryCity[] }) {
   );
 }
 
-async function recordMissingCitySearch(query: string) {
+async function recordCitySearch(query: string, citySlug?: string) {
   try {
     await fetch("/api/city-search-misses", {
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ citySlug, query }),
       headers: { "Content-Type": "application/json" },
+      keepalive: true,
       method: "POST",
     });
   } catch {

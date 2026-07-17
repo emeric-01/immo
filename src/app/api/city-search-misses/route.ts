@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { validateCitySearchMiss } from "@/lib/city-search-misses";
+import { getCityBySlug } from "@/lib/cities";
 
 type SupabaseConfig = {
   serviceRoleKey: string;
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
   }
 
   const query = typeof payload === "object" && payload !== null && "query" in payload ? payload.query : null;
+  const citySlug = typeof payload === "object" && payload !== null && "citySlug" in payload && typeof payload.citySlug === "string"
+    ? payload.citySlug
+    : null;
   const validated = validateCitySearchMiss(query);
 
   if (!validated) {
@@ -36,8 +40,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Configuration indisponible." }, { status: 503 });
   }
 
+  const matchedCity = citySlug ? getCityBySlug(citySlug) : null;
+
   const response = await fetch(`${config.url}/rest/v1/city_search_misses`, {
     body: JSON.stringify({
+      city_slug: matchedCity?.slug ?? null,
+      is_referenced: Boolean(matchedCity),
       query_display: validated.display,
       query_normalized: validated.normalized,
       source: "city_directory",
