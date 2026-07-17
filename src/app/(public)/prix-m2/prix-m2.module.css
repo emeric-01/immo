@@ -395,7 +395,8 @@
 }
 
 .positiveTrend,
-.negativeTrend {
+.negativeTrend,
+.missingTrend {
   display: flex;
   min-width: 65px;
   align-items: center;
@@ -411,6 +412,11 @@
 
 .negativeTrend {
   color: #ad6438;
+}
+
+.missingTrend {
+  color: #91877f;
+  font-weight: 600;
 }
 
 .cityArrow {
@@ -661,7 +667,8 @@
   }
 
   .positiveTrend,
-  .negativeTrend {
+  .negativeTrend,
+  .missingTrend {
     grid-column: 2;
     min-width: 0;
   }

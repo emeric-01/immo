@@ -13,7 +13,7 @@ export type DirectoryCity = {
   name: string;
   postalCode: string;
   slug: string;
-  trend: number;
+  trend: number | null;
 };
 
 type DepartmentFilter = "all" | "13" | "83";
@@ -123,8 +123,8 @@ export function CityDirectory({ cities }: { cities: DirectoryCity[] }) {
                 </div>
                 <div className={styles.cityList}>
                   {departmentCities.map((city) => {
-                    const TrendIcon = city.trend >= 0 ? ArrowUp : ArrowDown;
                     const seoTitle = `Prix m² à ${city.name}`;
+                    const TrendIcon = city.trend !== null && city.trend >= 0 ? ArrowUp : ArrowDown;
 
                     return (
                       <Link
@@ -142,10 +142,14 @@ export function CityDirectory({ cities }: { cities: DirectoryCity[] }) {
                           <span>Prix moyen indicatif</span>
                           <strong>{formatter.format(city.averagePrice)} €<small>/m²</small></strong>
                         </div>
-                        <span className={city.trend >= 0 ? styles.positiveTrend : styles.negativeTrend}>
-                          <TrendIcon aria-hidden="true" size={14} />
-                          {city.trend > 0 ? "+" : ""}{city.trend.toLocaleString("fr-FR")} %
-                        </span>
+                        {city.trend === null ? (
+                          <span className={styles.missingTrend}>Donnée à venir</span>
+                        ) : (
+                          <span className={city.trend >= 0 ? styles.positiveTrend : styles.negativeTrend}>
+                            <TrendIcon aria-hidden="true" size={14} />
+                            {city.trend > 0 ? "+" : ""}{city.trend.toLocaleString("fr-FR")} %
+                          </span>
+                        )}
                         <ArrowRight className={styles.cityArrow} aria-hidden="true" size={18} />
                       </Link>
                     );

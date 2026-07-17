@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Building2, MapPin, Search } from "lucide-react";
 import { southCities } from "@/lib/cities";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
 import styles from "./prix-m2.module.css";
 
@@ -22,9 +23,7 @@ const directoryCities: DirectoryCity[] = southCities
     const averagePrice = Math.round(
       (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
     );
-    const trend = Number(
-      ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
-    );
+    const trend = getStoredCityMarketTrend(city);
 
     return {
       averagePrice,

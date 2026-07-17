@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
 import styles from "./home.module.css";
 
@@ -32,7 +33,7 @@ const featuredCities = featuredSlugs.flatMap((slug) => {
   if (!city) return [];
   const market = getStaticCityMarketData(city);
   const average = Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2);
-  const trend = Number(((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1));
+  const trend = getStoredCityMarketTrend(city);
   return [{ city, market, average, trend }];
 });
 
@@ -83,13 +84,17 @@ export default function HomePage() {
         </div>
         <div className={styles.cityRail}>
           {featuredCities.map(({ city, market, average, trend }, index) => {
-            const TrendIcon = trend >= 0 ? TrendingUp : TrendingDown;
+            const TrendIcon = trend !== null && trend >= 0 ? TrendingUp : TrendingDown;
             return (
               <Link className={styles.cityCard} href={`/prix-m2/${city.slug}`} key={city.slug} title={`Prix m² à ${city.name}`}>
                 <div className={`${styles.cityVisual} ${styles[`cityVisual${index + 1}`]}`}><span>Photo à venir</span></div>
                 <div className={styles.cityCardBody}>
                   <h3>Prix m² à {city.name}</h3><strong>{formatPrice(average)} €/m²</strong>
-                  <span className={trend >= 0 ? styles.trendUp : styles.trendDown}><TrendIcon size={14} /> {trend > 0 ? "+" : ""}{trend.toLocaleString("fr-FR")} % sur 1 an</span>
+                  {trend === null ? (
+                    <span className={styles.trendMissing}>Évolution à venir</span>
+                  ) : (
+                    <span className={trend >= 0 ? styles.trendUp : styles.trendDown}><TrendIcon size={14} /> {trend > 0 ? "+" : ""}{trend.toLocaleString("fr-FR")} % sur 1 an</span>
+                  )}
                   <small>{market.transactionCount ? `${market.transactionCount.toLocaleString("fr-FR")} transactions analysées` : "Données de marché disponibles"}</small>
                 </div>
               </Link>
