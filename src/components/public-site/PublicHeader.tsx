@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { UserRound } from "lucide-react";
 import styles from "./public-site.module.css";
 
@@ -6,8 +7,13 @@ export function PublicHeader() {
   return (
     <header className={styles.header}>
       <Link className={styles.logo} href="/" aria-label="Les Jumelles Immo — accueil">
-        <span>les jumelles</span>
-        <strong>IMMO</strong>
+        <Image
+          alt="Les Jumelles Immo"
+          height={80}
+          priority
+          src="/brand/les-jumelles-logo-noir.png"
+          width={180}
+        />
       </Link>
       <nav className={styles.nav} aria-label="Navigation principale">
         <Link href="/prix-m2/aubagne">Prix immobilier</Link>
