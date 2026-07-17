@@ -50,7 +50,7 @@ export default function HomePage() {
           </p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryAction} href="/estimation">Estimer mon bien <ArrowRight size={17} /></Link>
-            <Link className={styles.secondaryAction} href="#secteurs">Voir les prix au m²</Link>
+            <Link className={styles.secondaryAction} href="/prix-m2">Voir les prix au m²</Link>
           </div>
         </div>
         <div className={styles.heroVisual}>
@@ -69,7 +69,7 @@ export default function HomePage() {
       </section>
 
       <section className={styles.services} aria-label="Nos services">
-        <article><span className={styles.iconBadge}><BarChart3 /></span><h2>Prix au m²</h2><p>Les prix du marché par ville, secteur et type de bien.</p><Link href="#secteurs">Explorer les prix <ArrowRight size={16} /></Link></article>
+        <article><span className={styles.iconBadge}><BarChart3 /></span><h2>Prix au m²</h2><p>Les prix du marché par ville, secteur et type de bien.</p><Link href="/prix-m2">Explorer les prix <ArrowRight size={16} /></Link></article>
         <article><span className={styles.iconBadge}><Home /></span><h2>Estimation fiable</h2><p>Une estimation data-driven, affinée par l’expertise locale.</p><Link href="/estimation">Estimer mon bien <ArrowRight size={16} /></Link></article>
         <article><span className={styles.iconBadge}><UserRoundSearch /></span><h2>Recherche accompagnée</h2><p>Un projet cadré, des alertes pertinentes et une équipe dédiée.</p><Link href="/recherche">Créer ma recherche <ArrowRight size={16} /></Link></article>
       </section>
@@ -79,16 +79,16 @@ export default function HomePage() {
           <p className={styles.eyebrow}>Le marché immobilier</p>
           <h2 id="market-title">Les prix dans votre secteur</h2>
           <p>Des repères locaux, actualisés et directement reliés aux pages détaillées de chaque ville.</p>
-          <Link href="/prix-m2/aubagne">Découvrir l’observatoire <ArrowRight size={16} /></Link>
+          <Link href="/prix-m2">Découvrir l’observatoire <ArrowRight size={16} /></Link>
         </div>
         <div className={styles.cityRail}>
           {featuredCities.map(({ city, market, average, trend }, index) => {
             const TrendIcon = trend >= 0 ? TrendingUp : TrendingDown;
             return (
-              <Link className={styles.cityCard} href={`/prix-m2/${city.slug}`} key={city.slug}>
+              <Link className={styles.cityCard} href={`/prix-m2/${city.slug}`} key={city.slug} title={`Prix m² à ${city.name}`}>
                 <div className={`${styles.cityVisual} ${styles[`cityVisual${index + 1}`]}`}><span>Photo à venir</span></div>
                 <div className={styles.cityCardBody}>
-                  <h3>{city.name}</h3><strong>{formatPrice(average)} €/m²</strong>
+                  <h3>Prix m² à {city.name}</h3><strong>{formatPrice(average)} €/m²</strong>
                   <span className={trend >= 0 ? styles.trendUp : styles.trendDown}><TrendIcon size={14} /> {trend > 0 ? "+" : ""}{trend.toLocaleString("fr-FR")} % sur 1 an</span>
                   <small>{market.transactionCount ? `${market.transactionCount.toLocaleString("fr-FR")} transactions analysées` : "Données de marché disponibles"}</small>
                 </div>
@@ -115,13 +115,13 @@ export default function HomePage() {
       <section className={styles.advice} id="conseils" aria-labelledby="advice-title">
         <div className={styles.sectionTitleRow}><div><p className={styles.eyebrow}>Conseils & décryptages</p><h2 id="advice-title">Mieux comprendre pour mieux décider</h2></div><Link href="/estimation">Préparer mon projet <ArrowRight size={16} /></Link></div>
         <div className={styles.adviceGrid}>
-          <Link href="/prix-m2/aix-en-provence"><div className={styles.articleVisual}>Marché local</div><div><small>Marché local</small><h3>Aix-en-Provence : comprendre les prix au m²</h3><span>Lire l’analyse <ArrowRight size={14} /></span></div></Link>
+          <Link href="/prix-m2/aix-en-provence" title="Prix m² à Aix-en-Provence"><div className={styles.articleVisual}>Marché local</div><div><small>Marché local</small><h3>Prix m² à Aix-en-Provence : comprendre le marché</h3><span>Lire l’analyse <ArrowRight size={14} /></span></div></Link>
           <Link href="/estimation"><div className={styles.articleVisual}>Estimation</div><div><small>Guide pratique</small><h3>Estimer juste : les facteurs qui changent tout</h3><span>Lancer mon estimation <ArrowRight size={14} /></span></div></Link>
-          <Link href="/prix-m2/cassis"><div className={styles.articleVisual}>Cassis</div><div><small>Focus secteur</small><h3>Acheter à Cassis : les repères essentiels</h3><span>Voir les prix <ArrowRight size={14} /></span></div></Link>
+          <Link href="/prix-m2/cassis" title="Prix m² à Cassis"><div className={styles.articleVisual}>Cassis</div><div><small>Focus secteur</small><h3>Prix m² à Cassis : les repères essentiels</h3><span>Voir les prix <ArrowRight size={14} /></span></div></Link>
         </div>
       </section>
 
-      <section className={styles.finalCta} aria-labelledby="action-title"><h2 id="action-title">Passez à l’action</h2><div><Link href="/prix-m2/aubagne"><Building2 /> <span><strong>Connaître les prix</strong><small>Explorer le marché</small></span><ArrowRight /></Link><Link href="/estimation"><Home /> <span><strong>Estimer mon bien</strong><small>Obtenir une estimation</small></span><ArrowRight /></Link><Link href="/recherche"><Search /> <span><strong>Créer ma recherche</strong><small>Être accompagné</small></span><ArrowRight /></Link></div></section>
+      <section className={styles.finalCta} aria-labelledby="action-title"><h2 id="action-title">Passez à l’action</h2><div><Link href="/prix-m2"><Building2 /> <span><strong>Connaître les prix</strong><small>Explorer le marché</small></span><ArrowRight /></Link><Link href="/estimation"><Home /> <span><strong>Estimer mon bien</strong><small>Obtenir une estimation</small></span><ArrowRight /></Link><Link href="/recherche"><Search /> <span><strong>Créer ma recherche</strong><small>Être accompagné</small></span><ArrowRight /></Link></div></section>
     </main>
   );
 }

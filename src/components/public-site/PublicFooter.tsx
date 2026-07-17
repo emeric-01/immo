@@ -13,7 +13,7 @@ export function PublicFooter() {
           <p>Une expertise locale renforcée par la donnée.</p>
         </div>
         <div className={styles.footerColumns} id="a-propos">
-          <nav aria-label="Services"><strong>Services</strong><Link href="/prix-m2/aubagne">Prix immobilier</Link><Link href="/estimation">Estimer mon bien</Link><Link href="/recherche">Recherche accompagnée</Link></nav>
+          <nav aria-label="Services"><strong>Services</strong><Link href="/prix-m2">Prix immobilier par ville</Link><Link href="/estimation">Estimer mon bien</Link><Link href="/recherche">Recherche accompagnée</Link></nav>
           <nav aria-label="Ressources"><strong>Ressources</strong><Link href="/#conseils">Conseils & analyses</Link><Link href="/#secteurs">Nos secteurs</Link><Link href="/client">Espace client</Link></nav>
           <nav aria-label="L'agence"><strong>L’agence</strong><Link href="/qui-sommes-nous">Qui sommes-nous</Link><Link href="/honoraires">Honoraires</Link><Link href="/recherche">Nous confier un projet</Link><Link href="/estimation">Nous contacter</Link></nav>
         </div>

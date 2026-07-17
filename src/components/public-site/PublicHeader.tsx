@@ -16,7 +16,7 @@ export function PublicHeader() {
         />
       </Link>
       <nav className={styles.nav} aria-label="Navigation principale">
-        <Link href="/prix-m2/aubagne">Prix immobilier</Link>
+        <Link href="/prix-m2">Prix immobilier</Link>
         <Link href="/estimation">Estimer</Link>
         <Link href="/recherche">Rechercher</Link>
         <Link href="/#conseils">Conseils</Link>

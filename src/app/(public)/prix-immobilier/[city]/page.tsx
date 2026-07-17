@@ -123,7 +123,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
   return (
     <main className="city-price-page city-price-modern">
       <nav className="city-breadcrumb city-modern-container" aria-label="Fil d’Ariane">
-        <Link href="/">Accueil</Link><span>Prix au m²</span><span>{city.name}</span>
+        <Link href="/">Accueil</Link><Link href="/prix-m2" title="Prix au m² par ville">Prix au m²</Link><span>{city.name}</span>
       </nav>
 
       <section className="city-modern-hero" aria-labelledby="city-price-title">
@@ -222,7 +222,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             {nearbyCities.map((nearbyCity) => {
               const nearby = getStaticCityMarketData(nearbyCity);
               const price = getAverageMarketPrice(nearby.apartment.averagePricePerM2, nearby.house.averagePricePerM2);
-              return <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug}><span>{nearbyCity.name}</span><strong>{formatPrice(price)}/m²</strong><ArrowRight size={15} /></Link>;
+              return <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug} title={`Prix m² à ${nearbyCity.name}`}><span>Prix m² à {nearbyCity.name}</span><strong>{formatPrice(price)}/m²</strong><ArrowRight size={15} /></Link>;
             })}
           </div>
         </article>

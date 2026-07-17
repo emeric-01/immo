@@ -24,7 +24,7 @@ export const southCities: City[] = [
   },
   {
     slug: "gemenos",
-    name: "Gemenos",
+    name: "Gémenos",
     postalCode: "13420",
     inseeCode: "13042",
     department: "Bouches-du-Rhone",
@@ -266,7 +266,7 @@ export const southCities: City[] = [
   },
   {
     slug: "hyeres",
-    name: "Hyeres",
+    name: "Hyères",
     postalCode: "83400",
     inseeCode: "83069",
     department: "Var",
@@ -277,7 +277,7 @@ export const southCities: City[] = [
   },
   {
     slug: "frejus",
-    name: "Frejus",
+    name: "Fréjus",
     postalCode: "83600",
     inseeCode: "83061",
     department: "Var",
