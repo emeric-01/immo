@@ -88,6 +88,7 @@ function AdminFrame({ children }: { children: React.ReactNode }) {
           <strong>IMMO</strong>
         </div>
         <nav>
+          <Link href="/admin/biens">Biens</Link>
           <Link data-active href="/admin/recherches">
             Recherches
           </Link>
