@@ -28,6 +28,21 @@ export const metadata: Metadata = {
 
 const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "carnoux-en-provence"];
 
+const cityImages: Record<string, { src: string; alt: string }> = {
+  aubagne: {
+    src: "/images/cities/aubagne.webp",
+    alt: "Vue d’Aubagne et du massif du Garlaban",
+  },
+  cassis: {
+    src: "/images/cities/cassis.webp",
+    alt: "Le port de Cassis et ses bateaux traditionnels",
+  },
+  gemenos: {
+    src: "/images/cities/gemenos.webp",
+    alt: "L’hôtel de ville de Gémenos",
+  },
+};
+
 const featuredCities = featuredSlugs.flatMap((slug) => {
   const city = getCityBySlug(slug);
   if (!city) return [];
@@ -85,9 +100,23 @@ export default function HomePage() {
         <div className={styles.cityRail}>
           {featuredCities.map(({ city, market, average, trend }, index) => {
             const TrendIcon = trend !== null && trend >= 0 ? TrendingUp : TrendingDown;
+            const cityImage = cityImages[city.slug];
             return (
               <Link className={styles.cityCard} href={`/prix-m2/${city.slug}`} key={city.slug} title={`Prix m² à ${city.name}`}>
-                <div className={`${styles.cityVisual} ${styles[`cityVisual${index + 1}`]}`}><span>Photo à venir</span></div>
+                <div className={`${styles.cityVisual} ${styles[`cityVisual${index + 1}`]}`}>
+                  {cityImage ? (
+                    <Image
+                      alt={cityImage.alt}
+                      className={styles.cityImage}
+                      fill
+                      quality={78}
+                      sizes="(max-width: 1100px) 210px, 16vw"
+                      src={cityImage.src}
+                    />
+                  ) : (
+                    <span>Photo à venir</span>
+                  )}
+                </div>
                 <div className={styles.cityCardBody}>
                   <h3>Prix m² à {city.name}</h3><strong>{formatPrice(average)} €/m²</strong>
                   {trend === null ? (
