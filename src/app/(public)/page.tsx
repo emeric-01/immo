@@ -89,7 +89,7 @@ export default async function HomePage() {
               fill
               fetchPriority="high"
               priority
-              quality={82}
+              quality={76}
               sizes="(max-width: 720px) calc(100vw - 52px), (max-width: 1100px) 42vw, 47vw"
               src="/images/agence-jumelles-immo-hero.webp"
             />
