@@ -7,9 +7,9 @@ import { sendEstimationVolumeAlertEmail } from "@/lib/email/buyer-search-emails"
 type UsageCounter = {
   alert_global: boolean;
   alert_ip: boolean;
+  bucket_started_at: string;
   global_count: number;
   ip_count: number;
-  window_started_at: string;
 };
 
 export async function recordEstimationApiUsage(request: Request) {
@@ -32,7 +32,7 @@ export async function recordEstimationApiUsage(request: Request) {
       globalCount: counter.global_count,
       ipCount: counter.ip_count,
       scope: counter.alert_global ? "global" : "ip",
-      windowStartedAt: counter.window_started_at,
+      windowStartedAt: counter.bucket_started_at,
     });
   } catch (error) {
     // Monitoring must never prevent a legitimate estimation.
