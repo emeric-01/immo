@@ -81,6 +81,7 @@ function AdminFrame({ children }: { children: React.ReactNode }) {
             Clients
           </Link>
           <Link href="/admin/recherches-villes">Villes recherchées</Link>
+          <Link href="/admin/contenus">Contenus</Link>
           <Link href="/admin/utilisateurs">Utilisateurs</Link>
         </nav>
       </aside>

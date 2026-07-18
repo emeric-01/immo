@@ -104,8 +104,13 @@
 }
 
 .secondaryButton,
+.primaryButton,
 .filterBar button,
 .loginForm button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 44px;
   border: 0;
   border-radius: 8px;
@@ -113,12 +118,23 @@
   color: #ffffff;
   padding: 0 18px;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .secondaryButton {
   border: 1px solid #e2d8ce;
   background: #ffffff;
   color: #111111;
+}
+
+.headerActions,
+.formActions,
+.articleActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .statsGrid {
@@ -270,6 +286,24 @@
   border-color: #8eb999;
   background: #eef7f0;
   color: #246034;
+}
+
+.statusBadge[data-status="published"] {
+  border-color: #8eb999;
+  background: #eef7f0;
+  color: #246034;
+}
+
+.statusBadge[data-status="draft"] {
+  border-color: #e4c292;
+  background: #fff8eb;
+  color: #82501c;
+}
+
+.statusBadge[data-status="archived"] {
+  border-color: #d2d7df;
+  background: #f3f5f7;
+  color: #667085;
 }
 
 .statusBadge[data-status="deleted_by_client"] {
@@ -621,6 +655,149 @@
   color: #707789;
 }
 
+.contentForm {
+  display: grid;
+  gap: 18px;
+}
+
+.formPanel {
+  display: grid;
+  gap: 20px;
+  border: 1px solid #e3dcd4;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 22px;
+  box-shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
+}
+
+.formIntro {
+  display: grid;
+  gap: 6px;
+}
+
+.formIntro h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 500;
+}
+
+.formIntro p {
+  max-width: 720px;
+  margin: 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.contentForm label {
+  display: grid;
+  gap: 7px;
+  color: #3f4655;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.contentForm input,
+.contentForm select,
+.contentForm textarea {
+  width: 100%;
+  border: 1px solid #d7dfe9;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 12px 13px;
+  color: #111111;
+  font: inherit;
+  font-weight: 500;
+}
+
+.contentForm input,
+.contentForm select {
+  min-height: 48px;
+}
+
+.contentForm textarea {
+  resize: vertical;
+}
+
+.contentForm small {
+  color: #707789;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.editorArea {
+  min-height: 420px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+  line-height: 1.65;
+}
+
+.formActions {
+  position: sticky;
+  bottom: 16px;
+  border: 1px solid #e3dcd4;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 14px;
+  box-shadow: 0 18px 45px rgba(17, 17, 17, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.articleList {
+  display: grid;
+  gap: 12px;
+}
+
+.articleRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: center;
+  border: 1px solid #e3dcd4;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  box-shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
+}
+
+.articleRow h2 {
+  margin: 10px 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  font-weight: 500;
+}
+
+.articleRow p {
+  max-width: 760px;
+  margin: 0 0 8px;
+  color: #5f6675;
+  line-height: 1.55;
+}
+
+.articleRow small {
+  color: #777f8e;
+  font-weight: 700;
+}
+
+.articleActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid #e2d8ce;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 14px;
+  color: #111111;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 @media (max-width: 1080px) {
   .adminPage {
     grid-template-columns: 1fr;
@@ -648,6 +825,11 @@
   }
 
   .userGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid,
+  .articleRow {
     grid-template-columns: 1fr;
   }
 }

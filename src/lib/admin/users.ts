@@ -15,7 +15,7 @@ export type AdminUser = {
   is_active: boolean;
   last_login_at: string | null;
   password_hash: string;
-  role: "admin" | "manager";
+  role: "admin" | "manager" | "editor";
   updated_at: string;
 };
 

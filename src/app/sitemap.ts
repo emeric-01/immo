@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { southCities } from "@/lib/cities";
+import { getContentArticleSitemapEntries } from "@/lib/content/articles";
 import { getPublishedProperties } from "@/lib/properties";
 import { absoluteUrl } from "@/lib/site";
 
@@ -11,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/prix-m2"), changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/estimation"), changeFrequency: "monthly", priority: 0.9 },
     { url: absoluteUrl("/recherche"), changeFrequency: "monthly", priority: 0.8 },
+    { url: absoluteUrl("/contenus"), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/qui-sommes-nous"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/nous-rejoindre"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/honoraires"), changeFrequency: "monthly", priority: 0.5 },
@@ -23,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const properties = await getPublishedProperties().catch(() => []);
+  const contentPages = await getContentArticleSitemapEntries().catch(() => []);
   const propertyPages: MetadataRoute.Sitemap = properties.filter(property => !property.seo_noindex).map(property => ({
     url: absoluteUrl(`/biens/${property.slug}`),
     lastModified: property.updated_at || property.published_at || property.created_at,
@@ -31,5 +34,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: property.images.map(image => image.public_url),
   }));
 
-  return [...staticPages, ...cityPages, ...propertyPages];
+  return [...staticPages, ...cityPages, ...contentPages, ...propertyPages];
 }

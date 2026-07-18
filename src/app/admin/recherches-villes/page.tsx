@@ -63,6 +63,7 @@ function Sidebar() {
         <Link data-active href="/admin/recherches-villes">
           Villes recherchées
         </Link>
+        <Link href="/admin/contenus">Contenus</Link>
         <Link href="/admin/utilisateurs">Utilisateurs</Link>
       </nav>
     </aside>

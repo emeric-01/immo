@@ -19,7 +19,7 @@ export function PublicHeader() {
         <Link href="/prix-m2">Prix immobilier</Link>
         <Link href="/estimation">Estimer</Link>
         <Link href="/recherche">Rechercher</Link>
-        <Link href="/#conseils">Conseils</Link>
+        <Link href="/contenus">Contenus</Link>
         <Link href="/#secteurs">Nos secteurs</Link>
         <Link href="/qui-sommes-nous">Qui sommes-nous</Link>
       </nav>

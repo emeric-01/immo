@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { createAdminUser } from "@/lib/admin/users";
+import { createAdminUser, type AdminUser } from "@/lib/admin/users";
 
 export async function createAdminUserAction(formData: FormData) {
   await requireAdminSession();
@@ -12,7 +12,7 @@ export async function createAdminUserAction(formData: FormData) {
     email: String(formData.get("email") ?? ""),
     fullName: String(formData.get("fullName") ?? ""),
     password: String(formData.get("password") ?? ""),
-    role: String(formData.get("role") ?? "manager") === "admin" ? "admin" : "manager",
+    role: parseRole(String(formData.get("role") ?? "manager")),
   });
 
   if (!result.success) {
@@ -21,4 +21,8 @@ export async function createAdminUserAction(formData: FormData) {
 
   revalidatePath("/admin/utilisateurs");
   redirect("/admin/utilisateurs?created=1");
+}
+
+function parseRole(value: string): AdminUser["role"] {
+  return value === "admin" || value === "editor" ? value : "manager";
 }

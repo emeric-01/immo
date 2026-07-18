@@ -55,6 +55,7 @@ export default async function AdminUsersPage({
               <label htmlFor="role">Role</label>
               <select id="role" name="role" defaultValue="manager">
                 <option value="manager">Manager</option>
+                <option value="editor">Editeur contenus</option>
                 <option value="admin">Admin</option>
               </select>
               <button type="submit">
