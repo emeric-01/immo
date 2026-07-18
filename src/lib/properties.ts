@@ -12,7 +12,7 @@ export type Property = {
   land_area_m2: number | null; bathrooms: number | null; levels: number | null; parking_spaces: number | null;
   property_condition: string | null; kitchen_type: string | null; land_is_buildable: boolean | null; land_is_serviced: boolean | null;
   seo_title: string | null; seo_description: string | null; seo_noindex: boolean;
-  contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; images: PropertyImage[];
+  contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; updated_at: string | null; images: PropertyImage[];
 };
 
 function config() {
@@ -41,6 +41,11 @@ async function attachImages(rows: Omit<Property, "images">[]): Promise<Property[
 export async function getPublishedProperty(slug: string) {
   const rows = await request<Omit<Property, "images">[]>(`properties?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=*&limit=1`);
   return (await attachImages(rows))[0] ?? null;
+}
+
+export async function getPublishedProperties() {
+  const rows = await request<Omit<Property, "images">[]>("properties?status=eq.published&select=*&order=published_at.desc");
+  return attachImages(rows);
 }
 
 export async function getAdminProperties() {

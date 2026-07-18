@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ReceiptText, ShieldCheck } from "lucide-react";
 import styles from "./honoraires.module.css";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Honoraires de l’agence | Les Jumelles Immo",
-  description:
-    "Consultez le barème TTC des honoraires de transaction des Jumelles Immo pour les mandats simples et exclusifs.",
-};
+export const metadata: Metadata = createPageMetadata({ title: "Honoraires de l’agence | Les Jumelles Immo", description: "Consultez le barème TTC des honoraires de transaction des Jumelles Immo pour les mandats simples et exclusifs.", path: "/honoraires" });
 
 const feeRows = [
   {

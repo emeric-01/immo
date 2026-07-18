@@ -19,13 +19,14 @@ import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
+import { createPageMetadata } from "@/lib/seo";
 import styles from "./home.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Les Jumelles Immo | Estimer, vendre et acheter avec méthode",
-  description:
-    "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos, Saint-Cyr-sur-Mer et Aix-en-Provence.",
-};
+  description: "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos, Saint-Cyr-sur-Mer et Aix-en-Provence.",
+  path: "/",
+});
 
 const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "saint-cyr-sur-mer"];
 

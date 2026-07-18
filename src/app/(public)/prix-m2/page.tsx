@@ -8,15 +8,10 @@ import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
 import { CityHeroSearch } from "./city-hero-search";
 import styles from "./prix-m2.module.css";
+import { absoluteUrl } from "@/lib/site";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Prix au m² par ville dans le 13 et le 83 | Les Jumelles Immo",
-  description:
-    "Consultez les prix au m² par ville dans les Bouches-du-Rhône (13) et le Var (83) : appartements, maisons et tendances du marché immobilier local.",
-  alternates: {
-    canonical: "/prix-m2",
-  },
-};
+export const metadata: Metadata = createPageMetadata({ title: "Prix au m² par ville dans le 13 et le 83 | Les Jumelles Immo", description: "Consultez les prix au m² par ville dans les Bouches-du-Rhône (13) et le Var (83) : appartements, maisons et tendances du marché immobilier local.", path: "/prix-m2" });
 
 async function getDirectoryCities(): Promise<DirectoryCity[]> {
   const cities = southCities.filter(
@@ -55,7 +50,7 @@ export default async function PriceDirectoryPage() {
       "@type": "ListItem",
       position: index + 1,
       name: `Prix au m² à ${city.name}`,
-      url: `https://immo-rho.vercel.app/prix-m2/${city.slug}`,
+      url: absoluteUrl(`/prix-m2/${city.slug}`),
     })),
   };
 

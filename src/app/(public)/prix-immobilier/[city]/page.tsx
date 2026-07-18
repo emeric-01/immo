@@ -21,6 +21,7 @@ import {
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
 import { CityAddressSearch } from "./city-address-search";
+import { absoluteUrl } from "@/lib/site";
 
 type CityPricePageProps = {
   params: Promise<{ city: string }>;
@@ -90,13 +91,10 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
 
   if (!city) return {};
 
-  return {
-    title: `Prix au m² à ${city.name} (${city.postalCode}) | Les Jumelles Immo`,
-    description: `Prix au m² à ${city.name} pour les appartements et maisons : évolution du marché et dernières ventes enregistrées.`,
-    alternates: {
-      canonical: `/prix-m2/${city.slug}`,
-    },
-  };
+  const title = `Prix au m² à ${city.name} (${city.postalCode}) | Les Jumelles Immo`;
+  const description = `Prix au m² à ${city.name} pour les appartements et maisons : évolution du marché et dernières ventes enregistrées.`;
+  const path = `/prix-m2/${city.slug}`;
+  return { title, description, alternates: { canonical: path }, robots: { index: true, follow: true }, openGraph: { type: "website", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path }, twitter: { card: "summary_large_image", title, description } };
 }
 
 export default async function CityPricePage({ params }: CityPricePageProps) {
@@ -117,9 +115,21 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
   const sourceLabel = market.source === "immo-data" ? "Données Immo Data" : "Données indicatives";
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const cacheDays = getMarketCacheDays();
+  const cityJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Accueil", item: absoluteUrl("/") },
+        { "@type": "ListItem", position: 2, name: "Prix au m²", item: absoluteUrl("/prix-m2") },
+        { "@type": "ListItem", position: 3, name: city.name, item: absoluteUrl(`/prix-m2/${city.slug}`) },
+      ] },
+      { "@type": "WebPage", "@id": `${absoluteUrl(`/prix-m2/${city.slug}`)}#webpage`, name: `Prix au m² à ${city.name}`, url: absoluteUrl(`/prix-m2/${city.slug}`), description: `Prix des appartements et maisons à ${city.name}, tendances et transactions immobilières locales.`, about: { "@type": "Place", name: city.name, postalCode: city.postalCode, geo: { "@type": "GeoCoordinates", latitude: city.latitude, longitude: city.longitude } }, isPartOf: { "@id": `${absoluteUrl("/")}#website` } },
+    ],
+  };
 
   return (
     <main className="city-price-page city-price-modern">
+      <script dangerouslySetInnerHTML={{ __html: JSON.stringify(cityJsonLd).replace(/</g, "\\u003c") }} type="application/ld+json" />
       <nav className="city-breadcrumb city-modern-container" aria-label="Fil d’Ariane">
         <Link href="/">Accueil</Link><Link href="/prix-m2" title="Prix au m² par ville">Prix au m²</Link><span>{city.name}</span>
       </nav>

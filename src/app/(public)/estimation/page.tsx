@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { EstimationForm } from "@/app/estimation-form";
 import type { AddressSuggestion } from "@/lib/immo-data";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Estimation immobilière | Les Jumelles Immo",
-  description: "Estimez votre bien immobilier avec Les Jumelles Immo.",
-};
+export const metadata: Metadata = createPageMetadata({ title: "Estimation immobilière | Les Jumelles Immo", description: "Obtenez une estimation immobilière argumentée à partir de votre adresse, des caractéristiques du bien et des ventes locales.", path: "/estimation" });
 
 type EstimationPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

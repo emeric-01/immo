@@ -338,10 +338,16 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
         },
         body: JSON.stringify(payload),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Estimation indisponible.");
+        if (response.status === 429) {
+          throw new Error(
+            "Vous avez atteint la limite de 5 estimations par heure. Réessayez un peu plus tard ou contactez directement l’agence.",
+          );
+        }
+
+        throw new Error(data?.error ?? "Estimation indisponible.");
       }
 
       setEstimation(data as PropertyEstimationResponse);

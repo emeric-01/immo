@@ -10,12 +10,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import styles from "./qui-sommes-nous.module.css";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Qui sommes-nous ? | Les Jumelles Immo",
-  description:
-    "Découvrez l’approche des Jumelles Immo : une estimation juste, une lecture urbanistique et un regard d’architecte pour révéler tout le potentiel de votre bien.",
-};
+export const metadata: Metadata = createPageMetadata({ title: "Qui sommes-nous ? | Les Jumelles Immo", description: "Découvrez l’approche des Jumelles Immo : une estimation juste, une lecture urbanistique et un regard d’architecte pour révéler tout le potentiel de votre bien.", path: "/qui-sommes-nous", image: "/images/laure-severine-jumelles-immo.jpg" });
 
 const expertises = [
   {

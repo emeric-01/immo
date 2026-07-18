@@ -120,6 +120,51 @@ export async function sendClientLoginCodeEmail({
   });
 }
 
+export async function sendEstimationVolumeAlertEmail({
+  globalCount,
+  ipCount,
+  scope,
+  windowStartedAt,
+}: {
+  globalCount: number;
+  ipCount: number;
+  scope: "global" | "ip";
+  windowStartedAt: string;
+}) {
+  const config = getEmailConfig();
+
+  if (!config) {
+    throw new Error("Emails transactionnels non configures.");
+  }
+
+  const recipient = process.env.ESTIMATION_ALERT_EMAIL?.trim() || "contact@jumellesimmo.fr";
+  const reason = scope === "global"
+    ? `${globalCount} estimations ont été demandées sur l’ensemble du site pendant la même heure.`
+    : `Une même adresse IP hachée a demandé ${ipCount} estimations pendant la même heure.`;
+  const firewallUrl = "https://vercel.com/emeric-01s-projects/immo/firewall";
+
+  await sendEmail(config, {
+    html: emailLayout(
+      "Alerte volume d’estimations",
+      `
+        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">${escapeHtml(reason)}</p>
+        <div style="margin:0 0 18px;border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:16px;color:#111;line-height:1.7;">
+          <strong>Fenêtre :</strong> ${escapeHtml(new Date(windowStartedAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris" }))}<br>
+          <strong>Volume IP :</strong> ${ipCount}<br>
+          <strong>Volume global :</strong> ${globalCount}<br>
+          <strong>Protection :</strong> la limite Vercel de 5 estimations par heure et par IP reste active.
+        </div>
+        <p style="margin:0;"><a href="${firewallUrl}" style="color:#9f5d33;font-weight:700;">Consulter le pare-feu Vercel</a></p>
+      `,
+    ),
+    subject: scope === "global"
+      ? `[Alerte] ${globalCount} estimations demandées en une heure`
+      : `[Alerte] Une IP approche la limite d’estimations`,
+    text: `${reason}\nFenêtre : ${windowStartedAt}\nVolume IP : ${ipCount}\nVolume global : ${globalCount}\nPare-feu : ${firewallUrl}`,
+    to: recipient,
+  });
+}
+
 function getEmailConfig(): EmailConfig | null {
   const from = process.env.EMAIL_FROM?.trim();
   const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "auto";

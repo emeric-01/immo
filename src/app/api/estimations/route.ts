@@ -5,6 +5,7 @@ import {
 } from "@/lib/immo-data";
 import { getClientSession } from "@/lib/client-access/auth";
 import { saveClientEstimation } from "@/lib/client-access/estimations";
+import { recordEstimationApiUsage } from "@/lib/estimation-api-alerts";
 
 function isValidEstimationInput(
   input: Partial<PropertyEstimationInput>,
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await recordEstimationApiUsage(request);
     const estimation = await createImmoDataEstimation(input);
     const session = await getClientSession();
     const estimationId = session
