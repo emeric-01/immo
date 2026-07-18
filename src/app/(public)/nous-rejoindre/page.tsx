@@ -22,7 +22,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Rejoignez Les Jumelles Immo et développez votre activité d’agent commercial avec une méthode, des outils, des données locales et un accompagnement humain.",
   path: "/nous-rejoindre",
-  image: "/images/laure-severine-jumelles-immo.jpg",
+  image: "/images/conseiller-immobilier-recrutement.jpg",
 });
 
 const support = [
@@ -93,15 +93,15 @@ export default function NousRejoindrePage() {
 
         <figure className={styles.heroVisual}>
           <Image
-            alt="Laure et Séverine, fondatrices des Jumelles Immo"
+            alt="Conseiller immobilier arrivant pour une visite dans une propriété méditerranéenne"
             fill
             priority
             sizes="(max-width: 860px) 100vw, 46vw"
-            src="/images/laure-severine-jumelles-immo.jpg"
+            src="/images/conseiller-immobilier-recrutement.jpg"
           />
           <figcaption>
-            <span>Une agence à taille humaine</span>
-            <strong>Deux regards, une ambition collective.</strong>
+            <span>Conseiller immobilier indépendant</span>
+            <strong>Votre terrain, notre accompagnement.</strong>
           </figcaption>
         </figure>
       </section>
