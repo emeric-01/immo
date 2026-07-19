@@ -4,9 +4,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { MarkdownContent } from "@/components/content/MarkdownContent";
+import { getCityBySlug } from "@/lib/cities";
+import { readCityMarketCache } from "@/lib/city-market-cache";
 import { formatArticleDate } from "@/lib/content/article-utils";
 import { getPublishedContentArticle } from "@/lib/content/articles";
 import { absoluteUrl } from "@/lib/site";
+import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import styles from "../contenus.module.css";
 
 export const revalidate = 900;
@@ -44,6 +47,13 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
   if (!article) {
     notFound();
   }
+
+  const relatedCity = article.related_city_slug ? getCityBySlug(article.related_city_slug) : null;
+  const cityMarketCache = relatedCity ? await readCityMarketCache(relatedCity) : null;
+  const cityMarket = cityMarketCache?.data;
+  const averagePrice = cityMarket
+    ? Math.round((cityMarket.apartment.averagePricePerM2 + cityMarket.house.averagePricePerM2) / 2)
+    : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -84,6 +94,30 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
                 src={article.cover_image_url}
               />
             </div>
+          ) : null}
+          {relatedCity && cityMarket?.history.length && averagePrice ? (
+            <section className={styles.articleMarketChart} aria-labelledby="article-market-chart-title">
+              <div className={styles.articleMarketChartHeading}>
+                <div>
+                  <p className={styles.eyebrow}>Transactions immobilières</p>
+                  <h2 id="article-market-chart-title">Évolution des prix à {relatedCity.name}</h2>
+                </div>
+                <div className={styles.articleChartLegend} aria-label="Légende">
+                  <span data-property="apartment">Appartement</span>
+                  <span data-property="house">Maison</span>
+                </div>
+              </div>
+              <CityMarketChart
+                averagePrice={averagePrice}
+                cityName={relatedCity.name}
+                defaultPeriod="5y"
+                points={cityMarket.history}
+              />
+              <p className={styles.articleChartSource}>
+                Repères construits à partir des transactions DVF publiées par la DGFiP, agrégées par type de bien.
+                Les prix constatés ne remplacent pas l’estimation des caractéristiques propres au logement.
+              </p>
+            </section>
           ) : null}
           <section className={styles.articleBody}>
             <MarkdownContent className={styles.markdown} markdown={article.body_markdown} />

@@ -17,6 +17,7 @@ import type { CityPriceHistoryPoint } from "@/lib/city-market-data";
 type CityMarketChartProps = {
   averagePrice: number;
   cityName: string;
+  defaultPeriod?: Period;
   points: CityPriceHistoryPoint[];
 };
 
@@ -49,8 +50,8 @@ function MarketTooltip({
   );
 }
 
-export function CityMarketChart({ averagePrice, cityName, points }: CityMarketChartProps) {
-  const [period, setPeriod] = useState<Period>("all");
+export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all", points }: CityMarketChartProps) {
+  const [period, setPeriod] = useState<Period>(defaultPeriod);
   const data = useMemo(() => {
     if (period === "all") return points;
     return points.slice(-61);

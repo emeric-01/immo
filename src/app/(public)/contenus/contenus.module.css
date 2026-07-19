@@ -181,6 +181,70 @@
   object-fit: cover;
 }
 
+.articleMarketChart {
+  width: min(920px, 100%);
+  margin: 0 auto 24px;
+  border: 1px solid #ded4ca;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: clamp(24px, 5vw, 42px);
+  box-shadow: 0 24px 60px rgba(59, 43, 30, 0.07);
+}
+
+.articleMarketChartHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.articleMarketChartHeading h2 {
+  margin: 7px 0 0;
+  color: #171511;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  font-weight: 500;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.articleChartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: #696159;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.articleChartLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.articleChartLegend span::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #b77b4c;
+  content: "";
+}
+
+.articleChartLegend span[data-property="house"]::before {
+  background: #72775a;
+}
+
+.articleChartSource {
+  margin: 12px 0 0;
+  border-top: 1px solid #ebe3db;
+  padding-top: 14px;
+  color: #777068;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
 .markdown {
   color: #2d2925;
   font-size: 1.08rem;
@@ -270,5 +334,9 @@
 
   .articleMeta {
     flex-direction: column;
+  }
+
+  .articleMarketChartHeading {
+    display: grid;
   }
 }
