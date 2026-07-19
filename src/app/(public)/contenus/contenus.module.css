@@ -244,17 +244,14 @@
 
 .articleDiscoveries {
   display: grid;
-  gap: 22px;
+  gap: 38px;
   width: min(1040px, 100%);
-  margin: 30px auto 0;
+  margin: 46px auto 0;
 }
 
 .discoverySection {
-  border: 1px solid #ded4ca;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.78);
-  padding: clamp(24px, 4vw, 38px);
-  box-shadow: 0 24px 60px rgba(59, 43, 30, 0.06);
+  border-top: 1px solid #ded4ca;
+  padding-top: 32px;
 }
 
 .discoveryHeading {
@@ -262,17 +259,17 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .discoveryHeading h2 {
   max-width: 720px;
-  margin: 8px 0 0;
+  margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 3vw, 2.35rem);
   font-weight: 500;
-  letter-spacing: -.045em;
-  line-height: .98;
+  letter-spacing: -.04em;
+  line-height: 1;
 }
 
 .discoveryAllLink,
@@ -298,12 +295,14 @@
 }
 
 .citySuggestionCard {
+  position: relative;
   display: grid;
-  min-height: 178px;
+  grid-template-rows: auto 1fr auto;
+  min-height: 142px;
   border: 1px solid #e3d8ce;
-  border-radius: 18px;
-  background: #fff;
-  padding: 20px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 18px;
   color: #171511;
   text-decoration: none;
   transition: border-color .18s ease, transform .18s ease;
@@ -311,13 +310,28 @@
 
 .citySuggestionCard[data-featured="true"] {
   border-color: #bd7c52;
-  background: #f7eee6;
+  background: #f8efe7;
 }
 
 .citySuggestionCard:hover,
 .relatedArticleCard:hover {
   border-color: #bd7c52;
   transform: translateY(-3px);
+}
+
+.citySuggestionBadge {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  border-radius: 999px;
+  background: #a86640;
+  padding: 5px 9px;
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .citySuggestionMeta {
@@ -332,9 +346,10 @@
 }
 
 .citySuggestionCard strong {
-  margin: 16px 0;
+  align-self: center;
+  margin: 12px 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 500;
   line-height: 1.06;
 }
@@ -342,7 +357,7 @@
 .citySuggestionCta {
   align-self: end;
   color: #8f5735;
-  font-size: .84rem;
+  font-size: .8rem;
   font-weight: 800;
 }
 
@@ -350,6 +365,14 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.relatedArticleGrid[data-count="1"] {
+  grid-template-columns: 1fr;
+}
+
+.relatedArticleGrid[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .relatedArticleCard {
@@ -362,11 +385,23 @@
   transition: border-color .18s ease, transform .18s ease;
 }
 
+.relatedArticleGrid[data-count="1"] .relatedArticleCard {
+  display: grid;
+  grid-template-columns: minmax(240px, 36%) 1fr;
+  min-height: 190px;
+}
+
 .relatedArticleMedia,
 .relatedArticleFallback {
   position: relative;
   height: 152px;
   background: #e8dfd6;
+}
+
+.relatedArticleGrid[data-count="1"] .relatedArticleMedia,
+.relatedArticleGrid[data-count="1"] .relatedArticleFallback {
+  height: 100%;
+  min-height: 190px;
 }
 
 .relatedArticleMedia img {
@@ -392,6 +427,11 @@
   padding: 20px;
 }
 
+.relatedArticleGrid[data-count="1"] .relatedArticleContent {
+  align-content: center;
+  padding: clamp(24px, 4vw, 38px);
+}
+
 .relatedArticleContent > span {
   color: #9a6b4e;
   font-size: .72rem;
@@ -407,6 +447,11 @@
   font-weight: 500;
   letter-spacing: -.03em;
   line-height: 1.05;
+}
+
+.relatedArticleGrid[data-count="1"] .relatedArticleContent h3 {
+  max-width: 620px;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
 }
 
 .relatedArticleContent div {
@@ -519,7 +564,22 @@
     grid-template-columns: 1fr;
   }
 
+  .relatedArticleGrid[data-count="1"],
+  .relatedArticleGrid[data-count="2"] {
+    grid-template-columns: 1fr;
+  }
+
+  .relatedArticleGrid[data-count="1"] .relatedArticleCard {
+    grid-template-columns: 1fr;
+  }
+
+  .relatedArticleGrid[data-count="1"] .relatedArticleMedia,
+  .relatedArticleGrid[data-count="1"] .relatedArticleFallback {
+    height: 190px;
+    min-height: 0;
+  }
+
   .citySuggestionCard {
-    min-height: 150px;
+    min-height: 132px;
   }
 }

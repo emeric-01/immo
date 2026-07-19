@@ -147,10 +147,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
               {suggestedCities.length > 0 && relatedCity ? (
                 <section className={styles.discoverySection} aria-labelledby="nearby-city-prices-title">
                   <div className={styles.discoveryHeading}>
-                    <div>
-                      <p className={styles.eyebrow}>Observatoire local</p>
-                      <h2 id="nearby-city-prices-title">Les prix au m² autour de {relatedCity.name}</h2>
-                    </div>
+                    <h2 id="nearby-city-prices-title">Les prix au m² autour de {relatedCity.name}</h2>
                     <Link className={styles.discoveryAllLink} href="/prix-m2">
                       Toutes les villes <ArrowRight size={17} />
                     </Link>
@@ -164,12 +161,15 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
                         key={city.slug}
                         title={`Prix m² à ${city.name}`}
                       >
+                        {index === 0 ? (
+                          <span className={styles.citySuggestionBadge}>Ville de l’article</span>
+                        ) : null}
                         <span className={styles.citySuggestionMeta}>
                           <MapPin size={15} /> {city.postalCode}
                         </span>
-                        <strong>Prix m² à {city.name}</strong>
+                        <strong>{city.name}</strong>
                         <span className={styles.citySuggestionCta}>
-                          Voir les prix <ArrowRight size={16} />
+                          Voir les prix au m² <ArrowRight size={16} />
                         </span>
                       </Link>
                     ))}
@@ -180,15 +180,12 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
               {suggestedArticles.length > 0 ? (
                 <section className={styles.discoverySection} aria-labelledby="related-articles-title">
                   <div className={styles.discoveryHeading}>
-                    <div>
-                      <p className={styles.eyebrow}>À lire ensuite</p>
-                      <h2 id="related-articles-title">D’autres regards sur l’immobilier</h2>
-                    </div>
+                    <h2 id="related-articles-title">À lire ensuite</h2>
                     <Link className={styles.discoveryAllLink} href="/contenus">
                       Tous les contenus <ArrowRight size={17} />
                     </Link>
                   </div>
-                  <div className={styles.relatedArticleGrid}>
+                  <div className={styles.relatedArticleGrid} data-count={suggestedArticles.length}>
                     {suggestedArticles.map((suggestedArticle) => (
                       <Link
                         className={styles.relatedArticleCard}
