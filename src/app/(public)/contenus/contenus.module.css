@@ -14,8 +14,8 @@
 .hero {
   display: grid;
   justify-items: center;
-  gap: 18px;
-  padding: 34px 0 54px;
+  gap: 16px;
+  padding: 26px 0 48px;
   text-align: center;
 }
 
@@ -48,31 +48,75 @@
   line-height: 1.65;
 }
 
+.hero h1 {
+  max-width: 840px;
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: .94;
+}
+
+.hero > p:last-child {
+  max-width: 680px;
+}
+
+.indexSection {
+  display: grid;
+  gap: 20px;
+}
+
+.indexHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #ded4ca;
+  padding-bottom: 16px;
+}
+
+.indexHeading h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.9rem, 3vw, 2.65rem);
+  font-weight: 500;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.indexHeading > span {
+  color: #8b8178;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 18px;
 }
 
 .card {
   display: grid;
-  gap: 18px;
-  min-height: 310px;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 14px;
+  min-width: 0;
   border: 1px solid #ded4ca;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.76);
-  padding: 30px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 20px;
   text-decoration: none;
-  box-shadow: 0 24px 60px rgba(59, 43, 30, 0.07);
-  transition: transform .18s ease, border-color .18s ease;
+  box-shadow: 0 18px 42px rgba(59, 43, 30, 0.055);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
 .cardMedia {
   position: relative;
+  display: grid;
+  place-items: center;
   overflow: hidden;
-  height: 220px;
-  margin: -30px -30px 2px;
-  border-radius: 23px 23px 0 0;
+  aspect-ratio: 16 / 10;
+  margin: -20px -20px 2px;
+  border-radius: 19px 19px 0 0;
   background: #e8dfd6;
 }
 
@@ -88,6 +132,13 @@
 .card:hover {
   border-color: #c28a62;
   transform: translateY(-3px);
+  box-shadow: 0 22px 48px rgba(59, 43, 30, 0.085);
+}
+
+.cardMediaFallback {
+  color: #a56741;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
 }
 
 .cardMeta {
@@ -96,7 +147,7 @@
   gap: 8px;
   align-items: center;
   color: #9a6b4e;
-  font-size: 0.78rem;
+  font-size: 0.69rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -106,16 +157,25 @@
   margin: 0;
   color: #171511;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: clamp(1.55rem, 2.25vw, 1.95rem);
   font-weight: 500;
   letter-spacing: -0.045em;
-  line-height: 0.98;
+  line-height: 1.02;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .card p {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0;
   color: #625c55;
-  line-height: 1.6;
+  font-size: .92rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .cardFooter {
@@ -125,7 +185,25 @@
   gap: 14px;
   margin-top: auto;
   color: #171511;
+  font-size: .78rem;
   font-weight: 800;
+}
+
+.cardArrow {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ded4ca;
+  border-radius: 50%;
+  background: #fff;
+  color: #965d3b;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.card:hover .cardArrow {
+  border-color: #c28a62;
+  background: #f7eee6;
 }
 
 .empty {
@@ -527,6 +605,12 @@
   text-decoration: none;
 }
 
+@media (max-width: 1020px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .shell {
     width: min(100% - 24px, 1160px);
@@ -539,12 +623,16 @@
 
   .card {
     min-height: auto;
-    padding: 24px;
+    padding: 20px;
   }
 
   .cardMedia {
-    height: 190px;
-    margin: -24px -24px 0;
+    height: auto;
+    margin: -20px -20px 0;
+  }
+
+  .indexHeading {
+    align-items: center;
   }
 
   .articleMeta {

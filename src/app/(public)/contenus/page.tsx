@@ -32,32 +32,40 @@ export default async function ContentIndexPage() {
             <p>Aucun contenu publié pour le moment. Les premiers articles arrivent bientôt.</p>
           </section>
         ) : (
-          <section className={styles.grid} aria-label="Articles publiés">
-            {articles.map((article) => (
-              <Link key={article.id} className={styles.card} href={`/contenus/${article.slug}`}>
-                {article.cover_image_url ? (
+          <section className={styles.indexSection} aria-labelledby="latest-content-title">
+            <div className={styles.indexHeading}>
+              <h2 id="latest-content-title">Dernières publications</h2>
+              <span>{articles.length} article{articles.length > 1 ? "s" : ""}</span>
+            </div>
+            <div className={styles.grid}>
+              {articles.map((article) => (
+                <Link key={article.id} className={styles.card} href={`/contenus/${article.slug}`}>
                   <div className={styles.cardMedia}>
-                    <ContentImage
-                      alt={article.cover_image_alt || article.title}
-                      fill
-                      sizes="(max-width: 760px) calc(100vw - 72px), 520px"
-                      src={article.cover_image_url}
-                    />
+                    {article.cover_image_url ? (
+                      <ContentImage
+                        alt={article.cover_image_alt || article.title}
+                        fill
+                        sizes="(max-width: 760px) calc(100vw - 52px), (max-width: 1020px) 46vw, 370px"
+                        src={article.cover_image_url}
+                      />
+                    ) : (
+                      <span className={styles.cardMediaFallback}>{article.category}</span>
+                    )}
                   </div>
-                ) : null}
-                <div className={styles.cardMeta}>
-                  <span>{article.category}</span>
-                  <span>·</span>
-                  <span>{formatArticleDate(article.published_at)}</span>
-                </div>
-                <h2>{article.title}</h2>
-                <p>{article.excerpt}</p>
-                <div className={styles.cardFooter}>
-                  <span>{article.reading_minutes} min de lecture</span>
-                  <ArrowRight size={20} />
-                </div>
-              </Link>
-            ))}
+                  <div className={styles.cardMeta}>
+                    <span>{article.category}</span>
+                    <span>·</span>
+                    <span>{formatArticleDate(article.published_at)}</span>
+                  </div>
+                  <h2>{article.title}</h2>
+                  {article.excerpt ? <p>{article.excerpt}</p> : null}
+                  <div className={styles.cardFooter}>
+                    <span>{article.reading_minutes} min de lecture</span>
+                    <span className={styles.cardArrow} aria-hidden="true"><ArrowRight size={17} /></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </section>
         )}
       </div>
