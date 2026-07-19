@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -38,6 +39,28 @@ export function MarkdownContent({ className, markdown }: MarkdownContentProps) {
       return;
     }
 
+    const image = parseMarkdownImage(line);
+
+    if (image) {
+      flushParagraph();
+      flushList();
+      blocks.push(
+        <figure key={`image-${blocks.length}`}>
+          <Image
+            alt={image.alt}
+            height={image.height}
+            loading="lazy"
+            quality={76}
+            sizes="(max-width: 820px) calc(100vw - 64px), 664px"
+            src={image.src}
+            width={image.width}
+          />
+          {image.alt ? <figcaption>{image.alt}</figcaption> : null}
+        </figure>,
+      );
+      return;
+    }
+
     if (line.startsWith("### ")) {
       flushParagraph();
       flushList();
@@ -73,6 +96,24 @@ export function MarkdownContent({ className, markdown }: MarkdownContentProps) {
   flushList();
 
   return <div className={className}>{blocks}</div>;
+}
+
+function parseMarkdownImage(line: string) {
+  const match = /^!\[([^\]]*)]\((https?:\/\/[^)\s]+|\/[^)\s]+)(?:\s+["'](\d+)x(\d+)["'])?\)$/.exec(line);
+
+  if (!match) {
+    return null;
+  }
+
+  const width = Number(match[3]);
+  const height = Number(match[4]);
+
+  return {
+    alt: match[1],
+    height: Number.isInteger(height) && height > 0 ? height : 1000,
+    src: match[2],
+    width: Number.isInteger(width) && width > 0 ? width : 1600,
+  };
 }
 
 function renderInline(text: string) {

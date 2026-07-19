@@ -737,6 +737,102 @@
   line-height: 1.65;
 }
 
+.bodyImageTools,
+.coverImageEditor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.7fr);
+  gap: 16px;
+  align-items: start;
+  border-top: 1px solid #eee7df;
+  padding-top: 18px;
+}
+
+.coverImageEditor > div:first-child {
+  display: grid;
+  gap: 14px;
+}
+
+.blogImageUploader {
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  border: 1px dashed #cfb69f;
+  border-radius: 12px;
+  background: #fbf7f2;
+  padding: 14px;
+}
+
+.blogUploadButton {
+  display: inline-flex !important;
+  width: fit-content;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px !important;
+  border-radius: 8px;
+  background: #111111;
+  padding: 0 14px;
+  color: #ffffff !important;
+  cursor: pointer;
+}
+
+.blogUploadButton[aria-disabled="true"] {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.blogImageUploader p {
+  margin: 0;
+  color: #707789;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.blogImageUploader .uploadSuccess {
+  color: #246034;
+  font-weight: 750;
+}
+
+.blogImageUploader .uploadError {
+  color: #a33a2b;
+  font-weight: 750;
+}
+
+.blogImageUploader .uploadWarning {
+  color: #82501c;
+}
+
+.coverImagePreview {
+  position: relative;
+  overflow: hidden;
+  min-height: 240px;
+  border-radius: 12px;
+  background: #eee7df;
+}
+
+.coverImagePreview img {
+  object-fit: cover;
+}
+
+.visuallyHidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
+.spin {
+  animation: adminSpin 0.8s linear infinite;
+}
+
+@keyframes adminSpin {
+  to { transform: rotate(360deg); }
+}
+
 .formActions {
   position: sticky;
   bottom: 16px;
@@ -829,7 +925,9 @@
   }
 
   .formGrid,
-  .articleRow {
+  .articleRow,
+  .bodyImageTools,
+  .coverImageEditor {
     grid-template-columns: 1fr;
   }
 }

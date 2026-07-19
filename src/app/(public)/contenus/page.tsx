@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatArticleDate } from "@/lib/content/article-utils";
@@ -34,6 +35,17 @@ export default async function ContentIndexPage() {
           <section className={styles.grid} aria-label="Articles publiés">
             {articles.map((article) => (
               <Link key={article.id} className={styles.card} href={`/contenus/${article.slug}`}>
+                {article.cover_image_url ? (
+                  <div className={styles.cardMedia}>
+                    <Image
+                      alt={article.cover_image_alt || article.title}
+                      fill
+                      quality={76}
+                      sizes="(max-width: 760px) calc(100vw - 72px), 520px"
+                      src={article.cover_image_url}
+                    />
+                  </div>
+                ) : null}
                 <div className={styles.cardMeta}>
                   <span>{article.category}</span>
                   <span>·</span>

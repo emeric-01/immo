@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     qualities: [76, 78],
     remotePatterns: [
       { protocol: "https", hostname: "hhduybnbtkusieqesqwi.supabase.co", pathname: "/storage/v1/object/public/property-images/**" },
+      { protocol: "https", hostname: "hhduybnbtkusieqesqwi.supabase.co", pathname: "/storage/v1/object/public/blog-images/**" },
     ],
   },
   async redirects() {

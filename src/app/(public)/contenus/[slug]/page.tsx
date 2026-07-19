@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -25,13 +26,15 @@ export async function generateMetadata({ params }: ContentArticlePageProps): Pro
   const description = article.seo_description || article.excerpt || "Conseil immobilier local par Les Jumelles Immo.";
   const path = `/contenus/${article.slug}`;
 
+  const images = article.cover_image_url ? [{ alt: article.cover_image_alt || article.title, url: article.cover_image_url }] : undefined;
+
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { type: "article", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path },
+    openGraph: { type: "article", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path, images },
     robots: { index: true, follow: true },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { card: "summary_large_image", title, description, images: article.cover_image_url ? [article.cover_image_url] : undefined },
   };
 }
 
@@ -50,6 +53,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
     datePublished: article.published_at,
     description: article.seo_description || article.excerpt,
     headline: article.seo_title || article.title,
+    image: article.cover_image_url || undefined,
     mainEntityOfPage: absoluteUrl(`/contenus/${article.slug}`),
     publisher: { "@type": "Organization", name: "Les Jumelles Immo" },
   };
@@ -69,6 +73,18 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
               {article.primary_keyword ? <span>{article.primary_keyword}</span> : null}
             </div>
           </header>
+          {article.cover_image_url ? (
+            <div className={styles.articleCover}>
+              <Image
+                alt={article.cover_image_alt || article.title}
+                fill
+                priority
+                quality={76}
+                sizes="(max-width: 960px) calc(100vw - 40px), 920px"
+                src={article.cover_image_url}
+              />
+            </div>
+          ) : null}
           <section className={styles.articleBody}>
             <MarkdownContent className={styles.markdown} markdown={article.body_markdown} />
           </section>
