@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ContentImage } from "./ContentImage";
 
 type MarkdownContentProps = {
   className?: string;
@@ -46,11 +46,10 @@ export function MarkdownContent({ className, markdown }: MarkdownContentProps) {
       flushList();
       blocks.push(
         <figure key={`image-${blocks.length}`}>
-          <Image
+          <ContentImage
             alt={image.alt}
             height={image.height}
             loading="lazy"
-            quality={76}
             sizes="(max-width: 820px) calc(100vw - 64px), 664px"
             src={image.src}
             width={image.width}

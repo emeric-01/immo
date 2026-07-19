@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
+import { ContentImage } from "@/components/content/ContentImage";
 import { MarkdownContent } from "@/components/content/MarkdownContent";
 import { getCityBySlug, southCities, type City } from "@/lib/cities";
 import { readCityMarketCache } from "@/lib/city-market-cache";
@@ -98,11 +98,10 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
           </header>
           {article.cover_image_url ? (
             <div className={styles.articleCover}>
-              <Image
+              <ContentImage
                 alt={article.cover_image_alt || article.title}
                 fill
                 priority
-                quality={76}
                 sizes="(max-width: 960px) calc(100vw - 40px), 920px"
                 src={article.cover_image_url}
               />
@@ -194,10 +193,9 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
                       >
                         {suggestedArticle.cover_image_url ? (
                           <div className={styles.relatedArticleMedia}>
-                            <Image
+                            <ContentImage
                               alt={suggestedArticle.cover_image_alt || suggestedArticle.title}
                               fill
-                              quality={72}
                               sizes="(max-width: 760px) calc(100vw - 48px), 360px"
                               src={suggestedArticle.cover_image_url}
                             />

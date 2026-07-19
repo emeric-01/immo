@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
+import { CONTENT_IMAGE_QUALITY } from "./src/lib/content/image-config";
 
 const nextConfig: NextConfig = {
   images: {
-    qualities: [76, 78],
+    qualities: [CONTENT_IMAGE_QUALITY, 78],
     remotePatterns: [
       { protocol: "https", hostname: "hhduybnbtkusieqesqwi.supabase.co", pathname: "/storage/v1/object/public/property-images/**" },
       { protocol: "https", hostname: "hhduybnbtkusieqesqwi.supabase.co", pathname: "/storage/v1/object/public/blog-images/**" },

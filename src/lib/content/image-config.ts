@@ -1,0 +1,1 @@
+export const CONTENT_IMAGE_QUALITY = 76;
