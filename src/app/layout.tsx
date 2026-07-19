@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { createSocialImageUrl } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
+
+const defaultSocialTitle = "Les Jumelles Immo | Agence immobilière locale";
+const defaultSocialDescription = "Prix immobiliers locaux, estimation argumentée et accompagnement immobilier personnalisé.";
+const defaultSocialImage = createSocialImageUrl({
+  title: "L’immobilier, avec méthode et expertise",
+  description: defaultSocialDescription,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -18,16 +26,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     siteName: "Les Jumelles Immo",
-    title: "Les Jumelles Immo | Agence immobilière locale",
-    description: "Prix immobiliers locaux, estimation argumentée et accompagnement immobilier personnalisé.",
+    title: defaultSocialTitle,
+    description: defaultSocialDescription,
     url: "/",
-    images: [{ url: "/images/agence-jumelles-immo-hero.webp", width: 1600, height: 1200, alt: "Les Jumelles Immo" }],
+    images: [{ url: defaultSocialImage, width: 1200, height: 630, alt: "Les Jumelles Immo" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Les Jumelles Immo | Agence immobilière locale",
-    description: "Prix immobiliers locaux, estimation argumentée et accompagnement immobilier personnalisé.",
-    images: ["/images/agence-jumelles-immo-hero.webp"],
+    title: defaultSocialTitle,
+    description: defaultSocialDescription,
+    images: [defaultSocialImage],
   },
   icons: {
     icon: [{ url: "/brand/favicon-jumelles-immo.svg", type: "image/svg+xml" }],

@@ -12,6 +12,7 @@ import {
   getPublishedContentArticles,
   type ContentArticle,
 } from "@/lib/content/articles";
+import { createSocialImageUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import styles from "../contenus.module.css";
@@ -30,18 +31,38 @@ export async function generateMetadata({ params }: ContentArticlePageProps): Pro
   }
 
   const title = article.seo_title || `${article.title} | Les Jumelles Immo`;
+  const socialTitle = article.title;
   const description = article.seo_description || article.excerpt || "Conseil immobilier local par Les Jumelles Immo.";
   const path = `/contenus/${article.slug}`;
-
-  const images = article.cover_image_url ? [{ alt: article.cover_image_alt || article.title, url: article.cover_image_url }] : undefined;
+  const socialImage = article.cover_image_url || createSocialImageUrl({
+    title: socialTitle,
+    description,
+    eyebrow: article.category,
+  });
+  const images = [{
+    alt: article.cover_image_alt || socialTitle,
+    url: socialImage,
+    ...(article.cover_image_url ? {} : { width: 1200, height: 630 }),
+  }];
 
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { type: "article", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path, images },
+    openGraph: {
+      type: "article",
+      locale: "fr_FR",
+      siteName: "Les Jumelles Immo",
+      title: socialTitle,
+      description,
+      url: path,
+      images,
+      publishedTime: article.published_at || undefined,
+      modifiedTime: article.updated_at,
+      authors: ["Les Jumelles Immo"],
+    },
     robots: { index: true, follow: true },
-    twitter: { card: "summary_large_image", title, description, images: article.cover_image_url ? [article.cover_image_url] : undefined },
+    twitter: { card: "summary_large_image", title: socialTitle, description, images: [socialImage] },
   };
 }
 

@@ -21,6 +21,7 @@ import {
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
 import { CityAddressSearch } from "./city-address-search";
+import { createSocialImageUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 
 type CityPricePageProps = {
@@ -92,9 +93,30 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
   if (!city) return {};
 
   const title = `Prix au m² à ${city.name} (${city.postalCode}) | Les Jumelles Immo`;
+  const socialTitle = `Prix au m² à ${city.name}`;
   const description = `Prix au m² à ${city.name} pour les appartements et maisons : évolution du marché et dernières ventes enregistrées.`;
   const path = `/prix-m2/${city.slug}`;
-  return { title, description, alternates: { canonical: path }, robots: { index: true, follow: true }, openGraph: { type: "website", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path }, twitter: { card: "summary_large_image", title, description } };
+  const socialImage = createSocialImageUrl({
+    title: socialTitle,
+    description,
+    eyebrow: `Observatoire local · ${city.postalCode}`,
+  });
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      siteName: "Les Jumelles Immo",
+      title: socialTitle,
+      description,
+      url: path,
+      images: [{ url: socialImage, width: 1200, height: 630, alt: socialTitle }],
+    },
+    twitter: { card: "summary_large_image", title: socialTitle, description, images: [socialImage] },
+  };
 }
 
 export default async function CityPricePage({ params }: CityPricePageProps) {
