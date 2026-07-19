@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { MarkdownContent } from "@/components/content/MarkdownContent";
-import { getCityBySlug } from "@/lib/cities";
+import { getCityBySlug, southCities, type City } from "@/lib/cities";
 import { readCityMarketCache } from "@/lib/city-market-cache";
 import { formatArticleDate } from "@/lib/content/article-utils";
-import { getPublishedContentArticle } from "@/lib/content/articles";
+import {
+  getPublishedContentArticle,
+  getPublishedContentArticles,
+  type ContentArticle,
+} from "@/lib/content/articles";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import styles from "../contenus.module.css";
@@ -48,7 +52,12 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
     notFound();
   }
 
-  const relatedCity = article.related_city_slug ? getCityBySlug(article.related_city_slug) : null;
+  const relatedCity = article.related_city_slug
+    ? getCityBySlug(article.related_city_slug)
+    : detectArticleCity(article);
+  const publishedArticles = await getPublishedContentArticles(30);
+  const suggestedArticles = selectSuggestedArticles(article, publishedArticles, relatedCity);
+  const suggestedCities = relatedCity ? selectSuggestedCities(relatedCity) : [];
   const cityMarketCache = relatedCity ? await readCityMarketCache(relatedCity) : null;
   const cityMarket = cityMarketCache?.data;
   const averagePrice = cityMarket
@@ -132,11 +141,176 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
               <MarkdownContent className={styles.markdown} markdown={chartArticleParts.after} />
             ) : null}
           </section>
+
+          {suggestedCities.length > 0 || suggestedArticles.length > 0 ? (
+            <footer className={styles.articleDiscoveries}>
+              {suggestedCities.length > 0 && relatedCity ? (
+                <section className={styles.discoverySection} aria-labelledby="nearby-city-prices-title">
+                  <div className={styles.discoveryHeading}>
+                    <div>
+                      <p className={styles.eyebrow}>Observatoire local</p>
+                      <h2 id="nearby-city-prices-title">Les prix au m² autour de {relatedCity.name}</h2>
+                    </div>
+                    <Link className={styles.discoveryAllLink} href="/prix-m2">
+                      Toutes les villes <ArrowRight size={17} />
+                    </Link>
+                  </div>
+                  <div className={styles.citySuggestionGrid}>
+                    {suggestedCities.map((city, index) => (
+                      <Link
+                        className={styles.citySuggestionCard}
+                        data-featured={index === 0 ? "true" : undefined}
+                        href={`/prix-m2/${city.slug}`}
+                        key={city.slug}
+                        title={`Prix m² à ${city.name}`}
+                      >
+                        <span className={styles.citySuggestionMeta}>
+                          <MapPin size={15} /> {city.postalCode}
+                        </span>
+                        <strong>Prix m² à {city.name}</strong>
+                        <span className={styles.citySuggestionCta}>
+                          Voir les prix <ArrowRight size={16} />
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              {suggestedArticles.length > 0 ? (
+                <section className={styles.discoverySection} aria-labelledby="related-articles-title">
+                  <div className={styles.discoveryHeading}>
+                    <div>
+                      <p className={styles.eyebrow}>À lire ensuite</p>
+                      <h2 id="related-articles-title">D’autres regards sur l’immobilier</h2>
+                    </div>
+                    <Link className={styles.discoveryAllLink} href="/contenus">
+                      Tous les contenus <ArrowRight size={17} />
+                    </Link>
+                  </div>
+                  <div className={styles.relatedArticleGrid}>
+                    {suggestedArticles.map((suggestedArticle) => (
+                      <Link
+                        className={styles.relatedArticleCard}
+                        href={`/contenus/${suggestedArticle.slug}`}
+                        key={suggestedArticle.id}
+                      >
+                        {suggestedArticle.cover_image_url ? (
+                          <div className={styles.relatedArticleMedia}>
+                            <Image
+                              alt={suggestedArticle.cover_image_alt || suggestedArticle.title}
+                              fill
+                              quality={72}
+                              sizes="(max-width: 760px) calc(100vw - 48px), 360px"
+                              src={suggestedArticle.cover_image_url}
+                            />
+                          </div>
+                        ) : (
+                          <div className={styles.relatedArticleFallback}>{suggestedArticle.category}</div>
+                        )}
+                        <div className={styles.relatedArticleContent}>
+                          <span>{suggestedArticle.category} · {suggestedArticle.reading_minutes} min</span>
+                          <h3>{suggestedArticle.title}</h3>
+                          <div>Lire l’article <ArrowRight size={16} /></div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </footer>
+          ) : null}
         </article>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </div>
     </main>
   );
+}
+
+function detectArticleCity(article: ContentArticle) {
+  const searchableText = normalizeForCityMatch([
+    article.title,
+    article.excerpt ?? "",
+    article.primary_keyword ?? "",
+  ].join(" "));
+
+  return [...southCities]
+    .filter((city) => city.postalCode.startsWith("13") || city.postalCode.startsWith("83"))
+    .sort((left, right) => right.name.length - left.name.length)
+    .find((city) => searchableText.includes(normalizeForCityMatch(city.name)));
+}
+
+function selectSuggestedCities(anchorCity: City) {
+  const departmentCode = anchorCity.postalCode.slice(0, 2);
+
+  if (departmentCode !== "13" && departmentCode !== "83") {
+    return [];
+  }
+
+  const nearbyCities = anchorCity.nearbySlugs
+    .map((slug) => getCityBySlug(slug))
+    .filter((city): city is City => city !== undefined && city.postalCode.startsWith(departmentCode));
+  const remainingDepartmentCities = southCities
+    .filter((city) => city.slug !== anchorCity.slug && city.postalCode.startsWith(departmentCode))
+    .sort((left, right) => cityDistance(anchorCity, left) - cityDistance(anchorCity, right));
+  const uniqueCities = new Map<string, City>();
+
+  [anchorCity, ...nearbyCities, ...remainingDepartmentCities].forEach((city) => {
+    uniqueCities.set(city.slug, city);
+  });
+
+  return [...uniqueCities.values()].slice(0, 4);
+}
+
+function selectSuggestedArticles(
+  currentArticle: ContentArticle,
+  articles: ContentArticle[],
+  relatedCity?: City | null,
+) {
+  return articles
+    .filter((article) => article.id !== currentArticle.id)
+    .map((article) => ({
+      article,
+      score:
+        (article.related_city_slug && article.related_city_slug === relatedCity?.slug ? 8 : 0) +
+        (article.category === currentArticle.category ? 4 : 0) +
+        (isArticleInDepartment(article, relatedCity) ? 2 : 0),
+    }))
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      return getArticleTimestamp(right.article) - getArticleTimestamp(left.article);
+    })
+    .slice(0, 3)
+    .map(({ article }) => article);
+}
+
+function isArticleInDepartment(article: ContentArticle, relatedCity?: City | null) {
+  if (!relatedCity || !article.related_city_slug) {
+    return false;
+  }
+
+  const articleCity = getCityBySlug(article.related_city_slug);
+  return articleCity?.postalCode.slice(0, 2) === relatedCity.postalCode.slice(0, 2);
+}
+
+function cityDistance(origin: City, destination: City) {
+  return Math.hypot(origin.latitude - destination.latitude, origin.longitude - destination.longitude);
+}
+
+function getArticleTimestamp(article: ContentArticle) {
+  return new Date(article.published_at || article.updated_at).getTime();
+}
+
+function normalizeForCityMatch(value: string) {
+  return ` ${value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()} `;
 }
 
 function splitArticleForMarketChart(markdown: string) {

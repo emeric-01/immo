@@ -242,6 +242,179 @@
   line-height: 1.55;
 }
 
+.articleDiscoveries {
+  display: grid;
+  gap: 22px;
+  width: min(1040px, 100%);
+  margin: 30px auto 0;
+}
+
+.discoverySection {
+  border: 1px solid #ded4ca;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: clamp(24px, 4vw, 38px);
+  box-shadow: 0 24px 60px rgba(59, 43, 30, 0.06);
+}
+
+.discoveryHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.discoveryHeading h2 {
+  max-width: 720px;
+  margin: 8px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: .98;
+}
+
+.discoveryAllLink,
+.citySuggestionCta,
+.relatedArticleContent div {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.discoveryAllLink {
+  flex: none;
+  color: #171511;
+  font-size: .9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.citySuggestionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.citySuggestionCard {
+  display: grid;
+  min-height: 178px;
+  border: 1px solid #e3d8ce;
+  border-radius: 18px;
+  background: #fff;
+  padding: 20px;
+  color: #171511;
+  text-decoration: none;
+  transition: border-color .18s ease, transform .18s ease;
+}
+
+.citySuggestionCard[data-featured="true"] {
+  border-color: #bd7c52;
+  background: #f7eee6;
+}
+
+.citySuggestionCard:hover,
+.relatedArticleCard:hover {
+  border-color: #bd7c52;
+  transform: translateY(-3px);
+}
+
+.citySuggestionMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #9a6b4e;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.citySuggestionCard strong {
+  margin: 16px 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.06;
+}
+
+.citySuggestionCta {
+  align-self: end;
+  color: #8f5735;
+  font-size: .84rem;
+  font-weight: 800;
+}
+
+.relatedArticleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.relatedArticleCard {
+  overflow: hidden;
+  border: 1px solid #e3d8ce;
+  border-radius: 20px;
+  background: #fff;
+  color: #171511;
+  text-decoration: none;
+  transition: border-color .18s ease, transform .18s ease;
+}
+
+.relatedArticleMedia,
+.relatedArticleFallback {
+  position: relative;
+  height: 152px;
+  background: #e8dfd6;
+}
+
+.relatedArticleMedia img {
+  object-fit: cover;
+  transition: transform .45s ease;
+}
+
+.relatedArticleCard:hover .relatedArticleMedia img {
+  transform: scale(1.025);
+}
+
+.relatedArticleFallback {
+  display: grid;
+  place-items: center;
+  color: #a56741;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+}
+
+.relatedArticleContent {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.relatedArticleContent > span {
+  color: #9a6b4e;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.relatedArticleContent h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.38rem;
+  font-weight: 500;
+  letter-spacing: -.03em;
+  line-height: 1.05;
+}
+
+.relatedArticleContent div {
+  color: #8f5735;
+  font-size: .84rem;
+  font-weight: 800;
+}
+
 .markdown {
   color: #2d2925;
   font-size: 1.08rem;
@@ -335,5 +508,18 @@
 
   .articleMarketChartHeading {
     display: grid;
+  }
+
+  .discoveryHeading {
+    display: grid;
+  }
+
+  .citySuggestionGrid,
+  .relatedArticleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .citySuggestionCard {
+    min-height: 150px;
   }
 }
