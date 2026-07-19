@@ -54,6 +54,11 @@
   line-height: .94;
 }
 
+.articleHero h1 {
+  font-size: clamp(2.55rem, 6vw, 4.85rem);
+  line-height: 0.95;
+}
+
 .hero > p:last-child {
   max-width: 680px;
 }
@@ -216,10 +221,10 @@
 
 .articleHero {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   max-width: 920px;
   margin: 0 auto;
-  padding: 46px 0 56px;
+  padding: 40px 0 48px;
   text-align: center;
 }
 
@@ -643,6 +648,24 @@
 
   .articleMeta {
     flex-direction: column;
+    gap: 6px;
+    font-size: 0.74rem;
+  }
+
+  .articleHero {
+    gap: 14px;
+    padding: 32px 0 40px;
+  }
+
+  .articleHero h1 {
+    font-size: clamp(2.2rem, 10vw, 3.1rem);
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+  }
+
+  .articleHero p {
+    font-size: 0.98rem;
+    line-height: 1.55;
   }
 
   .articleMarketChartHeading {
