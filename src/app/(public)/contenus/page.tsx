@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
-import { formatArticleDate } from "@/lib/content/article-utils";
+import { formatArticleMonth } from "@/lib/content/article-utils";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import { createPageMetadata } from "@/lib/seo";
 import styles from "./contenus.module.css";
@@ -55,7 +55,7 @@ export default async function ContentIndexPage() {
                   <div className={styles.cardMeta}>
                     <span>{article.category}</span>
                     <span>·</span>
-                    <span>{formatArticleDate(article.published_at)}</span>
+                    <span>{formatArticleMonth(article.published_at)}</span>
                   </div>
                   <h2>{article.title}</h2>
                   {article.excerpt ? <p>{article.excerpt}</p> : null}

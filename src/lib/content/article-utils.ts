@@ -42,3 +42,11 @@ export function formatArticleDate(value: string | null) {
 
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(value));
 }
+
+export function formatArticleMonth(value: string | null) {
+  if (!value) {
+    return "Non publié";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(value));
+}
