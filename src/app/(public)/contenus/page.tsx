@@ -45,7 +45,7 @@ export default async function ContentIndexPage() {
                       <ContentImage
                         alt={article.cover_image_alt || article.title}
                         fill
-                        sizes="(max-width: 760px) calc(100vw - 52px), (max-width: 1020px) 46vw, 370px"
+                        sizes="(max-width: 760px) calc(100vw - 52px), (max-width: 1020px) 46vw, (max-width: 1199px) 370px, 280px"
                         src={article.cover_image_url}
                       />
                     ) : (
