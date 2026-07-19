@@ -861,6 +861,28 @@
   box-shadow: 0 16px 38px rgba(17, 17, 17, 0.05);
 }
 
+.articleBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid #dfc3ad;
+  border-radius: 999px;
+  background: #fbf2ea;
+  padding: 0 10px;
+  color: #8f5735;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
 .articleRow h2 {
   margin: 10px 0 6px;
   font-family: Georgia, "Times New Roman", serif;

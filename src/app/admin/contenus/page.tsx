@@ -98,7 +98,10 @@ export default async function AdminContentPage({
             {data.map((article) => (
               <article key={article.id} className={admin.articleRow}>
                 <div>
-                  <span className={admin.statusBadge} data-status={article.status}>{statusLabels[article.status]}</span>
+                  <div className={admin.articleBadges}>
+                    <span className={admin.statusBadge} data-status={article.status}>{statusLabels[article.status]}</span>
+                    <span className={admin.categoryBadge}>{article.category}</span>
+                  </div>
                   <h2>{article.title}</h2>
                   <p>{article.excerpt ?? "Sans résumé pour le moment."}</p>
                   <small>/{article.slug} · {article.reading_minutes} min · {formatArticleDate(article.published_at)}</small>
