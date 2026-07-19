@@ -71,7 +71,7 @@ export async function optimizeBlogImage(file: File): Promise<OptimizedBlogImage>
     }
 
     return {
-      file: new File([blob], `${safeBaseName(file.name)}.webp`, {
+      file: new File([blob], `${createSeoImageBaseName(file.name)}.webp`, {
         lastModified: Date.now(),
         type: "image/webp",
       }),
@@ -128,14 +128,26 @@ function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
   });
 }
 
-function safeBaseName(name: string) {
-  const baseName = name.replace(/\.[^.]+$/, "");
+export function createSeoImageBaseName(name: string) {
+  const fileName = name.split(/[\\/]/).pop() || name;
+  const baseName = fileName
+    .replace(/\.[^.]+$/, "")
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉]/g, (digit) => unicodeDigitMap[digit] || digit);
   const normalized = baseName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-|-$/g, "")
+    .slice(0, 90)
+    .replace(/-$/g, "");
 
   return normalized || "image-article";
 }
+
+const unicodeDigitMap: Record<string, string> = {
+  "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
+  "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9",
+  "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4",
+  "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9",
+};

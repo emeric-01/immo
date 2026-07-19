@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
 import { hasAdminPermission } from "@/lib/admin/permissions";
-import { BLOG_IMAGE_UPLOAD_LIMIT_BYTES } from "@/lib/content/client-image-optimizer";
+import {
+  BLOG_IMAGE_UPLOAD_LIMIT_BYTES,
+  createSeoImageBaseName,
+} from "@/lib/content/client-image-optimizer";
 import { getSupabaseAdminConfig } from "@/lib/properties";
 
 export const runtime = "nodejs";
@@ -38,25 +41,13 @@ export async function POST(request: Request) {
     }
 
     const now = new Date();
-    const path = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${crypto.randomUUID()}.webp`;
-    const upload = await fetch(`${config.url}/storage/v1/object/blog-images/${path}`, {
-      body: bytes,
-      headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "Content-Type": "image/webp",
-        "x-upsert": "false",
-      },
-      method: "POST",
-    });
-
-    if (!upload.ok) {
-      throw new Error(await upload.text());
-    }
+    const folder = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+    const baseName = createSeoImageBaseName(image.name);
+    const path = await uploadWithSeoFilename(config, folder, baseName, bytes);
 
     return NextResponse.json({
       bytes: image.size,
+      fileName: path.split("/").at(-1) || `${baseName}.webp`,
       height: positiveInteger(formData.get("height")),
       originalBytes: positiveInteger(formData.get("originalBytes")),
       url: `${config.url}/storage/v1/object/public/blog-images/${path}`,
@@ -67,6 +58,53 @@ export async function POST(request: Request) {
       error: error instanceof Error ? error.message : "Envoi impossible.",
     }, { status: 500 });
   }
+}
+
+async function uploadWithSeoFilename(
+  config: { key: string; url: string },
+  folder: string,
+  baseName: string,
+  bytes: Uint8Array,
+) {
+  const firstPath = `${folder}/${baseName}.webp`;
+  const firstUpload = await uploadImage(config, firstPath, bytes);
+
+  if (firstUpload.ok) {
+    return firstPath;
+  }
+
+  const firstError = await firstUpload.text();
+
+  if (firstUpload.status !== 409 && !/already exists|resource.*exists|duplicate/i.test(firstError)) {
+    throw new Error(firstError);
+  }
+
+  const uniquePath = `${folder}/${baseName}-${crypto.randomUUID().slice(0, 8)}.webp`;
+  const uniqueUpload = await uploadImage(config, uniquePath, bytes);
+
+  if (!uniqueUpload.ok) {
+    throw new Error(await uniqueUpload.text());
+  }
+
+  return uniquePath;
+}
+
+function uploadImage(config: { key: string; url: string }, path: string, bytes: Uint8Array) {
+  const body = bytes.buffer instanceof ArrayBuffer
+    ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+    : Uint8Array.from(bytes).buffer;
+
+  return fetch(`${config.url}/storage/v1/object/blog-images/${path}`, {
+    body,
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Type": "image/webp",
+      "x-upsert": "false",
+    },
+    method: "POST",
+  });
 }
 
 function isWebp(bytes: Uint8Array) {

@@ -11,6 +11,7 @@ import admin from "../admin.module.css";
 
 export type UploadedBlogImage = {
   bytes: number;
+  fileName: string;
   height: number;
   originalBytes: number;
   url: string;
@@ -38,7 +39,7 @@ export function BlogImageUploader({ altText, label, onUploaded }: BlogImageUploa
       const optimized = await optimizeBlogImage(file);
       setMessage(`Envoi de ${formatImageBytes(optimized.file.size)}…`);
       const image = await sendImage(optimized);
-      setMessage(`${formatImageBytes(image.originalBytes)} → ${formatImageBytes(image.bytes)} en WebP`);
+      setMessage(`${formatImageBytes(image.originalBytes)} → ${formatImageBytes(image.bytes)} · ${image.fileName}`);
       onUploaded(image);
     } catch (uploadError) {
       setMessage("");
@@ -66,7 +67,7 @@ export function BlogImageUploader({ altText, label, onUploaded }: BlogImageUploa
         }}
         type="file"
       />
-      <p>JPG, PNG ou WebP · conversion WebP automatique · cible 450 Ko.</p>
+      <p>Renommez votre fichier avant l’envoi : son nom sera conservé dans l’URL SEO, puis converti en WebP. Un suffixe court est ajouté uniquement en cas de doublon.</p>
       {message ? <p className={admin.uploadSuccess}>{message}</p> : null}
       {error ? <p className={admin.uploadError} role="alert">{error}</p> : null}
       {!altText.trim() ? <p className={admin.uploadWarning}>Pensez à renseigner un texte alternatif descriptif pour le SEO.</p> : null}
