@@ -182,13 +182,10 @@
 }
 
 .articleMarketChart {
-  width: min(920px, 100%);
-  margin: 0 auto 24px;
-  border: 1px solid #ded4ca;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.88);
-  padding: clamp(24px, 5vw, 42px);
-  box-shadow: 0 24px 60px rgba(59, 43, 30, 0.07);
+  margin: 38px 0;
+  border-top: 1px solid #e5dbd1;
+  border-bottom: 1px solid #e5dbd1;
+  padding: 30px 0 26px;
 }
 
 .articleMarketChartHeading {
@@ -203,7 +200,7 @@
   margin: 7px 0 0;
   color: #171511;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  font-size: clamp(1.65rem, 4vw, 2.25rem);
   font-weight: 500;
   letter-spacing: -.04em;
   line-height: 1;

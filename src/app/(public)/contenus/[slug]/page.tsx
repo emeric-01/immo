@@ -54,6 +54,10 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
   const averagePrice = cityMarket
     ? Math.round((cityMarket.apartment.averagePricePerM2 + cityMarket.house.averagePricePerM2) / 2)
     : null;
+  const chartArticleParts = splitArticleForMarketChart(article.body_markdown);
+  const showMarketChart = Boolean(
+    chartArticleParts && relatedCity && cityMarket?.history.length && averagePrice,
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -95,36 +99,56 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
               />
             </div>
           ) : null}
-          {relatedCity && cityMarket?.history.length && averagePrice ? (
-            <section className={styles.articleMarketChart} aria-labelledby="article-market-chart-title">
-              <div className={styles.articleMarketChartHeading}>
-                <div>
-                  <p className={styles.eyebrow}>Transactions immobilières</p>
-                  <h2 id="article-market-chart-title">Évolution des prix à {relatedCity.name}</h2>
-                </div>
-                <div className={styles.articleChartLegend} aria-label="Légende">
-                  <span data-property="apartment">Appartement</span>
-                  <span data-property="house">Maison</span>
-                </div>
-              </div>
-              <CityMarketChart
-                averagePrice={averagePrice}
-                cityName={relatedCity.name}
-                defaultPeriod="5y"
-                points={cityMarket.history}
-              />
-              <p className={styles.articleChartSource}>
-                Repères construits à partir des transactions DVF publiées par la DGFiP, agrégées par type de bien.
-                Les prix constatés ne remplacent pas l’estimation des caractéristiques propres au logement.
-              </p>
-            </section>
-          ) : null}
           <section className={styles.articleBody}>
-            <MarkdownContent className={styles.markdown} markdown={article.body_markdown} />
+            <MarkdownContent
+              className={styles.markdown}
+              markdown={showMarketChart && chartArticleParts ? chartArticleParts.before : article.body_markdown}
+            />
+            {showMarketChart && chartArticleParts && relatedCity && cityMarket && averagePrice ? (
+              <div className={styles.articleMarketChart} aria-labelledby="article-market-chart-title">
+                <div className={styles.articleMarketChartHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>Transactions immobilières</p>
+                    <h2 id="article-market-chart-title">Évolution des prix à {relatedCity.name}</h2>
+                  </div>
+                  <div className={styles.articleChartLegend} aria-label="Légende">
+                    <span data-property="apartment">Appartement</span>
+                    <span data-property="house">Maison</span>
+                  </div>
+                </div>
+                <CityMarketChart
+                  averagePrice={averagePrice}
+                  cityName={relatedCity.name}
+                  defaultPeriod="5y"
+                  points={cityMarket.history}
+                />
+                <p className={styles.articleChartSource}>
+                  Repères construits à partir des transactions DVF publiées par la DGFiP, agrégées par type de bien.
+                  Les prix constatés ne remplacent pas l’estimation des caractéristiques propres au logement.
+                </p>
+              </div>
+            ) : null}
+            {showMarketChart && chartArticleParts ? (
+              <MarkdownContent className={styles.markdown} markdown={chartArticleParts.after} />
+            ) : null}
           </section>
         </article>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </div>
     </main>
   );
+}
+
+function splitArticleForMarketChart(markdown: string) {
+  const anchor = "Le graphique présenté ci-dessus";
+  const position = markdown.indexOf(anchor);
+
+  if (position < 0) {
+    return null;
+  }
+
+  return {
+    after: markdown.slice(position).trimStart(),
+    before: markdown.slice(0, position).trimEnd(),
+  };
 }
