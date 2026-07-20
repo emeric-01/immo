@@ -136,34 +136,47 @@ export default function QuiSommesNousPage() {
 
         <div className={styles.teamGrid}>
           <article className={styles.sistersCard}>
-            <div className={styles.sistersPortrait}>
-              <Image
-                alt="Laure et Séverine Masfrand"
-                className={styles.coverImage}
-                fill
-                sizes="(max-width: 860px) 100vw, 44vw"
-                src="/images/laure-severine-jumelles-immo.jpg"
-              />
-            </div>
             <div className={styles.sistersProfiles}>
-              <div>
-                <span>Architecture intérieure & potentiel d’usage</span>
-                <h3>Laure Masfrand</h3>
-                <p>
-                  Formée à l’École Boulle, Laure repère les mètres carrés mal
-                  exploités, imagine des volumes plus fluides et transforme les
-                  contraintes du lieu en scénarios capables de séduire.
-                </p>
-              </div>
-              <div>
-                <span>Immobilier, droit & urbanisme</span>
-                <h3>Séverine Masfrand</h3>
-                <p>
-                  Séverine relie la réalité du marché au cadre urbanistique. Son
-                  regard révèle les possibilités foncières et sécurise une
-                  stratégie de vente solide, précise et argumentée.
-                </p>
-              </div>
+              <section className={styles.profileRow} aria-labelledby="laure-profile-title">
+                <div className={styles.profilePortrait}>
+                  <Image
+                    alt="Portrait de Laure Masfrand, cofondatrice des Jumelles Immo"
+                    className={styles.coverImage}
+                    fill
+                    sizes="(max-width: 760px) 42vw, 210px"
+                    src="/images/laure-masfrand-jumelles-immo.webp"
+                  />
+                </div>
+                <div className={styles.profileCopy}>
+                  <span>Architecture intérieure & potentiel d’usage</span>
+                  <h3 id="laure-profile-title">Laure Masfrand</h3>
+                  <p>
+                    Formée à l’École Boulle, Laure repère les mètres carrés mal
+                    exploités, imagine des volumes plus fluides et transforme les
+                    contraintes du lieu en scénarios capables de séduire.
+                  </p>
+                </div>
+              </section>
+              <section className={styles.profileRow} aria-labelledby="severine-profile-title">
+                <div className={styles.profilePortrait}>
+                  <Image
+                    alt="Portrait de Séverine Masfrand, cofondatrice des Jumelles Immo"
+                    className={styles.coverImage}
+                    fill
+                    sizes="(max-width: 760px) 42vw, 210px"
+                    src="/images/severine-masfrand-jumelles-immo.webp"
+                  />
+                </div>
+                <div className={styles.profileCopy}>
+                  <span>Immobilier, droit & urbanisme</span>
+                  <h3 id="severine-profile-title">Séverine Masfrand</h3>
+                  <p>
+                    Séverine relie la réalité du marché au cadre urbanistique. Son
+                    regard révèle les possibilités foncières et sécurise une
+                    stratégie de vente solide, précise et argumentée.
+                  </p>
+                </div>
+              </section>
             </div>
           </article>
 

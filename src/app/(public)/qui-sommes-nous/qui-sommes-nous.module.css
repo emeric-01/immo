@@ -260,34 +260,38 @@
 }
 
 .sistersCard {
-  display: grid;
-  grid-template-columns: .9fr 1.1fr;
-}
-
-.sistersPortrait {
-  position: relative;
-  min-height: 590px;
-  background: #d9d4cd;
-}
-
-.sistersPortrait .coverImage {
-  object-position: center 34%;
+  display: flex;
 }
 
 .sistersProfiles {
   display: grid;
-  padding: 18px 34px;
+  width: 100%;
 }
 
-.sistersProfiles > div {
+.profileRow {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) 1fr;
+  min-height: 295px;
+}
+
+.profileRow + .profileRow {
+  border-top: 1px solid var(--line);
+}
+
+.profilePortrait {
+  position: relative;
+  background: #d9d4cd;
+}
+
+.profilePortrait .coverImage {
+  object-position: center;
+}
+
+.profileCopy {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 27px 0;
-}
-
-.sistersProfiles > div + div {
-  border-top: 1px solid var(--line);
+  padding: 34px;
 }
 
 .sistersProfiles span {
@@ -449,12 +453,8 @@
     grid-template-columns: 1fr .58fr;
   }
 
-  .sistersCard {
-    grid-template-columns: 1fr;
-  }
-
-  .sistersPortrait {
-    min-height: 430px;
+  .profileRow {
+    grid-template-columns: 180px 1fr;
   }
 
   .vision {
@@ -524,8 +524,13 @@
     grid-template-columns: 1fr;
   }
 
-  .sistersPortrait {
-    min-height: 480px;
+  .profileRow {
+    grid-template-columns: minmax(120px, 42%) 1fr;
+    min-height: 310px;
+  }
+
+  .profileCopy {
+    padding: 24px 20px;
   }
 
 }
@@ -535,12 +540,19 @@
     font-size: 2.8rem;
   }
 
-  .heroPortrait,
-  .sistersPortrait {
+  .heroPortrait {
     min-height: 410px;
   }
 
-  .sistersProfiles {
-    padding: 10px 22px;
+  .profileRow {
+    grid-template-columns: 1fr;
+  }
+
+  .profilePortrait {
+    min-height: 300px;
+  }
+
+  .profileCopy {
+    padding: 28px 22px 34px;
   }
 }
