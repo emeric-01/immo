@@ -332,7 +332,18 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         <article className={styles.priceResource}>
           <p className={styles.eyebrow}>Observatoire local</p>
           <h2>Prix au m² à {city.name}</h2>
-          <div><span>Appartement <strong>{formatPrice(market.apartment.averagePricePerM2)}/m²</strong></span><span>Maison <strong>{formatPrice(market.house.averagePricePerM2)}/m²</strong></span></div>
+          <div>
+            <span>
+              <Building2 aria-hidden="true" />
+              <small>Appartement</small>
+              <strong>{formatPrice(market.apartment.averagePricePerM2)}/m²</strong>
+            </span>
+            <span>
+              <Home aria-hidden="true" />
+              <small>Maison</small>
+              <strong>{formatPrice(market.house.averagePricePerM2)}/m²</strong>
+            </span>
+          </div>
           <Link href={`/prix-m2/${city.slug}`}>Voir les prix <ArrowRight size={15} /></Link>
         </article>
         <article className={styles.adviceResource}>
