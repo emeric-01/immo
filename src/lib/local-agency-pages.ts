@@ -22,8 +22,8 @@ export type LocalAgencyPage = {
 const localAgencyPages: Record<string, LocalAgencyPage> = {
   "la-ciotat": {
     citySlug: "la-ciotat",
-    eyebrow: "Agence immobilière à La Ciotat",
-    heroTitle: "Vendre à La Ciotat avec une stratégie qui révèle vraiment votre bien.",
+    eyebrow: "Estimation et vente à La Ciotat",
+    heroTitle: "Vendre avec une stratégie qui révèle vraiment votre bien.",
     heroIntro:
       "Nous nous déplaçons pour estimer votre bien, comprendre son environnement et construire une commercialisation adaptée au marché local.",
     heroImage: {

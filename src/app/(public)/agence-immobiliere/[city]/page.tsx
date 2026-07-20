@@ -161,7 +161,8 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             <Link href="/">Accueil</Link><span>/</span><span>{city.name}</span>
           </nav>
           <p className={styles.eyebrow}>{config.eyebrow}</p>
-          <h1 id="local-agency-title">{config.heroTitle}</h1>
+          <h1 id="local-agency-title">Agence immobilière à {city.name}</h1>
+          <h2 className={styles.heroHeadline}>{config.heroTitle}</h2>
           <p className={styles.heroIntro}>{config.heroIntro}</p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryButton} href="/estimation">

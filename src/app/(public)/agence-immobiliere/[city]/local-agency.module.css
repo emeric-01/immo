@@ -66,6 +66,17 @@
   line-height: .98;
 }
 
+.heroHeadline {
+  max-width: 555px;
+  margin: 20px 0 0;
+  color: #3f3a35;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.35rem, 1.8vw, 1.8rem);
+  font-weight: 400;
+  letter-spacing: -.025em;
+  line-height: 1.12;
+}
+
 .heroIntro {
   max-width: 555px;
   margin: 25px 0 0;
@@ -973,6 +984,7 @@
   .hero { grid-template-columns: 47% 53%; }
   .heroCopy { padding-inline: 34px; }
   .hero h1 { font-size: clamp(2.7rem, 5vw, 3.75rem); }
+  .heroHeadline { font-size: clamp(1.25rem, 2.1vw, 1.55rem); }
   .heroProofs { grid-template-columns: 1fr; gap: 8px; padding-top: 30px; }
   .heroProofs span + span { border-left: 0; padding-left: 0; }
   .heroProofs span { grid-template-columns: 26px 1fr; }
@@ -988,6 +1000,7 @@
   .heroCopy { padding: 32px 22px 28px; }
   .breadcrumb { margin-bottom: 30px; }
   .hero h1 { font-size: clamp(2.55rem, 12.2vw, 3.5rem); }
+  .heroHeadline { margin-top: 16px; font-size: 1.3rem; }
   .heroIntro { font-size: .88rem; }
   .heroActions { display: grid; gap: 18px; }
   .primaryButton { width: 100%; }
