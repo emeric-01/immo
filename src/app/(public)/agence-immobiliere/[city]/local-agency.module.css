@@ -974,6 +974,14 @@
   font-size: clamp(2rem, 2.8vw, 3rem);
 }
 
+.faqIntro {
+  max-width: 760px;
+  margin: 17px 0 0;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.7;
+}
+
 .faqList {
   margin-top: 28px;
   border-top: 1px solid var(--line);

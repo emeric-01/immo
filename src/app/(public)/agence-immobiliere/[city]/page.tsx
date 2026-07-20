@@ -341,6 +341,10 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.faqSection} aria-labelledby="faq-title">
         <p className={styles.eyebrow}>Questions fréquentes</p>
         <h2 id="faq-title">Votre projet immobilier à {city.name}</h2>
+        <p className={styles.faqIntro}>
+          Estimation, prix de vente, valorisation ou préparation du dossier : retrouvez les
+          réponses aux principales questions avant de vendre une maison ou un appartement à {city.name}.
+        </p>
         <div className={styles.faqList}>
           {config.faqs.map((faq) => (
             <details key={faq.question}>
