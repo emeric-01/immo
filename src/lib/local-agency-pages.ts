@@ -1,3 +1,5 @@
+import { getCityBySlug, southCities, type City } from "@/lib/cities";
+
 export type LocalAgencyPage = {
   citySlug: string;
   eyebrow: string;
@@ -110,4 +112,40 @@ export function getLocalAgencyPage(slug: string) {
 
 export function getLocalAgencyPageSlugs() {
   return Object.keys(localAgencyPages);
+}
+
+function distanceBetweenCities(first: City, second: City) {
+  const earthRadiusKm = 6_371;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const latitudeDelta = toRadians(second.latitude - first.latitude);
+  const longitudeDelta = toRadians(second.longitude - first.longitude);
+  const firstLatitude = toRadians(first.latitude);
+  const secondLatitude = toRadians(second.latitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+export function getNearestLocalAgencyCities(citySlug: string, limit = 4) {
+  const currentCity = getCityBySlug(citySlug);
+  if (!currentCity) return [];
+
+  const publishedSlugs = new Set(getLocalAgencyPageSlugs());
+
+  return southCities
+    .filter(
+      (candidate) =>
+        candidate.slug !== citySlug &&
+        publishedSlugs.has(candidate.slug) &&
+        ["Bouches-du-Rhone", "Var"].includes(candidate.department),
+    )
+    .map((candidate) => ({
+      city: candidate,
+      distanceKm: distanceBetweenCities(currentCity, candidate),
+    }))
+    .sort((first, second) => first.distanceKm - second.distanceKm)
+    .slice(0, limit)
+    .map(({ city }) => city);
 }

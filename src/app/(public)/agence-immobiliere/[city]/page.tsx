@@ -23,7 +23,11 @@ import { getCityBySlug } from "@/lib/cities";
 import { readCityMarketCache } from "@/lib/city-market-cache";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getPublishedContentArticles } from "@/lib/content/articles";
-import { getLocalAgencyPage, getLocalAgencyPageSlugs } from "@/lib/local-agency-pages";
+import {
+  getLocalAgencyPage,
+  getLocalAgencyPageSlugs,
+  getNearestLocalAgencyCities,
+} from "@/lib/local-agency-pages";
 import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
@@ -79,10 +83,16 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
   ]);
   const market = cachedMarket?.data ?? getStaticCityMarketData(city);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
-  const nearbyCities = config.nearbySlugs.flatMap((slug) => {
+  const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
+  const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
+  const placeholderCities = config.nearbySlugs.flatMap((slug) => {
     const nearbyCity = getCityBySlug(slug);
-    return nearbyCity ? [nearbyCity] : [];
+    return nearbyCity && !nearestAgencySlugs.has(nearbyCity.slug) ? [nearbyCity] : [];
   });
+  const nearbyAgencySlots = [
+    ...nearestAgencyCities.map((nearbyCity) => ({ city: nearbyCity, published: true })),
+    ...placeholderCities.map((nearbyCity) => ({ city: nearbyCity, published: false })),
+  ].slice(0, 4);
   const relatedArticle =
     articles.find((article) => article.related_city_slug === city.slug) ?? articles[0] ?? null;
   const averagePrice = Math.round(
@@ -357,15 +367,28 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
 
       <section className={styles.nearbySection} aria-labelledby="nearby-title">
         <div className={styles.sectionHeadingRow}>
-          <div><p className={styles.eyebrow}>Secteurs voisins</p><h2 id="nearby-title">Nous intervenons aussi autour de {city.name}</h2></div>
-          <Link href="/prix-m2">Toutes les villes <ArrowRight size={15} /></Link>
+          <div><p className={styles.eyebrow}>Nos secteurs d’intervention</p><h2 id="nearby-title">Les Jumelles Immo autour de {city.name}</h2></div>
         </div>
         <div className={styles.nearbyGrid}>
-          {nearbyCities.map((nearbyCity) => (
-            <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug} title={`Prix m² à ${nearbyCity.name}`}>
-              <strong>{nearbyCity.name}</strong><span>Découvrir le marché <ArrowRight size={14} /></span>
-            </Link>
-          ))}
+          {nearbyAgencySlots.map(({ city: nearbyCity, published }) =>
+            published ? (
+              <Link
+                href={`/agence-immobiliere/${nearbyCity.slug}`}
+                key={nearbyCity.slug}
+                title={`Agence immobilière à ${nearbyCity.name}`}
+              >
+                <small>Agence immobilière</small>
+                <strong>{nearbyCity.name}</strong>
+                <span>Découvrir l’agence <ArrowRight size={14} /></span>
+              </Link>
+            ) : (
+              <article className={styles.nearbyPlaceholder} key={nearbyCity.slug}>
+                <small>Agence immobilière</small>
+                <strong>{nearbyCity.name}</strong>
+                <span>Secteur couvert</span>
+              </article>
+            ),
+          )}
         </div>
       </section>
 

@@ -1032,12 +1032,14 @@
   margin-top: 24px;
 }
 
-.nearbyGrid a {
+.nearbyGrid a,
+.nearbyPlaceholder {
   display: flex;
   min-height: 84px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
   border: 1px solid #d6c8bb;
   border-radius: 8px;
   padding: 16px;
@@ -1046,9 +1048,23 @@
   transition: background .2s, border-color .2s;
 }
 
+.nearbyPlaceholder {
+  margin: 0;
+  border-style: dashed;
+  background: #fbf8f4;
+}
+
 .nearbyGrid a:hover {
   border-color: var(--copper);
   background: var(--cream);
+}
+
+.nearbyGrid small {
+  color: var(--copper);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
 }
 
 .nearbyGrid strong {
@@ -1062,6 +1078,10 @@
   color: var(--copper-dark);
   font-size: .62rem;
   font-weight: 700;
+}
+
+.nearbyPlaceholder span {
+  color: #8d857d;
 }
 
 .finalCta {
@@ -1171,7 +1191,7 @@
   .adviceImage { min-height: 210px; }
   .faqSection, .nearbySection { padding: 54px 6px 0; }
   .nearbyGrid { grid-template-columns: 1fr; }
-  .nearbyGrid a { min-height: 74px; }
+  .nearbyGrid a, .nearbyPlaceholder { min-height: 92px; }
   .finalCta { grid-template-columns: 1fr; margin-top: 54px; }
   .finalImage { min-height: 210px; order: -1; }
 }
