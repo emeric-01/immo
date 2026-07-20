@@ -204,7 +204,7 @@ export async function sendSellerLeadNotificationEmail({
         </div>
       `,
     ),
-    subject: `Demande d’estimation vendeur — ${city}`,
+    subject: `🔔 Nouvelle demande vendeur — ${city}`,
     text: `Nouvelle demande vendeur\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
     to: recipient,
   });
