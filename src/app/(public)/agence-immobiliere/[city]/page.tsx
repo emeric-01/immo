@@ -177,7 +177,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           <div className={styles.heroProofs} aria-label="Nos engagements">
             <span><MapPin /><small>Visite sur place</small></span>
             <span><ClipboardCheck /><small>Estimation argumentée</small></span>
-            <span><Handshake /><small>Accompagnement jusqu’à la vente</small></span>
+            <span><Handshake /><small>Suivi coordonné du projet</small></span>
           </div>
         </div>
         <div className={styles.heroVisual}>
@@ -303,18 +303,18 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         <div className={styles.processHeader}>
           <div>
             <p className={styles.eyebrow}>Notre méthode de vente</p>
-            <h2 id="process-title">Une méthode claire, du premier rendez-vous à la signature.</h2>
+            <h2 id="process-title">Une méthode claire pour piloter chaque étape de la vente.</h2>
           </div>
           <p>
-            Un parcours structuré, un suivi continu et une stratégie ajustée à votre bien
-            comme au marché local.
+            Votre projet est coordonné par un professionnel référent, avec une méthode
+            commune et des points de suivi clairs.
           </p>
         </div>
         <div className={styles.processGrid}>
           <article><div><b>01</b><SearchCheck /></div><h3>Découverte du bien</h3><p>Visite sur place, écoute de votre projet et lecture des spécificités.</p></article>
           <article><div><b>02</b><ClipboardCheck /></div><h3>Estimation et stratégie</h3><p>Une estimation argumentée et un positionnement adapté au marché.</p></article>
           <article><div><b>03</b><Sparkles /></div><h3>Mise en valeur et diffusion</h3><p>Conseils, présentation, annonce ciblée et diffusion auprès du bon réseau.</p></article>
-          <article><div><b>04</b><Handshake /></div><h3>Visites, négociation et suivi</h3><p>Organisation des visites et accompagnement jusqu’à la signature.</p></article>
+          <article><div><b>04</b><Handshake /></div><h3>Visites, négociation et suivi</h3><p>Retours qualifiés, négociation et coordination des échanges jusqu’à la signature.</p></article>
         </div>
       </section>
 
