@@ -28,6 +28,7 @@ import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
+import { LocalAgencySalesMap } from "./LocalAgencySalesMap";
 import styles from "./local-agency.module.css";
 
 type LocalAgencyPageProps = {
@@ -77,6 +78,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
     getPublishedContentArticles(12).catch(() => []),
   ]);
   const market = cachedMarket?.data ?? getStaticCityMarketData(city);
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearbyCities = config.nearbySlugs.flatMap((slug) => {
     const nearbyCity = getCityBySlug(slug);
     return nearbyCity ? [nearbyCity] : [];
@@ -256,9 +258,12 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         <article className={styles.factorsCard}>
           <p className={styles.eyebrow}>Estimer au-delà de la moyenne</p>
           <h2>Ce qui fait réellement varier la valeur ici</h2>
-          <div className={styles.localMap} aria-hidden="true">
-            <i /><i /><i /><i /><i /><i /><strong>{city.name}</strong><span />
-          </div>
+          <LocalAgencySalesMap
+            accessToken={mapboxToken}
+            center={{ latitude: city.latitude, longitude: city.longitude }}
+            cityName={city.name}
+            salePoints={market.salePoints}
+          />
           <div className={styles.factorList}>
             {config.localFactors.map((factor, index) => {
               const Icon = factorIcons[index];
