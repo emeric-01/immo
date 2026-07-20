@@ -165,6 +165,51 @@ export async function sendEstimationVolumeAlertEmail({
   });
 }
 
+export async function sendSellerLeadNotificationEmail({
+  address,
+  city,
+  phone,
+  propertyType,
+}: {
+  address: string;
+  city: string;
+  phone: string;
+  propertyType: string;
+}) {
+  const config = getEmailConfig();
+
+  if (!config) {
+    throw new Error("Emails transactionnels non configures.");
+  }
+
+  const recipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const typeLabels: Record<string, string> = {
+    apartment: "Appartement",
+    house: "Maison",
+    land: "Terrain",
+    other: "Autre bien",
+  };
+  const propertyLabel = typeLabels[propertyType] || "Bien immobilier";
+
+  await sendEmail(config, {
+    html: emailLayout(
+      `Nouvelle demande vendeur à ${city}`,
+      `
+        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Une personne souhaite être rappelée au sujet de la vente de son bien.</p>
+        <div style="border:1px solid #e8e0d8;border-radius:8px;padding:16px;margin:18px 0;color:#555f70;line-height:1.8;">
+          <strong style="color:#111;">Type de bien :</strong> ${escapeHtml(propertyLabel)}<br />
+          <strong style="color:#111;">Adresse :</strong> ${escapeHtml(address)}<br />
+          <strong style="color:#111;">Secteur :</strong> ${escapeHtml(city)}<br />
+          <strong style="color:#111;">Téléphone :</strong> <a href="tel:${escapeHtml(phone.replace(/\s/g, ""))}" style="color:#9f5d33;">${escapeHtml(phone)}</a>
+        </div>
+      `,
+    ),
+    subject: `Demande d’estimation vendeur — ${city}`,
+    text: `Nouvelle demande vendeur\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
+    to: recipient,
+  });
+}
+
 function getEmailConfig(): EmailConfig | null {
   const from = process.env.EMAIL_FROM?.trim();
   const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "auto";
