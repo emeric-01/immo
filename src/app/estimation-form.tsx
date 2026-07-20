@@ -371,6 +371,7 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
         <input
           name="address"
           autoComplete="street-address"
+          required
           value={form.address}
           onChange={(event) => {
             setHasTypedAddress(true);
@@ -460,11 +461,18 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
             </div>
 
             <div className="address-entry">
-              <span className="address-entry-label">Adresse du bien</span>
+              <span className="address-entry-label">
+                Adresse du bien <em>Obligatoire</em>
+              </span>
               <div className="address-search-row">
                 <MapPin aria-hidden="true" />
                 {addressField}
               </div>
+              {!selectedAddress ? (
+                <small className="address-entry-help">
+                  Saisissez puis sélectionnez votre adresse dans la liste proposée.
+                </small>
+              ) : null}
             </div>
 
             {selectedAddress ? (
