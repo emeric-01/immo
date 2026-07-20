@@ -193,6 +193,7 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
       Number(form.rooms) > 0
     );
   }, [form.address, form.rooms, form.surfaceM2]);
+  const canContinueEssential = canSubmit && Boolean(form.condition);
 
   const canOpenDetails = selectedAddress?.label === form.address.trim();
   const addressPlaceholder = locationHint?.city
@@ -531,7 +532,13 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
 
         <form
           className="essential-card"
-          onSubmit={handleSubmit}
+          onSubmit={(event) => {
+            event.preventDefault();
+
+            if (canContinueEssential) {
+              setStep("refine");
+            }
+          }}
         >
           <div className="module-heading">
             <h2 id="essential-title">Decrivez votre bien</h2>
@@ -638,98 +645,11 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
             </select>
           </label>
 
-          <section className="asset-section" aria-label="Atouts du bien">
-            <div className="asset-heading">
-              <strong>Atouts de votre bien</strong>
-              <span>(selectionnez tout ce qui s&apos;applique)</span>
-            </div>
-
-            <div className="asset-grid">
-              {quickCriteria.map(([key, label, icon]) => (
-                <label
-                  className={form[key] ? "asset-pill selected" : "asset-pill"}
-                  key={key}
-                >
-                  <Image
-                    alt=""
-                    aria-hidden="true"
-                    className="asset-svg"
-                    height={20}
-                    src={assetIconPaths[icon]}
-                    width={20}
-                  />
-                  <span>{label}</span>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(form[key])}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        [key]: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-              ))}
-              {form.propertyType === "apartment" ? (
-                <label
-                  className={
-                    form.hasElevator ? "asset-pill selected" : "asset-pill"
-                  }
-                >
-                  <Image
-                    alt=""
-                    aria-hidden="true"
-                    className="asset-svg"
-                    height={20}
-                    src={assetIconPaths.elevator}
-                    width={20}
-                  />
-                  <span>Ascenseur</span>
-                  <input
-                    type="checkbox"
-                    checked={form.hasElevator}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        hasElevator: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-              ) : (
-                <label
-                  className={form.hasPool ? "asset-pill selected" : "asset-pill"}
-                >
-                  <Image
-                    alt=""
-                    aria-hidden="true"
-                    className="asset-svg"
-                    height={20}
-                    src={assetIconPaths.pool}
-                    width={20}
-                  />
-                  <span>Piscine</span>
-                  <input
-                    type="checkbox"
-                    checked={form.hasPool}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        hasPool: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-              )}
-            </div>
-          </section>
-
           <button
             className="primary-action continue-action"
-            disabled={!canSubmit || isLoading}
+            disabled={!canContinueEssential}
           >
-            {isLoading ? "Estimation en cours" : "Estimer"}
+            Continuer
             <span aria-hidden="true">-&gt;</span>
           </button>
 
@@ -1020,316 +940,152 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
 
   return (
     <main className="estimation-page">
-      <section className="details-step estimation-shell" aria-labelledby="estimation-title">
-      <div className="details-header">
-        <button
-          type="button"
-          className="back-button"
-          onClick={() => setStep("address")}
-        >
-          Retour
-        </button>
-      </div>
+      <section className="details-step estimation-shell refine-step" aria-labelledby="estimation-title">
+        <div className="stepper" aria-label="Progression de l'estimation">
+          <div className="stepper-item completed">
+            <span><Check aria-hidden="true" /></span>
+            <div>
+              <strong>Informations essentielles</strong>
+              <small>Complétées</small>
+            </div>
+          </div>
+          <div className="stepper-item active">
+            <span>2</span>
+            <div>
+              <strong>Affiner l&apos;estimation</strong>
+              <small>Étape 2 sur 2 · optionnelle</small>
+            </div>
+          </div>
+        </div>
 
-      <section className="estimation-module" aria-labelledby="estimation-title">
-        <form className="estimation-form" onSubmit={handleSubmit}>
+        <form className="essential-card refine-card" onSubmit={handleSubmit}>
+          <button type="button" className="back-button refine-back" onClick={() => setStep("essential")}>
+            ← Modifier les informations essentielles
+          </button>
+
           <div className="module-heading">
-            <p className="eyebrow">Etape 2</p>
-            <h2 id="estimation-title">Quelques questions pour affiner</h2>
-            <p>
-              On garde le parcours court. Les criteres avances restent
-              optionnels.
+            <p className="eyebrow">
+              {form.propertyType === "apartment" ? "Appartement" : "Maison"}
             </p>
+            <h2 id="estimation-title">Quelques précisions utiles</h2>
+            <p>Renseignez uniquement ce que vous connaissez. Tous ces champs sont facultatifs.</p>
           </div>
 
-          {addressField}
-
-        <div className="segmented-control" aria-label="Type de bien">
-          {(["apartment", "house"] as const).map((type) => (
-            <button
-              type="button"
-              className={form.propertyType === type ? "selected" : ""}
-              key={type}
-              onClick={() =>
-                setForm((current) => ({ ...current, propertyType: type }))
-              }
-            >
-              {type === "apartment" ? "Appartement" : "Maison"}
-            </button>
-          ))}
-        </div>
-
-        <div className="form-grid">
-          <label>
-            Surface
-            <span className="input-unit">
-              <input
-                inputMode="decimal"
-                name="surface"
-                value={form.surfaceM2}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    surfaceM2: event.target.value,
-                  }))
-                }
-              />
-              m2
-            </span>
-          </label>
-
-          <label>
-            Pieces
-            <input
-              inputMode="numeric"
-              name="rooms"
-              value={form.rooms}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  rooms: event.target.value,
-                }))
-              }
-            />
-          </label>
-        </div>
-
-        <label>
-          Etat du bien
-          <select
-            value={form.condition}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                condition: event.target
-                  .value as FormState["condition"],
-              }))
-            }
-          >
-            <option value="">Selectionner</option>
-            <option value="new">Excellent etat</option>
-            <option value="good">Bon etat</option>
-            <option value="refresh">A rafraichir</option>
-            <option value="renovate">A renover</option>
-          </select>
-        </label>
-
-        <section className="quick-criteria" aria-label="Criteres rapides">
-          {quickCriteria.map(([key, label]) => (
-            <label key={key}>
-              <input
-                type="checkbox"
-                checked={Boolean(form[key])}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    [key]: event.target.checked,
-                  }))
-                }
-              />
-              {label}
-            </label>
-          ))}
-          {form.propertyType === "apartment" ? (
-            <label>
-              <input
-                type="checkbox"
-                checked={form.hasElevator}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    hasElevator: event.target.checked,
-                  }))
-                }
-              />
-              Ascenseur
-            </label>
-          ) : (
-            <label>
-              <input
-                type="checkbox"
-                checked={form.hasPool}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    hasPool: event.target.checked,
-                  }))
-                }
-              />
-              Piscine
-            </label>
-          )}
-        </section>
-
-        <details className="advanced-criteria">
-          <summary>
-            <span>Affiner l&apos;estimation</span>
-            <strong>DPE, etage, annee, salles de bain</strong>
-          </summary>
-
-          <div className="advanced-grid">
-            <label>
-              DPE
-              <select
-                value={form.dpe}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    dpe: event.target.value as FormState["dpe"],
-                  }))
-                }
-              >
-                <option value="">Non renseigne</option>
-                {["A", "B", "C", "D", "E", "F", "G"].map((dpe) => (
-                  <option value={dpe} key={dpe}>
-                    {dpe}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Salles de bain
-              <input
-                inputMode="numeric"
-                value={form.bathrooms}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    bathrooms: event.target.value,
-                  }))
-                }
-                placeholder="Ex. 1"
-              />
-            </label>
-
-            <label>
-              Annee construction
-              <input
-                inputMode="numeric"
-                value={form.constructionYear}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    constructionYear: event.target.value,
-                  }))
-                }
-                placeholder="Ex. 2010"
-              />
-            </label>
-
-            {form.propertyType === "apartment" ? (
-              <>
-                <label>
-                  Etage du bien
-                  <input
-                    inputMode="numeric"
-                    value={form.floor}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        floor: event.target.value,
-                      }))
-                    }
-                    placeholder="Ex. 2"
-                  />
-                </label>
-                <label>
-                  Etages immeuble
-                  <input
-                    inputMode="numeric"
-                    value={form.buildingLevels}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        buildingLevels: event.target.value,
-                      }))
-                    }
-                    placeholder="Ex. 5"
-                  />
-                </label>
-              </>
-            ) : (
+          <div className="advanced-grid refine-fields">
+            {form.propertyType === "house" ? (
               <label>
-                Surface terrain
+                Surface du terrain
                 <span className="input-unit">
                   <input
                     inputMode="decimal"
                     value={form.landAreaM2}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        landAreaM2: event.target.value,
-                      }))
-                    }
+                    onChange={(event) => setForm((current) => ({ ...current, landAreaM2: event.target.value }))}
                     placeholder="Ex. 500"
                   />
                   m2
                 </span>
               </label>
+            ) : (
+              <>
+                <label>
+                  Étage du bien
+                  <input
+                    inputMode="numeric"
+                    value={form.floor}
+                    onChange={(event) => setForm((current) => ({ ...current, floor: event.target.value }))}
+                    placeholder="Ex. 2"
+                  />
+                </label>
+                <label>
+                  Nombre d&apos;étages de l&apos;immeuble
+                  <input
+                    inputMode="numeric"
+                    value={form.buildingLevels}
+                    onChange={(event) => setForm((current) => ({ ...current, buildingLevels: event.target.value }))}
+                    placeholder="Ex. 5"
+                  />
+                </label>
+              </>
             )}
+
+            <label>
+              Année de construction
+              <input
+                inputMode="numeric"
+                value={form.constructionYear}
+                onChange={(event) => setForm((current) => ({ ...current, constructionYear: event.target.value }))}
+                placeholder="Ex. 2010"
+              />
+            </label>
+
+            <label>
+              Salles de bains
+              <input
+                inputMode="numeric"
+                value={form.bathrooms}
+                onChange={(event) => setForm((current) => ({ ...current, bathrooms: event.target.value }))}
+                placeholder="Ex. 1"
+              />
+            </label>
+
+            <label>
+              Classe énergétique (DPE)
+              <select
+                value={form.dpe}
+                onChange={(event) => setForm((current) => ({ ...current, dpe: event.target.value as FormState["dpe"] }))}
+              >
+                <option value="">Non renseignée</option>
+                {["A", "B", "C", "D", "E", "F", "G"].map((dpe) => (
+                  <option value={dpe} key={dpe}>{dpe}</option>
+                ))}
+              </select>
+            </label>
           </div>
-        </details>
 
-        <button className="primary-action" disabled={!canSubmit || isLoading}>
-          {isLoading ? "Estimation en cours" : "Obtenir la fourchette"}
-        </button>
+          <section className="asset-section" aria-label="Atouts du bien">
+            <div className="asset-heading">
+              <strong>Atouts du bien</strong>
+              <span>Sélectionnez uniquement les éléments présents.</span>
+            </div>
+            <div className="asset-grid refine-assets">
+              {quickCriteria
+                .filter(([key]) => form.propertyType === "apartment" || key !== "hasOutdoorSpace")
+                .map(([key, label, icon]) => (
+                  <label className={form[key] ? "asset-pill selected" : "asset-pill"} key={key}>
+                    <Image alt="" aria-hidden="true" className="asset-svg" height={20} src={assetIconPaths[icon]} width={20} />
+                    <span>{form.propertyType === "apartment" && key === "hasOutdoorSpace" ? "Terrasse" : label}</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form[key])}
+                      onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.checked }))}
+                    />
+                  </label>
+                ))}
 
-        {error ? <p className="form-error">{error}</p> : null}
+              {form.propertyType === "apartment" ? (
+                <label className={form.hasElevator ? "asset-pill selected" : "asset-pill"}>
+                  <Image alt="" aria-hidden="true" className="asset-svg" height={20} src={assetIconPaths.elevator} width={20} />
+                  <span>Ascenseur</span>
+                  <input type="checkbox" checked={form.hasElevator} onChange={(event) => setForm((current) => ({ ...current, hasElevator: event.target.checked }))} />
+                </label>
+              ) : (
+                <label className={form.hasPool ? "asset-pill selected" : "asset-pill"}>
+                  <Image alt="" aria-hidden="true" className="asset-svg" height={20} src={assetIconPaths.pool} width={20} />
+                  <span>Piscine</span>
+                  <input type="checkbox" checked={form.hasPool} onChange={(event) => setForm((current) => ({ ...current, hasPool: event.target.checked }))} />
+                </label>
+              )}
+            </div>
+          </section>
+
+          <button className="primary-action continue-action" disabled={!canSubmit || isLoading}>
+            {isLoading ? "Estimation en cours" : "Estimer mon bien"}
+            <span aria-hidden="true">-&gt;</span>
+          </button>
+
+          <p className="optional-submit-note">Vous pouvez lancer l&apos;estimation même si aucun champ facultatif n&apos;est renseigné.</p>
+          {error ? <p className="form-error">{error}</p> : null}
         </form>
-
-      <aside className="result-panel" aria-live="polite">
-        {estimation ? (
-          <>
-            <div>
-              <span className="result-source">
-                {estimation.source === "immo-data"
-                  ? "Immo Data"
-                  : "Mode demonstration"}
-              </span>
-              <h2>{estimation.addressLabel}</h2>
-            </div>
-
-            <div className="price-range">
-              <span>Fourchette estimee</span>
-              <strong>
-                {currencyFormatter.format(estimation.lowPrice)} -{" "}
-                {currencyFormatter.format(estimation.highPrice)}
-              </strong>
-              <em>
-                Valeur centrale {currencyFormatter.format(estimation.medianPrice)}
-              </em>
-            </div>
-
-            <div className="result-metrics">
-              <article>
-                <span>Prix / m2</span>
-                <strong>{numberFormatter.format(estimation.pricePerM2)} EUR</strong>
-              </article>
-              <article>
-                <span>Confiance</span>
-                <strong>{estimation.confidenceScore}/5</strong>
-              </article>
-            </div>
-
-            <ul className="signal-list">
-              {estimation.marketSignals.map((signal) => (
-                <li key={signal}>{signal}</li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <div className="empty-result">
-            <span>En attente</span>
-            <h2>La fourchette s&apos;affichera ici.</h2>
-            <p>
-              Premier test : adresse, type de bien, surface et pieces. Ensuite
-              on enrichira avec DPE, etage, terrain et comparables.
-            </p>
-          </div>
-        )}
-      </aside>
-    </section>
       </section>
     </main>
   );

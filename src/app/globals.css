@@ -2005,6 +2005,45 @@ button:focus-visible {
   padding: 30px;
 }
 
+.estimation-page .refine-card {
+  gap: 24px;
+}
+
+.estimation-page .refine-back {
+  justify-self: start;
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.8rem;
+}
+
+.estimation-page .refine-fields {
+  padding: 0;
+}
+
+.estimation-page .refine-fields label {
+  align-content: end;
+}
+
+.estimation-page .optional-submit-note {
+  margin: -12px 0 0;
+  color: #737780;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.estimation-page .stepper-item.completed > span {
+  border-color: #b48256;
+  background: #fbf7f2;
+  color: #8a5a34;
+}
+
+.estimation-page .stepper-item.completed > span svg {
+  width: 16px;
+}
+
 .estimation-page .module-heading h2 {
   color: #111111;
   font-size: 2.2rem;
