@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Check, Clock3, LockKeyhole, MapPin, Tag } from "lucide-react";
 import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AddressSuggestion,
@@ -424,38 +425,76 @@ export function EstimationForm({ initialAddress }: { initialAddress?: AddressSug
     return (
       <main className="estimation-page">
         <section className="address-step estimation-shell" aria-labelledby="address-step-title">
-
-        <div className="address-hero">
-          <p className="estimation-kicker">Estimation immobilière</p>
-          <h1 id="address-step-title">
-            Estimez votre bien avec Les Jumelles Immo
-          </h1>
-          <p>Une première estimation rapide, gratuite et sans engagement.</p>
-        </div>
-
-        <form
-          className="address-search-card"
-          onSubmit={(event) => {
-            event.preventDefault();
-
-            if (canOpenDetails) {
-              setStep("essential");
-            }
-          }}
-        >
-          <div className="address-search-row">
-            <span className="search-icon" aria-hidden="true" />
-            {addressField}
-            <button className="estimate-button" disabled={!canOpenDetails}>
-              Estimer
-            </button>
+          <div className="address-hero">
+            <p className="estimation-kicker">Estimation immobilière</p>
+            <h1 id="address-step-title">Quelle est la valeur de votre bien&nbsp;?</h1>
+            <p>
+              Obtenez une première estimation en quelques minutes, affinée par
+              notre expertise locale.
+            </p>
           </div>
-        </form>
 
-        <p className="privacy-note">
-          <span className="privacy-lock" aria-hidden="true" />
-          Vos donnees sont protegees (RGPD) et ne seront jamais revendues.
-        </p>
+          <div className="address-progress" aria-label="Étape 1 sur 4">
+            <div className="address-progress-bars" aria-hidden="true">
+              <span className="active" />
+              <span />
+              <span />
+              <span />
+            </div>
+            <span>Étape 1 sur 4</span>
+          </div>
+
+          <form
+            className="address-search-card"
+            onSubmit={(event) => {
+              event.preventDefault();
+
+              if (canOpenDetails) {
+                setStep("essential");
+              }
+            }}
+          >
+            <div className="address-card-heading">
+              <h2>Commençons par l&apos;adresse</h2>
+              <p>Elle nous permet d&apos;analyser précisément votre secteur.</p>
+            </div>
+
+            <div className="address-entry">
+              <span className="address-entry-label">Adresse du bien</span>
+              <div className="address-search-row">
+                <MapPin aria-hidden="true" />
+                {addressField}
+              </div>
+            </div>
+
+            {selectedAddress ? (
+              <div className="selected-address-row" aria-live="polite">
+                <MapPin aria-hidden="true" />
+                <strong>{selectedAddress.label}</strong>
+                <Check aria-hidden="true" />
+              </div>
+            ) : null}
+
+            <button className="estimate-button" disabled={!canOpenDetails}>
+              Continuer
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </form>
+
+          <ul className="estimation-reassurance" aria-label="Les garanties de l'estimation">
+            <li>
+              <Clock3 aria-hidden="true" />
+              <span><strong>2 minutes</strong> seulement</span>
+            </li>
+            <li>
+              <Tag aria-hidden="true" />
+              <span><strong>100 % gratuit</strong> et sans engagement</span>
+            </li>
+            <li>
+              <LockKeyhole aria-hidden="true" />
+              <span><strong>Données protégées</strong> et confidentielles</span>
+            </li>
+          </ul>
         </section>
       </main>
     );

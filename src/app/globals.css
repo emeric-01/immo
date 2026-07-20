@@ -1682,12 +1682,19 @@ button:focus-visible {
 }
 
 .estimation-page .address-step {
-  align-content: start;
-  padding-top: 62px;
+  display: grid;
+  justify-items: center;
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 58px 20px 54px;
+  border: 0;
+  background: transparent;
 }
 
 .estimation-page .address-hero {
-  margin: 0 0 34px;
+  width: 100%;
+  margin: 0 0 24px;
+  text-align: center;
 }
 
 .estimation-page .estimation-kicker {
@@ -1709,15 +1716,19 @@ button:focus-visible {
 }
 
 .estimation-page .address-hero h1 {
-  max-width: 780px;
+  max-width: 760px;
+  margin: 14px auto 16px;
   color: #111111;
-  font-size: clamp(2.7rem, 5vw, 4.6rem);
-  line-height: 0.98;
+  font-size: clamp(2.75rem, 5vw, 4.35rem);
+  line-height: 1;
 }
 
 .estimation-page .address-hero p:not(.estimation-kicker) {
+  max-width: 620px;
+  margin: 0 auto;
   color: #616878;
-  font-size: 1.08rem;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .estimation-page .address-search-card,
@@ -1730,7 +1741,189 @@ button:focus-visible {
 }
 
 .estimation-page .address-search-card {
-  border-radius: 10px;
+  width: min(720px, 100%);
+  padding: 30px 32px 32px;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.estimation-page .address-card-heading {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.estimation-page .address-card-heading h2 {
+  margin: 0 0 7px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  font-weight: 500;
+}
+
+.estimation-page .address-card-heading p {
+  margin: 0;
+  color: #697080;
+  font-size: 0.92rem;
+}
+
+.estimation-page .address-progress {
+  display: grid;
+  gap: 9px;
+  width: min(720px, 100%);
+  margin-bottom: 16px;
+  color: #7c7f86;
+  font-size: 0.75rem;
+}
+
+.estimation-page .address-progress-bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.estimation-page .address-progress-bars span {
+  height: 3px;
+  border-radius: 999px;
+  background: #e7e2dc;
+}
+
+.estimation-page .address-progress-bars span.active {
+  background: #b97949;
+}
+
+.estimation-page .address-entry {
+  display: grid;
+  gap: 8px;
+}
+
+.estimation-page .address-entry-label {
+  color: #242424;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.estimation-page .address-search-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 0 18px;
+  border: 1px solid #dcd7d1;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.estimation-page .address-search-row:focus-within {
+  border-color: #111111;
+  box-shadow: var(--focus-ring);
+}
+
+.estimation-page .address-search-row > svg {
+  width: 21px;
+  color: #b97949;
+}
+
+.estimation-page .address-step .address-label,
+.estimation-page .address-step .address-combobox {
+  width: 100%;
+}
+
+.estimation-page .address-step .address-combobox input {
+  min-height: 58px;
+  padding: 0 4px;
+  border: 0;
+  box-shadow: none;
+  font-size: 0.98rem;
+}
+
+.estimation-page .address-step .address-combobox input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.estimation-page .address-step .address-status {
+  display: none;
+}
+
+.estimation-page .address-step .suggestions-list {
+  top: calc(100% + 10px);
+}
+
+.estimation-page .selected-address-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 15px;
+  border: 1px solid #ded8d0;
+  border-radius: 9px;
+  background: #fbf7f2;
+  font-size: 0.85rem;
+}
+
+.estimation-page .selected-address-row svg {
+  width: 18px;
+  color: #b97949;
+}
+
+.estimation-page .selected-address-row svg:last-child {
+  color: #28845f;
+}
+
+.estimation-page .address-search-card > .estimate-button {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.estimation-page .address-search-card > .estimate-button svg {
+  width: 18px;
+  margin-left: 8px;
+}
+
+.estimation-page .estimation-reassurance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: min(720px, 100%);
+  margin: 25px 0 0;
+  padding: 0;
+  color: #6d7078;
+  list-style: none;
+}
+
+.estimation-page .estimation-reassurance li {
+  display: grid;
+  grid-template-columns: 23px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-right: 1px solid #e7e2dc;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.estimation-page .estimation-reassurance li:first-child {
+  padding-left: 0;
+}
+
+.estimation-page .estimation-reassurance li:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.estimation-page .estimation-reassurance svg {
+  width: 20px;
+  color: #b97949;
+}
+
+.estimation-page .estimation-reassurance strong {
+  display: block;
+  color: #242424;
+  font-weight: 700;
 }
 
 .estimation-page .estimate-button,
@@ -2331,11 +2524,35 @@ button:focus-visible {
   }
 
   .estimation-page .address-step {
-    padding-top: 42px;
+    width: min(100% - 20px, 980px);
+    padding: 34px 0 38px;
   }
 
   .estimation-page .address-hero h1 {
-    font-size: 2.65rem;
+    font-size: 2.55rem;
+  }
+
+  .estimation-page .address-search-card {
+    padding: 24px 18px;
+  }
+
+  .estimation-page .address-search-row {
+    min-height: 58px;
+    padding: 0 14px;
+  }
+
+  .estimation-page .estimation-reassurance {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: min(420px, 100%);
+  }
+
+  .estimation-page .estimation-reassurance li,
+  .estimation-page .estimation-reassurance li:first-child,
+  .estimation-page .estimation-reassurance li:last-child {
+    min-height: auto;
+    padding: 0;
+    border: 0;
   }
 
   .estimation-page .essential-card {
