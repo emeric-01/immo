@@ -54,7 +54,7 @@ function qualityAdjustment(property: Property) {
   else if (condition.includes("rafraichir")) add(-5, "À rafraîchir");
   else if (condition.includes("renover")) add(-12, "À rénover");
 
-  const amenities = new Set(property.amenities.map(normalize));
+  const amenities = new Set((property.amenities ?? []).map(normalize));
   const feature = (name: string, value: number, label = name) => { if (amenities.has(normalize(name))) add(value, label); };
   feature("Terrasse", property.property_type === "apartment" ? 4 : 3);
   feature("Balcon", 2);
@@ -121,7 +121,7 @@ export function calculatePropertyMarketScore(property: Property, market: CityMar
       : 0;
   const score = Math.max(0, Math.min(100, Math.round(100 - distanceFromRange * 3)));
   const status = marketPosition === "within" ? "coherent" : distanceFromRange <= 10 ? "watch" : "high-gap";
-  const label = marketPosition === "within" ? "Dans la fourchette" : marketPosition === "below" ? "Sous la fourchette" : distanceFromRange <= 10 ? "Haut de fourchette" : "Au-dessus de la fourchette";
+  const label = marketPosition === "within" ? "Dans la fourchette" : marketPosition === "below" ? "Sous la fourchette" : "Au-dessus de la fourchette";
 
   return {
     score,

@@ -70,3 +70,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: error instanceof Error ? error.message : "Modification impossible" }, { status: 500 });
   }
 }
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await getAdminSession())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const { id } = await params;
+    const encodedId = encodeURIComponent(id);
+    const images = await adminRest<Array<{ storage_path: string | null }>>(`property_images?property_id=eq.${encodedId}&select=storage_path`);
+    const deleted = await adminRest<Array<{ id: string }>>(`properties?id=eq.${encodedId}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=representation" },
+    });
+    if (!deleted.length) return NextResponse.json({ error: "Annonce introuvable" }, { status: 404 });
+
+    const config = getSupabaseAdminConfig();
+    if (config) {
+      await Promise.allSettled(images.map(async ({ storage_path: storagePath }) => {
+        if (!storagePath) return;
+        await fetch(`${config.url}/storage/v1/object/property-images/${storagePath}`, {
+          method: "DELETE",
+          headers: { apikey: config.key, Authorization: `Bearer ${config.key}` },
+        });
+      }));
+    }
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Suppression impossible" }, { status: 500 });
+  }
+}
