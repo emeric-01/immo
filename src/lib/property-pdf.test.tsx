@@ -1,7 +1,9 @@
 // @vitest-environment node
 
 import { describe, expect, it, vi } from "vitest";
-import { writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import type { Property } from "@/lib/properties";
 
 vi.mock("server-only", () => ({}));
@@ -67,6 +69,31 @@ describe("property PDF", () => {
 
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(10_000);
+  }, 20_000);
+
+  it("loads public assets through HTTP when they are absent from the server function", async () => {
+    const originalCwd = process.cwd();
+    const isolatedCwd = await mkdtemp(path.join(tmpdir(), "property-pdf-"));
+    const [logo, fallback] = await Promise.all([
+      readFile(path.join(originalCwd, "public/brand/les-jumelles-logo-noir.png")),
+      readFile(path.join(originalCwd, "public/images/agence-jumelles-immo-hero.webp")),
+    ]);
+
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+      const data = String(input).includes("les-jumelles-logo") ? logo : fallback;
+      return new Response(new Uint8Array(data), { status: 200 });
+    }));
+
+    try {
+      process.chdir(isolatedCwd);
+      const pdf = await renderPropertyPdf(property);
+      expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+      expect(pdf.length).toBeGreaterThan(10_000);
+    } finally {
+      process.chdir(originalCwd);
+      vi.unstubAllGlobals();
+      await rm(isolatedCwd, { force: true, recursive: true });
+    }
   }, 20_000);
 
   it("builds a stable download filename", () => {

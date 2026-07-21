@@ -247,15 +247,21 @@ async function loadPropertyImages(property: Property) {
   return [await loadLocalImage("public/images/agence-jumelles-immo-hero.webp", { height: 900, width: 1400 })];
 }
 
-async function loadRemoteImage(url: string) {
+async function loadRemoteImage(url: string, resize: { height?: number; width?: number } = { height: 900, width: 1400 }) {
   const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error(`Image inaccessible (${response.status})`);
-  return imageBufferToDataUri(Buffer.from(await response.arrayBuffer()), { height: 900, width: 1400 });
+  return imageBufferToDataUri(Buffer.from(await response.arrayBuffer()), resize);
 }
 
 async function loadLocalImage(relativePath: string, resize: { height?: number; width?: number }) {
-  const buffer = await readFile(path.join(process.cwd(), relativePath));
-  return imageBufferToDataUri(buffer, resize);
+  try {
+    const buffer = await readFile(path.join(process.cwd(), relativePath));
+    return imageBufferToDataUri(buffer, resize);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    const publicPath = `/${relativePath.replace(/^public\//, "")}`;
+    return loadRemoteImage(absoluteUrl(publicPath), resize);
+  }
 }
 
 async function imageBufferToDataUri(buffer: Buffer, resize: { height?: number; width?: number }): Promise<PdfImageSource> {
