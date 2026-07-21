@@ -79,16 +79,23 @@ describe("property PDF", () => {
       readFile(path.join(originalCwd, "public/images/agence-jumelles-immo-hero.webp")),
     ]);
 
-    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
       const data = String(input).includes("les-jumelles-logo") ? logo : fallback;
       return new Response(new Uint8Array(data), { status: 200 });
-    }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     try {
       process.chdir(isolatedCwd);
-      const pdf = await renderPropertyPdf(property);
+      const siteOrigin = "https://immobilier.lesjumelles.fr";
+      const pdf = await renderPropertyPdf(property, { siteOrigin });
       expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
       expect(pdf.length).toBeGreaterThan(10_000);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual(expect.arrayContaining([
+        `${siteOrigin}/brand/les-jumelles-logo-noir.png`,
+        `${siteOrigin}/images/agence-jumelles-immo-hero.webp`,
+      ]));
     } finally {
       process.chdir(originalCwd);
       vi.unstubAllGlobals();

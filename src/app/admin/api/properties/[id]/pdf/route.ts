@@ -7,7 +7,7 @@ import { getAdminProperty } from "@/lib/properties";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   if (!(await hasAdminPermission(session, "properties:read"))) {
@@ -18,7 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const property = await getAdminProperty((await params).id);
     if (!property) return NextResponse.json({ error: "Bien introuvable" }, { status: 404 });
 
-    const pdf = await renderPropertyPdf(property);
+    const pdf = await renderPropertyPdf(property, { siteOrigin: new URL(request.url).origin });
     const fileName = propertyPdfFileName(property);
 
     return new Response(new Uint8Array(pdf), {

@@ -16,7 +16,7 @@ import {
 import QRCode from "qrcode";
 import sharp from "sharp";
 import type { Property } from "@/lib/properties";
-import { absoluteUrl } from "@/lib/site";
+import { getSiteUrl } from "@/lib/site";
 
 const ink = "#171717";
 const muted = "#687080";
@@ -27,6 +27,10 @@ const soft = "#f8f2ec";
 type PdfImageSource = {
   data: Buffer;
   format: "jpg" | "png";
+};
+
+type PropertyPdfOptions = {
+  siteOrigin?: string;
 };
 
 const styles = StyleSheet.create({
@@ -89,11 +93,13 @@ const energyColors: Record<string, string> = {
 
 const energyWidths: Record<string, number> = { A: 22, B: 31, C: 40, D: 49, E: 58, F: 67, G: 76 };
 
-export async function renderPropertyPdf(property: Property) {
+export async function renderPropertyPdf(property: Property, options: PropertyPdfOptions = {}) {
+  const siteOrigin = normalizeSiteOrigin(options.siteOrigin || getSiteUrl());
+  const propertyUrl = siteUrl(`/biens/${property.slug}`, siteOrigin);
   const [logo, images, qrCode] = await Promise.all([
-    loadLocalImage("public/brand/les-jumelles-logo-noir.png", { width: 500 }),
-    loadPropertyImages(property),
-    QRCode.toBuffer(absoluteUrl(`/biens/${property.slug}`), {
+    loadLocalImage("public/brand/les-jumelles-logo-noir.png", { width: 500 }, siteOrigin),
+    loadPropertyImages(property, siteOrigin),
+    QRCode.toBuffer(propertyUrl, {
       errorCorrectionLevel: "M",
       margin: 0,
       type: "png",
@@ -102,7 +108,7 @@ export async function renderPropertyPdf(property: Property) {
   ]);
 
   return renderToBuffer(
-    <PropertyPdfDocument images={images} logo={logo} property={property} qrCode={qrCode} />,
+    <PropertyPdfDocument images={images} logo={logo} property={property} propertyUrl={propertyUrl} qrCode={qrCode} />,
   );
 }
 
@@ -116,11 +122,13 @@ function PropertyPdfDocument({
   images,
   logo,
   property,
+  propertyUrl,
   qrCode,
 }: {
   images: PdfImageSource[];
   logo: PdfImageSource;
   property: Property;
+  propertyUrl: string;
   qrCode: PdfImageSource;
 }) {
   const description = truncate(stripHtml(property.description || property.short_description || ""), 560);
@@ -201,7 +209,7 @@ function PropertyPdfDocument({
               <Text style={styles.contactCopy}>Notre équipe vous accompagne pour répondre à vos questions et organiser une visite.</Text>
               {property.contact_phone ? <Text style={styles.contactDetails}>{property.contact_phone}</Text> : null}
               <Text style={styles.contactEmail}>{property.contact_email || "contact@lesjumelles.immo"}</Text>
-              <Link src={absoluteUrl(`/biens/${property.slug}`)}><Image src={qrCode} style={styles.qr} /></Link>
+              <Link src={propertyUrl}><Image src={qrCode} style={styles.qr} /></Link>
             </View>
           </View>
 
@@ -235,7 +243,7 @@ function PropertyPhotos({ images }: { images: PdfImageSource[] }) {
   );
 }
 
-async function loadPropertyImages(property: Property) {
+async function loadPropertyImages(property: Property, siteOrigin: string) {
   const candidates = property.images.slice(0, 3).map((image) => image.public_url);
   const loaded = await Promise.all(candidates.map((url) => loadRemoteImage(url).catch(() => null)));
   const images = loaded.filter((image): image is PdfImageSource => Boolean(image));
@@ -244,7 +252,7 @@ async function loadPropertyImages(property: Property) {
     return images;
   }
 
-  return [await loadLocalImage("public/images/agence-jumelles-immo-hero.webp", { height: 900, width: 1400 })];
+  return [await loadLocalImage("public/images/agence-jumelles-immo-hero.webp", { height: 900, width: 1400 }, siteOrigin)];
 }
 
 async function loadRemoteImage(url: string, resize: { height?: number; width?: number } = { height: 900, width: 1400 }) {
@@ -253,14 +261,14 @@ async function loadRemoteImage(url: string, resize: { height?: number; width?: n
   return imageBufferToDataUri(Buffer.from(await response.arrayBuffer()), resize);
 }
 
-async function loadLocalImage(relativePath: string, resize: { height?: number; width?: number }) {
+async function loadLocalImage(relativePath: string, resize: { height?: number; width?: number }, siteOrigin: string) {
   try {
     const buffer = await readFile(path.join(process.cwd(), relativePath));
     return imageBufferToDataUri(buffer, resize);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     const publicPath = `/${relativePath.replace(/^public\//, "")}`;
-    return loadRemoteImage(absoluteUrl(publicPath), resize);
+    return loadRemoteImage(siteUrl(publicPath, siteOrigin), resize);
   }
 }
 
@@ -330,6 +338,14 @@ function formatNumber(value: number) {
 
 function groupDigits(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+function normalizeSiteOrigin(value: string) {
+  return new URL(value).origin;
+}
+
+function siteUrl(pathname: string, siteOrigin: string) {
+  return new URL(pathname, `${siteOrigin}/`).toString();
 }
 
 function slugify(value: string) {
