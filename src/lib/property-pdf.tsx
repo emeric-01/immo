@@ -22,7 +22,7 @@ const ink = "#171717";
 const muted = "#687080";
 const line = "#ded9d2";
 const accent = "#a56a40";
-const soft = "#f8f2ec";
+const soft = "#fbf6ea";
 
 type PdfImageSource = {
   data: Buffer;
@@ -34,51 +34,49 @@ type PropertyPdfOptions = {
 };
 
 const styles = StyleSheet.create({
-  page: { backgroundColor: "#ffffff", color: ink, fontFamily: "Helvetica", fontSize: 8 },
-  header: { alignItems: "center", borderBottomColor: line, borderBottomWidth: 1, flexDirection: "row", height: 58, justifyContent: "space-between", paddingHorizontal: 28 },
-  logo: { height: 42, objectFit: "contain", width: 120 },
-  reference: { color: muted, fontSize: 7, letterSpacing: 1.2, textTransform: "uppercase" },
-  photoGrid: { backgroundColor: "#ffffff", flexDirection: "row", gap: 4, height: 242, padding: 4 },
-  mainPhoto: { height: "100%", objectFit: "cover", width: "66%" },
-  mainPhotoOnly: { height: "100%", objectFit: "cover", width: "100%" },
-  sidePhotos: { flexDirection: "column", gap: 4, height: "100%", width: "34%" },
-  sidePhoto: { flexGrow: 1, height: "50%", objectFit: "cover", width: "100%" },
-  sidePhotoSingle: { height: "100%", objectFit: "cover", width: "100%" },
-  body: { paddingBottom: 48, paddingHorizontal: 28, paddingTop: 17 },
-  titleRow: { alignItems: "flex-end", borderBottomColor: line, borderBottomWidth: 1, flexDirection: "row", justifyContent: "space-between", paddingBottom: 13 },
-  titleBlock: { maxWidth: "70%" },
-  eyebrow: { color: accent, fontSize: 6.5, fontWeight: 700, letterSpacing: 1.3, textTransform: "uppercase" },
-  title: { fontFamily: "Times-Roman", fontSize: 22, lineHeight: 1.04, marginBottom: 3, marginTop: 5 },
-  location: { color: muted, fontSize: 8 },
-  price: { fontFamily: "Times-Bold", fontSize: 22 },
-  content: { flexDirection: "row", gap: 20, marginTop: 15 },
-  descriptionColumn: { width: "54%" },
-  sectionTitle: { fontFamily: "Times-Roman", fontSize: 14, lineHeight: 1.08, marginBottom: 7, marginTop: 4 },
-  description: { color: "#4e535b", fontSize: 7.4, lineHeight: 1.45 },
-  facts: { borderLeftColor: line, borderLeftWidth: 1, borderTopColor: line, borderTopWidth: 1, flexDirection: "row", flexWrap: "wrap", width: "46%" },
-  fact: { borderBottomColor: line, borderBottomWidth: 1, borderRightColor: line, borderRightWidth: 1, minHeight: 39, padding: 7, width: "50%" },
-  factLabel: { color: muted, fontSize: 6 },
-  factValue: { fontSize: 7.5, fontWeight: 700, marginTop: 4 },
-  lower: { borderTopColor: line, borderTopWidth: 1, flexDirection: "row", gap: 16, marginTop: 15, paddingTop: 13 },
-  features: { width: "39%" },
-  featureGrid: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 7 },
-  feature: { alignItems: "center", borderColor: line, borderWidth: 1, flexDirection: "row", minHeight: 22, paddingHorizontal: 6, width: "48%" },
-  featureDot: { alignItems: "center", backgroundColor: ink, borderRadius: 5, color: "#ffffff", fontSize: 6, height: 10, justifyContent: "center", marginRight: 5, width: 10 },
-  featureText: { fontSize: 6.3 },
-  energy: { width: "23%" },
-  energyRows: { marginTop: 5 },
-  energyRow: { alignItems: "center", flexDirection: "row", gap: 5, marginBottom: 2 },
-  energyLetter: { alignItems: "center", color: "#ffffff", fontSize: 5.5, height: 10, justifyContent: "center", width: 12 },
-  energyBar: { height: 5 },
-  energyBarActive: { height: 8 },
-  contact: { backgroundColor: soft, padding: 10, width: "38%" },
-  contactName: { fontFamily: "Times-Roman", fontSize: 13, lineHeight: 1.05, marginBottom: 5, marginTop: 4 },
-  contactCopy: { color: "#675448", fontSize: 6.2, lineHeight: 1.35 },
-  contactDetails: { fontSize: 6.5, fontWeight: 700, marginTop: 6 },
-  contactEmail: { color: "#675448", fontSize: 5.8, marginTop: 3 },
-  qr: { height: 37, marginTop: 7, width: 37 },
-  legal: { borderTopColor: line, borderTopWidth: 1, color: "#8a8a8a", fontSize: 4.8, lineHeight: 1.35, marginTop: 11, paddingTop: 7 },
-  footer: { bottom: 14, color: muted, flexDirection: "row", fontSize: 5.5, justifyContent: "space-between", left: 28, position: "absolute", right: 28 },
+  page: { backgroundColor: "#ffffff", color: ink, fontFamily: "Helvetica", fontSize: 8, paddingBottom: 66 },
+  top: { flexDirection: "row", height: 252 },
+  identityPanel: { backgroundColor: "#ffffff", width: "38%" },
+  identity: { alignItems: "center", flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 16 },
+  logo: { height: 58, marginBottom: 15, objectFit: "contain", width: 142 },
+  reference: { color: muted, fontSize: 5.8, letterSpacing: 1.1, marginBottom: 9, textTransform: "uppercase" },
+  listingType: { color: accent, fontSize: 6.5, fontWeight: 700, letterSpacing: 1.2, marginBottom: 5, textTransform: "uppercase" },
+  listingTitle: { fontFamily: "Times-Roman", fontSize: 15.5, lineHeight: 1.08, marginBottom: 13, textAlign: "center" },
+  city: { fontSize: 10.5, fontWeight: 700, marginBottom: 4, textTransform: "uppercase" },
+  address: { color: "#4e4e4e", fontSize: 7.4, lineHeight: 1.2, textAlign: "center" },
+  contact: { alignItems: "center", backgroundColor: soft, flexDirection: "row", height: 75, paddingHorizontal: 12 },
+  contactPortrait: { borderRadius: 24, height: 48, marginRight: 10, objectFit: "cover", width: 48 },
+  contactInfo: { flexGrow: 1, maxWidth: 118 },
+  contactName: { fontSize: 8.5, fontWeight: 700, marginBottom: 5, textTransform: "uppercase" },
+  contactLine: { fontSize: 6.8, lineHeight: 1.4 },
+  qr: { height: 38, marginLeft: 7, width: 38 },
+  hero: { height: "100%", position: "relative", width: "62%" },
+  heroImage: { height: "100%", objectFit: "cover", width: "100%" },
+  priceBox: { backgroundColor: "#ffffff", bottom: 22, paddingHorizontal: 14, paddingVertical: 8, position: "absolute", right: 0 },
+  price: { fontSize: 18, fontWeight: 700 },
+  gallery: { flexDirection: "row", gap: 4, height: 153, paddingTop: 4 },
+  galleryImage: { flexGrow: 1, height: "100%", objectFit: "cover" },
+  content: { flexDirection: "row", gap: 13, paddingHorizontal: 10, paddingTop: 9 },
+  detailsColumn: { width: "36%" },
+  descriptionColumn: { width: "64%" },
+  sectionHeader: { backgroundColor: soft, fontSize: 9.5, fontWeight: 700, paddingHorizontal: 8, paddingVertical: 6, textTransform: "uppercase" },
+  sectionBody: { paddingHorizontal: 8, paddingTop: 7 },
+  detailRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: 5.5 },
+  detailLabel: { color: "#565656", fontSize: 7.8, marginRight: 4 },
+  detailValue: { fontSize: 7.8, fontWeight: 700 },
+  feature: { color: "#4f4f4f", fontSize: 7.7, lineHeight: 1.38, marginBottom: 3 },
+  descriptionLead: { fontFamily: "Times-Roman", fontSize: 11.5, lineHeight: 1.12, marginBottom: 7 },
+  description: { color: "#4e4e4e", fontSize: 7.8, lineHeight: 1.47 },
+  energy: { marginTop: 12 },
+  energyRow: { alignItems: "center", flexDirection: "row", marginTop: 8 },
+  energyLabel: { color: "#4e4e4e", fontSize: 7.4, width: 76 },
+  energyScale: { alignItems: "center", flexDirection: "row", gap: 2 },
+  energyLetter: { color: "#ffffff", fontSize: 6.8, fontWeight: 700, height: 15, paddingTop: 3, textAlign: "center", width: 20 },
+  energyLetterActive: { borderColor: "#ffffff", borderRadius: 3, borderWidth: 1.5, fontSize: 8.5, height: 23, paddingTop: 5, width: 27 },
+  energyMissing: { color: muted, fontSize: 7, fontStyle: "italic" },
+  footer: { bottom: 13, color: "#555555", left: 26, position: "absolute", right: 26, textAlign: "center" },
+  legal: { fontSize: 5.1, lineHeight: 1.35 },
+  footerLink: { color: accent, fontSize: 5.5, marginTop: 4 },
 });
 
 const energyColors: Record<string, string> = {
@@ -91,13 +89,13 @@ const energyColors: Record<string, string> = {
   G: "#aa3435",
 };
 
-const energyWidths: Record<string, number> = { A: 22, B: 31, C: 40, D: 49, E: 58, F: 67, G: 76 };
 
 export async function renderPropertyPdf(property: Property, options: PropertyPdfOptions = {}) {
   const siteOrigin = normalizeSiteOrigin(options.siteOrigin || getSiteUrl());
   const propertyUrl = siteUrl(`/biens/${property.slug}`, siteOrigin);
-  const [logo, images, qrCode] = await Promise.all([
+  const [logo, contactPortrait, images, qrCode] = await Promise.all([
     loadLocalImage("public/brand/les-jumelles-logo-noir.png", { width: 500 }, siteOrigin),
+    loadLocalImage(contactPortraitPath(property.contact_name), { height: 240, width: 240 }, siteOrigin),
     loadPropertyImages(property, siteOrigin),
     QRCode.toBuffer(propertyUrl, {
       errorCorrectionLevel: "M",
@@ -108,7 +106,7 @@ export async function renderPropertyPdf(property: Property, options: PropertyPdf
   ]);
 
   return renderToBuffer(
-    <PropertyPdfDocument images={images} logo={logo} property={property} propertyUrl={propertyUrl} qrCode={qrCode} />,
+    <PropertyPdfDocument contactPortrait={contactPortrait} images={images} logo={logo} property={property} propertyUrl={propertyUrl} qrCode={qrCode} />,
   );
 }
 
@@ -119,132 +117,129 @@ export function propertyPdfFileName(property: Pick<Property, "city_name" | "slug
 }
 
 function PropertyPdfDocument({
+  contactPortrait,
   images,
   logo,
   property,
   propertyUrl,
   qrCode,
 }: {
+  contactPortrait: PdfImageSource;
   images: PdfImageSource[];
   logo: PdfImageSource;
   property: Property;
   propertyUrl: string;
   qrCode: PdfImageSource;
 }) {
-  const description = truncate(stripHtml(property.description || property.short_description || ""), 560);
+  const description = truncate(stripHtml(property.description || property.short_description || ""), 900);
   const propertyType = propertyTypeLabel(property.property_type);
-  const location = [property.city_name, property.postal_code ? `(${property.postal_code})` : null, property.neighborhood].filter(Boolean).join(" · ");
-  const facts = propertyFacts(property);
+  const address = property.address || [property.postal_code, property.neighborhood].filter(Boolean).join(" · ");
+  const surfaceFacts = propertySurfaceFacts(property);
+  const characteristicFacts = propertyCharacteristicFacts(property);
   const features = propertyFeatures(property);
   const rating = property.energy_rating?.toUpperCase() || "";
 
   return (
     <Document author="Les Jumelles Immo" subject={`Fiche du bien ${property.title}`} title={property.title}>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Image src={logo} style={styles.logo} />
-          <Text style={styles.reference}>Réf. {property.id.slice(0, 8).toUpperCase()} · Fiche bien</Text>
-        </View>
-
-        <PropertyPhotos images={images} />
-
-        <View style={styles.body}>
-          <View style={styles.titleRow}>
-            <View style={styles.titleBlock}>
-              <Text style={styles.eyebrow}>{propertyType} à vendre</Text>
-              <Text style={styles.title}>{property.title}</Text>
-              <Text style={styles.location}>{location}</Text>
+        <View style={styles.top} wrap={false}>
+          <View style={styles.identityPanel}>
+            <View style={styles.identity}>
+              <Image src={logo} style={styles.logo} />
+              <Text style={styles.reference}>Réf. {property.id.slice(0, 8).toUpperCase()}</Text>
+              <Text style={styles.listingType}>{propertyType} à vendre</Text>
+              <Text style={styles.listingTitle}>{property.title}</Text>
+              <Text style={styles.city}>{property.city_name}</Text>
+              {address ? <Text style={styles.address}>{address}</Text> : null}
             </View>
-            <Text style={styles.price}>{formatCurrency(property.price)}</Text>
-          </View>
-
-          <View style={styles.content}>
-            <View style={styles.descriptionColumn}>
-              <Text style={styles.eyebrow}>Le bien</Text>
-              <Text style={styles.sectionTitle}>{property.short_description || "Un bien sélectionné par Les Jumelles Immo"}</Text>
-              <Text style={styles.description}>{description || "Contactez notre équipe pour découvrir ce bien et organiser une visite."}</Text>
-            </View>
-            <View style={styles.facts}>
-              {facts.map(([label, value]) => (
-                <View key={label} style={styles.fact}>
-                  <Text style={styles.factLabel}>{label}</Text>
-                  <Text style={styles.factValue}>{value}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.lower}>
-            <View style={styles.features}>
-              <Text style={styles.eyebrow}>Prestations</Text>
-              <Text style={styles.sectionTitle}>Les atouts du bien</Text>
-              <View style={styles.featureGrid}>
-                {features.map((feature) => (
-                  <View key={feature} style={styles.feature}>
-                    <Text style={styles.featureDot}>✓</Text>
-                    <Text style={styles.featureText}>{feature}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.energy}>
-              <Text style={styles.eyebrow}>Énergie</Text>
-              <Text style={styles.sectionTitle}>{rating ? `DPE · ${rating}` : "DPE non renseigné"}</Text>
-              {rating ? (
-                <View style={styles.energyRows}>
-                  {Object.keys(energyColors).map((letter) => (
-                    <View key={letter} style={styles.energyRow}>
-                      <Text style={[styles.energyLetter, { backgroundColor: energyColors[letter] }]}>{letter}</Text>
-                      <View style={[rating === letter ? styles.energyBarActive : styles.energyBar, { backgroundColor: energyColors[letter], opacity: rating === letter ? 1 : 0.4, width: energyWidths[letter] }]} />
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-
             <View style={styles.contact}>
-              <Text style={styles.eyebrow}>Contact</Text>
-              <Text style={styles.contactName}>{property.contact_name || "Les Jumelles Immo"}</Text>
-              <Text style={styles.contactCopy}>Notre équipe vous accompagne pour répondre à vos questions et organiser une visite.</Text>
-              {property.contact_phone ? <Text style={styles.contactDetails}>{property.contact_phone}</Text> : null}
-              <Text style={styles.contactEmail}>{property.contact_email || "contact@lesjumelles.immo"}</Text>
+              <Image src={contactPortrait} style={styles.contactPortrait} />
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactName}>{property.contact_name || "Les Jumelles Immo"}</Text>
+                {property.contact_phone ? <Text style={styles.contactLine}>Tél. {property.contact_phone}</Text> : null}
+                <Text style={styles.contactLine}>{property.contact_email || "contact@lesjumelles.immo"}</Text>
+              </View>
               <Link src={propertyUrl}><Image src={qrCode} style={styles.qr} /></Link>
             </View>
           </View>
+          <View style={styles.hero}>
+            <Image src={images[0]} style={styles.heroImage} />
+            <View style={styles.priceBox}>
+              <Text style={styles.price}>{formatCurrency(property.price)} F.A.I</Text>
+            </View>
+          </View>
+        </View>
 
-          <Text style={styles.legal}>
-            Prix de vente : {formatCurrency(property.price)}. Honoraires à la charge du {property.fees_paid_by?.toLowerCase() || "vendeur"}. Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques. Document non contractuel.
-          </Text>
+        <PropertyGallery images={images} />
+
+        <View style={styles.content} wrap={false}>
+          <View style={styles.detailsColumn}>
+            {surfaceFacts.length ? <>
+              <Text style={styles.sectionHeader}>Surfaces</Text>
+              <View style={styles.sectionBody}>
+                {surfaceFacts.map(([label, value]) => (
+                  <View key={label} style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{label} :</Text>
+                    <Text style={styles.detailValue}>{value}</Text>
+                  </View>
+                ))}
+              </View>
+            </> : null}
+
+            <Text style={[styles.sectionHeader, { marginTop: 5 }]}>Caractéristiques</Text>
+            <View style={styles.sectionBody}>
+              {characteristicFacts.map(([label, value]) => (
+                <View key={label} style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{label} :</Text>
+                  <Text style={styles.detailValue}>{value}</Text>
+                </View>
+              ))}
+              {features.map((feature) => <Text key={feature} style={styles.feature}>• {feature}</Text>)}
+            </View>
+          </View>
+
+          <View style={styles.descriptionColumn}>
+            <Text style={styles.sectionHeader}>Description du bien</Text>
+            <View style={styles.sectionBody}>
+              <Text style={styles.descriptionLead}>{property.short_description || "Un bien sélectionné par Les Jumelles Immo"}</Text>
+              <Text style={styles.description}>{description || "Contactez notre équipe pour découvrir ce bien et organiser une visite."}</Text>
+              <View style={styles.energy}>
+                <Text style={styles.sectionHeader}>Performance énergétique</Text>
+                <EnergyScale rating={rating} />
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>lesjumellesimmo.fr</Text>
-          <Text>Transaction · Estimation · Recherche</Text>
+          <Text style={styles.legal}>Les Jumelles Immo - Agence Séverine Masfrand, SAS immatriculée au RCS de Marseille sous le n° 829 076 611, siège social 595 route des Aubes, 13400 Aubagne.</Text>
+          <Text style={styles.legal}>Carte professionnelle n° CPI 1310 2021 000 000 132. Prix : {formatCurrency(property.price)}. Honoraires à la charge du {property.fees_paid_by?.toLowerCase() || "vendeur"}. Document non contractuel.</Text>
+          <Text style={styles.footerLink}>Retrouvez cette annonce sur {new URL(propertyUrl).host}</Text>
         </View>
       </Page>
     </Document>
   );
 }
 
-function PropertyPhotos({ images }: { images: PdfImageSource[] }) {
-  if (images.length < 2) {
-    return <View style={styles.photoGrid}><Image src={images[0]} style={styles.mainPhotoOnly} /></View>;
-  }
+function PropertyGallery({ images }: { images: PdfImageSource[] }) {
+  const gallery = images.slice(1, 4);
+  if (!gallery.length) return null;
+  return <View style={styles.gallery} wrap={false}>{gallery.map((image, index) => (
+    <Image key={index} src={image} style={[styles.galleryImage, { width: `${100 / gallery.length}%` }]} />
+  ))}</View>;
+}
 
-  return (
-    <View style={styles.photoGrid}>
-      <Image src={images[0]} style={styles.mainPhoto} />
-      <View style={styles.sidePhotos}>
-        <Image src={images[1]} style={images.length > 2 ? styles.sidePhoto : styles.sidePhotoSingle} />
-        {images[2] ? <Image src={images[2]} style={styles.sidePhoto} /> : null}
-      </View>
-    </View>
-  );
+function EnergyScale({ rating }: { rating: string }) {
+  return <View style={styles.energyRow}>
+    <Text style={styles.energyLabel}>Classe énergie</Text>
+    {rating ? <View style={styles.energyScale}>{Object.keys(energyColors).map((letter) => (
+      <Text key={letter} style={[styles.energyLetter, rating === letter ? styles.energyLetterActive : {}, { backgroundColor: energyColors[letter] }]}>{letter}</Text>
+    ))}</View> : <Text style={styles.energyMissing}>DPE non renseigné</Text>}
+  </View>;
 }
 
 async function loadPropertyImages(property: Property, siteOrigin: string) {
-  const candidates = property.images.slice(0, 3).map((image) => image.public_url);
+  const candidates = property.images.slice(0, 4).map((image) => image.public_url);
   const loaded = await Promise.all(candidates.map((url) => loadRemoteImage(url).catch(() => null)));
   const images = loaded.filter((image): image is PdfImageSource => Boolean(image));
 
@@ -281,26 +276,43 @@ async function imageBufferToDataUri(buffer: Buffer, resize: { height?: number; w
   return { data: output, format: "jpg" };
 }
 
-function propertyFacts(property: Property): [string, string][] {
+function propertySurfaceFacts(property: Property): [string, string][] {
   const facts: [string, string][] = [];
   if (property.surface_m2) facts.push(["Surface habitable", `${formatNumber(property.surface_m2)} m²`]);
   if (property.land_area_m2) facts.push(["Terrain", `${formatNumber(property.land_area_m2)} m²`]);
+  if (property.terrace_m2) facts.push(["Terrasse", `${formatNumber(property.terrace_m2)} m²`]);
+  return facts;
+}
+
+function propertyCharacteristicFacts(property: Property): [string, string][] {
+  const facts: [string, string][] = [];
   if (property.rooms) facts.push(["Pièces", String(property.rooms)]);
   if (property.bedrooms) facts.push(["Chambres", String(property.bedrooms)]);
   if (property.bathrooms) facts.push(["Salles d’eau", String(property.bathrooms)]);
+  if (property.levels) facts.push(["Niveaux", String(property.levels)]);
+  if (property.floor_label) facts.push(["Étage", property.floor_label]);
   if (property.exposure) facts.push(["Exposition", property.exposure]);
-  if (property.floor_label && facts.length < 6) facts.push(["Étage", property.floor_label]);
-  if (property.construction_year && facts.length < 6) facts.push(["Construction", String(property.construction_year)]);
-  return facts.slice(0, 6);
+  if (property.construction_year) facts.push(["Construction", String(property.construction_year)]);
+  if (property.property_condition) facts.push(["État", property.property_condition]);
+  if (property.kitchen_type) facts.push(["Cuisine", property.kitchen_type]);
+  if (property.parking_spaces) facts.push(["Stationnement", `${property.parking_spaces} place${property.parking_spaces > 1 ? "s" : ""}`]);
+  return facts.slice(0, 8);
 }
 
 function propertyFeatures(property: Property) {
   const features = [...property.amenities];
-  if (property.terrace_m2 && !features.some((feature) => /terrasse/i.test(feature))) features.push(`Terrasse ${formatNumber(property.terrace_m2)} m²`);
   if (property.parking_details && !features.some((feature) => /parking|garage|box/i.test(feature))) features.push(property.parking_details);
   if (property.heating && !features.some((feature) => /chauffage|climatisation/i.test(feature))) features.push(property.heating);
   if (!features.length) features.push("Bien sélectionné", "Visite sur rendez-vous");
   return features.slice(0, 6);
+}
+
+function contactPortraitPath(contactName: string | null) {
+  const normalized = contactName?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || "";
+  if (normalized.includes("emeric")) return "public/images/emeric-legros.png";
+  if (normalized.includes("laure")) return "public/images/laure-masfrand-jumelles-immo.webp";
+  if (normalized.includes("severine")) return "public/images/severine-masfrand-jumelles-immo.webp";
+  return "public/images/laure-severine-jumelles-immo.jpg";
 }
 
 function propertyTypeLabel(value: string) {
@@ -313,13 +325,15 @@ function propertyTypeLabel(value: string) {
 function stripHtml(value: string) {
   return value
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

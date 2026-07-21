@@ -61,7 +61,8 @@ const property = {
 
 describe("property PDF", () => {
   it("generates a valid PDF buffer", async () => {
-    const pdf = await renderPropertyPdf(property);
+    const renderedProperty = process.env.WRITE_PROPERTY_PDF_FIXTURE ? await propertyWithGallery() : property;
+    const pdf = await renderPropertyPdf(renderedProperty);
 
     if (process.env.WRITE_PROPERTY_PDF_FIXTURE) {
       await writeFile("tmp/pdfs/fiche-bien-test.pdf", pdf);
@@ -91,10 +92,11 @@ describe("property PDF", () => {
       const pdf = await renderPropertyPdf(property, { siteOrigin });
       expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
       expect(pdf.length).toBeGreaterThan(10_000);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual(expect.arrayContaining([
         `${siteOrigin}/brand/les-jumelles-logo-noir.png`,
         `${siteOrigin}/images/agence-jumelles-immo-hero.webp`,
+        `${siteOrigin}/images/laure-severine-jumelles-immo.jpg`,
       ]));
     } finally {
       process.chdir(originalCwd);
@@ -107,3 +109,25 @@ describe("property PDF", () => {
     expect(propertyPdfFileName(property)).toBe("fiche-bien-gemenos.pdf");
   });
 });
+
+async function propertyWithGallery(): Promise<Property> {
+  const files = [
+    ["public/images/agence-jumelles-immo-hero.webp", "image/webp"],
+    ["public/images/local-agency/maison-piscine-mediterranee.jpg", "image/jpeg"],
+    ["public/images/local-agency/appartement-lumineux.webp", "image/webp"],
+    ["public/images/local-agency/maison-contemporaine-jardin.jpg", "image/jpeg"],
+  ] as const;
+  const images = await Promise.all(files.map(async ([filePath, mimeType], index) => ({
+    alt_text: `Photo ${index + 1}`,
+    id: `photo-${index + 1}`,
+    is_cover: index === 0,
+    position: index,
+    public_url: `data:${mimeType};base64,${(await readFile(filePath)).toString("base64")}`,
+  })));
+
+  return {
+    ...property,
+    description: "Cette villa contemporaine offre de beaux volumes ouverts sur le jardin et une lumière naturelle présente tout au long de la journée. Les espaces de vie ont été pensés pour recevoir, avec une circulation fluide entre le séjour, la cuisine et la terrasse.\n\nL'espace nuit réunit quatre chambres, dont une suite avec vue sur le jardin. Les matériaux sobres, les rangements intégrés et la climatisation réversible assurent un confort durable au quotidien.\n\nÀ l'extérieur, la piscine, la terrasse et le jardin paysagé composent un cadre calme à proximité immédiate du centre de Gémenos. Un garage et deux places de stationnement complètent ce bien.",
+    images,
+  };
+}
