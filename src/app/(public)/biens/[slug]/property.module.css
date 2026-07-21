@@ -12,6 +12,7 @@
 /* Ratio homogène et localisation publique protégée */
 .gallery{grid-template-columns:minmax(0,3fr) minmax(170px,1fr);grid-template-rows:minmax(0,1fr);aspect-ratio:1.47;min-height:0}
 .exclusiveBadge{display:inline-flex;align-items:center;margin:0 0 18px;border:1px solid #d6ad8f;border-radius:99px;background:#fbf1e8;padding:7px 11px;color:#a85e31;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.galleryExclusive{position:absolute;z-index:2;top:16px;left:16px;display:inline-flex;align-items:center;gap:7px;border:1px solid #ffffff40;border-radius:99px;background:#261e18e8;padding:8px 12px;color:#fffaf5;font-size:.66rem;font-style:normal;font-weight:800;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 8px 24px #1d120a2e;backdrop-filter:blur(8px)}.galleryExclusive::before{width:6px;height:6px;border-radius:50%;background:#d59462;content:"";box-shadow:0 0 0 3px #d5946226}
 .locationMap{overflow:hidden;margin:26px -28px -28px;border-top:1px solid #e6dbd0;background:#fff;text-align:left}
 .locationMapCanvas,.locationMapFallback{height:210px}
 .locationMapStage{position:relative}.locationMapHint{position:absolute;z-index:2;top:12px;left:12px;border:1px solid #e0c8b5;border-radius:99px;background:#fffcf8e8;padding:6px 9px;color:#84502e;font-size:.66rem;font-weight:750;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 4px 14px #39210d14;pointer-events:none}.locationMapCanvas :global(.mapboxgl-ctrl-group){overflow:hidden;border:1px solid #e2d8cf;border-radius:8px;box-shadow:0 6px 20px #2a1d111a}.locationMapCanvas :global(.mapboxgl-ctrl-group button){width:32px;height:32px}.locationMapCanvas :global(.mapboxgl-ctrl-attrib){font-size:9px}
@@ -19,3 +20,4 @@
 .locationMapCaption{display:flex;gap:10px;padding:16px 20px}
 .locationMapCaption>div{display:grid}.locationMapCaption span,.locationMapCaption small{color:#777}.locationMapCaption small{margin-top:4px;font-size:.7rem}
 @media(max-width:900px) and (min-width:601px){.gallery{aspect-ratio:1.55;min-height:0}}
+@media(max-width:600px){.galleryExclusive{top:12px;left:12px;padding:7px 10px;font-size:.6rem}}
