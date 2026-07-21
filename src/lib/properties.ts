@@ -3,7 +3,7 @@ import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 
 export type PropertyImage = { id: string; public_url: string; alt_text: string | null; position: number; is_cover: boolean };
 export type Property = {
-  id: string; slug: string; status: "draft" | "published" | "archived"; title: string; city_name: string;
+  id: string; slug: string; status: "draft" | "published" | "sold" | "archived"; title: string; city_name: string;
   postal_code: string | null; neighborhood: string | null; property_type: string; transaction_type: string;
   price: number; surface_m2: number | null; rooms: number | null; bedrooms: number | null; floor_label: string | null;
   short_description: string | null; description: string | null; address: string | null; energy_rating: string | null;
@@ -68,12 +68,12 @@ async function attachImages(rows: Omit<Property, "images">[]): Promise<Property[
 }
 
 export async function getPublishedProperty(slug: string) {
-  const rows = await request<Omit<Property, "images">[]>(`properties?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=*&limit=1`);
+  const rows = await request<Omit<Property, "images">[]>(`properties?slug=eq.${encodeURIComponent(slug)}&status=in.(published,sold)&select=*&limit=1`);
   return (await attachImages(rows))[0] ?? null;
 }
 
 export async function getPublishedProperties() {
-  const rows = await request<Omit<Property, "images">[]>("properties?status=eq.published&select=*&order=published_at.desc");
+  const rows = await request<Omit<Property, "images">[]>("properties?status=in.(published,sold)&select=*&order=published_at.desc");
   return attachImages(rows);
 }
 

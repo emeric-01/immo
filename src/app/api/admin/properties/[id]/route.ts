@@ -6,13 +6,15 @@ import { geocodePropertyAddress } from "@/lib/property-geocoding";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 const number = (form: FormData, key: string) => text(form, key) ? Number(text(form, key)) : null;
+const propertyStatuses = new Set(["draft", "published", "sold", "archived"]);
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await getAdminSession())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   try {
     const { id } = await params;
     const form = await request.formData();
-    const status = text(form, "status") || "draft";
+    const requestedStatus = text(form, "status");
+    const status = propertyStatuses.has(requestedStatus) ? requestedStatus : "draft";
     const geocode = await geocodePropertyAddress(text(form, "address"), text(form, "postal_code"), text(form, "city_name"));
     const amenities = form.getAll("amenities").map(String);
     if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
@@ -36,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       fees_paid_by: text(form, "fees_paid_by") || "Vendeur", contact_name: text(form, "contact_name") || null,
       contact_phone: text(form, "contact_phone") || null, contact_email: text(form, "contact_email") || null,
       seo_title: text(form, "seo_title") || null, seo_description: text(form, "seo_description") || null,
-      seo_noindex: form.has("seo_noindex"), published_at: status === "published" ? new Date().toISOString() : null,
+      seo_noindex: form.has("seo_noindex"), published_at: ["published", "sold"].includes(status) ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
     const [property] = await adminRest<{ slug: string }[]>(`properties?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });

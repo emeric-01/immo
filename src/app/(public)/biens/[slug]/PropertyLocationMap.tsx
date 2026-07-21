@@ -34,22 +34,21 @@ export function PropertyLocationMap({ accessToken, center, radiusMeters }: Props
       container: containerRef.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: publicCenter,
-      zoom: 13.8,
+      zoom: 13.2,
       interactive: true,
       scrollZoom: false,
       attributionControl: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
-    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
     map.on("load", () => {
       map.addSource("approximate-area", { type: "geojson", data: circle(publicCenter, radiusMeters) });
       map.addLayer({ id: "approximate-area-fill", type: "fill", source: "approximate-area", paint: { "fill-color": "#c37a48", "fill-opacity": 0.2 } });
       map.addLayer({ id: "approximate-area-line", type: "line", source: "approximate-area", paint: { "line-color": "#b86f3d", "line-width": 2, "line-opacity": 0.8 } });
-      map.fitBounds(circleBounds(publicCenter, radiusMeters), { padding: 34, duration: 0, maxZoom: 14.6 });
+      map.fitBounds(circleBounds(publicCenter, radiusMeters), { padding: 28, duration: 0, maxZoom: 13.6 });
     });
     map.on("error", () => setFailed(true));
     return () => map.remove();
   }, [accessToken, center.latitude, center.longitude, radiusMeters]);
   if (failed) return <div className={styles.locationMapFallback}>Localisation approximative du bien</div>;
-  return <div className={styles.locationMapStage}><div aria-label="Carte interactive de la zone approximative du bien. Utilisez les boutons plus et moins pour zoomer." className={styles.locationMapCanvas} ref={containerRef}/><span className={styles.locationMapHint}>Zone approximative</span></div>;
+  return <div className={styles.locationMapStage}><div aria-label="Carte interactive du secteur du bien. Utilisez les boutons plus et moins pour zoomer." className={styles.locationMapCanvas} ref={containerRef}/></div>;
 }

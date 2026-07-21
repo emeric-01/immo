@@ -21,3 +21,6 @@
 .locationMapCaption>div{display:grid}.locationMapCaption span,.locationMapCaption small{color:#777}.locationMapCaption small{margin-top:4px;font-size:.7rem}
 @media(max-width:900px) and (min-width:601px){.gallery{aspect-ratio:1.55;min-height:0}}
 @media(max-width:600px){.galleryExclusive{top:12px;left:12px;padding:7px 10px;font-size:.6rem}}
+.summary h1{font-size:clamp(2.2rem,3vw,2.75rem);line-height:1.02}@media(max-width:600px){.summary h1{font-size:2.35rem}}
+.descriptionCopy{margin-top:38px}.descriptionCopy>p:not(.eyebrow){color:#504c47;line-height:1.75}.description .facts{margin-top:0}
+.gallerySold{position:absolute;z-index:2;top:16px;left:16px;display:inline-flex;align-items:center;gap:7px;border:1px solid #ffffff55;border-radius:99px;background:#9b5938ed;padding:8px 12px;color:#fffaf5;font-size:.66rem;font-style:normal;font-weight:800;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 8px 24px #1d120a2e;backdrop-filter:blur(8px)}.gallerySold::before{width:6px;height:6px;border-radius:50%;background:#fff5ed;content:"";box-shadow:0 0 0 3px #fff3}.soldTitle{display:block;margin-top:24px;color:#a45d35;font:500 1.85rem Georgia,serif}@media(max-width:600px){.gallerySold{top:12px;left:12px;padding:7px 10px;font-size:.6rem}}
