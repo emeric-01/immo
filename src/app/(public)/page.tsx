@@ -24,6 +24,8 @@ import { getPublishedContentArticles, type ContentArticle } from "@/lib/content/
 import { createPageMetadata } from "@/lib/seo";
 import styles from "./home.module.css";
 
+export const revalidate = 900;
+
 export const metadata: Metadata = createPageMetadata({
   title: "Les Jumelles Immo | Estimer, vendre et acheter avec méthode",
   description: "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos, Saint-Cyr-sur-Mer et Aix-en-Provence.",
