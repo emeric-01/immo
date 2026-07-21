@@ -20,7 +20,6 @@ import { getSiteUrl } from "@/lib/site";
 
 const ink = "#171717";
 const muted = "#687080";
-const line = "#ded9d2";
 const accent = "#a56a40";
 const soft = "#fbf6ea";
 
