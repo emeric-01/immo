@@ -70,14 +70,14 @@ export function CommuneAutocomplete({ initialCity, initialPostalCode, initialIns
     <label htmlFor={`${listId}-input`}>Commune et code postal</label>
     <div className={styles.communeInput}>
       <MapPin aria-hidden="true"/>
-      <input aria-autocomplete="list" aria-controls={listId} aria-expanded={open} autoComplete="off" id={`${listId}-input`} onChange={(event) => edit(event.target.value)} onFocus={() => setOpen(true)} placeholder="Commencez par saisir une ville ou un code postal" required value={query}/>
+      <input aria-autocomplete="list" aria-controls={listId} aria-expanded={open} autoComplete="off" id={`${listId}-input`} onChange={(event) => edit(event.target.value)} onFocus={() => setOpen(true)} placeholder="Commencez par saisir une ville ou un code postal" required role="combobox" value={query}/>
       {searching ? <LoaderCircle aria-label="Recherche en cours" className={styles.spin}/> : city ? <Check aria-label="Commune vérifiée"/> : <Search aria-hidden="true"/>}
     </div>
     <input name="city_name" type="hidden" value={city}/>
     <input name="postal_code" type="hidden" value={postalCode}/>
     <input name="insee_code" type="hidden" value={inseeCode}/>
     {open && query.trim().length >= 2 ? <div className={styles.communeResults} id={listId} role="listbox">
-      {results.map((commune) => <button key={commune.cityCode || `${commune.name}-${commune.postalCode}`} onClick={() => choose(commune)} role="option" type="button"><MapPin/><span><strong>{commune.name}</strong><small>{(commune.postalCodes?.length ? commune.postalCodes : [commune.postalCode]).filter(Boolean).join(", ")} · INSEE {commune.cityCode}</small></span><Check/></button>)}
+      {results.map((commune) => <button aria-selected="false" key={commune.cityCode || `${commune.name}-${commune.postalCode}`} onClick={() => choose(commune)} role="option" type="button"><MapPin/><span><strong>{commune.name}</strong><small>{(commune.postalCodes?.length ? commune.postalCodes : [commune.postalCode]).filter(Boolean).join(", ")} · INSEE {commune.cityCode}</small></span><Check/></button>)}
       {!searching && results.length === 0 ? <p>Saisissez au moins 2 caractères puis choisissez une commune proposée.</p> : null}
     </div> : null}
     {city ? <div className={styles.communeConfirmation}><span><Check/> Commune vérifiée : <strong>{city}</strong>{inseeCode ? ` · INSEE ${inseeCode}` : ""}</span>{postalCodes.length > 1 ? <label>Code postal<select onChange={(event) => { setPostalCode(event.target.value); setQuery(`${city} — ${event.target.value}`); }} value={postalCode}>{postalCodes.map((code) => <option key={code}>{code}</option>)}</select></label> : postalCode ? <span>Code postal : <strong>{postalCode}</strong></span> : null}</div> : <p className={styles.communeHelp}>Sélectionnez une proposition pour fiabiliser la ville, le code postal et le code INSEE.</p>}
