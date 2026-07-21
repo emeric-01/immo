@@ -33,12 +33,14 @@ export function getApproximatePropertyLocation(property: Pick<Property, "id" | "
   if (!Number.isFinite(property.latitude) || !Number.isFinite(property.longitude)) return null;
   const seed = propertySeed(property.id);
   const angle = ((seed % 360) * Math.PI) / 180;
-  const distanceMeters = 120 + (seed % 81);
+  // Le centre public est décalé, mais l'adresse réelle reste toujours largement
+  // à l'intérieur du périmètre de 420 m affiché sur la carte.
+  const distanceMeters = 90 + (seed % 61);
   const latitude = property.latitude as number;
   return {
     latitude: Number((latitude + (distanceMeters * Math.cos(angle)) / 111_320).toFixed(5)),
     longitude: Number(((property.longitude as number) + (distanceMeters * Math.sin(angle)) / (111_320 * Math.cos((latitude * Math.PI) / 180))).toFixed(5)),
-    radiusMeters: 360,
+    radiusMeters: 420,
   };
 }
 

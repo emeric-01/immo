@@ -14,6 +14,7 @@
 .exclusiveBadge{display:inline-flex;align-items:center;margin:0 0 18px;border:1px solid #d6ad8f;border-radius:99px;background:#fbf1e8;padding:7px 11px;color:#a85e31;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
 .locationMap{overflow:hidden;margin:26px -28px -28px;border-top:1px solid #e6dbd0;background:#fff;text-align:left}
 .locationMapCanvas,.locationMapFallback{height:210px}
+.locationMapStage{position:relative}.locationMapHint{position:absolute;z-index:2;top:12px;left:12px;border:1px solid #e0c8b5;border-radius:99px;background:#fffcf8e8;padding:6px 9px;color:#84502e;font-size:.66rem;font-weight:750;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 4px 14px #39210d14;pointer-events:none}.locationMapCanvas :global(.mapboxgl-ctrl-group){overflow:hidden;border:1px solid #e2d8cf;border-radius:8px;box-shadow:0 6px 20px #2a1d111a}.locationMapCanvas :global(.mapboxgl-ctrl-group button){width:32px;height:32px}.locationMapCanvas :global(.mapboxgl-ctrl-attrib){font-size:9px}
 .locationMapFallback{display:grid;place-items:center;background:radial-gradient(circle at 45% 45%,#ead9ca 0 22%,transparent 23%),#f2eee9;color:#746c64;font-size:.78rem}
 .locationMapCaption{display:flex;gap:10px;padding:16px 20px}
 .locationMapCaption>div{display:grid}.locationMapCaption span,.locationMapCaption small{color:#777}.locationMapCaption small{margin-top:4px;font-size:.7rem}

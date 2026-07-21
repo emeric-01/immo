@@ -14,21 +14,42 @@ function circle(center: [number, number], radiusMeters: number) {
   return { type: "Feature" as const, properties: {}, geometry: { type: "Polygon" as const, coordinates: [coordinates] } };
 }
 
+function circleBounds(center: [number, number], radiusMeters: number) {
+  const latitudeDelta = radiusMeters / 111_320;
+  const longitudeDelta = radiusMeters / (111_320 * Math.cos((center[1] * Math.PI) / 180));
+  return new mapboxgl.LngLatBounds(
+    [center[0] - longitudeDelta, center[1] - latitudeDelta],
+    [center[0] + longitudeDelta, center[1] + latitudeDelta],
+  );
+}
+
 export function PropertyLocationMap({ accessToken, center, radiusMeters }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState(!accessToken);
   useEffect(() => {
     if (!containerRef.current || !accessToken) return;
     mapboxgl.accessToken = accessToken;
-    const map = new mapboxgl.Map({ container: containerRef.current, style: "mapbox://styles/mapbox/light-v11", center: [center.longitude, center.latitude], zoom: 14.2, interactive: false, attributionControl: false });
+    const publicCenter: [number, number] = [center.longitude, center.latitude];
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: "mapbox://styles/mapbox/light-v11",
+      center: publicCenter,
+      zoom: 13.8,
+      interactive: true,
+      scrollZoom: false,
+      attributionControl: false,
+    });
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
     map.on("load", () => {
-      map.addSource("approximate-area", { type: "geojson", data: circle([center.longitude, center.latitude], radiusMeters) });
+      map.addSource("approximate-area", { type: "geojson", data: circle(publicCenter, radiusMeters) });
       map.addLayer({ id: "approximate-area-fill", type: "fill", source: "approximate-area", paint: { "fill-color": "#c37a48", "fill-opacity": 0.2 } });
       map.addLayer({ id: "approximate-area-line", type: "line", source: "approximate-area", paint: { "line-color": "#b86f3d", "line-width": 2, "line-opacity": 0.8 } });
+      map.fitBounds(circleBounds(publicCenter, radiusMeters), { padding: 34, duration: 0, maxZoom: 14.6 });
     });
     map.on("error", () => setFailed(true));
     return () => map.remove();
   }, [accessToken, center.latitude, center.longitude, radiusMeters]);
   if (failed) return <div className={styles.locationMapFallback}>Localisation approximative du bien</div>;
-  return <div aria-label="Zone de localisation approximative du bien" className={styles.locationMapCanvas} ref={containerRef}/>;
+  return <div className={styles.locationMapStage}><div aria-label="Carte interactive de la zone approximative du bien. Utilisez les boutons plus et moins pour zoomer." className={styles.locationMapCanvas} ref={containerRef}/><span className={styles.locationMapHint}>Zone approximative</span></div>;
 }
