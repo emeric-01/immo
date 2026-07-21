@@ -17,6 +17,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const status = propertyStatuses.has(requestedStatus) ? requestedStatus : "draft";
     const geocode = await geocodePropertyAddress(text(form, "address"), text(form, "postal_code"), text(form, "city_name"));
     const amenities = form.getAll("amenities").map(String);
+    if ((number(form, "terrace_m2") ?? 0) > 0 && !amenities.includes("Terrasse")) amenities.push("Terrasse");
+    if (((number(form, "parking_spaces") ?? 0) > 0 || (text(form, "parking_details") && text(form, "parking_details") !== "Aucun")) && !amenities.includes("Parking")) amenities.push("Parking");
     if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
     const payload = {
       title: text(form, "title"), city_name: text(form, "city_name"), status,

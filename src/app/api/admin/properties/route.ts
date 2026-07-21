@@ -19,6 +19,8 @@ export async function POST(request: Request) {
     if (!title || !city || !number(form, "price")) return NextResponse.json({ error: "Titre, ville et prix sont requis." }, { status: 400 });
     const geocode = await geocodePropertyAddress(text(form, "address"), text(form, "postal_code"), city);
     const amenities = form.getAll("amenities").map(String);
+    if ((number(form, "terrace_m2") ?? 0) > 0 && !amenities.includes("Terrasse")) amenities.push("Terrasse");
+    if (((number(form, "parking_spaces") ?? 0) > 0 || (text(form, "parking_details") && text(form, "parking_details") !== "Aucun")) && !amenities.includes("Parking")) amenities.push("Parking");
     if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
     const payload = {
       title, city_name: city, slug: `${slugify(title)}-${slugify(city)}-${Date.now().toString().slice(-6)}`,
