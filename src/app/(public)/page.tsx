@@ -19,6 +19,8 @@ import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
+import { ContentImage } from "@/components/content/ContentImage";
+import { getPublishedContentArticles, type ContentArticle } from "@/lib/content/articles";
 import { createPageMetadata } from "@/lib/seo";
 import styles from "./home.module.css";
 
@@ -55,7 +57,23 @@ const cityImages: Record<string, { src: string; alt: string }> = {
 
 const formatPrice = (value: number) => new Intl.NumberFormat("fr-FR").format(value);
 
+function getDailyContentSelection(articles: ContentArticle[], count = 3) {
+  const dayKey = new Date().toISOString().slice(0, 10);
+  let seed = Array.from(dayKey).reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261);
+  const shuffled = [...articles];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const target = seed % (index + 1);
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+
+  return shuffled.slice(0, count);
+}
+
 export default async function HomePage() {
+  const publishedArticles = await getPublishedContentArticles(24);
+  const featuredArticles = getDailyContentSelection(publishedArticles);
   const cities = featuredSlugs.flatMap((slug) => {
     const city = getCityBySlug(slug);
     return city ? [city] : [];
@@ -161,12 +179,29 @@ export default async function HomePage() {
       </section>
 
       <section className={styles.advice} id="conseils" aria-labelledby="advice-title">
-        <div className={styles.sectionTitleRow}><div><p className={styles.eyebrow}>Conseils & décryptages</p><h2 id="advice-title">Mieux comprendre pour mieux décider</h2></div><Link href="/estimation">Préparer mon projet <ArrowRight size={16} /></Link></div>
-        <div className={styles.adviceGrid}>
-          <Link href="/prix-m2/aix-en-provence" title="Prix m² à Aix-en-Provence"><div className={styles.articleVisual}>Marché local</div><div><small>Marché local</small><h3>Prix m² à Aix-en-Provence : comprendre le marché</h3><span>Lire l’analyse <ArrowRight size={14} /></span></div></Link>
-          <Link href="/estimation"><div className={styles.articleVisual}>Estimation</div><div><small>Guide pratique</small><h3>Estimer juste : les facteurs qui changent tout</h3><span>Lancer mon estimation <ArrowRight size={14} /></span></div></Link>
-          <Link href="/prix-m2/cassis" title="Prix m² à Cassis"><div className={styles.articleVisual}>Cassis</div><div><small>Focus secteur</small><h3>Prix m² à Cassis : les repères essentiels</h3><span>Voir les prix <ArrowRight size={14} /></span></div></Link>
-        </div>
+        <div className={styles.sectionTitleRow}><div><p className={styles.eyebrow}>Conseils & décryptages</p><h2 id="advice-title">Mieux comprendre pour mieux décider</h2></div><Link href="/contenus">Voir tous les contenus <ArrowRight size={16} /></Link></div>
+        {featuredArticles.length > 0 ? (
+          <div className={styles.adviceGrid}>
+            {featuredArticles.map((article) => (
+              <Link href={`/contenus/${article.slug}`} key={article.id}>
+                <div className={styles.articleVisual}>
+                  {article.cover_image_url ? (
+                    <ContentImage
+                      alt={article.cover_image_alt || article.title}
+                      fill
+                      sizes="(max-width: 720px) 34vw, (max-width: 1100px) 31vw, 13vw"
+                      src={article.cover_image_url}
+                    />
+                  ) : null}
+                  <span>{article.category}</span>
+                </div>
+                <div><small>{article.category}</small><h3>{article.title}</h3><span>Lire le contenu <ArrowRight size={14} /></span></div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Link className={styles.adviceEmpty} href="/contenus">Découvrir tous nos conseils immobiliers <ArrowRight size={16} /></Link>
+        )}
       </section>
 
       <section className={styles.finalCta} aria-labelledby="action-title"><h2 id="action-title">Passez à l’action</h2><div><Link href="/prix-m2"><Building2 /> <span><strong>Connaître les prix</strong><small>Explorer le marché</small></span><ArrowRight /></Link><Link href="/estimation"><Home /> <span><strong>Estimer mon bien</strong><small>Obtenir une estimation</small></span><ArrowRight /></Link><Link href="/recherche"><Search /> <span><strong>Créer ma recherche</strong><small>Être accompagné</small></span><ArrowRight /></Link></div></section>
