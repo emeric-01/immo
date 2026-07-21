@@ -28,6 +28,8 @@ const property = {
   short_description: "Des volumes lumineux ouverts sur le jardin",
   description: "Une villa familiale avec piscine, terrasse et jardin paysagé.",
   address: null,
+  latitude: 43.2989,
+  longitude: 5.6284,
   energy_rating: "C",
   condominium_charges_monthly: null,
   property_tax_annual: 2800,

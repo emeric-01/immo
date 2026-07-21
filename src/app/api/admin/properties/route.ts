@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
 import { adminRest, getSupabaseAdminConfig } from "@/lib/properties";
+import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
+import { geocodePropertyAddress } from "@/lib/property-geocoding";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 const number = (form: FormData, key: string) => { const value = text(form, key); return value ? Number(value) : null; };
@@ -12,6 +14,9 @@ export async function POST(request: Request) {
     const form = await request.formData();
     const title = text(form, "title"); const city = text(form, "city_name");
     if (!title || !city || !number(form, "price")) return NextResponse.json({ error: "Titre, ville et prix sont requis." }, { status: 400 });
+    const geocode = await geocodePropertyAddress(text(form, "address"), text(form, "postal_code"), city);
+    const amenities = form.getAll("amenities").map(String);
+    if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
     const payload = {
       title, city_name: city, slug: `${slugify(title)}-${slugify(city)}-${Date.now().toString().slice(-6)}`,
       status: text(form, "status") || "draft", postal_code: text(form, "postal_code") || null,
@@ -19,14 +24,14 @@ export async function POST(request: Request) {
       transaction_type: text(form, "transaction_type") || "sale", price: number(form, "price"), surface_m2: number(form, "surface_m2"),
       rooms: number(form, "rooms"), bedrooms: number(form, "bedrooms"), floor_label: text(form, "floor_label") || null,
       short_description: text(form, "short_description") || null, description: text(form, "description") || null,
-      address: text(form, "address") || null, energy_rating: text(form, "energy_rating") || null,
+      address: text(form, "address") || null, latitude: geocode?.latitude ?? null, longitude: geocode?.longitude ?? null, energy_rating: text(form, "energy_rating") || null,
       condominium_charges_monthly: number(form, "condominium_charges_monthly"), property_tax_annual: number(form, "property_tax_annual"),
       condominium_lots: number(form, "condominium_lots"), terrace_m2: number(form, "terrace_m2"), heating: text(form, "heating") || null,
       exposure: text(form, "exposure") || null, construction_year: number(form, "construction_year"), parking_details: text(form, "parking_details") || null,
       land_area_m2: number(form, "land_area_m2"), bathrooms: number(form, "bathrooms"), levels: number(form, "levels"),
       parking_spaces: number(form, "parking_spaces"), property_condition: text(form, "property_condition") || null,
       kitchen_type: text(form, "kitchen_type") || null, land_is_buildable: form.has("land_is_buildable"), land_is_serviced: form.has("land_is_serviced"),
-      amenities: form.getAll("amenities").map(String), fees_paid_by: text(form, "fees_paid_by") || "Vendeur",
+      amenities, fees_paid_by: text(form, "fees_paid_by") || "Vendeur",
       contact_name: text(form, "contact_name") || "Les Jumelles Immo", contact_phone: text(form, "contact_phone") || null,
       contact_email: text(form, "contact_email") || null, published_at: text(form, "status") === "published" ? new Date().toISOString() : null,
       seo_title: text(form, "seo_title") || null, seo_description: text(form, "seo_description") || null, seo_noindex: form.has("seo_noindex"),

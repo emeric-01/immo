@@ -8,3 +8,13 @@
 .mainImage{display:block;width:100%;min-width:0}
 .mobileGallery{display:none}
 @media(max-width:600px){.gallery{display:none}.mobileGallery{display:flex;width:calc(100vw - 24px);max-width:100%;gap:9px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.mobileGallery::-webkit-scrollbar{display:none}.mobileGallery figure{position:relative;flex:0 0 100%;height:330px;margin:0;overflow:hidden;border-radius:10px;background:#eee;scroll-snap-align:start;scroll-snap-stop:always}.mobileGallery img{object-fit:cover}.mobileGallery span{position:absolute;bottom:12px;left:12px;border-radius:99px;background:#fff;padding:7px 11px;font-size:.78rem;box-shadow:0 4px 18px #00000018}}
+
+/* Ratio homogène et localisation publique protégée */
+.gallery{grid-template-columns:minmax(0,3fr) minmax(170px,1fr);grid-template-rows:minmax(0,1fr);aspect-ratio:1.47;min-height:0}
+.exclusiveBadge{display:inline-flex;align-items:center;margin:0 0 18px;border:1px solid #d6ad8f;border-radius:99px;background:#fbf1e8;padding:7px 11px;color:#a85e31;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.locationMap{overflow:hidden;margin:26px -28px -28px;border-top:1px solid #e6dbd0;background:#fff;text-align:left}
+.locationMapCanvas,.locationMapFallback{height:210px}
+.locationMapFallback{display:grid;place-items:center;background:radial-gradient(circle at 45% 45%,#ead9ca 0 22%,transparent 23%),#f2eee9;color:#746c64;font-size:.78rem}
+.locationMapCaption{display:flex;gap:10px;padding:16px 20px}
+.locationMapCaption>div{display:grid}.locationMapCaption span,.locationMapCaption small{color:#777}.locationMapCaption small{margin-top:4px;font-size:.7rem}
+@media(max-width:900px) and (min-width:601px){.gallery{aspect-ratio:1.55;min-height:0}}

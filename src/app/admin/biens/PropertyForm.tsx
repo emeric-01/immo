@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { GripVertical, LoaderCircle, RotateCcw, Star, Trash2 } from "lucide-react";
 import type { Property } from "@/lib/properties";
+import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 import styles from "../properties.module.css";
 import { PhotoDropzone } from "./PhotoDropzone";
 import { RichTextEditor } from "./RichTextEditor";
@@ -22,6 +23,7 @@ export function PropertyForm({ property }: { property?: Property }) {
   return <form className={styles.form} onSubmit={submit}>
     <div className={styles.formHeader}><div><span>{property?"Modification":"Nouvelle annonce"}</span><h2>{property?"Modifier la fiche":"Créer une fiche bien"}</h2></div><select defaultValue={property?.status??"draft"} name="status"><option value="draft">Brouillon</option><option value="published">Publié</option><option value="archived">Archivé</option></select></div>
     {contactSection}
+    <section><h3>Mandat</h3><p className={styles.sectionIntro}>La mention d’exclusivité sera mise en valeur sur la fiche publique.</p><div className={styles.grid}><label>Type de mandat<select defaultValue={property?.amenities.includes(EXCLUSIVE_MANDATE_AMENITY)?"exclusive":"simple"} name="mandate_type"><option value="simple">Mandat simple</option><option value="exclusive">Mandat exclusif</option></select></label></div></section>
     <section><h3>Informations essentielles</h3><div className={styles.grid}>
       <label className={styles.wide}>Titre<input defaultValue={property?.title} name="title" required /></label><label>Ville<input defaultValue={property?.city_name} name="city_name" required /></label><label>Code postal<input defaultValue={String(val("postal_code"))} name="postal_code" /></label>
       <label>Quartier<input defaultValue={String(val("neighborhood"))} name="neighborhood" /></label><label>Type de bien<select name="property_type" onChange={event=>setPropertyType(event.target.value)} value={propertyType}><option value="apartment">Appartement</option><option value="house">Maison</option><option value="land">Terrain</option><option value="other">Autre</option></select></label>

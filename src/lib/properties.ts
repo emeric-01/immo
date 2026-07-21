@@ -1,4 +1,5 @@
 import "server-only";
+import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 
 export type PropertyImage = { id: string; public_url: string; alt_text: string | null; position: number; is_cover: boolean };
 export type Property = {
@@ -6,6 +7,7 @@ export type Property = {
   postal_code: string | null; neighborhood: string | null; property_type: string; transaction_type: string;
   price: number; surface_m2: number | null; rooms: number | null; bedrooms: number | null; floor_label: string | null;
   short_description: string | null; description: string | null; address: string | null; energy_rating: string | null;
+  latitude: number | null; longitude: number | null;
   condominium_charges_monthly: number | null; property_tax_annual: number | null; condominium_lots: number | null;
   terrace_m2: number | null; heating: string | null; exposure: string | null; construction_year: number | null;
   parking_details: string | null; amenities: string[]; fees_paid_by: string | null; contact_name: string | null;
@@ -14,6 +16,31 @@ export type Property = {
   seo_title: string | null; seo_description: string | null; seo_noindex: boolean;
   contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; updated_at: string | null; images: PropertyImage[];
 };
+
+export function isExclusiveProperty(property: Pick<Property, "amenities">) {
+  return property.amenities.includes(EXCLUSIVE_MANDATE_AMENITY);
+}
+
+export function getPublicAmenities(property: Pick<Property, "amenities">) {
+  return property.amenities.filter((item) => item !== EXCLUSIVE_MANDATE_AMENITY);
+}
+
+function propertySeed(id: string) {
+  return [...id].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261);
+}
+
+export function getApproximatePropertyLocation(property: Pick<Property, "id" | "latitude" | "longitude">) {
+  if (!Number.isFinite(property.latitude) || !Number.isFinite(property.longitude)) return null;
+  const seed = propertySeed(property.id);
+  const angle = ((seed % 360) * Math.PI) / 180;
+  const distanceMeters = 120 + (seed % 81);
+  const latitude = property.latitude as number;
+  return {
+    latitude: Number((latitude + (distanceMeters * Math.cos(angle)) / 111_320).toFixed(5)),
+    longitude: Number(((property.longitude as number) + (distanceMeters * Math.sin(angle)) / (111_320 * Math.cos((latitude * Math.PI) / 180))).toFixed(5)),
+    radiusMeters: 360,
+  };
+}
 
 function config() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
