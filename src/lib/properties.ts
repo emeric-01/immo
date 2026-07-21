@@ -4,7 +4,7 @@ import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 export type PropertyImage = { id: string; public_url: string; alt_text: string | null; position: number; is_cover: boolean };
 export type Property = {
   id: string; slug: string; status: "draft" | "published" | "sold" | "archived"; title: string; city_name: string;
-  postal_code: string | null; neighborhood: string | null; property_type: string; transaction_type: string;
+  postal_code: string | null; insee_code?: string | null; neighborhood: string | null; property_type: string; transaction_type: string;
   price: number; surface_m2: number | null; rooms: number | null; bedrooms: number | null; floor_label: string | null;
   short_description: string | null; description: string | null; address: string | null; energy_rating: string | null;
   latitude: number | null; longitude: number | null;

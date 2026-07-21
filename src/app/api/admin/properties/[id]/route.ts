@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
     const payload = {
       title: text(form, "title"), city_name: text(form, "city_name"), status,
-      postal_code: text(form, "postal_code") || null, neighborhood: text(form, "neighborhood") || null,
+      postal_code: text(form, "postal_code") || null, insee_code: text(form, "insee_code") || null, neighborhood: text(form, "neighborhood") || null,
       property_type: text(form, "property_type") || "apartment", price: number(form, "price"),
       surface_m2: number(form, "surface_m2"), rooms: number(form, "rooms"), bedrooms: number(form, "bedrooms"),
       floor_label: text(form, "floor_label") || null, short_description: text(form, "short_description") || null,

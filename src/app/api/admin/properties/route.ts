@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (text(form, "mandate_type") === "exclusive") amenities.push(EXCLUSIVE_MANDATE_AMENITY);
     const payload = {
       title, city_name: city, slug: `${slugify(title)}-${slugify(city)}-${Date.now().toString().slice(-6)}`,
-      status, postal_code: text(form, "postal_code") || null,
+      status, postal_code: text(form, "postal_code") || null, insee_code: text(form, "insee_code") || null,
       neighborhood: text(form, "neighborhood") || null, property_type: text(form, "property_type") || "apartment",
       transaction_type: text(form, "transaction_type") || "sale", price: number(form, "price"), surface_m2: number(form, "surface_m2"),
       rooms: number(form, "rooms"), bedrooms: number(form, "bedrooms"), floor_label: text(form, "floor_label") || null,
