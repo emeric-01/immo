@@ -72,6 +72,7 @@
 .grid small { margin-top: 8px; font-size: .64rem; font-weight: 700; }
 .positiveTrend { color: #657252; }
 .negativeTrend { color: #a55e48; }
+.missingTrend { color: #8a837c; font-weight: 600 !important; }
 .grid svg { position: absolute; right: 17px; top: 50%; color: var(--copper); transform: translateY(-50%); }
 
 .agencyServices {

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, Home, MapPin } from "lucide-react";
 import { southCities } from "@/lib/cities";
-import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { createPageMetadata } from "@/lib/seo";
+import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import styles from "./estimation-cities.module.css";
 
 export const metadata: Metadata = createPageMetadata({
@@ -17,15 +18,6 @@ const estimationCities = southCities.filter((city) =>
   ["Bouches-du-Rhone", "Var"].includes(city.department),
 );
 
-const estimationCityCards = estimationCities.map((city) => {
-  const market = getStaticCityMarketData(city);
-  const trend1Year = Number(
-    ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
-  );
-
-  return { ...city, trend1Year };
-});
-
 function formatTrend(value: number) {
   return `${value > 0 ? "+" : ""}${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 }
@@ -35,7 +27,13 @@ const departments = [
   { key: "Var", label: "Var (83)" },
 ] as const;
 
-export default function EstimationCitiesPage() {
+export default async function EstimationCitiesPage() {
+  const cachedTrends = await readCityMarketTrends(estimationCities);
+  const estimationCityCards = estimationCities.map((city) => ({
+    ...city,
+    trend1Year: cachedTrends.get(city.inseeCode) ?? getStoredCityMarketTrend(city),
+  }));
+
   return (
     <main className={styles.page}>
       <nav className={styles.breadcrumb} aria-label="Fil d’Ariane">
@@ -71,9 +69,13 @@ export default function EstimationCitiesPage() {
                 <Link href={`/estimation-immobiliere/${city.slug}`} key={city.slug}>
                   <span>Estimation immobilière</span>
                   <strong>{city.name}</strong>
-                  <small className={city.trend1Year >= 0 ? styles.positiveTrend : styles.negativeTrend}>
-                    Évolution sur 1 an&nbsp;: {formatTrend(city.trend1Year)}
-                  </small>
+                  {city.trend1Year === null ? (
+                    <small className={styles.missingTrend}>Évolution locale à venir</small>
+                  ) : (
+                    <small className={city.trend1Year >= 0 ? styles.positiveTrend : styles.negativeTrend}>
+                      Évolution sur 1 an&nbsp;: {formatTrend(city.trend1Year)}
+                    </small>
+                  )}
                   <ArrowRight aria-hidden="true" size={16} />
                 </Link>
               ))}
