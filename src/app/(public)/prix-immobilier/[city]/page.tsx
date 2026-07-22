@@ -230,7 +230,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         <div className="city-property-guide-heading">
           <div>
             <p className="city-section-kicker">Prix immobilier à {city.name}</p>
-            <h2 id="property-price-title">Prix m² appartement et maison à {city.name}</h2>
+            <h2 id="property-price-title">Prix au m² des appartements et maisons à {city.name}</h2>
           </div>
           <p>
             Le prix au m² permet de situer rapidement un projet, à condition de comparer
