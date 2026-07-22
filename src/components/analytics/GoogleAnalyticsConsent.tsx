@@ -96,10 +96,10 @@ export function GoogleAnalyticsConsent() {
       {ready && choice === null ? (
         <aside aria-label="Gestion des cookies" className={styles.banner} role="dialog" aria-modal="false">
           <div>
-            <strong>Votre confidentialité, simplement.</strong>
+            <strong>Une expérience qui s’améliore avec vous.</strong>
             <p>
-              Avec votre accord, Google Analytics nous aide à comprendre l’utilisation du site. Aucun suivi publicitaire
-              n’est activé. <Link href="/mentions-legales#cookies">En savoir plus</Link>
+              Avec votre accord, nous mesurons l’audience et les parcours afin d’améliorer le site. Aucun usage
+              publicitaire n’est activé. <Link href="/mentions-legales#cookies">En savoir plus</Link>
             </p>
           </div>
           <div className={styles.actions}>
