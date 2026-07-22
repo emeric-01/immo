@@ -8,7 +8,6 @@
 export const legacyWordPressRedirects = [
   { source: "/prix-au-m2-aubagne-2", destination: "/prix-m2/aubagne", permanent: true },
   { source: "/prix-au-m2-aubagne-2-2", destination: "/estimation", permanent: true },
-  { source: "/estimation-immobiliere", destination: "/estimation", permanent: true },
   { source: "/actualite-du-marche-immobilier-et-expertise-de-notre-agence", destination: "/contenus", permanent: true },
   { source: "/honoraires-agence", destination: "/honoraires", permanent: true },
   { source: "/politique-de-confidentialite", destination: "/mentions-legales", permanent: true },

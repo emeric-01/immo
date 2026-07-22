@@ -49,6 +49,16 @@ const surfaceMin = 9;
 const surfaceMax = 300;
 const defaultSurface = 75;
 const roomOptions = ["1", "2", "3", "4", "5", "6"] as const;
+const priorityEstimationCities = [
+  { name: "Aubagne", slug: "aubagne" },
+  { name: "Ollioules", slug: "ollioules" },
+  { name: "Marseille", slug: "marseille" },
+  { name: "Le Castellet", slug: "le-castellet" },
+  { name: "Toulon", slug: "toulon" },
+  { name: "Aix-en-Provence", slug: "aix-en-provence" },
+  { name: "Ceyreste", slug: "ceyreste" },
+  { name: "Bandol", slug: "bandol" },
+] as const;
 
 const initialForm: FormState = {
   address: "",
@@ -521,6 +531,20 @@ export function EstimationForm({
               <span><strong>Données protégées</strong> et confidentielles</span>
             </li>
           </ul>
+
+          <nav className="estimation-city-links" aria-label="Estimations immobilières par ville">
+            <p>Estimations immobilières locales</p>
+            <div>
+              {priorityEstimationCities.map((city) => (
+                <Link href={`/estimation-immobiliere/${city.slug}`} key={city.slug}>
+                  {city.name}
+                </Link>
+              ))}
+            </div>
+            <Link className="estimation-city-index" href="/estimation-immobiliere">
+              Voir toutes les villes <ArrowRight aria-hidden="true" size={14} />
+            </Link>
+          </nav>
         </section>
       </main>
     );
