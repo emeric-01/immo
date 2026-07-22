@@ -5,6 +5,7 @@ import { ArrowRight, BedDouble, Building2, ChevronDown, Home, MapPin, Search, Sl
 import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { getPublishedProperties, isExclusiveProperty, type Property } from "@/lib/properties";
+import { comparePublicProperties, type PublicPropertySort } from "@/lib/property-order";
 import styles from "./properties-index.module.css";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,10 @@ export default async function PropertiesIndexPage({ searchParams }: { searchPara
   const query = (params.q || "").trim().toLocaleLowerCase("fr-FR");
   const selectedType = params.type || "all";
   const budget = Number(params.budget) || 0;
-  const sort = params.sort || "recent";
+  const requestedSort = params.sort || "manual";
+  const sort: PublicPropertySort = ["manual", "recent", "price-asc", "price-desc"].includes(requestedSort)
+    ? requestedSort as PublicPropertySort
+    : "manual";
   const properties = await getPublishedProperties().catch(() => []);
 
   const filtered = properties.filter((property) => {
@@ -62,12 +66,7 @@ export default async function PropertiesIndexPage({ searchParams }: { searchPara
     const matchesType = selectedType === "all" || property.property_type === selectedType;
     const matchesBudget = !budget || property.price <= budget;
     return matchesQuery && matchesType && matchesBudget;
-  }).sort((a, b) => {
-    if (a.status !== b.status) return a.status === "sold" ? 1 : -1;
-    if (sort === "price-asc") return a.price - b.price;
-    if (sort === "price-desc") return b.price - a.price;
-    return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
-  });
+  }).sort(comparePublicProperties(sort));
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -103,7 +102,7 @@ export default async function PropertiesIndexPage({ searchParams }: { searchPara
         <button type="submit"><Search/> Rechercher</button>
       </form>
 
-      <div className={styles.listHeading}><p>{filtered.length} bien{filtered.length > 1 ? "s" : ""} trouvé{filtered.length > 1 ? "s" : ""}</p><form method="get"><input name="q" type="hidden" value={params.q || ""}/><input name="type" type="hidden" value={selectedType}/><input name="budget" type="hidden" value={params.budget || ""}/><label>Trier par <select defaultValue={sort} name="sort"><option value="recent">Plus récents</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select></label><button type="submit">Appliquer</button></form></div>
+      <div className={styles.listHeading}><p>{filtered.length} bien{filtered.length > 1 ? "s" : ""} trouvé{filtered.length > 1 ? "s" : ""}</p><form method="get"><input name="q" type="hidden" value={params.q || ""}/><input name="type" type="hidden" value={selectedType}/><input name="budget" type="hidden" value={params.budget || ""}/><label>Trier par <select defaultValue={sort} name="sort"><option value="manual">Sélection de l’agence</option><option value="recent">Plus récents</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select></label><button type="submit">Appliquer</button></form></div>
 
       {filtered.length ? <section className={styles.grid} aria-label="Liste des biens">{filtered.map((property, index) => <PropertyCard featured={index === 0} key={property.id} property={property}/>)}</section> : <section className={styles.empty}><Search/><h2>Aucun bien ne correspond à vos critères</h2><p>Élargissez votre recherche ou confiez-nous votre projet pour être informé des prochaines opportunités.</p><div><Link href="/biens">Effacer les filtres</Link><Link href="/recherche">Créer ma recherche</Link></div></section>}
     </div>

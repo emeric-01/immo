@@ -7,6 +7,7 @@ import { getPropertyMarketScores } from "@/lib/property-market-score";
 import admin from "../admin.module.css";
 import styles from "../properties.module.css";
 import { DeletePropertyButton } from "./DeletePropertyButton";
+import { PropertyOrderManager, type OrderedProperty } from "./PropertyOrderManager";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +22,26 @@ export default async function PropertiesAdminPage() {
   const marketScores = await getPropertyMarketScores(properties);
   const scoredProperties = [...marketScores.values()].filter((score) => score !== null);
   const coherentProperties = scoredProperties.filter((score) => score?.status === "coherent").length;
+  const publicProperties: OrderedProperty[] = properties
+    .filter((property): property is typeof property & { status: "published" | "sold" } => ["published", "sold"].includes(property.status))
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === "sold" ? 1 : -1;
+      return a.display_order - b.display_order || new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+    })
+    .map((property) => ({
+      cityName: property.city_name,
+      id: property.id,
+      imageUrl: property.images[0]?.public_url || null,
+      status: property.status,
+      title: property.title,
+    }));
 
   return <main className={admin.adminPage}>
     <aside className={admin.sidebar}><div className={admin.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link data-active href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link href="/admin/estimations">Estimations</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link></nav></aside>
     <section className={`${admin.content} ${styles.catalogContent}`}>
       <header className={admin.pageHeader}><div><p className={admin.eyebrow}>Catalogue immobilier</p><h1>Vos biens</h1><p>Gérez vos annonces, leur publication et leur visibilité depuis un seul espace.</p></div><Link className={styles.addButton} href="/admin/biens/nouveau"><Plus size={18}/> Ajouter un bien</Link></header>
       <div className={styles.catalogStats}><article><Building2/><span>Total</span><strong>{properties.length}</strong></article><article><span className={styles.liveDot}/><span>En vente</span><strong>{published}</strong></article><article><span className={styles.soldDot}/><span>Vendus</span><strong>{sold}</strong></article><article><Archive/><span>Brouillons</span><strong>{drafts}</strong></article><article><span className={styles.scoreDot}/><span>Prix cohérents</span><strong>{coherentProperties}/{scoredProperties.length}</strong></article></div>
+      {!error && publicProperties.length ? <PropertyOrderManager properties={publicProperties}/> : null}
       <div className={styles.catalogHeading}><div><h2>Liste des biens</h2><p>{properties.length} annonce{properties.length > 1 ? "s" : ""} dans votre catalogue</p></div></div>
       {error ? <p className={styles.catalogError}>{error}</p> : properties.length === 0 ? <section className={styles.emptyCatalog}><Home/><h2>Aucun bien pour le moment</h2><p>Ajoutez votre première annonce pour commencer.</p><Link className={styles.addButton} href="/admin/biens/nouveau"><Plus size={18}/> Ajouter un bien</Link></section> : <div className={styles.list}>{properties.map(property => { const marketScore = marketScores.get(property.id); return <article key={property.id}>
         <div className={styles.cover}>{property.images[0] ? <Image src={property.images[0].public_url} alt="" height={112} width={160}/> : <Home/>}</div>

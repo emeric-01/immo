@@ -12,6 +12,7 @@ import { propertyPdfFileName, renderPropertyPdf } from "@/lib/property-pdf";
 
 const property = {
   id: "21af50e1-9ad4-43cb-b591-123456789abc",
+  display_order: 0,
   slug: "villa-contemporaine-gemenos",
   status: "draft",
   title: "Villa contemporaine avec piscine",
