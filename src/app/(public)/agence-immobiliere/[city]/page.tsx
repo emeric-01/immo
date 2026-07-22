@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: LocalAgencyPageProps): Promis
   if (!config || !city) return {};
 
   return createPageMetadata({
-    title: `Agence immobilière à ${city.name} | Estimation et vente`,
+    title: `Agence immobilière ${city.name} | Les Jumelles Immo`,
     description: `Les Jumelles Immo vous accompagnent à ${city.name} pour estimer, valoriser et vendre votre maison ou appartement avec une stratégie adaptée au marché local.`,
     image: config.heroImage.src,
     path: `/agence-immobiliere/${city.slug}`,
@@ -217,7 +217,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.strategySection} id="parlons-de-votre-bien">
         <div className={styles.strategyCopy}>
           <p className={styles.eyebrow}>Vendre à {city.name}</p>
-          <h2>Le bon prix attire. La bonne stratégie fait vendre.</h2>
+          <h2>Vendre son bien à {city.name} : le bon prix attire, la bonne stratégie fait vendre.</h2>
           <p>
             Vue, lumière, extérieur, stationnement, état ou potentiel : nous analysons ce
             qui rend votre bien différent pour fixer un prix cohérent, soigner sa
@@ -227,7 +227,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         </div>
         <aside className={styles.leadCard} aria-labelledby="lead-form-title">
           <p className={styles.eyebrow}>Premier échange</p>
-          <h2 id="lead-form-title">Parlons de votre bien</h2>
+          <h2 id="lead-form-title">Parlons de votre projet immobilier à {city.name}</h2>
           <LocalAgencyLeadForm cityName={city.name} />
         </aside>
       </section>
@@ -243,9 +243,9 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         </div>
         <div className={styles.teamCopy}>
           <p className={styles.eyebrow}>Les Jumelles Immo</p>
-          <h2 id="team-title">Deux sœurs, trois expertises pour vendre votre bien avec justesse.</h2>
+          <h2 id="team-title">Trois expertises pour vendre votre bien à {city.name} avec justesse.</h2>
           <div className={styles.expertiseGrid}>
-            <article><Home /><h3>Transaction et stratégie de vente</h3><p>Estimer, commercialiser, négocier et accompagner la vente jusqu’à la signature.</p></article>
+            <article><Home /><h3>Transaction immobilière et stratégie de vente</h3><p>Estimer, commercialiser, négocier et accompagner la vente jusqu’à la signature.</p></article>
             <article><FileSearch /><h3>Urbanisme et potentiel</h3><p>Identifier le potentiel réglementaire et les leviers de valorisation.</p></article>
             <article><Sofa /><h3>Architecture intérieure et travaux</h3><p>Révéler les volumes et faciliter la projection des futurs acquéreurs.</p></article>
           </div>
@@ -257,7 +257,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         <div className={styles.processHeader}>
           <div>
             <p className={styles.eyebrow}>Notre accompagnement de transaction</p>
-            <h2 id="process-title">De l’estimation à la signature, chaque étape est pilotée.</h2>
+            <h2 id="process-title">Vendre à {city.name} : de l’estimation à la signature.</h2>
           </div>
           <p>
             Un interlocuteur référent coordonne votre vente, sélectionne les acquéreurs
@@ -275,7 +275,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.propertySection} aria-labelledby="property-types-title">
         <div className={styles.centerHeading}>
           <p className={styles.eyebrow}>Une présentation sur mesure</p>
-          <h2 id="property-types-title">Des biens différents, une même exigence.</h2>
+          <h2 id="property-types-title">Maison ou appartement à {city.name} : une présentation sur mesure.</h2>
         </div>
         <div className={styles.propertyGrid}>
           {propertyCards.map((card) => (
@@ -310,7 +310,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
 
         <article className={styles.factorsCard}>
           <p className={styles.eyebrow}>Estimer au-delà de la moyenne</p>
-          <h2>Ce qui fait réellement varier la valeur ici</h2>
+          <h2>Ce qui fait varier la valeur d’un bien à {city.name}</h2>
           <LocalAgencySalesMap
             accessToken={mapboxToken}
             center={{ latitude: city.latitude, longitude: city.longitude }}
@@ -364,7 +364,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
 
       <section className={styles.faqSection} aria-labelledby="faq-title">
         <p className={styles.eyebrow}>Questions fréquentes</p>
-        <h2 id="faq-title">Votre projet immobilier à {city.name}</h2>
+        <h2 id="faq-title">Questions sur votre projet immobilier à {city.name}</h2>
         <p className={styles.faqIntro}>
           Estimation, prix de vente, valorisation ou préparation du dossier : retrouvez les
           réponses aux principales questions avant de vendre une maison ou un appartement à {city.name}.
@@ -409,7 +409,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.finalCta} aria-labelledby="final-cta-title">
         <div>
           <p className={styles.eyebrow}>Votre bien mérite une vraie stratégie</p>
-          <h2 id="final-cta-title">Révéler ses atouts. Défendre son prix. Sécuriser sa vente.</h2>
+          <h2 id="final-cta-title">Vendre votre bien à {city.name} : révéler ses atouts et défendre son prix.</h2>
           <p>
             À {city.name}, nous préparons chaque bien pour convaincre les bons acquéreurs
             et coordonnons chaque étape de la commercialisation jusqu’à la signature.
