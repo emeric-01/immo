@@ -1,0 +1,817 @@
+.page {
+  --apricot: #c8804f;
+  --ink: #171511;
+  --muted: #6f7686;
+  --line: #e5ddd5;
+  --paper: #fbf8f4;
+  background: #fff;
+  color: var(--ink);
+  padding-bottom: 72px;
+}
+
+.breadcrumb {
+  display: flex;
+  width: min(1280px, calc(100% - 64px));
+  align-items: center;
+  gap: 10px;
+  margin: 18px auto;
+  color: #777168;
+  font-size: .75rem;
+}
+
+.breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.breadcrumb a::after {
+  margin-left: 10px;
+  content: "/";
+}
+
+.hero {
+  position: relative;
+  min-height: 570px;
+  overflow: hidden;
+  border-block: 1px solid var(--line);
+  background: #efede9;
+}
+
+.heroMap,
+.heroMap > :global(.city-map-shell),
+.heroMap :global(.city-map) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 570px;
+}
+
+.heroMap {
+  pointer-events: none;
+}
+
+.heroMap :global(.city-map-shell) {
+  border: 0;
+  border-radius: 0;
+  background: #efede9;
+}
+
+.heroMap :global(.city-map-toolbar),
+.heroMap :global(.city-map-inspector),
+.heroMap :global(.city-map-footer),
+.heroMap :global(.mapboxgl-ctrl-top-right) {
+  display: none;
+}
+
+.heroMap :global(.mapboxgl-canvas) {
+  opacity: .82;
+}
+
+.heroMap :global(.mapboxgl-ctrl-bottom-left),
+.heroMap :global(.mapboxgl-ctrl-bottom-right) {
+  opacity: .72;
+}
+
+.heroScrim {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 53%;
+  border-right: 1px solid rgba(207, 191, 176, .8);
+  background: rgba(255, 253, 250, .94);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(1280px, calc(100% - 64px));
+  min-height: 570px;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 56px 0;
+}
+
+.heroContent > * {
+  width: min(570px, 45%);
+}
+
+.heroContent > p,
+.sectionHeading p,
+.trendCopy > p,
+.estimatorHeading p {
+  margin: 0 0 12px;
+  color: var(--apricot);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.heroContent h1 {
+  margin: 0;
+  font: 400 3.65rem/1.02 Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+.heroContent > span {
+  display: block;
+  margin-top: 22px;
+  color: #555c6b;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.heroContent > a,
+.finalCta a {
+  display: inline-flex;
+  width: auto;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+  padding: 0 24px;
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.heroContent > small {
+  display: flex;
+  width: auto;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  color: #707685;
+}
+
+.estimationSection,
+.marketStrip,
+.salesSection,
+.trendSection,
+.areasSection,
+.finalCta {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+}
+
+.estimationSection {
+  position: relative;
+  z-index: 3;
+  margin-top: -48px;
+}
+
+.estimator {
+  border: 1px solid #dfd3c8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 28px;
+  box-shadow: 0 18px 48px rgba(54, 41, 30, .1);
+}
+
+.estimatorHeading,
+.sectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.estimatorHeading h2,
+.sectionHeading h2,
+.trendCopy h2,
+.finalCta h2 {
+  margin: 0;
+  font: 400 2rem/1.15 Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+.estimatorHeading > span,
+.sectionHeading > span,
+.trendCopy > span {
+  color: var(--muted);
+  font-size: .83rem;
+  line-height: 1.55;
+}
+
+.typeSwitch {
+  display: grid;
+  width: min(440px, 100%);
+  grid-template-columns: 1fr 1fr;
+  margin-top: 24px;
+  border: 1px solid #d9dfe6;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.typeSwitch button {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #4f5663;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.typeSwitch .activeType {
+  background: var(--ink);
+  color: #fff;
+}
+
+.estimatorFields {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) 130px 110px 170px;
+  gap: 12px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.estimatorFields label {
+  position: relative;
+  display: grid;
+  gap: 7px;
+}
+
+.estimatorFields label > span {
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.addressInput,
+.numberInput {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d7dde5;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 14px;
+}
+
+.addressInput:focus-within,
+.numberInput:focus-within,
+.estimatorFields select:focus {
+  border-color: #a96a3f;
+  outline: 2px solid rgba(200, 128, 79, .14);
+}
+
+.addressInput input,
+.numberInput input,
+.estimatorFields select {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.addressInput small,
+.numberInput small {
+  color: #7b818b;
+  white-space: nowrap;
+}
+
+.estimatorFields select {
+  min-height: 52px;
+  border: 1px solid #d7dde5;
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid #d9dfe6;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(28, 25, 22, .12);
+}
+
+.suggestions button {
+  display: grid;
+  gap: 3px;
+  border: 0;
+  border-bottom: 1px solid #ece7e2;
+  background: #fff;
+  padding: 12px 14px;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.suggestions button:hover,
+.suggestions button:focus-visible {
+  background: var(--paper);
+}
+
+.suggestions span {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.submit {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.error {
+  margin: 12px 0 0;
+  color: #a2352c;
+  font-size: .82rem;
+}
+
+.marketStrip,
+.salesSection,
+.trendSection,
+.areasSection {
+  padding-block: 76px;
+}
+
+.sectionHeading > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: .82rem;
+  font-weight: 750;
+  text-underline-offset: 4px;
+}
+
+.priceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 28px;
+  border-block: 1px solid var(--line);
+}
+
+.priceGrid article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 14px;
+  align-items: center;
+  border-right: 1px solid var(--line);
+  padding: 28px;
+}
+
+.priceGrid article:last-child {
+  border-right: 0;
+}
+
+.priceGrid svg {
+  grid-row: 1 / 4;
+  color: var(--apricot);
+}
+
+.priceGrid span,
+.priceGrid p {
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.priceGrid strong {
+  font-size: 1.65rem;
+}
+
+.priceGrid strong small {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 500;
+}
+
+.priceGrid p {
+  margin: 0;
+}
+
+.salesSection {
+  border-top: 1px solid var(--line);
+}
+
+.salesList {
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.salesList article {
+  display: grid;
+  grid-template-columns: 110px minmax(240px, 1fr) 220px 170px;
+  gap: 20px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 19px 8px;
+}
+
+.saleType {
+  justify-self: start;
+  border: 1px solid #ddc8b7;
+  border-radius: 999px;
+  background: var(--paper);
+  padding: 6px 10px;
+  color: #704529;
+  font-size: .7rem;
+  font-weight: 750;
+}
+
+.saleAddress,
+.salePrice {
+  display: grid;
+  gap: 5px;
+}
+
+.saleAddress small,
+.saleDetails,
+.salePrice small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.saleAddress small,
+.saleDetails span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.saleDetails {
+  display: flex;
+  gap: 18px;
+}
+
+.salePrice {
+  text-align: right;
+}
+
+.salePrice strong {
+  font-size: 1.08rem;
+}
+
+.dvfNote {
+  max-width: 850px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.6;
+}
+
+.trendSection {
+  display: grid;
+  grid-template-columns: minmax(280px, .7fr) minmax(520px, 1.3fr);
+  gap: 64px;
+  align-items: center;
+  border-block: 1px solid var(--line);
+}
+
+.trendCopy h2 {
+  font-size: 2.55rem;
+}
+
+.trendCopy > span {
+  display: block;
+  margin-top: 18px;
+}
+
+.chartWrap {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 48px;
+}
+
+.areasSection {
+  padding-bottom: 42px;
+}
+
+.areaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.areaGrid article {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 15px;
+  align-items: center;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 18px;
+}
+
+.areaGrid article:nth-child(even) {
+  border-right: 0;
+}
+
+.areaGrid > article > span {
+  color: var(--apricot);
+  font: 400 1.2rem Georgia, "Times New Roman", serif;
+}
+
+.areaGrid div {
+  display: grid;
+  gap: 4px;
+}
+
+.areaGrid div small,
+.areaGrid p small {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.areaGrid p {
+  margin: 0;
+  font-weight: 750;
+}
+
+.finalCta {
+  display: flex;
+  min-height: 190px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-top: 36px;
+  border: 1px solid #312c27;
+  border-radius: 8px;
+  background: var(--ink);
+  padding: 38px 44px;
+  color: #fff;
+}
+
+.finalCta p {
+  margin: 0 0 10px;
+  color: #d6aa87;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.finalCta a {
+  flex: 0 0 auto;
+  margin: 0;
+  border-color: #fff;
+  background: #fff;
+  color: var(--ink);
+}
+
+@media (max-width: 980px) {
+  .heroScrim {
+    width: 62%;
+  }
+
+  .heroContent > * {
+    width: min(540px, 55%);
+  }
+
+  .heroContent h1 {
+    font-size: 3rem;
+  }
+
+  .estimatorFields {
+    grid-template-columns: 1fr 120px 100px;
+  }
+
+  .submit {
+    grid-column: 1 / -1;
+  }
+
+  .salesList article {
+    grid-template-columns: 100px 1fr 170px;
+  }
+
+  .saleDetails {
+    display: none;
+  }
+
+  .trendSection {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .chartWrap {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    padding-top: 32px;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding-bottom: 32px;
+  }
+
+  .breadcrumb,
+  .heroContent,
+  .estimationSection,
+  .marketStrip,
+  .salesSection,
+  .trendSection,
+  .areasSection,
+  .finalCta {
+    width: min(100% - 32px, 1280px);
+  }
+
+  .breadcrumb {
+    overflow: hidden;
+    margin-block: 12px;
+    white-space: nowrap;
+  }
+
+  .hero {
+    min-height: 620px;
+  }
+
+  .heroMap,
+  .heroMap > :global(.city-map-shell),
+  .heroMap :global(.city-map) {
+    min-height: 620px;
+  }
+
+  .heroScrim {
+    top: auto;
+    width: 100%;
+    height: 62%;
+    border-top: 1px solid rgba(207, 191, 176, .8);
+    border-right: 0;
+  }
+
+  .heroContent {
+    min-height: 620px;
+    justify-content: flex-end;
+    padding: 36px 0 48px;
+  }
+
+  .heroContent > * {
+    width: 100%;
+  }
+
+  .heroContent h1 {
+    font-size: 2.45rem;
+  }
+
+  .heroContent > span {
+    margin-top: 16px;
+    font-size: .92rem;
+  }
+
+  .heroContent > a {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .estimationSection {
+    margin-top: -20px;
+  }
+
+  .estimator {
+    padding: 20px;
+  }
+
+  .estimatorHeading,
+  .sectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .estimatorHeading > span {
+    display: none;
+  }
+
+  .estimatorHeading h2,
+  .sectionHeading h2 {
+    font-size: 1.7rem;
+  }
+
+  .typeSwitch {
+    width: 100%;
+  }
+
+  .estimatorFields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .addressField,
+  .submit {
+    grid-column: 1 / -1;
+  }
+
+  .marketStrip,
+  .salesSection,
+  .trendSection,
+  .areasSection {
+    padding-block: 52px;
+  }
+
+  .priceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .priceGrid article {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 22px 8px;
+  }
+
+  .priceGrid article:last-child {
+    border-bottom: 0;
+  }
+
+  .salesList article {
+    grid-template-columns: 1fr auto;
+    gap: 10px 14px;
+    padding: 18px 0;
+  }
+
+  .saleType {
+    grid-column: 1;
+  }
+
+  .saleAddress {
+    grid-column: 1;
+  }
+
+  .salePrice {
+    grid-row: 1 / 3;
+    grid-column: 2;
+    align-self: center;
+  }
+
+  .trendCopy h2 {
+    font-size: 2rem;
+  }
+
+  .areaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .areaGrid article,
+  .areaGrid article:nth-child(even) {
+    border-right: 0;
+    padding-inline: 4px;
+  }
+
+  .finalCta {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 30px 24px;
+  }
+
+  .finalCta a {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .heroContent h1 {
+    font-size: 2.15rem;
+  }
+
+  .estimatorFields {
+    grid-template-columns: 1fr;
+  }
+
+  .addressField,
+  .submit {
+    grid-column: auto;
+  }
+
+  .salePrice strong {
+    font-size: .95rem;
+  }
+
+  .areaGrid article {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .areaGrid p {
+    grid-column: 2;
+  }
+}
