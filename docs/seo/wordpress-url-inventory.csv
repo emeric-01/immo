@@ -7,34 +7,34 @@ old_path,type,destination,status,reason
 /politique-de-confidentialite/,page,/mentions-legales,redirect_ready,Page légale créée et redirection permanente configurée
 /honoraires-agence/,page,/honoraires,redirect_ready,Équivalent exact
 /architecte-interieur-nos-realisations/,page,/biens,redirect_ready,La page WordPress présente les annonces immobilières
-/contact/,page,,migrate_before_switch,Créer une vraie page contact avant redirection
+/contact/,page,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /les-jumelles-immo/,page,/qui-sommes-nous,redirect_ready,Présentation de l’agence équivalente
-/nos-prestations/,page,,migrate_before_switch,Contenu architecture intérieure sans équivalent complet
+/nos-prestations/,page,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /home/,page,/qui-sommes-nous,redirect_ready,Ancienne présentation architecture intérieure
-/atelier-les-jumelles/,page,,migrate_before_switch,Présentation historique de l’équipe à fusionner ou recréer
+/atelier-les-jumelles/,page,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /nos-inspirations-deco/,page,/contenus,redirect_ready,Destination éditoriale la plus proche
-/global-styles/,page,,ignore_or_410,Page technique Elementor sans valeur éditoriale
+/global-styles/,page,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /appartement-t3-4-avec-vue-mer-panoramique-a-la-ciotat/,property,/biens/appartement-t3-4-avec-vue-mer-panoramique-la-ciotat-212627,redirect_ready,Fiche équivalente publiée
-/aix-en-provence-appartement-t3-traversant-70-m%C2%B2-avec-vue-sainte-victoire-transformable-t4/,property,,migrate_before_switch,Annonce absente du sitemap du nouveau site
+/aix-en-provence-appartement-t3-traversant-70-m%C2%B2-avec-vue-sainte-victoire-transformable-t4/,property,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /lurbanism-lallie-cache-pour-bien-acheter-ou-bien-vendre/,article,/contenus/acheter-maison-verifications-urbanisme-avant-signature,redirect_ready,Contenu urbanisme équivalent
 /rez-de-villa-98m2-avec-jardin-a-aubagne-335-000-e/,property,/biens/rez-de-villa-98m2-avec-jardin-a-aubagne-aubagne-164388,redirect_ready,Fiche équivalente publiée
 /haut-de-villa-avec-garage-et-jardin-de-580-m2-a-aubagne-455-000-e/,property,/biens/haut-de-villa-avec-garage-et-jardin-aubagne-139509,redirect_ready,Fiche équivalente publiée
-/grande-maison-familiale-de-280m%C2%B2-sur-terrain-de-895-m%C2%B2-a-aubagne/,property,,migrate_before_switch,Annonce absente du sitemap du nouveau site
-/pret-immobilier-comment-seduire-son-banquier-et-obtenir-son-pret-presque-a-coup-sur/,article,,migrate_before_switch,Aucun contenu financement suffisamment équivalent
+/grande-maison-familiale-de-280m%C2%B2-sur-terrain-de-895-m%C2%B2-a-aubagne/,property,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
+/pret-immobilier-comment-seduire-son-banquier-et-obtenir-son-pret-presque-a-coup-sur/,article,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /evolution-des-prix-au-m2-a-gemenos-entre-2024-et-2025/,article,/prix-m2/gemenos,redirect_ready,Page de marché locale plus complète et actualisée
 /evolution-des-prix-au-m2-a-aubagne-entre-2024-et-2025/,article,/prix-m2/aubagne,redirect_ready,Page de marché locale plus complète et actualisée
 /home-staging-vs-renovation-quelle-strategie-choisir-pour-vendre-vite/,article,/contenus/home-staging-architecture-interieure-valoriser-bien,redirect_ready,Contenu équivalent publié
 /comment-calculer-le-potentiel-dun-terrain-constructible-selon-le-plan-local-durbanisme-plu/,article,/contenus/plu-extension-potentiel-constructible-valeur-bien,redirect_ready,Contenu PLU équivalent publié
 /tout-savoir-sur-la-division-parcellaire-demarches-contraintes-et-couts/,article,/contenus/division-parcellaire-immobilier-valoriser-terrain,redirect_ready,Contenu équivalent publié
-/villa-de-212-m%C2%B2-avec-terrain-constructible-a-la-ciotat/,property,,migrate_before_switch,Annonce absente du sitemap du nouveau site
-/grand-t2-de-50m2-avec-belle-terrasse-de-env-18m2-a-gemenos-299-000-e/,property,,migrate_before_switch,Annonce absente du sitemap du nouveau site
-/maison-t3-a-gemenos-410-000e/,property,,migrate_before_switch,Annonce absente du sitemap du nouveau site
+/villa-de-212-m%C2%B2-avec-terrain-constructible-a-la-ciotat/,property,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
+/grand-t2-de-50m2-avec-belle-terrasse-de-env-18m2-a-gemenos-299-000-e/,property,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
+/maison-t3-a-gemenos-410-000e/,property,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
 /terrain-constructible-a-gemenos-1100m2-450-000-e/,property,/biens/terrain-constructible-1100-m2-gemenos,redirect_ready,Fiche équivalente publiée
 /appartement-t2-marseille-5-proche-la-timone-villa-medicis-205-000-e/,property,/biens/appartement-t2-villa-medicis-la-timone-marseille-5,redirect_ready,Fiche équivalente publiée
 /charmant-t2-renove-proche-mer-dans-la-residence-senioriale-les-hesperides-du-prado-marseille-8-198-000-e/,property,/biens/appartement-t2-hesperides-prado-marseille-8,redirect_ready,Fiche équivalente publiée
 /appartement-t3-aubagne-de-57-m2-au-pied-du-garlaban-les-solans/,property,/biens/appartement-t3-les-solans-aubagne,redirect_ready,Fiche équivalente publiée
 /maison-recente-castellet-t4-94-m%C2%B2-avec-jardin-440-000-e/,property,/biens/maison-recente-t4-jardin-le-castellet,redirect_ready,Fiche équivalente publiée
 /maisons-t4-et-t2-independants-en-exclusivite-avec-piscine-et-garages-a-gemenos-1-260-000e/,property,/biens/maisons-t4-t2-piscine-garages-gemenos,redirect_ready,Fiche équivalente publiée
-/peinture-murale-reussir-des-arrondis-parfaits/,article,,migrate_before_switch,Article décoration sans équivalent exact
-/diy-fabriquez-votre-propre-tete-de-lit-avec-niche-et-eclairage-led/,article,,migrate_before_switch,Article décoration sans équivalent exact
-/locations.kml,local,,ignore_or_410,Fichier Rank Math local à remplacer par les données structurées du nouveau site
+/peinture-murale-reussir-des-arrondis-parfaits/,article,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
+/diy-fabriquez-votre-propre-tete-de-lit-avec-niche-et-eclairage-led/,article,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
+/locations.kml,local,/,redirect_ready,Arbitrage validé : redirection vers l’accueil
