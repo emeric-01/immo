@@ -170,11 +170,13 @@ export async function sendSellerLeadNotificationEmail({
   city,
   phone,
   propertyType,
+  requestType,
 }: {
   address: string;
   city: string;
   phone: string;
   propertyType: string;
+  requestType: string;
 }) {
   const config = getEmailConfig();
 
@@ -190,13 +192,20 @@ export async function sendSellerLeadNotificationEmail({
     other: "Autre bien",
   };
   const propertyLabel = typeLabels[propertyType] || "Bien immobilier";
+  const requestLabel = requestType === "human_estimate"
+    ? "Estimation humaine sur place"
+    : "Étude immobilière détaillée";
+  const requestIntro = requestType === "human_estimate"
+    ? "Une personne souhaite être rappelée pour organiser une estimation de son bien sur place."
+    : "Une personne souhaite être rappelée pour recevoir une étude immobilière plus détaillée.";
 
   await sendEmail(config, {
     html: emailLayout(
       `Nouvelle demande vendeur à ${city}`,
       `
-        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Une personne souhaite être rappelée au sujet de la vente de son bien.</p>
+        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">${escapeHtml(requestIntro)}</p>
         <div style="border:1px solid #e8e0d8;border-radius:8px;padding:16px;margin:18px 0;color:#555f70;line-height:1.8;">
+          <strong style="color:#111;">Demande :</strong> ${escapeHtml(requestLabel)}<br />
           <strong style="color:#111;">Type de bien :</strong> ${escapeHtml(propertyLabel)}<br />
           <strong style="color:#111;">Adresse :</strong> ${escapeHtml(address)}<br />
           <strong style="color:#111;">Secteur :</strong> ${escapeHtml(city)}<br />
@@ -204,8 +213,8 @@ export async function sendSellerLeadNotificationEmail({
         </div>
       `,
     ),
-    subject: `🔔 Nouvelle demande vendeur — ${city}`,
-    text: `Nouvelle demande vendeur\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
+    subject: `🔔 ${requestLabel} — ${city}`,
+    text: `${requestLabel}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
     to: recipient,
   });
 }

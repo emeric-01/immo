@@ -50,6 +50,7 @@ type FormState = {
 
 type FlowStep = "address" | "essential" | "refine" | "result";
 type LeadSubmitState = "idle" | "loading" | "success" | "error";
+type LeadIntent = "detailed_study" | "human_estimate";
 
 type PropertyEstimationResponse = PropertyEstimation & {
   clientEstimationId?: string | null;
@@ -230,6 +231,7 @@ export function EstimationForm({
   const [hasTypedAddress, setHasTypedAddress] = useState(false);
   const [leadState, setLeadState] = useState<LeadSubmitState>("idle");
   const [leadMessage, setLeadMessage] = useState("");
+  const [leadIntent, setLeadIntent] = useState<LeadIntent>("detailed_study");
   const addressAbortRef = useRef<AbortController | null>(null);
 
   const canSubmit = useMemo(() => {
@@ -427,6 +429,7 @@ export function EstimationForm({
           address: form.address.trim(),
           city: selectedAddress?.cityName ?? "Secteur du bien",
           propertyType: form.propertyType,
+          requestType: leadIntent,
           phone: formData.get("phone"),
           consent: formData.get("consent"),
           website: formData.get("website"),
@@ -441,7 +444,9 @@ export function EstimationForm({
       leadForm.reset();
       setLeadState("success");
       setLeadMessage(
-        "Merci. Nous vous rappelons rapidement pour préparer l’étude approfondie de votre bien.",
+        leadIntent === "human_estimate"
+          ? "Merci. Nous vous rappelons rapidement pour organiser l’estimation de votre bien sur place."
+          : "Merci. Nous vous rappelons rapidement pour préparer l’étude détaillée de votre bien.",
       );
     } catch (leadError) {
       setLeadState("error");
@@ -878,24 +883,41 @@ export function EstimationForm({
               </div>
             </div>
             <aside className="valuation-expert-panel">
-              <span className="expert-panel-kicker"><Eye aria-hidden="true" /> L&apos;œil de l&apos;agence</span>
-              <h2>La donnée donne un repère. La visite révèle la vraie valeur.</h2>
+              <span className="expert-panel-kicker"><CheckCircle2 aria-hidden="true" /> Première étape terminée</span>
+              <h2>Voici votre première estimation.</h2>
               <p>
-                Vue, lumière, distribution, état, extérieur ou potentiel urbain peuvent
-                déplacer sensiblement cette première estimation.
+                Cette fourchette constitue un premier repère de marché. Pour la rendre
+                réellement exploitable, nous pouvons maintenant approfondir l&apos;analyse.
               </p>
-              <ul>
-                <li><Check aria-hidden="true" /> Visite et lecture du micro-secteur</li>
-                <li><Check aria-hidden="true" /> Avis de valeur argumenté</li>
-                <li><Check aria-hidden="true" /> Stratégie de mise en vente</li>
-              </ul>
-              <a className="expert-panel-primary" href="#etude-approfondie">
-                Faire affiner mon estimation <ArrowRight aria-hidden="true" />
-              </a>
-              <a className="expert-panel-secondary" href="#confier-mon-bien">
-                Je souhaite vendre mon bien
-              </a>
-              <small>Premier échange gratuit et sans engagement.</small>
+              <div className="expert-choice-list" aria-label="Choisir comment affiner l’estimation">
+                <a
+                  className="expert-choice-card is-detailed"
+                  href="#confier-mon-bien"
+                  onClick={() => setLeadIntent("detailed_study")}
+                >
+                  <FileSearch aria-hidden="true" />
+                  <span>
+                    <small>02 — Étude détaillée</small>
+                    <strong>Recevoir une analyse approfondie</strong>
+                    <em>Comparables sélectionnés, micro-secteur et premier avis argumenté.</em>
+                  </span>
+                  <ArrowRight aria-hidden="true" />
+                </a>
+                <a
+                  className="expert-choice-card is-human"
+                  href="#confier-mon-bien"
+                  onClick={() => setLeadIntent("human_estimate")}
+                >
+                  <Home aria-hidden="true" />
+                  <span>
+                    <small>03 — Expertise sur place</small>
+                    <strong>Demander une estimation humaine</strong>
+                    <em>Visite du bien, lecture de ses qualités réelles et avis de valeur affiné.</em>
+                  </span>
+                  <ArrowRight aria-hidden="true" />
+                </a>
+              </div>
+              <small className="expert-panel-reassurance">Deux démarches gratuites et sans engagement.</small>
             </aside>
           </section>
 
@@ -1117,9 +1139,19 @@ export function EstimationForm({
             </div>
 
             <aside className="mandate-lead-card" id="confier-mon-bien">
-              <span className="section-index">PREMIER ÉCHANGE</span>
-              <h3>Faisons le point sur votre bien</h3>
-              <p>Un membre de notre équipe vous rappelle pour comprendre votre projet et organiser, si vous le souhaitez, une visite d&apos;estimation.</p>
+              <span className="section-index">
+                {leadIntent === "human_estimate" ? "ESTIMATION HUMAINE" : "ÉTUDE DÉTAILLÉE"}
+              </span>
+              <h3>
+                {leadIntent === "human_estimate"
+                  ? "Organisons une estimation sur place"
+                  : "Recevez une étude plus approfondie"}
+              </h3>
+              <p>
+                {leadIntent === "human_estimate"
+                  ? "Un membre de notre équipe vous rappelle pour comprendre votre projet et convenir d’une visite du bien."
+                  : "Nous vous rappelons pour compléter les informations, sélectionner les références pertinentes et préparer une première analyse argumentée."}
+              </p>
               {leadState === "success" ? (
                 <div className="mandate-success" role="status">
                   <CheckCircle2 aria-hidden="true" />
@@ -1146,7 +1178,9 @@ export function EstimationForm({
                   </label>
                   <button disabled={leadState === "loading"} type="submit">
                     {leadState === "loading" ? <LoaderCircle className="mandate-spinner" aria-hidden="true" /> : null}
-                    Demander mon étude approfondie
+                    {leadIntent === "human_estimate"
+                      ? "Demander mon estimation humaine"
+                      : "Recevoir mon étude détaillée"}
                     {leadState !== "loading" ? <ArrowRight aria-hidden="true" /> : null}
                   </button>
                   {leadState === "error" ? <p className="mandate-error" role="alert">{leadMessage}</p> : null}
