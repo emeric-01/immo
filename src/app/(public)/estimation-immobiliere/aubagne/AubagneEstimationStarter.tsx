@@ -5,6 +5,20 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { AddressSuggestion, RealtyType } from "@/lib/immo-data";
 import styles from "./aubagne-estimation.module.css";
+import { prioritizeAddressSuggestions } from "./prioritize-address-suggestions";
+
+async function requestAddressSuggestions(query: string, signal: AbortSignal) {
+  const response = await fetch(`/api/addresses?q=${encodeURIComponent(query)}`, {
+    signal,
+  });
+  const data = (await response.json()) as AddressSuggestion[] | { error?: string };
+
+  if (!response.ok || !Array.isArray(data)) {
+    throw new Error(!Array.isArray(data) && data.error ? data.error : "Recherche indisponible.");
+  }
+
+  return data;
+}
 
 export function AubagneEstimationStarter({ cityName, inseeCode }: { cityName: string; inseeCode: string }) {
   const router = useRouter();
@@ -34,20 +48,22 @@ export function AubagneEstimationStarter({ cityName, inseeCode }: { cityName: st
       setError("");
 
       try {
-        const response = await fetch(`/api/addresses?q=${encodeURIComponent(`${query} ${cityName}`)}`, {
-          signal: controller.signal,
-        });
-        const data = (await response.json()) as AddressSuggestion[] | { error?: string };
+        const [cityResult, broadResult] = await Promise.allSettled([
+          requestAddressSuggestions(`${query} ${cityName}`, controller.signal),
+          requestAddressSuggestions(query, controller.signal),
+        ]);
+        const citySuggestions = cityResult.status === "fulfilled" ? cityResult.value : [];
+        const broadSuggestions = broadResult.status === "fulfilled" ? broadResult.value : [];
 
-        if (!response.ok || !Array.isArray(data)) {
-          throw new Error(!Array.isArray(data) && data.error ? data.error : "Recherche indisponible.");
+        if (cityResult.status === "rejected" && broadResult.status === "rejected") {
+          throw cityResult.reason;
         }
 
-        setSuggestions(
-          data
-            .filter((suggestion) => suggestion.inseeCode === inseeCode)
-            .slice(0, 5),
-        );
+        setSuggestions(prioritizeAddressSuggestions(
+          citySuggestions,
+          broadSuggestions,
+          inseeCode,
+        ));
       } catch (searchError) {
         if (searchError instanceof DOMException && searchError.name === "AbortError") return;
         setSuggestions([]);
@@ -64,7 +80,7 @@ export function AubagneEstimationStarter({ cityName, inseeCode }: { cityName: st
     event.preventDefault();
 
     if (!selectedAddress || selectedAddress.label !== address.trim()) {
-      setError(`Sélectionnez une adresse proposée à ${cityName}.`);
+      setError("Sélectionnez une adresse proposée par la recherche.");
       return;
     }
 
@@ -147,7 +163,7 @@ export function AubagneEstimationStarter({ cityName, inseeCode }: { cityName: st
                   type="button"
                 >
                   <strong>{suggestion.label}</strong>
-                  <span>{suggestion.postCode?.[0] ?? ""} {cityName}</span>
+                  <span>{suggestion.postCode?.[0] ?? ""} {suggestion.cityName ?? cityName}</span>
                 </button>
               ))}
             </div>
