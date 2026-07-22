@@ -43,8 +43,15 @@ function anonymousId(key: string) {
   return value;
 }
 
+function sessionId() {
+  const key = "jumellesimmo-session";
+  let value = sessionStorage.getItem(key);
+  if (!value) { value = crypto.randomUUID(); sessionStorage.setItem(key, value); }
+  return value;
+}
+
 function trackFirstPartyPage(pathname: string) {
-  const payload = JSON.stringify({ eventType: "page_view", path: pathname, referrer: document.referrer, visitorId: anonymousId("jumellesimmo-visitor"), sessionId: anonymousId("jumellesimmo-session") });
+  const payload = JSON.stringify({ eventType: "page_view", path: pathname, referrer: document.referrer, visitorId: anonymousId("jumellesimmo-visitor"), sessionId: sessionId() });
   if (navigator.sendBeacon) navigator.sendBeacon("/api/site-analytics", new Blob([payload], { type: "application/json" }));
   else void fetch("/api/site-analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
 }
@@ -68,13 +75,17 @@ export function GoogleAnalyticsConsent() {
   }, []);
 
   useEffect(() => {
+    if (choice !== "accepted") return;
+    trackFirstPartyPage(pathname);
+  }, [choice, pathname]);
+
+  useEffect(() => {
     if (choice !== "accepted" || !scriptReady || !window.gtag) return;
     window.gtag("event", "page_view", {
       page_location: window.location.href,
       page_path: pathname,
       page_title: document.title,
     });
-    trackFirstPartyPage(pathname);
   }, [choice, pathname, scriptReady]);
 
   const updateChoice = (nextChoice: ConsentChoice) => {
