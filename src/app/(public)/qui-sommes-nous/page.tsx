@@ -37,6 +37,54 @@ const expertises = [
   },
 ];
 
+const interiorProjects = [
+  {
+    eyebrow: "Villa en Provence",
+    title: "Du sur-mesure pour révéler les volumes",
+    text: "Claustras, rangements intégrés, lumière et mobilier dessiné pour le lieu : l’aménagement donne une lecture plus fluide et plus singulière de la maison.",
+    images: [
+      {
+        src: "/images/about/amenagement-villa-bibliotheque.webp",
+        alt: "Bibliothèque sur mesure rétroéclairée dans une villa en Provence",
+      },
+      {
+        src: "/images/about/amenagement-villa-provence.webp",
+        alt: "Pièce de vie réaménagée avec claustra en bois et mobilier intégré",
+      },
+    ],
+  },
+  {
+    eyebrow: "Appartement témoin",
+    title: "Créer la projection sans travestir le bien",
+    text: "Une circulation lisible, des fonctions clairement installées et une décoration juste permettent aux visiteurs de comprendre immédiatement comment habiter l’espace.",
+    images: [
+      {
+        src: "/images/about/appartement-temoin-piece-de-vie.webp",
+        alt: "Pièce de vie lumineuse aménagée en appartement témoin",
+      },
+      {
+        src: "/images/about/appartement-temoin-chambre.webp",
+        alt: "Chambre mise en scène dans un appartement témoin",
+      },
+    ],
+  },
+  {
+    eyebrow: "Meublé touristique",
+    title: "Donner une identité à un bien d’investissement",
+    text: "L’architecture intérieure aide aussi à positionner un bien après l’achat : cohérence des ambiances, usages optimisés et personnalité mémorable pour mieux le valoriser.",
+    images: [
+      {
+        src: "/images/about/meuble-touristique-piece-de-vie.webp",
+        alt: "Pièce de vie aménagée dans un meublé touristique au Castellet",
+      },
+      {
+        src: "/images/about/meuble-touristique-chambre.webp",
+        alt: "Chambre chaleureuse aménagée dans un meublé touristique",
+      },
+    ],
+  },
+];
+
 export default function QuiSommesNousPage() {
   return (
     <main className={styles.page}>
@@ -104,6 +152,62 @@ export default function QuiSommesNousPage() {
             d’évolution et l’émotion que le bien peut provoquer.
           </p>
         </div>
+      </section>
+
+      <section className={styles.projectsSection} aria-labelledby="projects-title">
+        <div className={styles.projectsIntro}>
+          <div>
+            <p className={styles.eyebrow}>La preuve par les espaces</p>
+            <h2 id="projects-title">Imaginer, aménager, mieux valoriser.</h2>
+          </div>
+          <p>
+            Avant une vente, après une acquisition ou pour repositionner un
+            investissement, notre regard ne s’arrête pas à l’état existant. Ces
+            réalisations montrent comment une intention juste peut révéler les
+            volumes, clarifier les usages et renforcer le désir d’habiter.
+          </p>
+        </div>
+
+        <div className={styles.projectsGrid}>
+          {interiorProjects.map((project, projectIndex) => (
+            <article className={styles.projectCard} key={project.title}>
+              <div className={styles.projectGallery}>
+                {project.images.map((image, imageIndex) => (
+                  <figure
+                    className={imageIndex === 0 ? styles.projectImageMain : styles.projectImageDetail}
+                    key={image.src}
+                  >
+                    <Image
+                      alt={image.alt}
+                      className={styles.coverImage}
+                      fill
+                      quality={78}
+                      sizes={projectIndex === 0
+                        ? "(max-width: 760px) 88vw, (max-width: 1100px) 42vw, 31vw"
+                        : "(max-width: 760px) 88vw, (max-width: 1100px) 42vw, 22vw"}
+                      src={image.src}
+                    />
+                  </figure>
+                ))}
+              </div>
+              <div className={styles.projectCopy}>
+                <span>{project.eyebrow}</span>
+                <h3>{project.title}</h3>
+                <p>{project.text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <aside className={styles.projectsNote}>
+          <DraftingCompass aria-hidden="true" />
+          <p>
+            <strong>Une double compétence, au service de la décision.</strong>
+            Le regard immobilier mesure la valeur de marché. Le regard
+            d’architecte révèle ce qui peut être amélioré, transformé ou mieux
+            raconté — avec des propositions réalistes, jamais artificielles.
+          </p>
+        </aside>
       </section>
 
       <section className={styles.expertiseSection} aria-labelledby="expertise-title">
