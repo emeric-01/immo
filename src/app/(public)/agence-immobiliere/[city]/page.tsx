@@ -288,6 +288,37 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         </article>
       </section>
 
+      <section className={styles.resourceSection}>
+        <article className={styles.priceResource}>
+          <p className={styles.eyebrow}>Observatoire local</p>
+          <h2>Prix au m² à {city.name}</h2>
+          <div>
+            <span>
+              <Building2 aria-hidden="true" />
+              <small>Appartement</small>
+              <strong>{formatPrice(market.apartment.averagePricePerM2)}/m²</strong>
+            </span>
+            <span>
+              <Home aria-hidden="true" />
+              <small>Maison</small>
+              <strong>{formatPrice(market.house.averagePricePerM2)}/m²</strong>
+            </span>
+          </div>
+          <Link href={`/prix-m2/${city.slug}`}>Voir les prix <ArrowRight size={15} /></Link>
+        </article>
+        <article className={styles.adviceResource}>
+          <div>
+            <p className={styles.eyebrow}>Conseils pour vendre à {city.name}</p>
+            <h2>{relatedArticle?.title || "Préparer son bien, choisir le bon moment et comprendre les attentes locales."}</h2>
+            <p>{relatedArticle?.excerpt || "Nos conseils concrets pour vendre sereinement et dans les meilleures conditions."}</p>
+            <Link href={relatedArticle ? `/contenus/${relatedArticle.slug}` : "/contenus"}>Lire nos conseils <ArrowRight size={15} /></Link>
+          </div>
+          {relatedArticle?.cover_image_url ? (
+            <div className={styles.adviceImage}><ContentImage alt={relatedArticle.cover_image_alt || relatedArticle.title} fill sizes="260px" src={relatedArticle.cover_image_url} /></div>
+          ) : <Sparkles aria-hidden="true" />}
+        </article>
+      </section>
+
       <section className={styles.teamSection} aria-labelledby="team-title">
         <div className={styles.teamPortrait}>
           <Image
@@ -326,37 +357,6 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           <article><div><b>03</b><Sparkles /></div><h3>Mise en valeur et diffusion</h3><p>Conseils, présentation, annonce ciblée et diffusion auprès du bon réseau.</p></article>
           <article><div><b>04</b><Handshake /></div><h3>Visites, négociation et suivi</h3><p>Retours qualifiés, négociation et coordination des échanges jusqu’à la signature.</p></article>
         </div>
-      </section>
-
-      <section className={styles.resourceSection}>
-        <article className={styles.priceResource}>
-          <p className={styles.eyebrow}>Observatoire local</p>
-          <h2>Prix au m² à {city.name}</h2>
-          <div>
-            <span>
-              <Building2 aria-hidden="true" />
-              <small>Appartement</small>
-              <strong>{formatPrice(market.apartment.averagePricePerM2)}/m²</strong>
-            </span>
-            <span>
-              <Home aria-hidden="true" />
-              <small>Maison</small>
-              <strong>{formatPrice(market.house.averagePricePerM2)}/m²</strong>
-            </span>
-          </div>
-          <Link href={`/prix-m2/${city.slug}`}>Voir les prix <ArrowRight size={15} /></Link>
-        </article>
-        <article className={styles.adviceResource}>
-          <div>
-            <p className={styles.eyebrow}>Conseils pour vendre à {city.name}</p>
-            <h2>{relatedArticle?.title || "Préparer son bien, choisir le bon moment et comprendre les attentes locales."}</h2>
-            <p>{relatedArticle?.excerpt || "Nos conseils concrets pour vendre sereinement et dans les meilleures conditions."}</p>
-            <Link href={relatedArticle ? `/contenus/${relatedArticle.slug}` : "/contenus"}>Lire nos conseils <ArrowRight size={15} /></Link>
-          </div>
-          {relatedArticle?.cover_image_url ? (
-            <div className={styles.adviceImage}><ContentImage alt={relatedArticle.cover_image_alt || relatedArticle.title} fill sizes="260px" src={relatedArticle.cover_image_url} /></div>
-          ) : <Sparkles aria-hidden="true" />}
-        </article>
       </section>
 
       <section className={styles.faqSection} aria-labelledby="faq-title">

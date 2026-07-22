@@ -1143,6 +1143,36 @@
   min-height: 255px;
 }
 
+@media (min-width: 761px) {
+  .marketMetrics > span {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .marketMetrics svg {
+    width: 27px;
+    height: 27px;
+  }
+
+  .factorList > div {
+    grid-template-columns: 31px 1fr;
+    gap: 11px;
+  }
+
+  .factorList svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .priceResource span {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .priceResource span svg {
+    width: 23px;
+    height: 23px;
+  }
+}
+
 @media (max-width: 1100px) {
   .hero { grid-template-columns: 54% 46%; }
   .heroCopy { padding-inline: 34px; }
