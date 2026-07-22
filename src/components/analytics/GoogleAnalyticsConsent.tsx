@@ -37,6 +37,18 @@ function saveConsent(choice: ConsentChoice) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, updatedAt: Date.now() } satisfies StoredConsent));
 }
 
+function anonymousId(key: string) {
+  let value = localStorage.getItem(key);
+  if (!value) { value = crypto.randomUUID(); localStorage.setItem(key, value); }
+  return value;
+}
+
+function trackFirstPartyPage(pathname: string) {
+  const payload = JSON.stringify({ eventType: "page_view", path: pathname, referrer: document.referrer, visitorId: anonymousId("jumellesimmo-visitor"), sessionId: anonymousId("jumellesimmo-session") });
+  if (navigator.sendBeacon) navigator.sendBeacon("/api/site-analytics", new Blob([payload], { type: "application/json" }));
+  else void fetch("/api/site-analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
+}
+
 export function GoogleAnalyticsConsent() {
   const pathname = usePathname();
   const [choice, setChoice] = useState<ConsentChoice | null>(null);
@@ -62,6 +74,7 @@ export function GoogleAnalyticsConsent() {
       page_path: pathname,
       page_title: document.title,
     });
+    trackFirstPartyPage(pathname);
   }, [choice, pathname, scriptReady]);
 
   const updateChoice = (nextChoice: ConsentChoice) => {
