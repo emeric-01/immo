@@ -98,9 +98,9 @@ const localAgencyPages: Record<string, LocalAgencyPage> = {
           "Pour préparer l’analyse, il est utile de réunir le titre de propriété, les plans disponibles, la taxe foncière, les diagnostics déjà réalisés et les informations concernant les travaux. Pour un appartement, les documents de copropriété, le montant des charges, les derniers procès-verbaux d’assemblée générale et les informations sur le stationnement sont également importants. Pour une maison, les autorisations d’urbanisme, factures de travaux, plans de parcelle et informations relatives à l’assainissement peuvent compléter le dossier. Tous les éléments ne sont pas indispensables dès le premier rendez-vous, mais un dossier clair sécurise ensuite la commercialisation.",
       },
       {
-        question: "Intervenez-vous à La Ciotat sans agence physique ouverte dans la ville ?",
+        question: "Quel accompagnement proposez-vous à La Ciotat ?",
         answer:
-          "Oui. Notre organisation repose sur des rendez-vous directement sur place, à La Ciotat et dans les communes voisines. Cette proximité terrain permet d’observer l’environnement du bien, les accès, le voisinage immédiat et les caractéristiques du secteur, qui sont essentiels pour l’estimation comme pour la présentation aux acquéreurs. Selon le projet et la zone, le suivi est assuré par un professionnel référent appliquant la méthode de l’agence. Vous bénéficiez ainsi d’un accompagnement coordonné, de l’estimation à la négociation, sans que la présence d’une vitrine physique locale soit nécessaire.",
+          "Nous vous accompagnons directement sur place, à La Ciotat et dans les communes voisines. Cette proximité terrain permet d’observer précisément l’environnement du bien, les accès, le voisinage immédiat et les caractéristiques du secteur, autant d’éléments essentiels pour l’estimation et la présentation aux acquéreurs. Un professionnel référent assure le suivi de votre projet avec la méthode Les Jumelles Immo, de l’estimation à la négociation. Vous bénéficiez ainsi d’un accompagnement personnalisé, coordonné et attentif à chaque étape.",
       },
     ],
   },
