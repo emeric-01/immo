@@ -34,11 +34,29 @@ const city = getAubagneCity();
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Estimation maison et appartement à Aubagne | Les Jumelles Immo",
+  title: "Estimation immobilière à Aubagne | Maison et appartement",
   description: "Estimation immobilière à Aubagne pour une maison ou un appartement : prix au m², ventes récentes, quartiers et première estimation gratuite.",
   alternates: { canonical: "/estimation-immobiliere/aubagne" },
   robots: { index: true, follow: true },
 };
+
+const aubagneFaqs = [
+  {
+    question: "Une estimation en ligne suffit-elle pour fixer le prix de vente ?",
+    answer:
+      "Elle fournit un premier repère cohérent avec les données disponibles. Une visite reste nécessaire pour évaluer l’état réel, les travaux, la vue, les nuisances et les prestations.",
+  },
+  {
+    question: "Pourquoi le prix au m² varie-t-il selon les quartiers d’Aubagne ?",
+    answer:
+      "Le type de logements, l’environnement, les accès et la rareté des ventes diffèrent d’un secteur à l’autre. Le prix communal sert donc de point de départ, pas de résultat final.",
+  },
+  {
+    question: "Quels documents sont utiles pour affiner une estimation ?",
+    answer:
+      "Le diagnostic de performance énergétique, les plans, la taxe foncière, les factures de travaux et, en copropriété, les charges et derniers procès-verbaux facilitent l’analyse.",
+  },
+];
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
@@ -129,6 +147,14 @@ export default async function AubagneEstimationPage() {
         provider: { "@id": `${absoluteUrl("/")}#organization` },
         url: absoluteUrl("/estimation-immobiliere/aubagne"),
       },
+      {
+        "@type": "FAQPage",
+        mainEntity: aubagneFaqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: { "@type": "Answer", text: faq.answer },
+        })),
+      },
     ],
   };
 
@@ -160,12 +186,13 @@ export default async function AubagneEstimationPage() {
         <div className={styles.heroScrim} />
         <div className={styles.heroContent}>
           <p>Estimation immobilière · 13400</p>
-          <h1 id="aubagne-estimation-title">Quelle est la valeur de votre bien à Aubagne&nbsp;?</h1>
+          <h1 id="aubagne-estimation-title">Estimation immobilière à Aubagne</h1>
           <span>
-            Une première lecture fondée sur les transactions locales, puis affinée
-            selon les qualités réelles de votre maison ou appartement.
+            Quelle est la valeur de votre maison ou appartement à Aubagne&nbsp;? Obtenez
+            une première estimation fondée sur les transactions locales, puis affinée
+            selon les qualités réelles de votre bien.
           </span>
-          <a href="#estimer">Commencer mon estimation <ArrowRight aria-hidden="true" size={19} /></a>
+          <a href="#estimer">Estimer mon bien à Aubagne <ArrowRight aria-hidden="true" size={19} /></a>
           <small><MapPin aria-hidden="true" size={15} /> {market.salePoints.length} ventes récentes positionnées sur la carte</small>
         </div>
       </section>
@@ -180,7 +207,7 @@ export default async function AubagneEstimationPage() {
             <p>Repères de marché</p>
             <h2 id="aubagne-prices-title">Les prix au m² à Aubagne</h2>
           </div>
-          <Link href="/prix-m2/aubagne">Voir l’analyse complète <ArrowRight aria-hidden="true" size={17} /></Link>
+          <Link href="/prix-m2/aubagne">Voir les prix au m² à Aubagne <ArrowRight aria-hidden="true" size={17} /></Link>
         </div>
         <div className={styles.priceGrid}>
           <article>
@@ -385,30 +412,15 @@ export default async function AubagneEstimationPage() {
         <div className={styles.faqBlock}>
           <div>
             <p>Questions fréquentes</p>
-            <h2>Bien préparer son estimation immobilière</h2>
+            <h2>Questions fréquentes sur l’estimation immobilière à Aubagne</h2>
           </div>
           <div className={styles.faqList}>
-            <details>
-              <summary>Une estimation en ligne suffit-elle pour fixer le prix de vente&nbsp;?</summary>
-              <p>
-                Elle fournit un premier repère cohérent avec les données disponibles. Une visite reste
-                nécessaire pour évaluer l’état réel, les travaux, la vue, les nuisances et les prestations.
-              </p>
-            </details>
-            <details>
-              <summary>Pourquoi le prix au m² varie-t-il selon les quartiers d’Aubagne&nbsp;?</summary>
-              <p>
-                Le type de logements, l’environnement, les accès et la rareté des ventes diffèrent d’un
-                secteur à l’autre. Le prix communal sert donc de point de départ, pas de résultat final.
-              </p>
-            </details>
-            <details>
-              <summary>Quels documents sont utiles pour affiner une estimation&nbsp;?</summary>
-              <p>
-                Le diagnostic de performance énergétique, les plans, la taxe foncière, les factures de
-                travaux et, en copropriété, les charges et derniers procès-verbaux facilitent l’analyse.
-              </p>
-            </details>
+            {aubagneFaqs.map((faq) => (
+              <details key={faq.question}>
+                <summary>{faq.question}</summary>
+                <p>{faq.answer}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -418,7 +430,7 @@ export default async function AubagneEstimationPage() {
           <p>Une donnée donne un repère. Une visite révèle la valeur.</p>
           <h2>Faisons le point sur votre bien à Aubagne.</h2>
         </div>
-        <Link href="/estimation">Demander mon estimation <ArrowRight aria-hidden="true" size={19} /></Link>
+        <Link href="/estimation">Demander mon estimation à Aubagne <ArrowRight aria-hidden="true" size={19} /></Link>
       </section>
     </main>
   );

@@ -93,7 +93,7 @@ export function AubagneEstimationStarter() {
       <div className={styles.estimatorHeading}>
         <div>
           <p>Première estimation</p>
-          <h2>Décrivez votre bien à Aubagne</h2>
+          <h2>Estimez votre maison ou appartement à Aubagne</h2>
         </div>
         <span>Gratuite et sans engagement</span>
       </div>
