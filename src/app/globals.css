@@ -5725,7 +5725,40 @@ button:focus-visible {
 }
 
 .estimation-page .result-side {
-  grid-row: 3;
+  grid-row: auto;
+  order: 3;
+}
+
+.estimation-page .result-valuation-hero {
+  order: 1;
+}
+
+.estimation-page .result-reading-grid {
+  order: 2;
+}
+
+.estimation-page .comparables-card {
+  order: 3;
+}
+
+.estimation-page .meaning-card {
+  order: 4;
+}
+
+.estimation-page .result-case-section {
+  order: 5;
+}
+
+.estimation-page .result-content-section {
+  order: 6;
+}
+
+.estimation-page .mandate-conversion {
+  order: 7;
+}
+
+.estimation-page .result-privacy {
+  order: 8;
 }
 
 .estimation-page .result-valuation-hero {
