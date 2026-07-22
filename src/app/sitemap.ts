@@ -2,26 +2,17 @@ import type { MetadataRoute } from "next";
 import { southCities } from "@/lib/cities";
 import { getContentArticleSitemapEntries } from "@/lib/content/articles";
 import { getPublishedProperties } from "@/lib/properties";
+import { mergePublicSitemapEntries, publicSitemapRoutes } from "@/lib/seo/sitemap";
 import { absoluteUrl } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: absoluteUrl("/"), changeFrequency: "weekly", priority: 1 },
-    { url: absoluteUrl("/prix-m2"), changeFrequency: "weekly", priority: 0.9 },
-    { url: absoluteUrl("/biens"), changeFrequency: "daily", priority: 0.9 },
-    { url: absoluteUrl("/estimation"), changeFrequency: "monthly", priority: 0.9 },
-    { url: absoluteUrl("/estimation-immobiliere"), changeFrequency: "weekly", priority: 0.8 },
-    { url: absoluteUrl("/agence-immobiliere"), changeFrequency: "weekly", priority: 0.8 },
-    { url: absoluteUrl("/recherche"), changeFrequency: "monthly", priority: 0.8 },
-    { url: absoluteUrl("/contenus"), changeFrequency: "weekly", priority: 0.8 },
-    { url: absoluteUrl("/qui-sommes-nous"), changeFrequency: "monthly", priority: 0.7 },
-    { url: absoluteUrl("/nous-rejoindre"), changeFrequency: "monthly", priority: 0.7 },
-    { url: absoluteUrl("/parrainage"), changeFrequency: "monthly", priority: 0.7 },
-    { url: absoluteUrl("/honoraires"), changeFrequency: "monthly", priority: 0.5 },
-    { url: absoluteUrl("/mentions-legales"), changeFrequency: "yearly", priority: 0.3 },
-  ];
+  const staticPages: MetadataRoute.Sitemap = publicSitemapRoutes.map((route) => ({
+    changeFrequency: route.changeFrequency,
+    priority: route.priority,
+    url: absoluteUrl(route.path),
+  }));
 
   const cityPages: MetadataRoute.Sitemap = southCities.map(city => ({
     url: absoluteUrl(`/prix-m2/${city.slug}`),
@@ -47,13 +38,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const properties = await getPublishedProperties().catch(() => []);
   const contentPages = await getContentArticleSitemapEntries().catch(() => []);
-  const propertyPages: MetadataRoute.Sitemap = properties.filter(property => !property.seo_noindex).map(property => ({
-    url: absoluteUrl(`/biens/${property.slug}`),
-    lastModified: property.updated_at || property.published_at || property.created_at,
-    changeFrequency: "weekly",
-    priority: 0.8,
-    images: property.images.map(image => image.public_url),
-  }));
+  const propertyPages: MetadataRoute.Sitemap = properties
+    .filter((property) => !property.seo_noindex)
+    .map((property) => ({
+      changeFrequency: "weekly",
+      images: property.images.map((image) => image.public_url).filter(Boolean),
+      lastModified: property.updated_at || property.published_at || property.created_at,
+      priority: 0.8,
+      url: absoluteUrl(`/biens/${property.slug}`),
+    }));
 
-  return [...staticPages, ...cityPages, ...localServicePages, ...contentPages, ...propertyPages];
+  return mergePublicSitemapEntries(
+    staticPages,
+    cityPages,
+    localServicePages,
+    contentPages,
+    propertyPages,
+  );
 }

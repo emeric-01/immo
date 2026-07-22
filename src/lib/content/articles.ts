@@ -164,6 +164,7 @@ export async function getContentArticleSitemapEntries() {
 
   return articles.map((article) => ({
     changeFrequency: "monthly" as const,
+    images: article.cover_image_url ? [article.cover_image_url] : undefined,
     lastModified: article.updated_at || article.published_at || article.created_at,
     priority: 0.65,
     url: absoluteUrl(`/contenus/${article.slug}`),
