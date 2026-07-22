@@ -7,6 +7,7 @@ import type { CityPriceZone, CitySalePoint } from "@/lib/city-market-data";
 type CityPriceMapProps = {
   accessToken: string;
   cityName: string;
+  fitToSalePoints?: boolean;
   center: {
     longitude: number;
     latitude: number;
@@ -112,6 +113,7 @@ function buildSalesCollection(salePoints: CitySalePoint[]) {
 export function CityPriceMap({
   accessToken,
   cityName,
+  fitToSalePoints = false,
   center,
   zones,
   salePoints,
@@ -235,6 +237,27 @@ export function CityPriceMap({
         },
       });
 
+      if (fitToSalePoints && salePoints.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+
+        salePoints.forEach((salePoint) => {
+          if (
+            Number.isFinite(salePoint.longitude) &&
+            Number.isFinite(salePoint.latitude)
+          ) {
+            bounds.extend([salePoint.longitude, salePoint.latitude]);
+          }
+        });
+
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, {
+            duration: 0,
+            maxZoom: 14,
+            padding: 56,
+          });
+        }
+      }
+
       map.on("click", "price-zones-fill", (event) => {
         const properties = getFeatureProperties(event.features?.[0]);
         const zoneId = properties?.id;
@@ -293,7 +316,7 @@ export function CityPriceMap({
       popupRef.current = null;
       mapRef.current = null;
     };
-  }, [accessToken, center.latitude, center.longitude, salePoints, zones]);
+  }, [accessToken, center.latitude, center.longitude, fitToSalePoints, salePoints, zones]);
 
   useEffect(() => {
     const map = mapRef.current;

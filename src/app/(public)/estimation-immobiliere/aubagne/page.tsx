@@ -149,6 +149,7 @@ export default async function AubagneEstimationPage() {
             accessToken={mapboxToken}
             center={{ latitude: city.latitude, longitude: city.longitude }}
             cityName={city.name}
+            fitToSalePoints
             salePoints={market.salePoints.slice(0, 30)}
             zones={[]}
           />
