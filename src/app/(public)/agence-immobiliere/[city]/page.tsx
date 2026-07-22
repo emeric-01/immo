@@ -217,15 +217,11 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.strategySection} id="parlons-de-votre-bien">
         <div className={styles.strategyCopy}>
           <p className={styles.eyebrow}>Vendre à {city.name}</p>
-          <h2>Un bien ne se vend pas avec une moyenne. Il se vend avec une stratégie.</h2>
+          <h2>Le bon prix attire. La bonne stratégie fait vendre.</h2>
           <p>
-            Chaque adresse a ses spécificités : vue, luminosité, extérieur, stationnement,
-            état, distribution et potentiel urbanistique.
-          </p>
-          <p>
-            Nous analysons ces critères sur place pour définir un prix cohérent, préparer
-            la présentation du bien et construire une commercialisation qui attire des
-            acquéreurs réellement qualifiés.
+            Vue, lumière, extérieur, stationnement, état ou potentiel : nous analysons ce
+            qui rend votre bien différent pour fixer un prix cohérent, soigner sa
+            présentation et attirer des acquéreurs réellement qualifiés.
           </p>
           <LocalAgencyQuickActions cityName={city.name} />
         </div>

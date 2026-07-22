@@ -18,11 +18,17 @@ import { CityPriceMap } from "../../prix-immobilier/[city]/city-price-map";
 import { AubagneEstimationStarter } from "./AubagneEstimationStarter";
 import styles from "./aubagne-estimation.module.css";
 
-const city = getCityBySlug("aubagne");
+function getAubagneCity() {
+  const configuredCity = getCityBySlug("aubagne");
 
-if (!city) {
-  throw new Error("La ville d'Aubagne est absente de la configuration.");
+  if (!configuredCity) {
+    throw new Error("La ville d'Aubagne est absente de la configuration.");
+  }
+
+  return configuredCity;
 }
+
+const city = getAubagneCity();
 
 export const dynamic = "force-dynamic";
 
@@ -124,7 +130,7 @@ export default async function AubagneEstimationPage() {
       </nav>
 
       <section className={styles.hero} aria-labelledby="aubagne-estimation-title">
-        <div className={styles.heroMap} aria-hidden="true">
+        <div className={styles.heroMap}>
           <CityPriceMap
             accessToken={mapboxToken}
             center={{ latitude: city.latitude, longitude: city.longitude }}

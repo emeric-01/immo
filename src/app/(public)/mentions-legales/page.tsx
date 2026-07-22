@@ -85,9 +85,17 @@ export default function LegalNoticePage() {
           <div className={styles.prose}>
             <p>
               Le site est hébergé par <strong>Vercel Inc.</strong>, 440 N Barranca
-              Avenue #4133, Covina, CA 91723, États-Unis. Le stockage applicatif,
-              l’authentification et certains fichiers sont opérés au moyen de
-              services techniques sécurisés fournis notamment par Supabase.
+              Avenue #4133, Covina, CA 91723, États-Unis. Les fonctions serveur
+              du site sont configurées pour être exécutées dans la région Vercel
+              de Paris, France (<strong>cdg1</strong>). Les contenus statiques
+              peuvent être distribués depuis le réseau mondial de diffusion de
+              Vercel afin d’être servis depuis un point proche du visiteur.
+            </p>
+            <p>
+              Le stockage applicatif, l’authentification et certains fichiers sont
+              opérés au moyen de services techniques sécurisés fournis notamment
+              par Supabase. La localisation de ces données dépend de la région
+              configurée pour le projet Supabase.
             </p>
             <p>
               Site internet :{" "}
@@ -173,9 +181,11 @@ export default function LegalNoticePage() {
             <article>
               <h3>Transferts hors Espace économique européen</h3>
               <p>
-                Certains prestataires techniques peuvent traiter des données hors
-                de l’Espace économique européen. Ces transferts sont encadrés par
-                les mécanismes reconnus par le RGPD, notamment les clauses
+                Bien que les fonctions serveur soient configurées pour s’exécuter
+                à Paris, certains prestataires techniques sont établis hors de
+                l’Espace économique européen ou peuvent y réaliser des opérations
+                accessoires. Les transferts concernés sont encadrés par les
+                mécanismes reconnus par le RGPD, notamment les clauses
                 contractuelles types ou une décision d’adéquation lorsqu’elle est
                 applicable.
               </p>
