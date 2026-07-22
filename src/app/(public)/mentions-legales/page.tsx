@@ -244,11 +244,13 @@ export default function LegalNoticePage() {
             <p>
               La consultation des annonces peut également être comptabilisée au
               moyen d’un identifiant pseudonyme enregistré localement afin d’éviter
-              les doublons et de produire des statistiques agrégées. Aucune régie
-              publicitaire ni aucun outil de ciblage publicitaire n’est activé sur
-              le site à la date de mise à jour de cette page. Tout ajout futur d’un
-              outil soumis au consentement donnera lieu à une information et à un
-              choix préalable.
+              les doublons et de produire des statistiques agrégées. Avec votre
+              accord préalable, Google Analytics 4 mesure également les pages vues,
+              les parcours et les interactions afin d’améliorer le site. Le traceur
+              Google n’est chargé qu’après acceptation et votre choix est conservé
+              pendant six mois. Vous pouvez le modifier à tout moment avec le lien
+              « Gérer mes cookies » présent dans le pied de page. Aucun ciblage
+              publicitaire n’est activé.
             </p>
           </div>
         </section>

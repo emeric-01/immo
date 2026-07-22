@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { southCities } from "@/lib/cities";
+import { readCityMarketCacheDates } from "@/lib/city-market-cache";
 import { getContentArticleSitemapEntries } from "@/lib/content/articles";
 import { getPublishedProperties } from "@/lib/properties";
 import { mergePublicSitemapEntries, publicSitemapRoutes } from "@/lib/seo/sitemap";
@@ -8,6 +9,7 @@ import { absoluteUrl } from "@/lib/site";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const cityMarketDates = await readCityMarketCacheDates(southCities);
   const staticPages: MetadataRoute.Sitemap = publicSitemapRoutes.map((route) => ({
     changeFrequency: route.changeFrequency,
     priority: route.priority,
@@ -17,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const cityPages: MetadataRoute.Sitemap = southCities.map(city => ({
     url: absoluteUrl(`/prix-m2/${city.slug}`),
     changeFrequency: "weekly",
+    lastModified: cityMarketDates.get(city.inseeCode),
     priority: 0.8,
   }));
 
@@ -27,11 +30,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: absoluteUrl(`/estimation-immobiliere/${city.slug}`),
       changeFrequency: "weekly" as const,
+      lastModified: cityMarketDates.get(city.inseeCode),
       priority: 0.9,
     },
     {
       url: absoluteUrl(`/agence-immobiliere/${city.slug}`),
       changeFrequency: "weekly" as const,
+      lastModified: cityMarketDates.get(city.inseeCode),
       priority: 0.9,
     },
   ]);

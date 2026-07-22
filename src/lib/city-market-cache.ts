@@ -137,3 +137,32 @@ export async function readCityMarketTrends(cities: City[]) {
 
   return trends;
 }
+
+export async function readCityMarketCacheDates(cities: City[]) {
+  const config = getConfig();
+  const dates = new Map<string, string>();
+  if (!config || cities.length === 0) return dates;
+
+  const codes = cities.map((city) => `"${city.inseeCode}"`).join(",");
+  const params = new URLSearchParams({
+    insee_code: `in.(${codes})`,
+    select: "insee_code,fetched_at",
+  });
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
+      cache: "no-store",
+      headers: headers(config),
+    });
+    if (!response.ok) return dates;
+
+    const rows = (await response.json()) as Pick<CacheRow, "fetched_at" | "insee_code">[];
+    for (const row of rows) {
+      if (row.fetched_at) dates.set(row.insee_code, row.fetched_at);
+    }
+  } catch {
+    return dates;
+  }
+
+  return dates;
+}
