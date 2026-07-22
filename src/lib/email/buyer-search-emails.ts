@@ -169,15 +169,31 @@ export async function sendEstimationVolumeAlertEmail({
 export async function sendSellerLeadNotificationEmail({
   address,
   city,
+  confidenceScore,
+  estimatedHighPrice,
+  estimatedLowPrice,
+  estimatedMedianPrice,
+  estimatedPricePerM2,
+  estimationId,
   phone,
   propertyType,
   requestType,
+  rooms,
+  surfaceM2,
 }: {
   address: string;
   city: string;
+  confidenceScore?: number;
+  estimatedHighPrice?: number;
+  estimatedLowPrice?: number;
+  estimatedMedianPrice?: number;
+  estimatedPricePerM2?: number;
+  estimationId?: string;
   phone: string;
   propertyType: string;
   requestType: string;
+  rooms?: number;
+  surfaceM2?: number;
 }) {
   const config = getEmailConfig();
 
@@ -199,6 +215,38 @@ export async function sendSellerLeadNotificationEmail({
   const requestIntro = requestType === "human_estimate"
     ? "Une personne souhaite être rappelée pour organiser une estimation de son bien sur place."
     : "Une personne souhaite être rappelée pour recevoir une étude immobilière plus détaillée.";
+  const estimationDetails = [
+    estimatedLowPrice && estimatedHighPrice
+      ? `<strong style="color:#111;">Fourchette affichée :</strong> ${escapeHtml(formatCurrency(estimatedLowPrice))} – ${escapeHtml(formatCurrency(estimatedHighPrice))}`
+      : "",
+    estimatedMedianPrice
+      ? `<strong style="color:#111;">Repère statistique :</strong> ${escapeHtml(formatCurrency(estimatedMedianPrice))}`
+      : "",
+    estimatedPricePerM2
+      ? `<strong style="color:#111;">Prix estimé :</strong> ${escapeHtml(formatInteger(estimatedPricePerM2))} €/m²`
+      : "",
+    surfaceM2 || rooms
+      ? `<strong style="color:#111;">Caractéristiques :</strong> ${surfaceM2 ? `${escapeHtml(formatInteger(surfaceM2))} m²` : "Surface non renseignée"}${rooms ? ` · ${escapeHtml(formatInteger(rooms))} pièce${rooms > 1 ? "s" : ""}` : ""}`
+      : "",
+    confidenceScore
+      ? `<strong style="color:#111;">Fiabilité des données :</strong> ${escapeHtml(formatInteger(confidenceScore))}/5`
+      : "",
+    estimationId
+      ? `<strong style="color:#111;">Référence estimation :</strong> ${escapeHtml(estimationId)}`
+      : "",
+  ].filter(Boolean);
+  const estimationText = [
+    estimatedLowPrice && estimatedHighPrice
+      ? `Fourchette affichée : ${formatCurrency(estimatedLowPrice)} – ${formatCurrency(estimatedHighPrice)}`
+      : "",
+    estimatedMedianPrice ? `Repère statistique : ${formatCurrency(estimatedMedianPrice)}` : "",
+    estimatedPricePerM2 ? `Prix estimé : ${formatInteger(estimatedPricePerM2)} €/m²` : "",
+    surfaceM2 || rooms
+      ? `Caractéristiques : ${surfaceM2 ? `${formatInteger(surfaceM2)} m²` : "Surface non renseignée"}${rooms ? ` · ${formatInteger(rooms)} pièce${rooms > 1 ? "s" : ""}` : ""}`
+      : "",
+    confidenceScore ? `Fiabilité des données : ${formatInteger(confidenceScore)}/5` : "",
+    estimationId ? `Référence estimation : ${estimationId}` : "",
+  ].filter(Boolean).join("\n");
 
   await sendEmail(config, {
     html: emailLayout(
@@ -212,10 +260,16 @@ export async function sendSellerLeadNotificationEmail({
           <strong style="color:#111;">Secteur :</strong> ${escapeHtml(city)}<br />
           <strong style="color:#111;">Téléphone :</strong> <a href="tel:${escapeHtml(phone.replace(/\s/g, ""))}" style="color:#9f5d33;">${escapeHtml(phone)}</a>
         </div>
+        ${estimationDetails.length > 0 ? `
+          <div style="border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:16px;margin:18px 0;color:#555f70;line-height:1.8;">
+            <strong style="display:block;margin-bottom:6px;color:#9f5d33;text-transform:uppercase;letter-spacing:.08em;font-size:12px;">Estimation consultée</strong>
+            ${estimationDetails.join("<br />")}
+          </div>
+        ` : ""}
       `,
     ),
     subject: `🔔 ${requestLabel} — ${city}`,
-    text: `${requestLabel}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
+    text: `${requestLabel}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}${estimationText ? `\n\nEstimation consultée\n${estimationText}` : ""}`,
     to: recipient,
   });
 }
@@ -599,6 +653,10 @@ function formatCurrency(value: number | null) {
     maximumFractionDigits: 0,
     style: "currency",
   }).format(value);
+}
+
+function formatInteger(value: number) {
+  return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value);
 }
 
 function getAppUrl() {

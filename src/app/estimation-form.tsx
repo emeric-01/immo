@@ -15,6 +15,7 @@ import {
   LoaderCircle,
   LockKeyhole,
   MapPin,
+  PhoneCall,
   Ruler,
   Sparkles,
   Tag,
@@ -66,6 +67,8 @@ type LocationHint = {
 const surfaceMin = 9;
 const surfaceMax = 300;
 const defaultSurface = 75;
+const agencyPhoneHref = "tel:+33619821984";
+const agencyPhoneLabel = "06 19 82 19 84";
 const roomOptions = ["1", "2", "3", "4", "5", "6"] as const;
 const priorityEstimationCities = [
   { name: "Aubagne", slug: "aubagne" },
@@ -433,6 +436,14 @@ export function EstimationForm({
           phone: formData.get("phone"),
           consent: formData.get("consent"),
           website: formData.get("website"),
+          estimationId: estimation?.clientEstimationId,
+          estimatedLowPrice: estimation?.lowPrice,
+          estimatedHighPrice: estimation?.highPrice,
+          estimatedMedianPrice: estimation?.medianPrice,
+          estimatedPricePerM2: estimation?.pricePerM2,
+          confidenceScore: estimation?.confidenceScore,
+          surfaceM2: Number(form.surfaceM2),
+          rooms: Number(form.rooms),
         }),
       });
       const result = (await response.json()) as { error?: string };
@@ -883,41 +894,42 @@ export function EstimationForm({
               </div>
             </div>
             <aside className="valuation-expert-panel">
-              <span className="expert-panel-kicker"><CheckCircle2 aria-hidden="true" /> Première étape terminée</span>
-              <h2>Voici votre première estimation.</h2>
+              <span className="expert-panel-kicker"><CheckCircle2 aria-hidden="true" /> Fourchette obtenue · prochaine étape</span>
+              <h2>Transformons ce repère en avis de valeur.</h2>
               <p>
-                Cette fourchette constitue un premier repère de marché. Pour la rendre
-                réellement exploitable, nous pouvons maintenant approfondir l&apos;analyse.
+                Nous reprenons les données, sélectionnons les comparables réellement pertinents
+                et intégrons ce qu&apos;un algorithme ne peut pas voir dans votre bien.
               </p>
-              <div className="expert-choice-list" aria-label="Choisir comment affiner l’estimation">
+              <ul className="expert-benefit-list">
+                <li><Check aria-hidden="true" /> Lecture du micro-secteur et des ventes comparables</li>
+                <li><Check aria-hidden="true" /> Analyse de l&apos;état, de la vue et des prestations</li>
+                <li><Check aria-hidden="true" /> Premier conseil de positionnement pour vendre</li>
+              </ul>
+              <div className="expert-primary-actions">
                 <a
-                  className="expert-choice-card is-detailed"
+                  className="expert-main-action"
                   href="#confier-mon-bien"
                   onClick={() => setLeadIntent("detailed_study")}
                 >
                   <FileSearch aria-hidden="true" />
                   <span>
-                    <small>02 — Étude détaillée</small>
-                    <strong>Recevoir une analyse approfondie</strong>
-                    <em>Comparables sélectionnés, micro-secteur et premier avis argumenté.</em>
+                    <strong>Demander mon étude approfondie</strong>
+                    <small>Gratuite et sans engagement</small>
                   </span>
                   <ArrowRight aria-hidden="true" />
                 </a>
                 <a
-                  className="expert-choice-card is-human"
-                  href="#confier-mon-bien"
-                  onClick={() => setLeadIntent("human_estimate")}
+                  className="expert-call-action"
+                  href={agencyPhoneHref}
                 >
-                  <Home aria-hidden="true" />
+                  <PhoneCall aria-hidden="true" />
                   <span>
-                    <small>03 — Expertise sur place</small>
-                    <strong>Demander une estimation humaine</strong>
-                    <em>Visite du bien, lecture de ses qualités réelles et avis de valeur affiné.</em>
+                    <small>Vous préférez échanger maintenant&nbsp;?</small>
+                    <strong>Appeler l&apos;agence · {agencyPhoneLabel}</strong>
                   </span>
-                  <ArrowRight aria-hidden="true" />
                 </a>
               </div>
-              <small className="expert-panel-reassurance">Deux démarches gratuites et sans engagement.</small>
+              <small className="expert-panel-reassurance">Un premier échange suffit pour comprendre votre projet et vous orienter.</small>
             </aside>
           </section>
 
@@ -1122,23 +1134,43 @@ export function EstimationForm({
 
           <section className="mandate-conversion" id="etude-approfondie" aria-labelledby="mandate-title">
             <div className="mandate-conversion-copy">
-              <span className="section-index">DE L&apos;ESTIMATION À LA VENTE</span>
-              <h2 id="mandate-title">Vous avez une fourchette. Construisons maintenant la vente.</h2>
+              <span className="section-index">VOTRE ANALYSE APPROFONDIE</span>
+              <h2 id="mandate-title">Votre estimation mérite maintenant un regard professionnel.</h2>
               <p>
-                Notre rôle ne consiste pas seulement à annoncer un prix. Nous venons comprendre
-                le bien, identifier ses leviers de valeur et préparer une commercialisation capable
-                de convaincre les bons acquéreurs.
+                Nous partons de cette fourchette pour produire un avis plus précis, comprendre
+                les qualités propres au bien et préparer, si vous souhaitez vendre, une stratégie
+                cohérente avec votre marché local.
               </p>
               <div className="mandate-benefits">
-                <span><FileSearch aria-hidden="true" /><strong>Étude approfondie</strong>Comparables, visite et micro-secteur</span>
-                <span><Ruler aria-hidden="true" /><strong>Potentiel vérifié</strong>Urbanisme, volumes et usages</span>
-                <span><Sparkles aria-hidden="true" /><strong>Présentation soignée</strong>Conseils ciblés et mise en valeur</span>
-                <span><Handshake aria-hidden="true" /><strong>Vente accompagnée</strong>Diffusion, visites et négociation</span>
+                <span><FileSearch aria-hidden="true" /><strong>Comparables sélectionnés</strong>Les références vraiment pertinentes autour du bien</span>
+                <span><MapPin aria-hidden="true" /><strong>Micro-emplacement analysé</strong>Adresse, environnement, vue et nuisances</span>
+                <span><Ruler aria-hidden="true" /><strong>Potentiel vérifié</strong>Urbanisme, volumes, travaux et usages possibles</span>
+                <span><Handshake aria-hidden="true" /><strong>Conseil de mise en vente</strong>Prix de lancement, présentation et stratégie</span>
               </div>
-              <p className="mandate-signature">Les données cadrent la valeur. Notre expertise construit la vente.</p>
+              <p className="mandate-signature">La donnée donne un repère. Le regard métier permet de défendre la valeur.</p>
             </div>
 
             <aside className="mandate-lead-card" id="confier-mon-bien">
+              <div className="mandate-intent-switch" role="group" aria-label="Choisir le type d’accompagnement">
+                <button
+                  aria-pressed={leadIntent === "detailed_study"}
+                  className={leadIntent === "detailed_study" ? "selected" : ""}
+                  onClick={() => setLeadIntent("detailed_study")}
+                  type="button"
+                >
+                  <FileSearch aria-hidden="true" />
+                  <span><strong>Étude approfondie</strong><small>Analyse et comparables</small></span>
+                </button>
+                <button
+                  aria-pressed={leadIntent === "human_estimate"}
+                  className={leadIntent === "human_estimate" ? "selected" : ""}
+                  onClick={() => setLeadIntent("human_estimate")}
+                  type="button"
+                >
+                  <Home aria-hidden="true" />
+                  <span><strong>Visite du bien</strong><small>Estimation sur place</small></span>
+                </button>
+              </div>
               <span className="section-index">
                 {leadIntent === "human_estimate" ? "ESTIMATION HUMAINE" : "ÉTUDE DÉTAILLÉE"}
               </span>
@@ -1187,6 +1219,11 @@ export function EstimationForm({
                 </form>
               )}
               <small><LockKeyhole aria-hidden="true" /> Échange gratuit, confidentiel et sans engagement.</small>
+              <a className="mandate-direct-call" href={agencyPhoneHref}>
+                <PhoneCall aria-hidden="true" />
+                <span>Besoin d&apos;une réponse immédiate&nbsp;?</span>
+                <strong>{agencyPhoneLabel}</strong>
+              </a>
               <Link href="/honoraires">Consulter nos honoraires</Link>
             </aside>
           </section>
@@ -1196,6 +1233,14 @@ export function EstimationForm({
             Vos données sont protégées. Aucune revente de données.
           </p>
         </div>
+        <nav className="result-mobile-conversion" aria-label="Affiner ou discuter de cette estimation">
+          <a href="#confier-mon-bien" onClick={() => setLeadIntent("detailed_study")}>
+            Affiner mon estimation
+          </a>
+          <a aria-label={`Appeler l'agence au ${agencyPhoneLabel}`} href={agencyPhoneHref}>
+            <PhoneCall aria-hidden="true" />
+          </a>
+        </nav>
         </section>
       </main>
     );

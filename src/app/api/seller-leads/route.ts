@@ -4,16 +4,39 @@ import { sendSellerLeadNotificationEmail } from "@/lib/email/buyer-search-emails
 type SellerLeadPayload = {
   address?: unknown;
   city?: unknown;
+  confidenceScore?: unknown;
   consent?: unknown;
+  estimatedHighPrice?: unknown;
+  estimatedLowPrice?: unknown;
+  estimatedMedianPrice?: unknown;
+  estimatedPricePerM2?: unknown;
+  estimationId?: unknown;
   phone?: unknown;
   propertyType?: unknown;
   requestType?: unknown;
+  rooms?: unknown;
+  surfaceM2?: unknown;
   website?: unknown;
 };
 
 const propertyTypes = new Set(["house", "apartment", "land", "other"]);
 const requestTypes = new Set(["detailed_study", "human_estimate"]);
 const phonePattern = /^(?:(?:\+33|0)\s?)[1-9](?:[\s.-]?\d{2}){4}$/;
+
+function readPositiveNumber(value: unknown, maximum: number) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= maximum
+    ? Math.round(value)
+    : undefined;
+}
+
+function readShortString(value: unknown, maximumLength = 120) {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized && normalized.length <= maximumLength ? normalized : undefined;
+}
 
 export async function POST(request: Request) {
   try {
@@ -43,7 +66,21 @@ export async function POST(request: Request) {
       );
     }
 
-    await sendSellerLeadNotificationEmail({ address, city, phone, propertyType, requestType });
+    await sendSellerLeadNotificationEmail({
+      address,
+      city,
+      confidenceScore: readPositiveNumber(payload.confidenceScore, 5),
+      estimatedHighPrice: readPositiveNumber(payload.estimatedHighPrice, 100_000_000),
+      estimatedLowPrice: readPositiveNumber(payload.estimatedLowPrice, 100_000_000),
+      estimatedMedianPrice: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
+      estimatedPricePerM2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
+      estimationId: readShortString(payload.estimationId),
+      phone,
+      propertyType,
+      requestType,
+      rooms: readPositiveNumber(payload.rooms, 100),
+      surfaceM2: readPositiveNumber(payload.surfaceM2, 100_000),
+    });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
