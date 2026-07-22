@@ -67,6 +67,9 @@
 .grid a:hover { border-color: #c99a7c; transform: translateY(-2px); }
 .grid span { color: var(--muted); font-size: .62rem; }
 .grid strong { margin-top: 5px; font: 400 1.08rem Georgia, serif; }
+.grid small { margin-top: 8px; font-size: .64rem; font-weight: 700; }
+.positiveTrend { color: #657252; }
+.negativeTrend { color: #a55e48; }
 .grid svg { position: absolute; right: 17px; top: 50%; color: var(--copper); transform: translateY(-50%); }
 
 @media (max-width: 900px) {
