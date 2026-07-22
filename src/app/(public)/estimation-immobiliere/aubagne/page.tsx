@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   ChartNoAxesCombined,
+  Check,
   Home,
   MapPin,
   Ruler,
@@ -33,10 +34,10 @@ const city = getAubagneCity();
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Estimation immobilière à Aubagne | Les Jumelles Immo",
-  description: "Estimez une maison ou un appartement à Aubagne à partir des prix locaux, des dernières ventes DVF et des caractéristiques du bien.",
+  title: "Estimation maison et appartement à Aubagne | Les Jumelles Immo",
+  description: "Estimation immobilière à Aubagne pour une maison ou un appartement : prix au m², ventes récentes, quartiers et première estimation gratuite.",
   alternates: { canonical: "/estimation-immobiliere/aubagne" },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 };
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", {
@@ -123,6 +124,7 @@ export default async function AubagneEstimationPage() {
       {
         "@type": "Service",
         name: "Estimation immobilière à Aubagne",
+        serviceType: ["Estimation de maison", "Estimation d’appartement"],
         areaServed: { "@type": "City", name: "Aubagne" },
         provider: { "@id": `${absoluteUrl("/")}#organization` },
         url: absoluteUrl("/estimation-immobiliere/aubagne"),
@@ -281,6 +283,133 @@ export default async function AubagneEstimationPage() {
               <p>{formatPrice(zone.pricePerM2)}<small>/m²</small></p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.seoSection} aria-labelledby="aubagne-local-estimation-title">
+        <header className={styles.seoLead}>
+          <div>
+            <p>Estimation locale</p>
+            <h2 id="aubagne-local-estimation-title">
+              Estimer une maison ou un appartement à Aubagne
+            </h2>
+          </div>
+          <div className={styles.seoLeadCopy}>
+            <p>
+              Une estimation immobilière à Aubagne ne consiste pas seulement à multiplier une
+              surface par un prix moyen. Deux biens de même taille peuvent présenter une valeur
+              différente selon leur adresse, leur état, leurs prestations et les ventes réellement
+              conclues autour d’eux.
+            </p>
+            <p>
+              Notre première analyse croise le type de bien avec les transactions récentes et le
+              secteur concerné : Centre-ville, Beaumond, Passons, Pin Vert, Camp Major, Tourtelle,
+              Charrel, Garlaban ou Saint-Mitre. Une visite permet ensuite d’intégrer ce que la donnée
+              seule ne peut pas mesurer.
+            </p>
+          </div>
+        </header>
+
+        <div className={styles.propertyGuideGrid}>
+          <article className={styles.propertyGuide}>
+            <div className={styles.guideHeading}>
+              <span><Home aria-hidden="true" size={24} /></span>
+              <div>
+                <small>Maison</small>
+                <h3>Estimation d’une maison à Aubagne</h3>
+              </div>
+            </div>
+            <p>
+              Pour estimer une maison à Aubagne, la surface habitable doit être rapprochée de la
+              taille et de l’usage du terrain. Les extérieurs, le stationnement et la qualité de
+              l’environnement peuvent créer des écarts importants entre deux ventes voisines.
+            </p>
+            <ul className={styles.guideFactors}>
+              <li><Check aria-hidden="true" size={16} /> Terrain, piscine, terrasse et dépendances</li>
+              <li><Check aria-hidden="true" size={16} /> État général, travaux et performance énergétique</li>
+              <li><Check aria-hidden="true" size={16} /> Calme, exposition, vue et facilité d’accès</li>
+            </ul>
+            <Link href="/estimation?propertyType=house">
+              Estimer ma maison à Aubagne <ArrowRight aria-hidden="true" size={17} />
+            </Link>
+          </article>
+
+          <article className={styles.propertyGuide}>
+            <div className={styles.guideHeading}>
+              <span><Building2 aria-hidden="true" size={24} /></span>
+              <div>
+                <small>Appartement</small>
+                <h3>Estimation d’un appartement à Aubagne</h3>
+              </div>
+            </div>
+            <p>
+              L’estimation d’un appartement à Aubagne dépend du prix observé dans son secteur, mais
+              aussi de l’immeuble et de la situation du logement. Un étage élevé, un extérieur ou un
+              stationnement ne produisent pas le même effet selon la résidence et l’adresse.
+            </p>
+            <ul className={styles.guideFactors}>
+              <li><Check aria-hidden="true" size={16} /> Étage, ascenseur, luminosité et agencement</li>
+              <li><Check aria-hidden="true" size={16} /> Balcon, terrasse, cave, parking ou garage</li>
+              <li><Check aria-hidden="true" size={16} /> Charges, copropriété, DPE et travaux votés</li>
+            </ul>
+            <Link href="/estimation?propertyType=apartment">
+              Estimer mon appartement à Aubagne <ArrowRight aria-hidden="true" size={17} />
+            </Link>
+          </article>
+        </div>
+
+        <div className={styles.methodBand}>
+          <div className={styles.methodHeading}>
+            <p>Notre méthode</p>
+            <h2>Comment calculons-nous votre estimation à Aubagne&nbsp;?</h2>
+          </div>
+          <ol className={styles.methodSteps}>
+            <li>
+              <span>01</span>
+              <strong>Localiser précisément</strong>
+              <p>L’adresse relie le bien à son secteur IRIS et aux ventes disponibles à proximité.</p>
+            </li>
+            <li>
+              <span>02</span>
+              <strong>Comparer les bons biens</strong>
+              <p>Maison et appartement sont analysés séparément avec des surfaces comparables.</p>
+            </li>
+            <li>
+              <span>03</span>
+              <strong>Affiner par les prestations</strong>
+              <p>L’état, les extérieurs, l’étage et les qualités propres au bien ajustent le repère statistique.</p>
+            </li>
+          </ol>
+        </div>
+
+        <div className={styles.faqBlock}>
+          <div>
+            <p>Questions fréquentes</p>
+            <h2>Bien préparer son estimation immobilière</h2>
+          </div>
+          <div className={styles.faqList}>
+            <details>
+              <summary>Une estimation en ligne suffit-elle pour fixer le prix de vente&nbsp;?</summary>
+              <p>
+                Elle fournit un premier repère cohérent avec les données disponibles. Une visite reste
+                nécessaire pour évaluer l’état réel, les travaux, la vue, les nuisances et les prestations.
+              </p>
+            </details>
+            <details>
+              <summary>Pourquoi le prix au m² varie-t-il selon les quartiers d’Aubagne&nbsp;?</summary>
+              <p>
+                Le type de logements, l’environnement, les accès et la rareté des ventes diffèrent d’un
+                secteur à l’autre. Le prix communal sert donc de point de départ, pas de résultat final.
+              </p>
+            </details>
+            <details>
+              <summary>Quels documents sont utiles pour affiner une estimation&nbsp;?</summary>
+              <p>
+                Le diagnostic de performance énergétique, les plans, la taxe foncière, les factures de
+                travaux et, en copropriété, les charges et derniers procès-verbaux facilitent l’analyse.
+              </p>
+            </details>
+          </div>
         </div>
       </section>
 

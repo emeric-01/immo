@@ -156,6 +156,7 @@
 .salesSection,
 .trendSection,
 .areasSection,
+.seoSection,
 .finalCta {
   width: min(1280px, calc(100% - 64px));
   margin-inline: auto;
@@ -551,6 +552,215 @@
   font-weight: 750;
 }
 
+.seoSection {
+  padding-block: 76px 42px;
+  border-top: 1px solid var(--line);
+}
+
+.seoLead {
+  display: grid;
+  grid-template-columns: minmax(320px, .8fr) minmax(480px, 1.2fr);
+  gap: 72px;
+  align-items: start;
+}
+
+.seoLead > div:first-child > p,
+.methodHeading > p,
+.faqBlock > div:first-child > p {
+  margin: 0 0 12px;
+  color: var(--apricot);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.seoLead h2,
+.methodHeading h2,
+.faqBlock h2 {
+  margin: 0;
+  font: 400 2.45rem/1.08 Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+.seoLeadCopy {
+  display: grid;
+  gap: 16px;
+}
+
+.seoLeadCopy p,
+.propertyGuide > p,
+.faqList p {
+  margin: 0;
+  color: #59606f;
+  font-size: .96rem;
+  line-height: 1.75;
+}
+
+.propertyGuideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 52px;
+  border-block: 1px solid var(--line);
+}
+
+.propertyGuide {
+  padding: 42px 48px 42px 0;
+}
+
+.propertyGuide + .propertyGuide {
+  border-left: 1px solid var(--line);
+  padding-right: 0;
+  padding-left: 48px;
+}
+
+.guideHeading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.guideHeading > span {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--paper);
+  color: #72492f;
+}
+
+.guideHeading small {
+  color: var(--apricot);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.guideHeading h3 {
+  margin: 4px 0 0;
+  font: 400 1.58rem/1.15 Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+.propertyGuide > p {
+  margin-top: 24px;
+}
+
+.guideFactors {
+  display: grid;
+  gap: 11px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideFactors li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #373a40;
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.guideFactors svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--apricot);
+}
+
+.propertyGuide > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 28px;
+  color: var(--ink);
+  font-size: .88rem;
+  font-weight: 800;
+  text-underline-offset: 4px;
+}
+
+.methodBand {
+  display: grid;
+  grid-template-columns: minmax(260px, .7fr) minmax(600px, 1.3fr);
+  gap: 54px;
+  margin-top: 68px;
+  border-block: 1px solid #decfC1;
+  background: var(--paper);
+  padding: 42px;
+}
+
+.methodHeading h2 {
+  font-size: 2rem;
+}
+
+.methodSteps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.methodSteps li {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.methodSteps li > span {
+  color: var(--apricot);
+  font: 400 1.18rem Georgia, "Times New Roman", serif;
+}
+
+.methodSteps strong {
+  font-size: .9rem;
+}
+
+.methodSteps p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.6;
+}
+
+.faqBlock {
+  display: grid;
+  grid-template-columns: minmax(280px, .75fr) minmax(520px, 1.25fr);
+  gap: 72px;
+  margin-top: 68px;
+}
+
+.faqBlock h2 {
+  font-size: 2rem;
+}
+
+.faqList {
+  border-top: 1px solid var(--line);
+}
+
+.faqList details {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+
+.faqList summary {
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.faqList p {
+  margin-top: 14px;
+  font-size: .86rem;
+}
+
 .finalCta {
   display: flex;
   min-height: 190px;
@@ -614,6 +824,16 @@
     gap: 34px;
   }
 
+  .seoLead,
+  .faqBlock {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .methodBand {
+    grid-template-columns: 1fr;
+  }
+
   .chartWrap {
     border-top: 1px solid var(--line);
     border-left: 0;
@@ -634,6 +854,7 @@
   .salesSection,
   .trendSection,
   .areasSection,
+  .seoSection,
   .finalCta {
     width: min(100% - 32px, 1280px);
   }
@@ -726,7 +947,8 @@
   .marketStrip,
   .salesSection,
   .trendSection,
-  .areasSection {
+  .areasSection,
+  .seoSection {
     padding-block: 52px;
   }
 
@@ -776,6 +998,53 @@
   .areaGrid article:nth-child(even) {
     border-right: 0;
     padding-inline: 4px;
+  }
+
+  .seoLead h2 {
+    font-size: 2rem;
+  }
+
+  .propertyGuideGrid {
+    grid-template-columns: 1fr;
+    margin-top: 38px;
+  }
+
+  .propertyGuide,
+  .propertyGuide + .propertyGuide {
+    border-left: 0;
+    padding: 32px 0;
+  }
+
+  .propertyGuide + .propertyGuide {
+    border-top: 1px solid var(--line);
+  }
+
+  .methodBand {
+    gap: 30px;
+    margin-inline: -16px;
+    margin-top: 46px;
+    padding: 32px 16px;
+  }
+
+  .methodSteps {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .methodSteps li {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .methodSteps li > span {
+    grid-row: 1 / 3;
+  }
+
+  .methodSteps p {
+    grid-column: 2;
+  }
+
+  .faqBlock {
+    margin-top: 48px;
   }
 
   .finalCta {

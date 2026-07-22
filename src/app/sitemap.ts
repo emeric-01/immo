@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/prix-m2"), changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/biens"), changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/estimation"), changeFrequency: "monthly", priority: 0.9 },
+    { url: absoluteUrl("/estimation-immobiliere/aubagne"), changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/recherche"), changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/contenus"), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/qui-sommes-nous"), changeFrequency: "monthly", priority: 0.7 },
