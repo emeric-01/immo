@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { CONTENT_IMAGE_QUALITY } from "./src/lib/content/image-config";
+import { legacyAgenceAsmRedirects } from "./src/lib/seo/agence-asm-redirects";
 import { legacyWordPressRedirects } from "./src/lib/seo/legacy-redirects";
 
 const nextConfig: NextConfig = {
@@ -12,6 +13,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      ...legacyAgenceAsmRedirects,
       ...legacyWordPressRedirects,
       {
         source: "/prix-immobilier/:city",

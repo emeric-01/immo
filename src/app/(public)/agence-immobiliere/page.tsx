@@ -125,9 +125,9 @@ export default function AgencyCitiesPage() {
           <div className={styles.heading}><p>Nos secteurs</p><h2>{department.label}</h2></div>
           <div className={styles.grid}>
             {agencyCities.filter((city) => city.department === department.key).map((city) => (
-              <Link href={`/agence-immobiliere/${city.slug}`} key={city.slug}>
-                <span>Agence immobilière</span>
-                <strong>{city.name}</strong>
+              <Link className={styles.agencyCityCard} href={`/agence-immobiliere/${city.slug}`} key={city.slug}>
+                <span>Les Jumelles Immo</span>
+                <h3>Agence immobilière à {city.name}</h3>
                 <ArrowRight aria-hidden="true" size={16} />
               </Link>
             ))}
