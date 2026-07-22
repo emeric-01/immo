@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { absoluteUrl } from "@/lib/site";
 import { createPageMetadata } from "@/lib/seo";
+import { getClientSession } from "@/lib/client-access/auth";
 import { ReferralForm } from "./ReferralForm";
 import styles from "./parrainage.module.css";
 
@@ -68,7 +69,10 @@ const faqs = [
   },
 ];
 
-export default function ParrainagePage() {
+export const dynamic = "force-dynamic";
+
+export default async function ParrainagePage() {
+  const clientSession = await getClientSession();
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -193,7 +197,12 @@ export default function ParrainagePage() {
             <li><Check aria-hidden="true" /> Suivi de votre parrainage par l’agence</li>
           </ul>
         </div>
-        <ReferralForm />
+        <ReferralForm sponsor={clientSession ? {
+          email: clientSession.email,
+          firstName: clientSession.firstName,
+          lastName: clientSession.lastName,
+          phone: clientSession.phone,
+        } : null} />
       </section>
 
       <section className={styles.conditions} aria-labelledby="conditions-title">

@@ -30,10 +30,46 @@ export const referralSchema = z.object({
 
 export type ReferralInput = z.infer<typeof referralSchema>;
 
-type ReferralRow = { id: string };
+export const referralStatuses = ["new", "contacted", "qualified", "signed", "rewarded", "rejected"] as const;
+export type ReferralStatus = (typeof referralStatuses)[number];
+
+export type ReferralRow = {
+  consent_recorded_at: string;
+  created_at: string;
+  id: string;
+  message: string | null;
+  project_kind: "buy" | "sell";
+  property_city: string;
+  property_type: "apartment" | "house" | "land" | "other";
+  referred_email: string | null;
+  referred_first_name: string;
+  referred_last_name: string;
+  referred_phone: string;
+  reward_paid_at: string | null;
+  source: string;
+  sponsor_client_account_id: string | null;
+  sponsor_email: string;
+  sponsor_first_name: string;
+  sponsor_last_name: string;
+  sponsor_phone: string;
+  status: ReferralStatus;
+  updated_at: string;
+};
 
 export async function createReferral(input: ReferralInput) {
-  const rows = await clientSupabaseRequest<ReferralRow[]>("referral_leads?select=id", {
+  const normalizedSponsorEmail = input.sponsorEmail.trim().toLowerCase();
+  let sponsorClientAccountId: string | null = null;
+
+  try {
+    const accounts = await clientSupabaseRequest<Array<{ id: string }>>(
+      `client_accounts?email=eq.${encodeURIComponent(normalizedSponsorEmail)}&select=id&limit=1`,
+    );
+    sponsorClientAccountId = accounts[0]?.id ?? null;
+  } catch (error) {
+    console.error("Referral account matching failed", error);
+  }
+
+  const rows = await clientSupabaseRequest<Array<Pick<ReferralRow, "id">>>("referral_leads?select=id", {
     body: JSON.stringify({
       consent_recorded_at: new Date().toISOString(),
       message: input.message || null,
@@ -45,7 +81,8 @@ export async function createReferral(input: ReferralInput) {
       referred_last_name: input.referredLastName,
       referred_phone: input.referredPhone,
       source: "website_referral_page",
-      sponsor_email: input.sponsorEmail.toLowerCase(),
+      sponsor_client_account_id: sponsorClientAccountId,
+      sponsor_email: normalizedSponsorEmail,
       sponsor_first_name: input.sponsorFirstName,
       sponsor_last_name: input.sponsorLastName,
       sponsor_phone: input.sponsorPhone,
@@ -59,4 +96,28 @@ export async function createReferral(input: ReferralInput) {
   }
 
   return rows[0];
+}
+
+export function formatReferralProjectKind(value: ReferralRow["project_kind"]) {
+  return value === "sell" ? "Vente" : "Achat";
+}
+
+export function formatReferralPropertyType(value: ReferralRow["property_type"]) {
+  return {
+    apartment: "Appartement",
+    house: "Maison",
+    land: "Terrain",
+    other: "Autre bien",
+  }[value];
+}
+
+export function formatReferralStatus(value: ReferralStatus) {
+  return {
+    contacted: "Contacté",
+    new: "Reçu",
+    qualified: "Projet qualifié",
+    rejected: "Non retenu",
+    rewarded: "Prime versée",
+    signed: "Transaction signée",
+  }[value];
 }

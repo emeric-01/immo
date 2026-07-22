@@ -352,7 +352,7 @@
 
 .statsBand {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-block: 1px solid #e3dcd4;
 }
 
@@ -578,6 +578,32 @@
   padding: 6px 9px;
   color: #70401e;
   font-weight: 800;
+}
+
+.referralStatus {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid #dec4a8;
+  border-radius: 999px;
+  background: #fbf7f2;
+  padding: 0 11px;
+  color: #70401e;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.referralStatus[data-status="signed"],
+.referralStatus[data-status="rewarded"] {
+  border-color: #a8cdb0;
+  background: #eef7f0;
+  color: #246034;
+}
+
+.referralStatus[data-status="rejected"] {
+  border-color: #e6b0a8;
+  background: #fff2ef;
+  color: #8b2e21;
 }
 
 .sectionEmpty {

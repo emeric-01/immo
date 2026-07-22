@@ -199,6 +199,7 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
 
   if (existing[0]) {
     await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}`, payload);
+    await linkExistingReferrals(config, existing[0].id, normalizedEmail);
     return existing[0];
   }
 
@@ -209,7 +210,21 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
     throw new Error("Supabase client account insert did not return a row.");
   }
 
+  await linkExistingReferrals(config, account.id, normalizedEmail);
   return account;
+}
+
+async function linkExistingReferrals(config: SupabaseConfig, clientAccountId: string, email: string) {
+  try {
+    await updateSupabaseRows(
+      config,
+      "referral_leads",
+      `sponsor_client_account_id=is.null&sponsor_email=eq.${encodeURIComponent(email)}`,
+      { sponsor_client_account_id: clientAccountId },
+    );
+  } catch (error) {
+    console.error("Referral account linking failed", error);
+  }
 }
 
 async function insertLocations(config: SupabaseConfig, buyerSearchId: string, data: BuyerSearchFormData) {

@@ -6,6 +6,7 @@ import {
   Building2,
   Euro,
   Home,
+  HeartHandshake,
   LogOut,
   MapPin,
   Plus,
@@ -15,6 +16,8 @@ import { propertyTypeLabels } from "@/lib/buyer-search/options";
 import { requireClientSession } from "@/lib/client-access/auth";
 import { getClientEstimations } from "@/lib/client-access/estimations";
 import { getClientBuyerSearches } from "@/lib/client-access/project";
+import { getClientReferrals } from "@/lib/client-access/referrals";
+import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus } from "@/lib/referrals";
 import { logoutClient } from "./login/actions";
 import { DeleteSearchButton } from "./DeleteSearchButton";
 import styles from "./client.module.css";
@@ -27,9 +30,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ClientDashboardPage() {
   const session = await requireClientSession();
-  const [searches, estimations] = await Promise.all([
+  const [searches, estimations, referrals] = await Promise.all([
     getClientBuyerSearches(session),
     getClientEstimations(session),
+    getClientReferrals(session),
   ]);
 
   return (
@@ -52,6 +56,10 @@ export default async function ClientDashboardPage() {
               <BarChart3 size={18} aria-hidden="true" />
               Nouvelle estimation
             </Link>
+            <Link className={styles.secondaryButton} href="/parrainage?source=client">
+              <HeartHandshake size={18} aria-hidden="true" />
+              Parrainer un proche
+            </Link>
           </div>
         </section>
 
@@ -65,6 +73,11 @@ export default async function ClientDashboardPage() {
             <BarChart3 size={20} aria-hidden="true" />
             <strong>{estimations.length}</strong>
             <span>Estimation{estimations.length > 1 ? "s" : ""}</span>
+          </div>
+          <div>
+            <HeartHandshake size={20} aria-hidden="true" />
+            <strong>{referrals.length}</strong>
+            <span>Parrainage{referrals.length > 1 ? "s" : ""}</span>
           </div>
         </section>
 
@@ -140,6 +153,39 @@ export default async function ClientDashboardPage() {
             </div>
           ) : (
             <EmptySection icon={BarChart3} title="Aucune estimation" text="Les estimations réalisées en étant connecté apparaîtront ici." href="/" />
+          )}
+        </section>
+
+        <section className={styles.dashboardSection}>
+          <div className={styles.sectionTitle}>
+            <div>
+              <p className={styles.eyebrow}>Mes recommandations</p>
+              <h2>Mes parrainages</h2>
+            </div>
+            <Link href="/parrainage?source=client">Parrainer un proche</Link>
+          </div>
+          {referrals.length > 0 ? (
+            <div className={styles.projectList}>
+              {referrals.map((referral) => (
+                <article className={styles.projectCard} key={referral.id}>
+                  <div className={styles.projectCardMain}>
+                    <span className={styles.metricIcon}><HeartHandshake size={20} aria-hidden="true" /></span>
+                    <div>
+                      <small>Parrainage du {formatDate(referral.created_at)}</small>
+                      <h3>{referral.referred_first_name} {referral.referred_last_name}</h3>
+                      <p>{formatReferralProjectKind(referral.project_kind)} · {formatReferralPropertyType(referral.property_type)} · {referral.property_city}</p>
+                    </div>
+                  </div>
+                  <div className={styles.projectMeta}>
+                    <span className={styles.referralStatus} data-status={referral.status}>
+                      {formatReferralStatus(referral.status)}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptySection icon={HeartHandshake} title="Aucun parrainage" text="Présentez-nous un proche et suivez ici l’avancement de sa recommandation." href="/parrainage?source=client" />
           )}
         </section>
       </section>

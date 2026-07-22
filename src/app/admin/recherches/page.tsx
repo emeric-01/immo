@@ -93,6 +93,7 @@ function AdminFrame({ children }: { children: React.ReactNode }) {
             Recherches
           </Link>
           <Link href="/admin/estimations">Estimations</Link>
+          <Link href="/admin/parrainages">Parrainages</Link>
           <Link href="/admin/clients">Clients</Link>
           <Link href="/admin/recherches-villes">Villes recherchées</Link>
           <Link href="/admin/contenus">Contenus</Link>

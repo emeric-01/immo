@@ -3,6 +3,7 @@ import "server-only";
 import { propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
+import type { AdminReferral } from "@/lib/admin/referrals";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -45,6 +46,7 @@ export type AdminClientListItem = AdminClientAccount & {
 export type AdminClientDetail = {
   client: AdminClientAccount;
   estimations: ClientEstimationRow[];
+  referrals: AdminReferral[];
   searches: AdminClientSearch[];
 };
 
@@ -194,10 +196,25 @@ export async function getAdminClient(id: string): Promise<AdminDataState<AdminCl
     return estimationsResult;
   }
 
+  const referralsParams = new URLSearchParams({
+    order: "created_at.desc",
+    or: `(sponsor_client_account_id.eq.${id},sponsor_email.eq.${client.email.toLowerCase()})`,
+    select: "*",
+  });
+  const referralsResult = await supabaseAdminFetch<AdminReferral[]>(
+    config,
+    `referral_leads?${referralsParams.toString()}`,
+  );
+
+  if (referralsResult.status !== "ready") {
+    return referralsResult;
+  }
+
   return {
     data: {
       client,
       estimations: estimationsResult.data,
+      referrals: referralsResult.data,
       searches: searchesResult.data,
     },
     status: "ready",

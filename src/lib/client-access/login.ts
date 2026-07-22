@@ -11,6 +11,7 @@ type ClientAccount = {
   first_name: string;
   id: string;
   last_name: string;
+  phone: string;
 };
 
 type LoginChallenge = {
@@ -145,6 +146,7 @@ export async function verifyClientLoginCode(email: string, code: string) {
       firstName: account.first_name,
       id: account.id,
       lastName: account.last_name,
+      phone: account.phone,
     }),
   ]);
 
@@ -153,7 +155,7 @@ export async function verifyClientLoginCode(email: string, code: string) {
 
 async function findClientAccount(email: string) {
   const accounts = await clientSupabaseRequest<ClientAccount[]>(
-    `client_accounts?email=eq.${encodeURIComponent(email)}&select=id,email,first_name,last_name,access_enabled&limit=1`,
+    `client_accounts?email=eq.${encodeURIComponent(email)}&select=id,email,first_name,last_name,phone,access_enabled&limit=1`,
   );
 
   return accounts[0] ?? null;

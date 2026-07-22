@@ -12,6 +12,7 @@ export type ClientSession = {
   firstName: string;
   id: string;
   lastName: string;
+  phone?: string;
 };
 
 function getSessionSecret() {
@@ -112,6 +113,7 @@ function verifySessionCookie(value: string, secret: string): ClientSession | nul
       firstName: decoded.firstName,
       id: decoded.id,
       lastName: decoded.lastName,
+      phone: decoded.phone,
     };
   } catch {
     return null;

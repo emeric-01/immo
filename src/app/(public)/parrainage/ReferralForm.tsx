@@ -6,7 +6,14 @@ import styles from "./parrainage.module.css";
 
 type SubmitState = "idle" | "loading" | "success" | "error";
 
-export function ReferralForm() {
+type SponsorDefaults = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+};
+
+export function ReferralForm({ sponsor }: { sponsor?: SponsorDefaults | null }) {
   const [state, setState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
 
@@ -51,19 +58,19 @@ export function ReferralForm() {
         <div className={styles.twoColumns}>
           <label>
             <span>Prénom *</span>
-            <input autoComplete="given-name" name="sponsorFirstName" required />
+            <input autoComplete="given-name" defaultValue={sponsor?.firstName ?? ""} name="sponsorFirstName" required />
           </label>
           <label>
             <span>Nom *</span>
-            <input autoComplete="family-name" name="sponsorLastName" required />
+            <input autoComplete="family-name" defaultValue={sponsor?.lastName ?? ""} name="sponsorLastName" required />
           </label>
           <label>
             <span>Email *</span>
-            <input autoComplete="email" inputMode="email" name="sponsorEmail" required type="email" />
+            <input autoComplete="email" defaultValue={sponsor?.email ?? ""} inputMode="email" name="sponsorEmail" required type="email" />
           </label>
           <label>
             <span>Téléphone *</span>
-            <input autoComplete="tel" inputMode="tel" name="sponsorPhone" placeholder="06 12 34 56 78" required type="tel" />
+            <input autoComplete="tel" defaultValue={sponsor?.phone ?? ""} inputMode="tel" name="sponsorPhone" placeholder="06 12 34 56 78" required type="tel" />
           </label>
         </div>
       </fieldset>

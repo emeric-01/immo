@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, UserRound } from "lucide-react";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import { requireAdminSession } from "@/lib/admin/auth";
+import type { AdminReferral } from "@/lib/admin/referrals";
+import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus } from "@/lib/referrals";
 import {
   formatAdminClientName,
   formatAdminClientPropertyTypes,
@@ -49,7 +51,7 @@ export default async function AdminClientDetailPage({
     );
   }
 
-  const { client, estimations, searches } = result.data;
+  const { client, estimations, referrals, searches } = result.data;
   const latestSearch = searches.find((search) => search.status !== "deleted_by_client") ?? null;
 
   return (
@@ -144,9 +146,26 @@ export default async function AdminClientDetailPage({
             <p className={styles.mutedText}>Aucune estimation rattachee a ce client.</p>
           )}
         </InfoPanel>
+
+        <InfoPanel title={`Parrainages liés (${referrals.length})`} wide>
+          {referrals.length > 0 ? (
+            <div className={styles.tablePanel}>
+              <table>
+                <thead><tr><th>Date</th><th>Proche présenté</th><th>Projet</th><th>Statut</th><th aria-label="Détail" /></tr></thead>
+                <tbody>{referrals.map((referral) => <ReferralRow key={referral.id} referral={referral} />)}</tbody>
+              </table>
+            </div>
+          ) : (
+            <p className={styles.mutedText}>Aucun parrainage rattaché à ce client.</p>
+          )}
+        </InfoPanel>
       </section>
     </DetailFrame>
   );
+}
+
+function ReferralRow({ referral }: { referral: AdminReferral }) {
+  return <tr><td><strong>{formatDate(referral.created_at)}</strong></td><td><strong>{referral.referred_first_name} {referral.referred_last_name}</strong><small>{referral.referred_phone}</small></td><td><strong>{formatReferralProjectKind(referral.project_kind)} · {formatReferralPropertyType(referral.property_type)}</strong><small>{referral.property_city}</small></td><td><span className={styles.statusBadge} data-status={referral.status}>{formatReferralStatus(referral.status)}</span></td><td><Link className={styles.iconLink} href={`/admin/parrainages/${referral.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>;
 }
 
 function EstimationRow({ estimation }: { estimation: ClientEstimationRow }) {

@@ -312,6 +312,19 @@
   color: #8f2f25;
 }
 
+.statusBadge[data-status="signed"],
+.statusBadge[data-status="rewarded"] {
+  border-color: #8eb999;
+  background: #eef7f0;
+  color: #246034;
+}
+
+.statusBadge[data-status="rejected"] {
+  border-color: #d8aaa4;
+  background: #fff1ef;
+  color: #8f2f25;
+}
+
 .deletedNotice {
   display: flex;
   align-items: flex-start;
@@ -506,6 +519,46 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.statusForm {
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid #eee7df;
+  padding-bottom: 16px;
+}
+
+.statusForm label {
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.statusForm > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.statusForm select,
+.statusForm button {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 700;
+}
+
+.statusForm select {
+  border: 1px solid #d7dfe9;
+  background: #ffffff;
+}
+
+.statusForm button {
+  border: 0;
+  background: #111111;
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .consentText {
