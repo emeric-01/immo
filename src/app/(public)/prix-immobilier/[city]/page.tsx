@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -64,14 +65,35 @@ function MarketPriceCard({
   stat: PropertyMarketStat;
 }) {
   const TrendIcon = stat.trend1Year >= 0 ? TrendingUp : TrendingDown;
+  const rangeWidth = stat.highPricePerM2 - stat.lowPricePerM2;
+  const averagePosition = rangeWidth > 0
+    ? Math.min(100, Math.max(0, ((stat.averagePricePerM2 - stat.lowPricePerM2) / rangeWidth) * 100))
+    : 50;
+  const rangeStyle = {
+    "--market-range-position": `${averagePosition}%`,
+  } as CSSProperties;
 
   return (
     <article className="city-market-price-card">
       <span className="city-market-icon"><Icon size={20} /></span>
-      <div>
+      <div className="city-market-card-content">
         <span>{label}</span>
         <strong>{formatPrice(stat.averagePricePerM2)}<small>/m²</small></strong>
-        <p>Fourchette {formatPrice(stat.lowPricePerM2)} — {formatPrice(stat.highPricePerM2)}</p>
+        <div className="city-market-range" style={rangeStyle}>
+          <div className="city-market-range-values">
+            <span>Fourchette observée</span>
+            <strong>
+              {formatPrice(stat.lowPricePerM2)}
+              <small>à</small>
+              {formatPrice(stat.highPricePerM2)}
+              <em>/m²</em>
+            </strong>
+          </div>
+          <div className="city-market-range-track" aria-hidden="true"><span /></div>
+          <div className="city-market-range-labels" aria-hidden="true">
+            <span>Prix bas</span><span>Moyenne</span><span>Prix haut</span>
+          </div>
+        </div>
       </div>
       <span className={stat.trend1Year >= 0 ? "city-trend positive" : "city-trend negative"}>
         <TrendIcon size={14} /> {formatPercent(stat.trend1Year)}

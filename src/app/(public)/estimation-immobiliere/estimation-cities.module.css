@@ -72,8 +72,74 @@
 .negativeTrend { color: #a55e48; }
 .grid svg { position: absolute; right: 17px; top: 50%; color: var(--copper); transform: translateY(-50%); }
 
+.agencyServices {
+  display: grid;
+  grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+  gap: 64px;
+  margin-bottom: 72px;
+  border-block: 1px solid var(--line);
+  padding: 54px 0;
+}
+
+.agencyLead > p,
+.agencyApproach > div:first-child > p,
+.agencyFaq > div:first-child > p {
+  margin: 0 0 12px;
+  color: var(--copper);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.agencyLead h2,
+.agencyApproach h2,
+.agencyFaq h2 {
+  margin: 0;
+  font: 400 clamp(2rem, 3vw, 3.1rem)/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: -.04em;
+}
+
+.agencyLead > span {
+  display: block;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.7;
+}
+
+.serviceGrid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.serviceGrid article { padding: 8px 24px; }
+.serviceGrid article + article { border-left: 1px solid var(--line); }
+.serviceGrid strong { color: var(--copper); font: 400 1.15rem Georgia, serif; }
+.serviceGrid h3 { margin: 20px 0 10px; font: 400 1.2rem Georgia, serif; }
+.serviceGrid p { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.65; }
+
+.agencyApproach {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  margin-top: 76px;
+  border-radius: 14px;
+  background: #211f1c;
+  padding: 52px;
+  color: #fff;
+}
+.agencyApproach > div:last-child > p { margin: 0 0 24px; color: #c0b9b1; font-size: .82rem; line-height: 1.75; }
+.agencyApproach nav { display: grid; gap: 11px; }
+.agencyApproach nav a { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #49433d; padding-bottom: 10px; color: #fff; font-size: .74rem; text-decoration: none; }
+.agencyApproach nav svg { color: #d59a72; }
+
+.agencyFaq { display: grid; grid-template-columns: .75fr 1.25fr; gap: 72px; padding: 76px 0 20px; }
+.agencyFaq details { border-bottom: 1px solid var(--line); }
+.agencyFaq summary { display: flex; cursor: pointer; justify-content: space-between; gap: 20px; padding: 18px 0; font-size: .8rem; font-weight: 750; list-style: none; }
+.agencyFaq summary::-webkit-details-marker { display: none; }
+.agencyFaq summary span { color: var(--copper); font-size: 1.1rem; }
+.agencyFaq details p { margin: -2px 0 18px; color: var(--muted); font-size: .76rem; line-height: 1.7; }
+
 @media (max-width: 900px) {
   .grid { grid-template-columns: repeat(2, 1fr); }
+  .agencyServices, .agencyApproach, .agencyFaq { grid-template-columns: 1fr; gap: 34px; }
 }
 
 @media (max-width: 600px) {
@@ -84,4 +150,10 @@
   .intro { grid-template-columns: 1fr; margin: 42px auto 54px; }
   .intro div + div { border-top: 1px solid var(--line); border-left: 0; }
   .grid { grid-template-columns: 1fr; }
+  .agencyServices { padding: 42px 0; }
+  .serviceGrid { grid-template-columns: 1fr; }
+  .serviceGrid article { padding: 22px 0; }
+  .serviceGrid article + article { border-top: 1px solid var(--line); border-left: 0; }
+  .agencyApproach { margin-top: 54px; padding: 32px 22px; }
+  .agencyFaq { padding-top: 54px; }
 }

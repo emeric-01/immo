@@ -6479,3 +6479,119 @@ button:focus-visible {
     padding: 24px 20px;
   }
 }
+
+/* Fourchette de prix mise en avant dans les cartes de marché. */
+.city-price-modern .city-market-price-card,
+.city-price-modern .city-market-signal-card {
+  min-height: 176px;
+}
+
+.city-market-card-content {
+  min-width: 0;
+}
+
+.city-market-range {
+  display: grid;
+  gap: 7px;
+  margin-top: 5px;
+  border-top: 1px solid var(--city-line);
+  padding-top: 10px;
+}
+
+.city-market-range-values {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.city-market-range-values > span {
+  color: var(--city-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.city-market-price-card .city-market-range-values > strong {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--city-ink);
+  font-family: Arial, sans-serif;
+  font-size: 0.79rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.city-market-price-card .city-market-range-values > strong small,
+.city-market-price-card .city-market-range-values > strong em {
+  margin: 0;
+  color: var(--city-muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.city-market-range-track {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: #e7ded5;
+}
+
+.city-market-range-track::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #c7895f;
+  content: "";
+  opacity: 0.72;
+}
+
+.city-market-range-track > span {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: var(--market-range-position);
+  width: 11px;
+  height: 11px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--city-ink);
+  box-shadow: 0 0 0 1px rgba(23, 22, 18, 0.18);
+  transform: translate(-50%, -50%);
+}
+
+.city-market-range-labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  color: #91877d;
+  font-size: 0.58rem;
+}
+
+.city-market-range-labels span:nth-child(2) {
+  text-align: center;
+}
+
+.city-market-range-labels span:last-child {
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .city-price-modern .city-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-price-modern .city-market-price-card,
+  .city-price-modern .city-market-signal-card {
+    min-height: 166px;
+  }
+
+  .city-price-modern .city-market-signal-card {
+    min-height: 122px;
+  }
+
+  .city-market-range-values {
+    align-items: flex-start;
+  }
+}
