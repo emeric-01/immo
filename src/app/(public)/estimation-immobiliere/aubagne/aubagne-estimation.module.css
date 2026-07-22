@@ -597,6 +597,28 @@
   line-height: 1.75;
 }
 
+.agencyLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid #c9a58e;
+  padding-bottom: 5px;
+  color: var(--ink);
+  font-size: .84rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.agencyLink svg {
+  color: var(--apricot);
+  transition: transform .2s ease;
+}
+
+.agencyLink:hover svg {
+  transform: translateX(3px);
+}
+
 .propertyGuideGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

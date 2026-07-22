@@ -19,17 +19,15 @@ import { CityPriceMap } from "../../prix-immobilier/[city]/city-price-map";
 import { AubagneEstimationStarter } from "./AubagneEstimationStarter";
 import styles from "./aubagne-estimation.module.css";
 
-function getAubagneCity() {
-  const configuredCity = getCityBySlug("aubagne");
+function getEstimationCity(citySlug: string) {
+  const configuredCity = getCityBySlug(citySlug);
 
   if (!configuredCity) {
-    throw new Error("La ville d'Aubagne est absente de la configuration.");
+    throw new Error(`La ville ${citySlug} est absente de la configuration.`);
   }
 
   return configuredCity;
 }
-
-const city = getAubagneCity();
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +100,9 @@ function formatDate(value: string) {
   }).format(date);
 }
 
-function labelZones(zones: CityPriceZone[]) {
+function labelZones(zones: CityPriceZone[], citySlug: string) {
+  if (citySlug !== "aubagne") return zones;
+
   return zones.map((zone, index) => ({
     ...zone,
     name: aubagneZoneLabels[zone.id] ?? aubagneFallbackZoneLabels[index] ?? zone.name,
@@ -119,15 +119,26 @@ function selectRecentSales(sales: CitySalePoint[]) {
     .slice(0, 6);
 }
 
-export default async function AubagneEstimationPage() {
+export default function AubagneEstimationPage() {
+  return <CityEstimationPage citySlug="aubagne" />;
+}
+
+export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
+  const city = getEstimationCity(citySlug);
+  const cityFaqs = aubagneFaqs.map((faq) => ({
+    question: faq.question.replaceAll("Aubagne", city.name),
+    answer: faq.answer.replaceAll("Aubagne", city.name),
+  }));
   const cachedMarket = await readCityMarketCache(city);
   const market = cachedMarket?.data ?? getStaticCityMarketData(city);
-  const zones = labelZones(market.zones);
+  const zones = labelZones(market.zones, city.slug);
   const recentSales = selectRecentSales(market.salePoints);
   const averagePrice = Math.round(
     (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
   );
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+  const pagePath = `/estimation-immobiliere/${city.slug}`;
+  const localSectorNames = zones.slice(0, 9).map((zone) => zone.name).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -136,20 +147,20 @@ export default async function AubagneEstimationPage() {
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Accueil", item: absoluteUrl("/") },
           { "@type": "ListItem", position: 2, name: "Estimation immobilière", item: absoluteUrl("/estimation") },
-          { "@type": "ListItem", position: 3, name: "Aubagne", item: absoluteUrl("/estimation-immobiliere/aubagne") },
+          { "@type": "ListItem", position: 3, name: city.name, item: absoluteUrl(pagePath) },
         ],
       },
       {
         "@type": "Service",
-        name: "Estimation immobilière à Aubagne",
+        name: `Estimation immobilière à ${city.name}`,
         serviceType: ["Estimation de maison", "Estimation d’appartement"],
-        areaServed: { "@type": "City", name: "Aubagne" },
+        areaServed: { "@type": "City", name: city.name },
         provider: { "@id": `${absoluteUrl("/")}#organization` },
-        url: absoluteUrl("/estimation-immobiliere/aubagne"),
+        url: absoluteUrl(pagePath),
       },
       {
         "@type": "FAQPage",
-        mainEntity: aubagneFaqs.map((faq) => ({
+        mainEntity: cityFaqs.map((faq) => ({
           "@type": "Question",
           name: faq.question,
           acceptedAnswer: { "@type": "Answer", text: faq.answer },
@@ -168,7 +179,7 @@ export default async function AubagneEstimationPage() {
       <nav className={styles.breadcrumb} aria-label="Fil d’Ariane">
         <Link href="/">Accueil</Link>
         <Link href="/estimation">Estimation</Link>
-        <span>Aubagne</span>
+        <span>{city.name}</span>
       </nav>
 
       <section className={styles.hero} aria-labelledby="aubagne-estimation-title">
@@ -186,28 +197,28 @@ export default async function AubagneEstimationPage() {
         <div className={styles.heroScrim} />
         <div className={styles.heroContent}>
           <p>Estimation immobilière · 13400</p>
-          <h1 id="aubagne-estimation-title">Estimation immobilière à Aubagne</h1>
+          <h1 id="aubagne-estimation-title">Estimation immobilière à {city.name}</h1>
           <span>
-            Quelle est la valeur de votre maison ou appartement à Aubagne&nbsp;? Obtenez
+            Quelle est la valeur de votre maison ou appartement à {city.name}&nbsp;? Obtenez
             une première estimation fondée sur les transactions locales, puis affinée
             selon les qualités réelles de votre bien.
           </span>
-          <a href="#estimer">Estimer mon bien à Aubagne <ArrowRight aria-hidden="true" size={19} /></a>
+          <a href="#estimer">Estimer mon bien à {city.name} <ArrowRight aria-hidden="true" size={19} /></a>
           <small><MapPin aria-hidden="true" size={15} /> {market.salePoints.length} ventes récentes positionnées sur la carte</small>
         </div>
       </section>
 
       <section className={styles.estimationSection} id="estimer">
-        <AubagneEstimationStarter />
+        <AubagneEstimationStarter cityName={city.name} inseeCode={city.inseeCode} />
       </section>
 
       <section className={styles.marketStrip} aria-labelledby="aubagne-prices-title">
         <div className={styles.sectionHeading}>
           <div>
             <p>Repères de marché</p>
-            <h2 id="aubagne-prices-title">Les prix au m² à Aubagne</h2>
+            <h2 id="aubagne-prices-title">Les prix au m² à {city.name}</h2>
           </div>
-          <Link href="/prix-m2/aubagne">Voir les prix au m² à Aubagne <ArrowRight aria-hidden="true" size={17} /></Link>
+          <Link href={`/prix-m2/${city.slug}`}>Voir les prix au m² à {city.name} <ArrowRight aria-hidden="true" size={17} /></Link>
         </div>
         <div className={styles.priceGrid}>
           <article>
@@ -276,7 +287,7 @@ export default async function AubagneEstimationPage() {
       <section className={styles.trendSection} aria-labelledby="aubagne-trend-title">
         <div className={styles.trendCopy}>
           <p>Évolution du marché</p>
-          <h2 id="aubagne-trend-title">Maisons et appartements ne suivent pas toujours la même trajectoire</h2>
+          <h2 id="aubagne-trend-title">Maisons et appartements à {city.name} ne suivent pas toujours la même trajectoire</h2>
           <span>
             Le graphique replace votre projet dans la tendance observée. L’estimation finale
             s’appuie ensuite sur des biens réellement comparables autour de l’adresse.
@@ -291,7 +302,7 @@ export default async function AubagneEstimationPage() {
         <div className={styles.sectionHeading}>
           <div>
             <p>Découpage infra-communal</p>
-            <h2 id="aubagne-areas-title">Les grands secteurs d’Aubagne</h2>
+            <h2 id="aubagne-areas-title">Les grands secteurs de {city.name}</h2>
           </div>
           <span>
             {market.source === "immo-data"
@@ -318,22 +329,25 @@ export default async function AubagneEstimationPage() {
           <div>
             <p>Estimation locale</p>
             <h2 id="aubagne-local-estimation-title">
-              Estimer une maison ou un appartement à Aubagne
+              Estimer une maison ou un appartement à {city.name}
             </h2>
           </div>
           <div className={styles.seoLeadCopy}>
             <p>
-              Une estimation immobilière à Aubagne ne consiste pas seulement à multiplier une
+              Une estimation immobilière à {city.name} ne consiste pas seulement à multiplier une
               surface par un prix moyen. Deux biens de même taille peuvent présenter une valeur
               différente selon leur adresse, leur état, leurs prestations et les ventes réellement
               conclues autour d’eux.
             </p>
             <p>
               Notre première analyse croise le type de bien avec les transactions récentes et le
-              secteur concerné : Centre-ville, Beaumond, Passons, Pin Vert, Camp Major, Tourtelle,
-              Charrel, Garlaban ou Saint-Mitre. Une visite permet ensuite d’intégrer ce que la donnée
+              secteur concerné{localSectorNames ? ` : ${localSectorNames}` : ""}. Une visite permet ensuite d’intégrer ce que la donnée
               seule ne peut pas mesurer.
             </p>
+            <Link className={styles.agencyLink} href={`/agence-immobiliere/${city.slug}`}>
+              Découvrir notre agence immobilière à {city.name}
+              <ArrowRight aria-hidden="true" size={17} />
+            </Link>
           </div>
         </header>
 
@@ -343,11 +357,11 @@ export default async function AubagneEstimationPage() {
               <span><Home aria-hidden="true" size={24} /></span>
               <div>
                 <small>Maison</small>
-                <h3>Estimation d’une maison à Aubagne</h3>
+                <h3>Estimation d’une maison à {city.name}</h3>
               </div>
             </div>
             <p>
-              Pour estimer une maison à Aubagne, la surface habitable doit être rapprochée de la
+              Pour estimer une maison à {city.name}, la surface habitable doit être rapprochée de la
               taille et de l’usage du terrain. Les extérieurs, le stationnement et la qualité de
               l’environnement peuvent créer des écarts importants entre deux ventes voisines.
             </p>
@@ -357,7 +371,7 @@ export default async function AubagneEstimationPage() {
               <li><Check aria-hidden="true" size={16} /> Calme, exposition, vue et facilité d’accès</li>
             </ul>
             <Link href="/estimation?propertyType=house">
-              Estimer ma maison à Aubagne <ArrowRight aria-hidden="true" size={17} />
+              Estimer ma maison à {city.name} <ArrowRight aria-hidden="true" size={17} />
             </Link>
           </article>
 
@@ -366,11 +380,11 @@ export default async function AubagneEstimationPage() {
               <span><Building2 aria-hidden="true" size={24} /></span>
               <div>
                 <small>Appartement</small>
-                <h3>Estimation d’un appartement à Aubagne</h3>
+                <h3>Estimation d’un appartement à {city.name}</h3>
               </div>
             </div>
             <p>
-              L’estimation d’un appartement à Aubagne dépend du prix observé dans son secteur, mais
+              L’estimation d’un appartement à {city.name} dépend du prix observé dans son secteur, mais
               aussi de l’immeuble et de la situation du logement. Un étage élevé, un extérieur ou un
               stationnement ne produisent pas le même effet selon la résidence et l’adresse.
             </p>
@@ -380,7 +394,7 @@ export default async function AubagneEstimationPage() {
               <li><Check aria-hidden="true" size={16} /> Charges, copropriété, DPE et travaux votés</li>
             </ul>
             <Link href="/estimation?propertyType=apartment">
-              Estimer mon appartement à Aubagne <ArrowRight aria-hidden="true" size={17} />
+              Estimer mon appartement à {city.name} <ArrowRight aria-hidden="true" size={17} />
             </Link>
           </article>
         </div>
@@ -388,7 +402,7 @@ export default async function AubagneEstimationPage() {
         <div className={styles.methodBand}>
           <div className={styles.methodHeading}>
             <p>Notre méthode</p>
-            <h2>Comment calculons-nous votre estimation à Aubagne&nbsp;?</h2>
+            <h2>Comment calculons-nous votre estimation à {city.name}&nbsp;?</h2>
           </div>
           <ol className={styles.methodSteps}>
             <li>
@@ -412,10 +426,10 @@ export default async function AubagneEstimationPage() {
         <div className={styles.faqBlock}>
           <div>
             <p>Questions fréquentes</p>
-            <h2>Questions fréquentes sur l’estimation immobilière à Aubagne</h2>
+            <h2>Questions fréquentes sur l’estimation immobilière à {city.name}</h2>
           </div>
           <div className={styles.faqList}>
-            {aubagneFaqs.map((faq) => (
+            {cityFaqs.map((faq) => (
               <details key={faq.question}>
                 <summary>{faq.question}</summary>
                 <p>{faq.answer}</p>
@@ -428,9 +442,9 @@ export default async function AubagneEstimationPage() {
       <section className={styles.finalCta}>
         <div>
           <p>Une donnée donne un repère. Une visite révèle la valeur.</p>
-          <h2>Faisons le point sur votre bien à Aubagne.</h2>
+          <h2>Faisons le point sur votre bien à {city.name}.</h2>
         </div>
-        <Link href="/estimation">Demander mon estimation à Aubagne <ArrowRight aria-hidden="true" size={19} /></Link>
+        <Link href="/estimation">Demander mon estimation à {city.name} <ArrowRight aria-hidden="true" size={19} /></Link>
       </section>
     </main>
   );

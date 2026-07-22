@@ -262,7 +262,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
         <div><CheckCircle2 size={22} /><span>Estimation gratuite et confidentielle</span></div>
         <h2>La moyenne de {city.name} ne suffit pas à estimer votre bien.</h2>
         <p>Obtenez une estimation qui tient compte de votre adresse et des caractéristiques réelles du logement.</p>
-        <Link href="/estimation">Estimer mon bien à {city.name} <ArrowRight size={18} /></Link>
+        <Link href={`/estimation-immobiliere/${city.slug}`}>Estimer mon bien à {city.name} <ArrowRight size={18} /></Link>
       </section>
 
       <section className="city-faq-modern city-modern-container">

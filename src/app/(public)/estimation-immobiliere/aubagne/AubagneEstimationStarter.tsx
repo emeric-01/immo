@@ -6,9 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import type { AddressSuggestion, RealtyType } from "@/lib/immo-data";
 import styles from "./aubagne-estimation.module.css";
 
-const AUBAGNE_INSEE_CODE = "13005";
-
-export function AubagneEstimationStarter() {
+export function AubagneEstimationStarter({ cityName, inseeCode }: { cityName: string; inseeCode: string }) {
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
   const [address, setAddress] = useState("");
@@ -36,7 +34,7 @@ export function AubagneEstimationStarter() {
       setError("");
 
       try {
-        const response = await fetch(`/api/addresses?q=${encodeURIComponent(`${query} Aubagne`)}`, {
+        const response = await fetch(`/api/addresses?q=${encodeURIComponent(`${query} ${cityName}`)}`, {
           signal: controller.signal,
         });
         const data = (await response.json()) as AddressSuggestion[] | { error?: string };
@@ -47,7 +45,7 @@ export function AubagneEstimationStarter() {
 
         setSuggestions(
           data
-            .filter((suggestion) => suggestion.inseeCode === AUBAGNE_INSEE_CODE)
+            .filter((suggestion) => suggestion.inseeCode === inseeCode)
             .slice(0, 5),
         );
       } catch (searchError) {
@@ -60,13 +58,13 @@ export function AubagneEstimationStarter() {
     }, 280);
 
     return () => window.clearTimeout(timeout);
-  }, [address, selectedAddress]);
+  }, [address, cityName, inseeCode, selectedAddress]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!selectedAddress || selectedAddress.label !== address.trim()) {
-      setError("Sélectionnez une adresse proposée à Aubagne.");
+      setError(`Sélectionnez une adresse proposée à ${cityName}.`);
       return;
     }
 
@@ -77,8 +75,8 @@ export function AubagneEstimationStarter() {
       propertyType,
       rooms,
       surfaceM2,
-      cityName: selectedAddress.cityName ?? "Aubagne",
-      inseeCode: selectedAddress.inseeCode ?? AUBAGNE_INSEE_CODE,
+      cityName: selectedAddress.cityName ?? cityName,
+      inseeCode: selectedAddress.inseeCode ?? inseeCode,
     });
 
     if (selectedAddress.addressId) params.set("addressId", selectedAddress.addressId);
@@ -93,7 +91,7 @@ export function AubagneEstimationStarter() {
       <div className={styles.estimatorHeading}>
         <div>
           <p>Première estimation</p>
-          <h2>Estimez votre maison ou appartement à Aubagne</h2>
+          <h2>Estimez votre maison ou appartement à {cityName}</h2>
         </div>
         <span>Gratuite et sans engagement</span>
       </div>
@@ -149,7 +147,7 @@ export function AubagneEstimationStarter() {
                   type="button"
                 >
                   <strong>{suggestion.label}</strong>
-                  <span>{suggestion.postCode?.[0] ?? "13400"} Aubagne</span>
+                  <span>{suggestion.postCode?.[0] ?? ""} {cityName}</span>
                 </button>
               ))}
             </div>

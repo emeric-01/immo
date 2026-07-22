@@ -182,7 +182,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             dans les visites, la négociation et le suivi de la vente jusqu’à la signature.
           </p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryButton} href="/estimation">
+            <Link className={styles.primaryButton} href={`/estimation-immobiliere/${city.slug}`}>
               Estimer et vendre mon bien <ArrowRight size={17} />
             </Link>
             <a className={styles.textLink} href="#parlons-de-votre-bien">
@@ -414,7 +414,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             À {city.name}, nous préparons chaque bien pour convaincre les bons acquéreurs
             et coordonnons chaque étape de la commercialisation jusqu’à la signature.
           </p>
-          <Link href="/estimation">Découvrir la valeur de mon bien <ArrowRight size={16} /></Link>
+          <Link href={`/estimation-immobiliere/${city.slug}`}>Découvrir la valeur de mon bien <ArrowRight size={16} /></Link>
         </div>
         <div className={styles.finalImage}>
           <Image

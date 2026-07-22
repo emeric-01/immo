@@ -104,14 +104,182 @@ const localAgencyPages: Record<string, LocalAgencyPage> = {
       },
     ],
   },
+  aubagne: {
+    citySlug: "aubagne",
+    eyebrow: "Estimation et vente à Aubagne",
+    heroTitle: "Vendre à Aubagne avec une stratégie adaptée à votre bien et à son secteur.",
+    heroIntro:
+      "Nous estimons votre maison ou appartement sur place, puis construisons une commercialisation cohérente avec le marché aubagnais et les attentes des acquéreurs.",
+    heroImage: {
+      src: "/images/local-agency/maison-contemporaine-jardin.jpg",
+      alt: "Maison contemporaine avec jardin dans le pays d’Aubagne",
+    },
+    interventionText:
+      "Nous intervenons à Aubagne, du centre-ville aux secteurs résidentiels, ainsi que dans les communes voisines du pays d’Aubagne.",
+    nearbySlugs: ["gemenos", "roquevaire", "la-penne-sur-huveaune", "carnoux-en-provence"],
+    localFactors: [
+      {
+        title: "Adresse et secteur",
+        description: "Centre-ville, Beaumond, Tourtelle, Charrel ou Garlaban ne répondent pas aux mêmes niveaux de demande.",
+      },
+      {
+        title: "Calme et exposition",
+        description: "L’environnement, les nuisances, la lumière et les vues dégagées influencent directement l’attractivité.",
+      },
+      {
+        title: "Terrain et extérieur",
+        description: "Jardin, terrasse, piscine et usage réel de la parcelle doivent être comparés avec des biens similaires.",
+      },
+      {
+        title: "Accès et stationnement",
+        description: "Garage, places privatives et facilité d’accès comptent particulièrement dans les secteurs résidentiels.",
+      },
+      {
+        title: "État et performance",
+        description: "Travaux, distribution, qualité du bâti et performance énergétique modifient le prix défendable.",
+      },
+      {
+        title: "Potentiel du bien",
+        description: "Extension, dépendance, division ou réaménagement sont étudiés avec prudence au regard des règles applicables.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Réalisez-vous des estimations immobilières à Aubagne ?",
+        answer:
+          "Oui. Nous nous déplaçons à Aubagne pour visiter la maison ou l’appartement, comprendre son environnement immédiat et confronter ses caractéristiques aux ventes comparables. Cette analyse sur place complète les données DVF et les prix moyens afin de proposer un avis de valeur argumenté avant une éventuelle mise en vente.",
+      },
+      {
+        question: "Comment estimez-vous une maison à Aubagne ?",
+        answer:
+          "Nous étudions l’adresse, la surface habitable, le terrain, les extérieurs, l’exposition, le stationnement, l’état du bâti et les travaux éventuels. La comparaison tient compte de maisons réellement similaires et du niveau de demande observé dans le secteur, qu’il s’agisse notamment de Beaumond, Tourtelle, Charrel, Camp Major, Saint-Mitre ou des abords du Garlaban.",
+      },
+      {
+        question: "Quels critères influencent l’estimation d’un appartement à Aubagne ?",
+        answer:
+          "Pour un appartement, nous analysons la résidence, l’étage, l’ascenseur, la luminosité, l’agencement, les extérieurs, le stationnement, les charges, le DPE et les travaux de copropriété. Deux appartements de même surface peuvent ainsi présenter une valeur différente selon leur adresse et leurs prestations.",
+      },
+      {
+        question: "Accompagnez-vous toute la vente immobilière à Aubagne ?",
+        answer:
+          "Oui. Après l’estimation, nous définissons le positionnement du bien, préparons sa présentation, organisons sa diffusion et les visites, sélectionnons les acquéreurs et accompagnons la négociation. Le dossier est ensuite suivi du compromis jusqu’à la signature définitive.",
+      },
+      {
+        question: "Pouvez-vous mettre en valeur un bien avant sa commercialisation ?",
+        answer:
+          "Notre double compétence en immobilier et architecture intérieure permet d’identifier les améliorations réellement utiles à la vente. Il peut s’agir de clarifier les volumes, faciliter la circulation, mieux utiliser la lumière ou présenter un potentiel d’aménagement, sans engager de dépenses disproportionnées ni masquer l’état réel du bien.",
+      },
+      {
+        question: "Quels documents préparer pour vendre à Aubagne ?",
+        answer:
+          "Le titre de propriété, les diagnostics disponibles, les plans, la taxe foncière et les factures de travaux constituent une première base. Pour un appartement, les documents de copropriété sont nécessaires ; pour une maison, les autorisations d’urbanisme, informations d’assainissement et plans de parcelle peuvent également sécuriser la commercialisation.",
+      },
+    ],
+  },
 };
 
+const localPageCities = southCities.filter((city) =>
+  ["Bouches-du-Rhone", "Var"].includes(city.department),
+);
+
+const coastalCitySlugs = new Set([
+  "bandol",
+  "cassis",
+  "ceyreste",
+  "hyeres",
+  "la-ciotat",
+  "la-seyne-sur-mer",
+  "marseille",
+  "sanary-sur-mer",
+  "saint-cyr-sur-mer",
+  "six-fours-les-plages",
+  "toulon",
+]);
+
+function createGenericLocalAgencyPage(city: City): LocalAgencyPage {
+  const coastal = coastalCitySlugs.has(city.slug);
+
+  return {
+    citySlug: city.slug,
+    eyebrow: `Estimation et vente à ${city.name}`,
+    heroTitle: `Vendre à ${city.name} avec une stratégie adaptée à votre bien.`,
+    heroIntro: `Nous nous déplaçons à ${city.name} pour estimer votre maison ou appartement, comprendre son environnement et préparer une commercialisation cohérente avec le marché local.`,
+    heroImage: coastal
+      ? {
+          src: "/images/local-agency/maison-piscine-mediterranee.jpg",
+          alt: `Maison méditerranéenne représentative du marché immobilier à ${city.name}`,
+        }
+      : {
+          src: "/images/local-agency/maison-contemporaine-jardin.jpg",
+          alt: `Maison avec jardin représentative du marché immobilier à ${city.name}`,
+        },
+    interventionText: `Nous intervenons à ${city.name}, dans ses différents secteurs résidentiels et dans les communes voisines.`,
+    nearbySlugs: city.nearbySlugs,
+    localFactors: [
+      {
+        title: "Adresse et micro-secteur",
+        description: `À ${city.name}, la rue, l’environnement immédiat et la proximité des services influencent la valeur.`,
+      },
+      {
+        title: "Vue et luminosité",
+        description: "L’orientation, les perspectives, le vis-à-vis et la lumière naturelle modifient l’attractivité.",
+      },
+      {
+        title: "Extérieur",
+        description: "Balcon, terrasse, jardin, piscine et usage réel des espaces extérieurs doivent être comparés localement.",
+      },
+      {
+        title: "Accès et stationnement",
+        description: "Garage, place privative, transports et facilité d’accès peuvent devenir des critères décisifs.",
+      },
+      {
+        title: "État et distribution",
+        description: "Travaux, performance énergétique, volumes et circulation influencent le prix défendable.",
+      },
+      {
+        title: "Potentiel urbanistique",
+        description: "Extension, dépendance, division ou réaménagement sont étudiés au regard des règles applicables.",
+      },
+    ],
+    faqs: [
+      {
+        question: `Vous déplacez-vous à ${city.name} pour réaliser une estimation ?`,
+        answer: `Oui. Nous visitons le bien à ${city.name} afin d’analyser son état, son environnement, ses prestations et les éventuels travaux. Cette lecture de terrain complète les transactions disponibles et les prix moyens pour établir un avis de valeur argumenté.`,
+      },
+      {
+        question: `Comment déterminez-vous le prix de vente à ${city.name} ?`,
+        answer: `Nous croisons les ventes récentes, les références DVF, les biens comparables et la dynamique du marché à ${city.name}. L’adresse, la typologie, l’état, les extérieurs, le stationnement et les qualités propres au logement permettent ensuite d’ajuster le positionnement.`,
+      },
+      {
+        question: `Estimez-vous les maisons et les appartements à ${city.name} ?`,
+        answer: `Oui. Une maison est notamment étudiée selon son terrain, ses extérieurs, ses accès et son potentiel. Pour un appartement, nous intégrons la résidence, l’étage, l’ascenseur, les charges, les extérieurs et le stationnement.`,
+      },
+      {
+        question: `Accompagnez-vous toute la vente immobilière à ${city.name} ?`,
+        answer: `Oui. Nous préparons la stratégie, la présentation et la diffusion du bien, organisons les visites, sélectionnons les acquéreurs et accompagnons la négociation puis le dossier jusqu’à la signature définitive.`,
+      },
+      {
+        question: "Pouvez-vous valoriser le bien avant sa mise en vente ?",
+        answer: "Notre compétence en architecture intérieure permet d’identifier les améliorations utiles, de révéler les volumes et de faciliter la projection des acquéreurs sans engager de dépenses disproportionnées.",
+      },
+      {
+        question: `Quels documents préparer pour vendre un bien à ${city.name} ?`,
+        answer: "Le titre de propriété, les diagnostics, les plans, la taxe foncière et les factures de travaux constituent une première base. Les documents de copropriété ou les autorisations d’urbanisme complètent ensuite le dossier selon le type de bien.",
+      },
+    ],
+  };
+}
+
 export function getLocalAgencyPage(slug: string) {
-  return localAgencyPages[slug] ?? null;
+  const configuredPage = localAgencyPages[slug];
+  if (configuredPage) return configuredPage;
+
+  const city = localPageCities.find((candidate) => candidate.slug === slug);
+  return city ? createGenericLocalAgencyPage(city) : null;
 }
 
 export function getLocalAgencyPageSlugs() {
-  return Object.keys(localAgencyPages);
+  return localPageCities.map((city) => city.slug);
 }
 
 function distanceBetweenCities(first: City, second: City) {

@@ -12,14 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/prix-m2"), changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/biens"), changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/estimation"), changeFrequency: "monthly", priority: 0.9 },
-    { url: absoluteUrl("/estimation-immobiliere/aubagne"), changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/recherche"), changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/contenus"), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/qui-sommes-nous"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/nous-rejoindre"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/honoraires"), changeFrequency: "monthly", priority: 0.5 },
     { url: absoluteUrl("/mentions-legales"), changeFrequency: "yearly", priority: 0.3 },
-    { url: absoluteUrl("/agence-immobiliere/la-ciotat"), changeFrequency: "weekly", priority: 0.9 },
   ];
 
   const cityPages: MetadataRoute.Sitemap = southCities.map(city => ({
@@ -27,6 +25,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.8,
   }));
+
+  const localCities = southCities.filter((city) =>
+    ["Bouches-du-Rhone", "Var"].includes(city.department),
+  );
+  const localServicePages: MetadataRoute.Sitemap = localCities.flatMap((city) => [
+    {
+      url: absoluteUrl(`/estimation-immobiliere/${city.slug}`),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
+    {
+      url: absoluteUrl(`/agence-immobiliere/${city.slug}`),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
+  ]);
 
   const properties = await getPublishedProperties().catch(() => []);
   const contentPages = await getContentArticleSitemapEntries().catch(() => []);
@@ -38,5 +52,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: property.images.map(image => image.public_url),
   }));
 
-  return [...staticPages, ...cityPages, ...contentPages, ...propertyPages];
+  return [...staticPages, ...cityPages, ...localServicePages, ...contentPages, ...propertyPages];
 }
