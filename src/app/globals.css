@@ -5476,3 +5476,240 @@ button:focus-visible {
     bottom: 0;
   }
 }
+
+/* Enrichissement editorial du gabarit prix au m2. */
+.city-property-guide,
+.city-dvf-method,
+.city-project-links {
+  padding-top: 84px;
+}
+
+.city-property-guide-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+  align-items: end;
+  gap: 42px;
+  margin-bottom: 30px;
+}
+
+.city-property-guide h2,
+.city-dvf-method h2,
+.city-project-links h2 {
+  margin: 0;
+  color: var(--city-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.1rem, 3.5vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.04;
+}
+
+.city-property-guide-heading > p,
+.city-dvf-method-copy > p,
+.city-project-links > div:first-child > p:last-child {
+  margin: 0;
+  color: var(--city-muted);
+  line-height: 1.7;
+}
+
+.city-property-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--city-line);
+  border-bottom: 1px solid var(--city-line);
+}
+
+.city-property-guide-grid article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  padding: 30px 30px 32px 0;
+}
+
+.city-property-guide-grid article + article {
+  border-left: 1px solid var(--city-line);
+  padding-right: 0;
+  padding-left: 30px;
+}
+
+.city-property-guide-grid article > span,
+.city-dvf-steps li > span,
+.city-project-link-list a > span {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f4ece4;
+  color: var(--city-copper);
+}
+
+.city-property-guide-grid h3 {
+  margin: 0 0 12px;
+  color: var(--city-ink);
+  font-size: 1.05rem;
+  letter-spacing: 0;
+}
+
+.city-property-guide-grid strong {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--city-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-weight: 500;
+}
+
+.city-property-guide-grid strong small {
+  margin-left: 5px;
+  color: var(--city-muted);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.city-property-guide-grid p {
+  max-width: 540px;
+  margin: 0;
+  color: var(--city-muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.city-dvf-method {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
+  gap: 70px;
+}
+
+.city-dvf-method-copy {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.city-dvf-method-copy .city-section-kicker {
+  margin: 0;
+}
+
+.city-dvf-steps {
+  margin: 0;
+  border-top: 1px solid var(--city-line);
+  padding: 0;
+  list-style: none;
+}
+
+.city-dvf-steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--city-line);
+  padding: 18px 0;
+}
+
+.city-dvf-steps strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--city-ink);
+}
+
+.city-dvf-steps p {
+  margin: 0;
+  color: var(--city-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.city-project-links {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 64px;
+}
+
+.city-project-links > div:first-child {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.city-project-links .city-section-kicker {
+  margin: 0;
+}
+
+.city-project-link-list {
+  border-top: 1px solid var(--city-line);
+}
+
+.city-project-link-list a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--city-line);
+  color: var(--city-ink);
+  padding: 18px 0;
+  text-decoration: none;
+}
+
+.city-project-link-list a:hover strong {
+  color: var(--city-copper);
+}
+
+.city-project-link-list a > div {
+  display: grid;
+  gap: 5px;
+}
+
+.city-project-link-list small {
+  color: var(--city-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .city-property-guide-heading,
+  .city-dvf-method,
+  .city-project-links {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .city-dvf-method,
+  .city-project-links {
+    gap: 36px;
+  }
+}
+
+@media (max-width: 760px) {
+  .city-property-guide,
+  .city-dvf-method,
+  .city-project-links {
+    padding-top: 64px;
+  }
+
+  .city-property-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-property-guide-grid article,
+  .city-property-guide-grid article + article {
+    border-left: 0;
+    padding: 24px 0;
+  }
+
+  .city-property-guide-grid article + article {
+    border-top: 1px solid var(--city-line);
+  }
+
+  .city-property-guide-grid article > span,
+  .city-dvf-steps li > span,
+  .city-project-link-list a > span {
+    width: 40px;
+    height: 40px;
+  }
+
+  .city-project-link-list a {
+    gap: 12px;
+  }
+}
