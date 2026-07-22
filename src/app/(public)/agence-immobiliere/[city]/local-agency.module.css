@@ -249,6 +249,188 @@
   line-height: 1.72;
 }
 
+.quickActions {
+  display: grid;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.quickEstimate {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 23px;
+  box-shadow: 0 14px 34px rgba(53, 38, 25, .04);
+}
+
+.quickLabel {
+  margin: 0 0 7px;
+  color: var(--copper);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.quickEstimate h3 {
+  margin: 0 0 17px;
+  font-size: 1.35rem;
+  letter-spacing: -.025em;
+}
+
+.quickEstimate form {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.quickAddressField {
+  display: grid;
+  min-height: 48px;
+  grid-template-columns: 21px minmax(0, 1fr) 18px;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #dfd5cb;
+  border-radius: 5px;
+  padding: 0 12px;
+}
+
+.quickAddressField:focus-within {
+  border-color: #bc8059;
+  box-shadow: 0 0 0 3px rgba(184, 111, 67, .1);
+}
+
+.quickAddressField > svg {
+  width: 18px;
+  color: var(--copper);
+}
+
+.quickAddressField input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: .76rem;
+}
+
+.quickAddressField .spinner {
+  animation: spin .8s linear infinite;
+}
+
+.quickSubmit,
+.callAction button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 4px;
+  background: #211f1b;
+  padding: 0 17px;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.quickSubmit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quickSubmit svg {
+  width: 16px;
+}
+
+.quickSubmit:disabled {
+  cursor: not-allowed;
+  opacity: .42;
+}
+
+.quickSuggestions {
+  position: absolute;
+  z-index: 5;
+  top: 52px;
+  right: 0;
+  left: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  padding: 5px;
+  list-style: none;
+  box-shadow: 0 15px 32px rgba(35, 28, 22, .13);
+}
+
+.quickSuggestions button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 10px;
+  color: var(--ink);
+  font-size: .7rem;
+  text-align: left;
+}
+
+.quickSuggestions button:hover,
+.quickSuggestions button:focus-visible {
+  background: var(--cream);
+}
+
+.quickSuggestions svg {
+  width: 15px;
+  flex: 0 0 auto;
+  color: var(--copper);
+}
+
+.callAction {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border-radius: 10px;
+  background: #eee5dc;
+  padding: 12px;
+}
+
+.callAction > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--copper);
+}
+
+.callAction svg {
+  width: 18px;
+}
+
+.callAction div {
+  display: grid;
+  gap: 3px;
+}
+
+.callAction strong {
+  font-size: .72rem;
+}
+
+.callAction small {
+  color: var(--muted);
+  font-size: .62rem;
+}
+
+.callAction button {
+  min-height: 40px;
+  background: var(--copper);
+}
+
 .leadCard {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1208,6 +1390,10 @@
   .coverageStrip { align-items: flex-start; padding: 15px 18px; }
   .coverageStrip p { font-size: .69rem; line-height: 1.5; }
   .strategySection { grid-template-columns: 1fr; gap: 36px; padding: 54px 12px; }
+  .quickEstimate form { grid-template-columns: 1fr; }
+  .quickSuggestions { top: 52px; }
+  .callAction { grid-template-columns: 38px 1fr; }
+  .callAction button { grid-column: 1 / -1; width: 100%; }
   .strategyCopy h2, .leadCard h2, .centerHeading h2, .chartCard h2, .factorsCard h2, .teamCopy > h2, .processSection h2, .resourceSection h2, .faqSection > h2, .nearbySection h2, .finalCta h2 { font-size: 2rem; }
   .leadCard { padding: 24px 18px; }
   .propertySection { padding: 46px 0 54px; }

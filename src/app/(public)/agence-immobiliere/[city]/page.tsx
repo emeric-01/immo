@@ -32,6 +32,7 @@ import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
+import { LocalAgencyQuickActions } from "./LocalAgencyQuickActions";
 import { LocalAgencySalesMap } from "./LocalAgencySalesMap";
 import styles from "./local-agency.module.css";
 
@@ -221,6 +222,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             Nous analysons ces critères sur place, au bon moment, pour définir un
             positionnement juste et une mise en valeur qui attire les bons acquéreurs.
           </p>
+          <LocalAgencyQuickActions cityName={city.name} />
         </div>
         <aside className={styles.leadCard} aria-labelledby="lead-form-title">
           <p className={styles.eyebrow}>Premier échange</p>
