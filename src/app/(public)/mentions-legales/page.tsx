@@ -20,7 +20,7 @@ export const metadata: Metadata = createPageMetadata({
   path: "/mentions-legales",
 });
 
-const updatedAt = "22 juillet 2026";
+const updatedAt = "23 juillet 2026";
 
 export default function LegalNoticePage() {
   return (
@@ -111,12 +111,14 @@ export default function LegalNoticePage() {
           </SectionTitle>
           <div className={styles.prose}>
             <p>
-              Le site est hébergé par <strong>Vercel Inc.</strong>, 440 N Barranca
-              Avenue #4133, Covina, CA 91723, États-Unis. Les fonctions serveur
-              du site sont configurées pour être exécutées dans la région Vercel
-              de Paris, France (<strong>cdg1</strong>). Les contenus statiques
-              peuvent être distribués depuis le réseau mondial de diffusion de
-              Vercel afin d’être servis depuis un point proche du visiteur.
+              Le site utilise l’<strong>infrastructure d’hébergement Vercel en
+              France</strong>. Les fonctions serveur sont configurées pour être
+              exécutées dans la région Vercel de Paris, France
+              (<strong>cdg1</strong>). Ce service est fourni par
+              <strong> Vercel Inc.</strong>, 440 N Barranca Avenue #4133, Covina,
+              CA 91723, États-Unis. Les contenus statiques peuvent être distribués
+              depuis le réseau mondial de diffusion de Vercel afin d’être servis
+              depuis un point proche du visiteur.
             </p>
             <p>
               Le stockage applicatif, l’authentification et certains fichiers sont
