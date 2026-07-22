@@ -58,22 +58,49 @@ export default function LegalNoticePage() {
             Éditeur du site
           </SectionTitle>
           <div className={styles.identityGrid}>
-            <LegalFact label="Dénomination">Agence Séverine Masfrand — ASM</LegalFact>
-            <LegalFact label="Forme juridique">Société par actions simplifiée (SAS)</LegalFact>
-            <LegalFact label="Capital social">1 000 €</LegalFact>
-            <LegalFact label="Siège social">595 route des Aubes, 13400 Aubagne</LegalFact>
-            <LegalFact label="SIREN">829 076 611</LegalFact>
-            <LegalFact label="SIRET">829 076 611 00013</LegalFact>
-            <LegalFact label="Immatriculation">RCS Marseille 829 076 611</LegalFact>
-            <LegalFact label="TVA intracommunautaire">FR77 829076611</LegalFact>
-            <LegalFact label="Carte professionnelle">CPI 1310 2021 000 000 132</LegalFact>
-            <LegalFact label="Autorité de délivrance">CCI Marseille Provence</LegalFact>
-            <LegalFact label="Directrice de la publication">Séverine Masfrand, Présidente</LegalFact>
-            <LegalFact label="Activité">Transactions sur immeubles et fonds de commerce</LegalFact>
+            <article>
+              <p className={styles.identityNumber}>01</p>
+              <h3>La société</h3>
+              <p>
+                Le site est édité par <strong>Agence Séverine Masfrand — ASM</strong>,
+                société par actions simplifiée au capital de 1 000 €, dont le siège
+                social est situé 595 route des Aubes, 13400 Aubagne.
+              </p>
+              <dl>
+                <LegalFact label="SIREN">829 076 611</LegalFact>
+                <LegalFact label="SIRET">829 076 611 00013</LegalFact>
+                <LegalFact label="RCS">Marseille 829 076 611</LegalFact>
+                <LegalFact label="TVA">FR77 829076611</LegalFact>
+              </dl>
+            </article>
+            <article>
+              <p className={styles.identityNumber}>02</p>
+              <h3>L’activité immobilière</h3>
+              <p>
+                L’agence exerce une activité de transaction sur immeubles et fonds
+                de commerce sous la carte professionnelle délivrée par la CCI
+                Marseille Provence.
+              </p>
+              <dl>
+                <LegalFact label="Carte professionnelle">CPI 1310 2021 000 000 132</LegalFact>
+                <LegalFact label="Autorité">CCI Marseille Provence</LegalFact>
+              </dl>
+            </article>
+            <article>
+              <p className={styles.identityNumber}>03</p>
+              <h3>La publication</h3>
+              <p>
+                La direction de la publication est assurée par
+                <strong> Séverine Masfrand</strong>, en sa qualité de Présidente de
+                la société.
+              </p>
+              <dl>
+                <LegalFact label="Contact">contact@jumellesimmo.fr</LegalFact>
+              </dl>
+            </article>
           </div>
           <div className={styles.contactLine}>
             <a href="mailto:contact@jumellesimmo.fr"><Mail aria-hidden="true" /> contact@jumellesimmo.fr</a>
-            <a href="tel:+33619821984">06 19 82 19 84</a>
             <Link href="/honoraires">Consulter nos honoraires</Link>
           </div>
         </section>
@@ -290,7 +317,7 @@ export default function LegalNoticePage() {
 }
 
 function LegalFact({ children, label }: { children: React.ReactNode; label: string }) {
-  return <div><span>{label}</span><strong>{children}</strong></div>;
+  return <div><dt>{label}</dt><dd>{children}</dd></div>;
 }
 
 function SectionTitle({ children, eyebrow, icon: Icon, id }: {

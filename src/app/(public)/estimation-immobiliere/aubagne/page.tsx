@@ -57,27 +57,41 @@ const aubagneZoneLabels: Record<string, string> = {
   "1300507": "Garlaban · Saint-Mitre · Beaudinard",
 };
 
+const aubagneFallbackZoneLabels = [
+  "Centre-ville · Beaumond",
+  "Charrel · Tourtelle",
+  "Les Paluds · Camp Major",
+  "Saint-Mitre · Beaudinard",
+  "Garlaban · Passons",
+];
+
 function formatPrice(value: number) {
   return euroFormatter.format(value).replace(/\u202f/g, " ");
 }
 
 function formatDate(value: string) {
+  if (/^[A-Za-zÀ-ÿ]+\s+\d{4}$/u.test(value)) return value;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
   return new Intl.DateTimeFormat("fr-FR", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function labelZones(zones: CityPriceZone[]) {
-  return zones.map((zone) => ({
+  return zones.map((zone, index) => ({
     ...zone,
-    name: aubagneZoneLabels[zone.id] ?? zone.name,
+    name: aubagneZoneLabels[zone.id] ?? aubagneFallbackZoneLabels[index] ?? zone.name,
   }));
 }
 
 function selectRecentSales(sales: CitySalePoint[]) {
-  const valid = sales.filter((sale) => sale.price && sale.pricePerM2 && sale.surfaceM2 >= 20);
+  const valid = sales.filter((sale) => sale.surfaceM2 >= 20);
   const apartments = valid.filter((sale) => sale.propertyType === "Appartement").slice(0, 3);
   const houses = valid.filter((sale) => sale.propertyType === "Maison").slice(0, 3);
 
@@ -136,7 +150,7 @@ export default async function AubagneEstimationPage() {
             center={{ latitude: city.latitude, longitude: city.longitude }}
             cityName={city.name}
             salePoints={market.salePoints.slice(0, 30)}
-            zones={zones}
+            zones={[]}
           />
         </div>
         <div className={styles.heroScrim} />
@@ -207,8 +221,17 @@ export default async function AubagneEstimationPage() {
                 <span>{sale.rooms} pièces</span>
               </div>
               <div className={styles.salePrice}>
-                <strong>{formatPrice(sale.price ?? 0)}</strong>
-                <small>{formatPrice(sale.pricePerM2 ?? 0)}/m²</small>
+                {sale.price && sale.pricePerM2 ? (
+                  <>
+                    <strong>{formatPrice(sale.price)}</strong>
+                    <small>{formatPrice(sale.pricePerM2)}/m²</small>
+                  </>
+                ) : (
+                  <>
+                    <strong>Prix non communiqué</strong>
+                    <small>Transaction localisée</small>
+                  </>
+                )}
               </div>
             </article>
           ))}
@@ -239,7 +262,11 @@ export default async function AubagneEstimationPage() {
             <p>Découpage infra-communal</p>
             <h2 id="aubagne-areas-title">Les grands secteurs d’Aubagne</h2>
           </div>
-          <span>Regroupements de quartiers construits à partir des codes IRIS INSEE–IGN</span>
+          <span>
+            {market.source === "immo-data"
+              ? "Regroupements de quartiers construits à partir des codes IRIS INSEE–IGN"
+              : "Aperçu local de secours, remplacé par le découpage IRIS lorsque le cache est disponible"}
+          </span>
         </div>
         <div className={styles.areaGrid}>
           {zones.map((zone, index) => (
