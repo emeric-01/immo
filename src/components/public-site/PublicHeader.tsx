@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
+import { PublicMobileMenu } from "./PublicMobileMenu";
 import styles from "./public-site.module.css";
 
 export function PublicHeader() {
@@ -16,15 +17,16 @@ export function PublicHeader() {
         />
       </Link>
       <nav className={styles.nav} aria-label="Navigation principale">
-        <Link href="/prix-m2">Prix immobilier</Link>
-        <Link href="/biens">Nos biens</Link>
         <Link href="/estimation">Estimer</Link>
         <Link href="/recherche">Rechercher</Link>
+        <Link href="/biens">Nos biens</Link>
+        <Link href="/agence-immobiliere">Agences immobilières</Link>
         <Link href="/contenus">Contenus</Link>
-        <Link href="/#secteurs">Nos secteurs</Link>
+        <Link href="/prix-m2">Nos secteurs</Link>
         <Link href="/qui-sommes-nous">Qui sommes-nous</Link>
       </nav>
       <Link className={styles.accountLink} href="/client"><UserRound size={18} /> Mon compte</Link>
+      <PublicMobileMenu />
     </header>
   );
 }

@@ -2,7 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Clock3, LockKeyhole, MapPin, Tag } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Eye,
+  FileSearch,
+  Handshake,
+  Home,
+  LoaderCircle,
+  LockKeyhole,
+  MapPin,
+  Ruler,
+  Sparkles,
+  Tag,
+} from "lucide-react";
 import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AddressSuggestion,
@@ -33,6 +49,7 @@ type FormState = {
 };
 
 type FlowStep = "address" | "essential" | "refine" | "result";
+type LeadSubmitState = "idle" | "loading" | "success" | "error";
 
 type PropertyEstimationResponse = PropertyEstimation & {
   clientEstimationId?: string | null;
@@ -211,6 +228,8 @@ export function EstimationForm({
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasTypedAddress, setHasTypedAddress] = useState(false);
+  const [leadState, setLeadState] = useState<LeadSubmitState>("idle");
+  const [leadMessage, setLeadMessage] = useState("");
   const addressAbortRef = useRef<AbortController | null>(null);
 
   const canSubmit = useMemo(() => {
@@ -389,6 +408,48 @@ export function EstimationForm({
       );
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleLeadSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLeadState("loading");
+    setLeadMessage("");
+
+    const leadForm = event.currentTarget;
+    const formData = new FormData(leadForm);
+
+    try {
+      const response = await fetch("/api/seller-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: form.address.trim(),
+          city: selectedAddress?.cityName ?? "Secteur du bien",
+          propertyType: form.propertyType,
+          phone: formData.get("phone"),
+          consent: formData.get("consent"),
+          website: formData.get("website"),
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Votre demande n’a pas pu être envoyée.");
+      }
+
+      leadForm.reset();
+      setLeadState("success");
+      setLeadMessage(
+        "Merci. Nous vous rappelons rapidement pour préparer l’étude approfondie de votre bien.",
+      );
+    } catch (leadError) {
+      setLeadState("error");
+      setLeadMessage(
+        leadError instanceof Error
+          ? leadError.message
+          : "Votre demande n’a pas pu être envoyée.",
+      );
     }
   }
 
@@ -792,47 +853,80 @@ export function EstimationForm({
         </div>
 
         <div className="result-layout">
-          <section className="valuation-card" aria-labelledby="result-title">
+          <section className="valuation-card result-valuation-hero" aria-labelledby="result-title">
             <div className="valuation-main">
-              <span className="result-source">
-                {estimation.source === "immo-data" ? "Analyse Immo Data" : "Mode démonstration"}
-              </span>
+              <span className="result-source">Données de marché et ventes comparables</span>
               <p className="result-address">{estimation.addressLabel}</p>
-              <p className="valuation-kicker">Notre avis de valeur</p>
-              <h1 id="result-title">Un prix juste, défendable sur le marché</h1>
-              <strong className="result-price">
-                {currencyFormatter.format(estimation.medianPrice)}
-              </strong>
-              <p className="result-range">
-                Fourchette de marché : {currencyFormatter.format(estimation.lowPrice)} à{" "}
-                {currencyFormatter.format(estimation.highPrice)}
+              <p className="valuation-kicker">Votre première fourchette</p>
+              <h1 id="result-title">Une estimation de marché, à affiner avec votre bien</h1>
+              <div className="result-price-range" aria-label={`Entre ${currencyFormatter.format(estimation.lowPrice)} et ${currencyFormatter.format(estimation.highPrice)}`}>
+                <strong>{currencyFormatter.format(estimation.lowPrice)}</strong>
+                <span>à</span>
+                <strong>{currencyFormatter.format(estimation.highPrice)}</strong>
+              </div>
+              <p className="result-range result-range-explanation">
+                Cette fourchette volontairement prudente donne un repère à partir des
+                transactions locales et des informations renseignées. Elle ne remplace pas
+                l&apos;analyse du bien, de son environnement et de son potentiel réel.
               </p>
-              <div className="valuation-scale" aria-label="Position du prix recommandé dans la fourchette">
+              <div className="valuation-scale" aria-label="Position du point central statistique dans la fourchette">
                 <div className="valuation-track">
                   <span className="valuation-fill" style={{ width: `${medianPosition}%` }} />
                   <span className="valuation-marker" style={{ left: `${medianPosition}%` }} />
                 </div>
-                <div><span>{currencyFormatter.format(estimation.lowPrice)}</span><strong>Prix recommandé</strong><span>{currencyFormatter.format(estimation.highPrice)}</span></div>
+                <div><span>Fourchette basse</span><strong>Repère statistique {currencyFormatter.format(estimation.medianPrice)}</strong><span>Fourchette haute</span></div>
               </div>
             </div>
-            <aside className="valuation-proof">
-              <p>Pourquoi ce prix ?</p>
-              <article><strong>{numberFormatter.format(estimation.pricePerM2)} €</strong><span>Prix estimé au m²</span></article>
-              <article><strong>{estimation.comparables.length}</strong><span>Ventes comparables analysées</span></article>
-              <article><strong>{estimation.confidenceScore}/5</strong><span>Indice de fiabilité</span></article>
-              <small>Données locales, caractéristiques du bien et ventes enregistrées sur le secteur.</small>
+            <aside className="valuation-expert-panel">
+              <span className="expert-panel-kicker"><Eye aria-hidden="true" /> L&apos;œil de l&apos;agence</span>
+              <h2>La donnée donne un repère. La visite révèle la vraie valeur.</h2>
+              <p>
+                Vue, lumière, distribution, état, extérieur ou potentiel urbain peuvent
+                déplacer sensiblement cette première estimation.
+              </p>
+              <ul>
+                <li><Check aria-hidden="true" /> Visite et lecture du micro-secteur</li>
+                <li><Check aria-hidden="true" /> Avis de valeur argumenté</li>
+                <li><Check aria-hidden="true" /> Stratégie de mise en vente</li>
+              </ul>
+              <a className="expert-panel-primary" href="#etude-approfondie">
+                Faire affiner mon estimation <ArrowRight aria-hidden="true" />
+              </a>
+              <a className="expert-panel-secondary" href="#confier-mon-bien">
+                Je souhaite vendre mon bien
+              </a>
+              <small>Premier échange gratuit et sans engagement.</small>
             </aside>
           </section>
 
-          <section className="result-card summary-card" aria-labelledby="summary-title">
-            <div className="section-heading">
-              <h2 id="summary-title">Resume du bien</h2>
-            </div>
-            <div className="summary-chips">
-              {resultChips.map((chip) => (
-                <span key={chip}>{chip}</span>
-              ))}
-            </div>
+          <section className="result-reading-grid summary-card" aria-labelledby="summary-title">
+            <article className="result-card data-reading-card">
+              <span className="section-index">01 — CE QUE LES DONNÉES NOUS DISENT</span>
+              <h2 id="summary-title">Les repères disponibles aujourd&apos;hui</h2>
+              <div className="summary-chips">
+                {resultChips.map((chip) => (
+                  <span key={chip}>{chip}</span>
+                ))}
+              </div>
+              <div className="data-reading-metrics">
+                <div><Ruler aria-hidden="true" /><span><strong>{numberFormatter.format(estimation.pricePerM2)} €/m²</strong>Prix estimé du bien</span></div>
+                <div><Home aria-hidden="true" /><span><strong>{estimation.comparables.length}</strong>Ventes comparables</span></div>
+                <div><BarChart3 aria-hidden="true" /><span><strong>{market?.priceEvolution12Months !== undefined ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %` : "NC"}</strong>Évolution sur 12 mois</span></div>
+                <div><FileSearch aria-hidden="true" /><span><strong>{estimation.confidenceScore}/5</strong>Fiabilité des données</span></div>
+              </div>
+            </article>
+
+            <article className="result-card visit-reading-card">
+              <span className="section-index">02 — CE QUE LA VISITE DOIT RÉVÉLER</span>
+              <h2>Les critères qui font vraiment varier la valeur</h2>
+              <div className="visit-factor-list">
+                <span><MapPin aria-hidden="true" /><strong>Adresse et micro-emplacement</strong></span>
+                <span><Eye aria-hidden="true" /><strong>Vue, lumière et nuisances</strong></span>
+                <span><Sparkles aria-hidden="true" /><strong>État, volumes et présentation</strong></span>
+                <span><Ruler aria-hidden="true" /><strong>Potentiel d&apos;aménagement ou de division</strong></span>
+              </div>
+              <p>Ce sont ces éléments, invisibles dans une base de données, qui permettent de défendre un prix auprès des acquéreurs.</p>
+            </article>
           </section>
 
           <section className="result-card comparables-card" aria-labelledby="comparables-title">
@@ -955,23 +1049,117 @@ export function EstimationForm({
                 </article>
               ))}
             </div>
-            <div className="seller-takeaway"><span>Notre lecture</span><strong>{priceAdvice}</strong><p>{market?.saleDurationDays ? `Le marché local absorbe actuellement les biens en environ ${market.saleDurationDays} jours.` : "Le délai sera précisé après l'analyse terrain de nos expertes."} {refreshPotential ? `Un potentiel de valorisation d'environ ${currencyFormatter.format(refreshPotential)} reste à confirmer sur place.` : "La présentation et le lancement seront déterminants pour défendre ce prix."}</p></div>
+            <div className="seller-takeaway"><span>Notre lecture</span><strong>{priceAdvice}</strong><p>{market?.saleDurationDays ? `Le marché local absorbe actuellement les biens en environ ${market.saleDurationDays} jours.` : "Le délai sera précisé après l'analyse terrain de notre équipe."} {refreshPotential ? `Un potentiel de valorisation d'environ ${currencyFormatter.format(refreshPotential)} reste à confirmer sur place.` : "La présentation et le lancement seront déterminants pour défendre ce prix."}</p></div>
           </section>
 
-          <div className="result-actions">
-            <button className="primary-action report-action">
-              Recevoir mon avis de valeur complet
-              <span>Analyse détaillée, ventes témoins et stratégie</span>
-            </button>
-            <button className="secondary-action">
-              Échanger avec une experte locale
-              <span>15 minutes pour challenger cette estimation</span>
-            </button>
-          </div>
+          <section className="result-card result-case-section" aria-labelledby="case-title">
+            <div className="section-heading case-section-heading">
+              <span className="section-index">04 — AU-DELÀ DE LA MOYENNE</span>
+              <h2 id="case-title">Trois situations où la visite change l&apos;analyse</h2>
+              <p>Pas de promesse artificielle : nous cherchons les éléments concrets qui permettent de mieux positionner et mieux présenter le bien.</p>
+            </div>
+            <div className="result-case-grid">
+              <article>
+                <span>Potentiel du bien</span>
+                <h3>{form.propertyType === "house" ? "Terrain, extension ou division" : "Plan, étage et copropriété"}</h3>
+                <p>{form.propertyType === "house" ? "Le PLU, les accès et la configuration parcellaire peuvent révéler un potentiel que le prix au m² ne voit pas." : "Une distribution optimisable, une belle exposition ou les caractéristiques de la copropriété changent la perception du bien."}</p>
+              </article>
+              <article>
+                <span>Présentation</span>
+                <h3>Faire percevoir les bons volumes</h3>
+                <p>Circulation, lumière, usages et quelques ajustements ciblés peuvent aider les acquéreurs à se projeter sans engager de travaux inutiles.</p>
+              </article>
+              <article>
+                <span>Commercialisation</span>
+                <h3>Le bon prix, au bon moment</h3>
+                <p>Le prix le plus haut n&apos;est pas toujours celui qui rapporte le plus. Un lancement cohérent protège l&apos;attractivité et le pouvoir de négociation.</p>
+              </article>
+            </div>
+            <Link className="case-proof-link" href="/biens">
+              Découvrir les biens présentés par l&apos;agence <ArrowRight aria-hidden="true" />
+            </Link>
+          </section>
+
+          <section className="result-card result-content-section" aria-labelledby="content-title">
+            <div className="section-heading inline">
+              <div><span className="section-index">POUR PRÉPARER VOTRE DÉCISION</span><h2 id="content-title">Nos conseils avant de vendre</h2></div>
+              <Link href="/contenus">Tous les contenus <ArrowRight aria-hidden="true" /></Link>
+            </div>
+            <div className="result-content-links">
+              <Link href="/contenus/estimation-immobiliere-fiable-data-humain">
+                <span>Estimation</span><strong>Pourquoi les algorithmes ne suffisent pas</strong><ArrowRight aria-hidden="true" />
+              </Link>
+              <Link href="/contenus/division-parcellaire-immobilier-valoriser-terrain">
+                <span>Urbanisme</span><strong>Quand le potentiel du terrain change la valeur</strong><ArrowRight aria-hidden="true" />
+              </Link>
+              <Link href="/contenus/vendre-avant-apres-travaux">
+                <span>Valorisation</span><strong>Vendre avant ou après travaux&nbsp;?</strong><ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
+          </section>
+
+          <section className="mandate-conversion" id="etude-approfondie" aria-labelledby="mandate-title">
+            <div className="mandate-conversion-copy">
+              <span className="section-index">DE L&apos;ESTIMATION À LA VENTE</span>
+              <h2 id="mandate-title">Vous avez une fourchette. Construisons maintenant la vente.</h2>
+              <p>
+                Notre rôle ne consiste pas seulement à annoncer un prix. Nous venons comprendre
+                le bien, identifier ses leviers de valeur et préparer une commercialisation capable
+                de convaincre les bons acquéreurs.
+              </p>
+              <div className="mandate-benefits">
+                <span><FileSearch aria-hidden="true" /><strong>Étude approfondie</strong>Comparables, visite et micro-secteur</span>
+                <span><Ruler aria-hidden="true" /><strong>Potentiel vérifié</strong>Urbanisme, volumes et usages</span>
+                <span><Sparkles aria-hidden="true" /><strong>Présentation soignée</strong>Conseils ciblés et mise en valeur</span>
+                <span><Handshake aria-hidden="true" /><strong>Vente accompagnée</strong>Diffusion, visites et négociation</span>
+              </div>
+              <p className="mandate-signature">Les données cadrent la valeur. Notre expertise construit la vente.</p>
+            </div>
+
+            <aside className="mandate-lead-card" id="confier-mon-bien">
+              <span className="section-index">PREMIER ÉCHANGE</span>
+              <h3>Faisons le point sur votre bien</h3>
+              <p>Un membre de notre équipe vous rappelle pour comprendre votre projet et organiser, si vous le souhaitez, une visite d&apos;estimation.</p>
+              {leadState === "success" ? (
+                <div className="mandate-success" role="status">
+                  <CheckCircle2 aria-hidden="true" />
+                  <strong>Votre demande est bien partie.</strong>
+                  <p>{leadMessage}</p>
+                </div>
+              ) : (
+                <form className="mandate-lead-form" onSubmit={handleLeadSubmit}>
+                  <label>
+                    <span>Bien concerné</span>
+                    <input readOnly value={`${propertyLabel} · ${estimation.addressLabel}`} />
+                  </label>
+                  <label>
+                    <span>Votre téléphone</span>
+                    <input autoComplete="tel" inputMode="tel" name="phone" placeholder="06 12 34 56 78" required type="tel" />
+                  </label>
+                  <label className="mandate-honeypot" aria-hidden="true">
+                    <span>Ne pas remplir</span>
+                    <input autoComplete="off" name="website" tabIndex={-1} />
+                  </label>
+                  <label className="mandate-consent">
+                    <input name="consent" required type="checkbox" value="accepted" />
+                    <span>J&apos;accepte d&apos;être recontacté au sujet de mon projet immobilier.</span>
+                  </label>
+                  <button disabled={leadState === "loading"} type="submit">
+                    {leadState === "loading" ? <LoaderCircle className="mandate-spinner" aria-hidden="true" /> : null}
+                    Demander mon étude approfondie
+                    {leadState !== "loading" ? <ArrowRight aria-hidden="true" /> : null}
+                  </button>
+                  {leadState === "error" ? <p className="mandate-error" role="alert">{leadMessage}</p> : null}
+                </form>
+              )}
+              <small><LockKeyhole aria-hidden="true" /> Échange gratuit, confidentiel et sans engagement.</small>
+              <Link href="/honoraires">Consulter nos honoraires</Link>
+            </aside>
+          </section>
 
           <p className="privacy-note result-privacy">
             <span className="privacy-lock" aria-hidden="true" />
-            Vos donnees sont protegees. Aucune revente de donnees.
+            Vos données sont protégées. Aucune revente de données.
           </p>
         </div>
         </section>
