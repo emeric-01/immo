@@ -176,10 +176,14 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           <p className={styles.eyebrow}>{config.eyebrow}</p>
           <h1 id="local-agency-title">Agence immobilière à {city.name}</h1>
           <h2 className={styles.heroHeadline}>{config.heroTitle}</h2>
-          <p className={styles.heroIntro}>{config.heroIntro}</p>
+          <p className={styles.heroIntro}>
+            Vous souhaitez vendre une maison ou un appartement à {city.name} ? Nous
+            estimons votre bien, préparons sa commercialisation et vous accompagnons
+            dans les visites, la négociation et le suivi de la vente jusqu’à la signature.
+          </p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryButton} href="/estimation">
-              Faire estimer mon bien <ArrowRight size={17} />
+              Estimer et vendre mon bien <ArrowRight size={17} />
             </Link>
             <a className={styles.textLink} href="#parlons-de-votre-bien">
               Échanger sur mon projet <ArrowRight size={15} />
@@ -219,8 +223,9 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             état, distribution et potentiel urbanistique.
           </p>
           <p>
-            Nous analysons ces critères sur place, au bon moment, pour définir un
-            positionnement juste et une mise en valeur qui attire les bons acquéreurs.
+            Nous analysons ces critères sur place pour définir un prix cohérent, préparer
+            la présentation du bien et construire une commercialisation qui attire des
+            acquéreurs réellement qualifiés.
           </p>
           <LocalAgencyQuickActions cityName={city.name} />
         </div>
@@ -229,6 +234,48 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           <h2 id="lead-form-title">Parlons de votre bien</h2>
           <LocalAgencyLeadForm cityName={city.name} />
         </aside>
+      </section>
+
+      <section className={styles.teamSection} aria-labelledby="team-title">
+        <div className={styles.teamPortrait}>
+          <Image
+            alt="Laure et Séverine, fondatrices des Jumelles Immo"
+            fill
+            sizes="(max-width: 760px) 100vw, 40vw"
+            src="/images/laure-severine-jumelles-immo.jpg"
+          />
+        </div>
+        <div className={styles.teamCopy}>
+          <p className={styles.eyebrow}>Les Jumelles Immo</p>
+          <h2 id="team-title">Deux sœurs, trois expertises pour vendre votre bien avec justesse.</h2>
+          <div className={styles.expertiseGrid}>
+            <article><Home /><h3>Transaction et stratégie de vente</h3><p>Estimer, commercialiser, négocier et accompagner la vente jusqu’à la signature.</p></article>
+            <article><FileSearch /><h3>Urbanisme et potentiel</h3><p>Identifier le potentiel réglementaire et les leviers de valorisation.</p></article>
+            <article><Sofa /><h3>Architecture intérieure et travaux</h3><p>Révéler les volumes et faciliter la projection des futurs acquéreurs.</p></article>
+          </div>
+          <Link className={styles.textLink} href="/qui-sommes-nous">Découvrir notre approche <ArrowRight size={15} /></Link>
+        </div>
+      </section>
+
+      <section className={styles.processSection} aria-labelledby="process-title">
+        <div className={styles.processHeader}>
+          <div>
+            <p className={styles.eyebrow}>Notre accompagnement de transaction</p>
+            <h2 id="process-title">De l’estimation à la signature, chaque étape est pilotée.</h2>
+          </div>
+          <p>
+            Un interlocuteur référent coordonne votre vente, sélectionne les acquéreurs
+            et vous tient informé avec des points de suivi clairs.
+          </p>
+        </div>
+        <div className={styles.processGrid}>
+          <article><div><b>01</b><SearchCheck /></div><h3>Visite du bien</h3><p>Écoute de votre projet et analyse des caractéristiques sur place.</p></article>
+          <article><div><b>02</b><ClipboardCheck /></div><h3>Estimation et stratégie</h3><p>Prix argumenté, positionnement et plan de commercialisation.</p></article>
+          <article><div><b>03</b><Sparkles /></div><h3>Préparation et diffusion</h3><p>Mise en valeur, photos, annonce et diffusion auprès du bon réseau.</p></article>
+          <article><div><b>04</b><Eye /></div><h3>Visites qualifiées</h3><p>Sélection des acquéreurs, organisation des visites et retours précis.</p></article>
+          <article><div><b>05</b><Handshake /></div><h3>Offre et négociation</h3><p>Analyse des offres et défense de vos intérêts jusqu’à l’accord.</p></article>
+          <article><div><b>06</b><FileSearch /></div><h3>Dossier et signature</h3><p>Coordination du dossier, du compromis à la signature définitive.</p></article>
+        </div>
       </section>
 
       <section className={styles.propertySection} aria-labelledby="property-types-title">
@@ -319,46 +366,6 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             <div className={styles.adviceImage}><ContentImage alt={relatedArticle.cover_image_alt || relatedArticle.title} fill sizes="260px" src={relatedArticle.cover_image_url} /></div>
           ) : <Sparkles aria-hidden="true" />}
         </article>
-      </section>
-
-      <section className={styles.teamSection} aria-labelledby="team-title">
-        <div className={styles.teamPortrait}>
-          <Image
-            alt="Laure et Séverine, fondatrices des Jumelles Immo"
-            fill
-            sizes="(max-width: 760px) 100vw, 40vw"
-            src="/images/laure-severine-jumelles-immo.jpg"
-          />
-        </div>
-        <div className={styles.teamCopy}>
-          <p className={styles.eyebrow}>Les Jumelles Immo</p>
-          <h2 id="team-title">Deux sœurs, trois expertises, un seul objectif : défendre la valeur juste.</h2>
-          <div className={styles.expertiseGrid}>
-            <article><Home /><h3>Immobilier et stratégie de vente</h3><p>Comprendre le marché local et positionner chaque bien au juste prix.</p></article>
-            <article><FileSearch /><h3>Urbanisme et potentiel</h3><p>Identifier le potentiel réglementaire et les leviers de valorisation.</p></article>
-            <article><Sofa /><h3>Architecture intérieure et travaux</h3><p>Optimiser l’espace et la présentation avec Les Jumelles s’en Mêlent.</p></article>
-          </div>
-          <Link className={styles.textLink} href="/qui-sommes-nous">Découvrir notre approche <ArrowRight size={15} /></Link>
-        </div>
-      </section>
-
-      <section className={styles.processSection} aria-labelledby="process-title">
-        <div className={styles.processHeader}>
-          <div>
-            <p className={styles.eyebrow}>Notre méthode de vente</p>
-            <h2 id="process-title">Une méthode claire pour piloter chaque étape de la vente.</h2>
-          </div>
-          <p>
-            Votre projet est coordonné par un professionnel référent, avec une méthode
-            commune et des points de suivi clairs.
-          </p>
-        </div>
-        <div className={styles.processGrid}>
-          <article><div><b>01</b><SearchCheck /></div><h3>Découverte du bien</h3><p>Visite sur place, écoute de votre projet et lecture des spécificités.</p></article>
-          <article><div><b>02</b><ClipboardCheck /></div><h3>Estimation et stratégie</h3><p>Une estimation argumentée et un positionnement adapté au marché.</p></article>
-          <article><div><b>03</b><Sparkles /></div><h3>Mise en valeur et diffusion</h3><p>Conseils, présentation, annonce ciblée et diffusion auprès du bon réseau.</p></article>
-          <article><div><b>04</b><Handshake /></div><h3>Visites, négociation et suivi</h3><p>Retours qualifiés, négociation et coordination des échanges jusqu’à la signature.</p></article>
-        </div>
       </section>
 
       <section className={styles.faqSection} aria-labelledby="faq-title">

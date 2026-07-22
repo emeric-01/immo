@@ -564,7 +564,8 @@
 
 .propertySection {
   border-top: 1px solid var(--line);
-  padding: 56px 0 70px;
+  margin-top: 16px;
+  padding: 44px 0 54px;
 }
 
 .centerHeading {
@@ -591,7 +592,7 @@
 
 .propertyImage {
   position: relative;
-  height: 260px;
+  height: 220px;
   overflow: hidden;
 }
 
@@ -1031,14 +1032,14 @@
 
 .processGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 38px;
 }
 
 .processGrid article {
   position: relative;
-  min-height: 210px;
+  min-height: 196px;
   border: 1px solid #48433d;
   border-radius: 10px;
   background: #292724;

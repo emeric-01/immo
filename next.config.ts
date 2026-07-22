@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { CONTENT_IMAGE_QUALITY } from "./src/lib/content/image-config";
+import { legacyWordPressRedirects } from "./src/lib/seo/legacy-redirects";
 
 const nextConfig: NextConfig = {
   images: {
@@ -11,6 +12,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      ...legacyWordPressRedirects,
       {
         source: "/prix-immobilier/:city",
         destination: "/prix-m2/:city",
