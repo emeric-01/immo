@@ -13,6 +13,7 @@ const links = [
   { href: "/contenus", label: "Contenus" },
   { href: "/prix-m2", label: "Nos secteurs" },
   { href: "/qui-sommes-nous", label: "Qui sommes-nous" },
+  { href: "/parrainage", label: "Parrainage" },
 ] as const;
 
 export function PublicMobileMenu() {

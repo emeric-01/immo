@@ -1,0 +1,746 @@
+.page {
+  --accent: #bd7748;
+  --cream: #f7efe7;
+  --ink: #171511;
+  --line: #e7ddd3;
+  --muted: #69625c;
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 20px 28px 70px;
+  color: var(--ink);
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.hero {
+  display: flex;
+  position: relative;
+  min-height: min(720px, calc(100svh - 128px));
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #766b60;
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: center 46%;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(20, 17, 14, .83) 0%, rgba(20, 17, 14, .61) 43%, rgba(20, 17, 14, .08) 76%),
+    linear-gradient(0deg, rgba(20, 17, 14, .42) 0%, transparent 48%);
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 70%);
+  padding: clamp(50px, 7vw, 100px);
+  color: #fff;
+}
+
+.hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font: 400 clamp(3.4rem, 6.7vw, 6.4rem)/.92 Georgia, "Times New Roman", serif;
+  letter-spacing: -.04em;
+}
+
+.hero h1 em {
+  color: #e4b18d;
+  font-style: normal;
+}
+
+.heroIntro {
+  max-width: 650px;
+  margin: 27px 0 0;
+  color: rgba(255, 255, 255, .86);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-top: 32px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 8px;
+  padding: 0 22px;
+  font-size: .82rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.primaryAction {
+  border-color: #fff;
+  background: #fff;
+  color: var(--ink);
+}
+
+.secondaryAction {
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.primaryAction svg,
+.secondaryAction svg,
+.finalCta a svg {
+  width: 17px;
+}
+
+.heroProofs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px 22px;
+  margin: 28px 0 0;
+  padding: 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: .74rem;
+  list-style: none;
+}
+
+.heroProofs li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.heroProofs svg {
+  width: 15px;
+  color: #e4b18d;
+}
+
+.reward {
+  display: grid;
+  position: absolute;
+  z-index: 1;
+  right: clamp(30px, 5vw, 72px);
+  bottom: clamp(30px, 5vw, 68px);
+  min-width: 220px;
+  border: 1px solid rgba(255, 255, 255, .52);
+  border-radius: 12px;
+  background: rgba(28, 23, 19, .72);
+  padding: 20px 24px;
+  color: #fff;
+  backdrop-filter: blur(14px);
+}
+
+.reward span,
+.reward small {
+  color: rgba(255, 255, 255, .7);
+  font-size: .68rem;
+}
+
+.reward strong {
+  margin: 3px 0;
+  font: 400 3.2rem/1 Georgia, "Times New Roman", serif;
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: .9fr 1.1fr;
+  gap: 92px;
+  padding: 108px clamp(20px, 5vw, 74px);
+}
+
+.intro h2,
+.sectionHeading h2,
+.formIntro h2,
+.conditions h2,
+.finalCta h2 {
+  margin: 0;
+  font: 400 clamp(2.6rem, 4.5vw, 4.7rem)/.98 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.introText {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+  align-self: end;
+}
+
+.introText p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.steps {
+  scroll-margin-top: 110px;
+  border-radius: 18px;
+  background: #f7f2ec;
+  padding: 78px clamp(24px, 5vw, 72px);
+}
+
+.sectionHeading {
+  max-width: 760px;
+}
+
+.steps ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 54px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  min-width: 0;
+  padding: 0 34px;
+}
+
+.steps li:first-child {
+  padding-left: 0;
+}
+
+.steps li:last-child {
+  padding-right: 0;
+}
+
+.steps li + li {
+  border-left: 1px solid #ddd0c4;
+}
+
+.stepTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepIcon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #8d5434;
+}
+
+.stepIcon svg {
+  width: 25px;
+}
+
+.stepTop b {
+  color: #c6b5a7;
+  font: 400 1.15rem Georgia, "Times New Roman", serif;
+}
+
+.steps h3 {
+  margin: 25px 0 10px;
+  font: 400 1.55rem/1.15 Georgia, "Times New Roman", serif;
+}
+
+.steps li p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .88rem;
+  line-height: 1.7;
+}
+
+.formSection {
+  display: grid;
+  grid-template-columns: .72fr 1.28fr;
+  gap: clamp(40px, 6vw, 90px);
+  scroll-margin-top: 105px;
+  padding: 110px clamp(20px, 5vw, 74px);
+}
+
+.formIntro {
+  align-self: start;
+}
+
+.formIntro > p:not(.eyebrow) {
+  max-width: 520px;
+  margin: 24px 0 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.formTrust {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  margin-top: 30px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 23px 0;
+}
+
+.formTrust > svg {
+  width: 23px;
+  flex: 0 0 auto;
+  color: #a3623a;
+}
+
+.formTrust div {
+  display: grid;
+  gap: 5px;
+}
+
+.formTrust strong {
+  font-size: .87rem;
+}
+
+.formTrust span {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.formIntro ul {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  color: #5f5852;
+  font-size: .79rem;
+  list-style: none;
+}
+
+.formIntro li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.formIntro li svg {
+  width: 16px;
+  color: #a3623a;
+}
+
+.referralForm {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: clamp(24px, 4vw, 42px);
+  box-shadow: 0 20px 54px rgba(47, 36, 27, .06);
+}
+
+.referralForm fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.referralForm fieldset + fieldset {
+  margin-top: 33px;
+  border-top: 1px solid var(--line);
+  padding-top: 31px;
+}
+
+.referralForm legend {
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 0;
+  font: 400 1.45rem Georgia, "Times New Roman", serif;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.referralForm label:not(.honeypot) {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.referralForm label > span {
+  font-size: .74rem;
+  font-weight: 700;
+}
+
+.referralForm label small {
+  color: #8a8179;
+  font-size: .67rem;
+  font-weight: 500;
+}
+
+.referralForm input,
+.referralForm select,
+.referralForm textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dcd5ce;
+  border-radius: 7px;
+  outline: 0;
+  background: #fff;
+  padding: 0 13px;
+  color: var(--ink);
+  font-size: .84rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.referralForm input,
+.referralForm select {
+  min-height: 49px;
+}
+
+.referralForm textarea {
+  min-height: 94px;
+  resize: vertical;
+  padding-top: 13px;
+  line-height: 1.5;
+}
+
+.referralForm input:focus,
+.referralForm select:focus,
+.referralForm textarea:focus {
+  border-color: #b87948;
+  box-shadow: 0 0 0 3px rgba(184, 121, 72, .12);
+}
+
+.fullField {
+  grid-column: 1 / -1;
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.consents {
+  display: grid;
+  gap: 12px;
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.consents label {
+  display: grid !important;
+  grid-template-columns: 19px minmax(0, 1fr);
+  gap: 11px !important;
+  align-items: start;
+  color: #57514b;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.consents input {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 2px 0 0;
+  accent-color: #171511;
+}
+
+.consents span {
+  font-size: .72rem !important;
+  font-weight: 500 !important;
+}
+
+.referralForm > button {
+  display: flex;
+  width: 100%;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  margin-top: 25px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 750;
+}
+
+.referralForm > button:hover:not(:disabled) {
+  background: #2d2925;
+}
+
+.referralForm > button:disabled {
+  opacity: .65;
+}
+
+.referralForm > button svg {
+  width: 18px;
+}
+
+.spinner {
+  animation: spin .8s linear infinite;
+}
+
+.formPrivacy {
+  margin: 10px 0 0;
+  color: #867e77;
+  font-size: .67rem;
+  text-align: center;
+}
+
+.formSuccess,
+.formError {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 17px 0 0;
+  border-radius: 7px;
+  padding: 13px;
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
+.formSuccess {
+  background: #edf7ef;
+  color: #28653c;
+}
+
+.formError {
+  background: #fff0ed;
+  color: #9f3629;
+}
+
+.formSuccess svg {
+  width: 17px;
+  flex: 0 0 auto;
+}
+
+.conditions {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 82px clamp(20px, 5vw, 74px);
+}
+
+.conditionsLead {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.conditionsLead > svg {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--cream);
+  padding: 14px;
+  color: #965a36;
+}
+
+.conditions h2 {
+  font-size: clamp(2.4rem, 4vw, 4rem);
+}
+
+.conditionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-top: 46px;
+  border-top: 1px solid var(--line);
+}
+
+.conditionGrid p {
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 23px 26px 23px 0;
+  color: var(--muted);
+  font-size: .83rem;
+  line-height: 1.7;
+}
+
+.conditionGrid p:nth-child(even) {
+  border-left: 1px solid var(--line);
+  padding-right: 0;
+  padding-left: 26px;
+}
+
+.conditionGrid strong {
+  color: var(--ink);
+}
+
+.conditions > details {
+  margin-top: 24px;
+}
+
+.conditions summary,
+.faq summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.conditions details > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: .75rem;
+  line-height: 1.65;
+}
+
+.conditions details p {
+  margin: 0;
+}
+
+.faq {
+  display: grid;
+  grid-template-columns: .72fr 1.28fr;
+  gap: 80px;
+  padding: 96px clamp(20px, 5vw, 74px);
+}
+
+.faqList {
+  border-top: 1px solid var(--line);
+}
+
+.faqList details {
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0;
+}
+
+.faqList summary {
+  position: relative;
+  padding-right: 34px;
+  list-style: none;
+}
+
+.faqList summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqList summary::after {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  color: #a2643c;
+  content: "+";
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+
+.faqList details[open] summary::after {
+  content: "−";
+}
+
+.faqList p {
+  max-width: 720px;
+  margin: 15px 0 0;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.7;
+}
+
+.finalCta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  border-radius: 16px;
+  background: #171511;
+  padding: 44px clamp(28px, 5vw, 70px);
+  color: #fff;
+}
+
+.finalCta h2 {
+  font-size: clamp(2.1rem, 3.5vw, 3.7rem);
+}
+
+.finalCta a {
+  display: inline-flex;
+  min-height: 52px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 22px;
+  color: #171511;
+  font-size: .8rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 980px) {
+  .heroCopy { width: 80%; padding: 62px 48px; }
+  .reward { right: 30px; bottom: 30px; }
+  .intro { gap: 50px; }
+  .steps li { padding: 0 24px; }
+  .formSection { grid-template-columns: 1fr; }
+  .formIntro { max-width: 680px; }
+  .faq { grid-template-columns: 1fr; gap: 44px; }
+}
+
+@media (max-width: 720px) {
+  .page { padding: 10px 12px 42px; }
+  .hero { min-height: 680px; align-items: flex-end; border-radius: 14px; }
+  .heroImage { object-position: 63% center; }
+  .heroOverlay {
+    background:
+      linear-gradient(0deg, rgba(18, 15, 12, .93) 0%, rgba(18, 15, 12, .64) 58%, rgba(18, 15, 12, .12) 100%);
+  }
+  .heroCopy { width: 100%; padding: 42px 24px 98px; }
+  .hero h1 { font-size: clamp(3rem, 13vw, 4rem); line-height: .95; }
+  .heroIntro { margin-top: 21px; font-size: .92rem; }
+  .heroActions { display: grid; }
+  .primaryAction, .secondaryAction { width: 100%; }
+  .heroProofs { display: grid; gap: 8px; margin-top: 20px; }
+  .reward {
+    right: 24px;
+    bottom: 20px;
+    left: 24px;
+    grid-template-columns: 1fr auto;
+    min-width: 0;
+    align-items: center;
+    padding: 13px 16px;
+  }
+  .reward strong { grid-row: 1 / 3; grid-column: 2; font-size: 2.35rem; }
+  .intro { grid-template-columns: 1fr; gap: 30px; padding: 76px 18px; }
+  .introText { grid-template-columns: 1fr; gap: 18px; }
+  .intro h2, .sectionHeading h2, .formIntro h2, .conditions h2 { font-size: 2.65rem; }
+  .steps { padding: 58px 24px; border-radius: 14px; }
+  .steps ol { grid-template-columns: 1fr; gap: 0; margin-top: 38px; }
+  .steps li, .steps li:first-child, .steps li:last-child { padding: 25px 0; }
+  .steps li + li { border-top: 1px solid #ddd0c4; border-left: 0; }
+  .formSection { gap: 38px; padding: 76px 18px; }
+  .referralForm { padding: 25px 18px; }
+  .twoColumns { grid-template-columns: 1fr; }
+  .fullField { grid-column: auto; }
+  .conditions { padding: 65px 18px; }
+  .conditionsLead { grid-template-columns: 46px 1fr; gap: 13px; }
+  .conditionsLead > svg { width: 44px; height: 44px; padding: 11px; }
+  .conditionGrid { grid-template-columns: 1fr; }
+  .conditionGrid p, .conditionGrid p:nth-child(even) { border-left: 0; padding: 19px 0; }
+  .conditions details > div { grid-template-columns: 1fr; gap: 15px; }
+  .faq { gap: 30px; padding: 70px 18px; }
+  .finalCta { align-items: stretch; flex-direction: column; padding: 34px 24px; }
+  .finalCta a { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 390px) {
+  .heroCopy { padding-right: 20px; padding-left: 20px; }
+  .hero h1 { font-size: 2.85rem; }
+  .intro h2, .sectionHeading h2, .formIntro h2, .conditions h2 { font-size: 2.35rem; }
+}

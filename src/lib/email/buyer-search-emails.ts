@@ -9,6 +9,7 @@ import {
 } from "@/lib/buyer-search/options";
 import type { BuyerSearchSubmissionResult } from "@/lib/buyer-search/database";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
+import type { ReferralInput } from "@/lib/referrals";
 
 type EmailDeliveryResult = {
   warnings: string[];
@@ -217,6 +218,81 @@ export async function sendSellerLeadNotificationEmail({
     text: `${requestLabel}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}`,
     to: recipient,
   });
+}
+
+export async function sendReferralLeadEmails({
+  input,
+  referralId,
+}: {
+  input: ReferralInput;
+  referralId: string;
+}): Promise<EmailDeliveryResult> {
+  const config = getEmailConfig();
+
+  if (!config) {
+    return { warnings: ["Emails transactionnels non configurés pour le parrainage."] };
+  }
+
+  const warnings: string[] = [];
+  const projectLabel = input.projectKind === "sell" ? "Vente" : "Achat";
+  const propertyLabels: Record<ReferralInput["propertyType"], string> = {
+    apartment: "Appartement",
+    house: "Maison",
+    land: "Terrain",
+    other: "Autre bien",
+  };
+  const adminRecipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const messages: EmailMessage[] = [
+    {
+      html: emailLayout(
+        "Votre parrainage est enregistré",
+        `
+          <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Bonjour ${escapeHtml(input.sponsorFirstName)},</p>
+          <p style="margin:0 0 18px;color:#555f70;line-height:1.6;">Merci de nous avoir présenté ${escapeHtml(input.referredFirstName)}. Notre équipe vérifie la demande et prendra rapidement contact avec votre proche.</p>
+          <div style="border:1px solid #e8e0d8;border-radius:8px;background:#fbf7f2;padding:16px;color:#555f70;line-height:1.8;">
+            <strong style="color:#111;">Projet :</strong> ${escapeHtml(projectLabel)} d’un ${escapeHtml(propertyLabels[input.propertyType].toLowerCase())}<br />
+            <strong style="color:#111;">Secteur :</strong> ${escapeHtml(input.propertyCity)}<br />
+            <strong style="color:#111;">Référence :</strong> ${escapeHtml(referralId.slice(0, 8).toUpperCase())}
+          </div>
+          <p style="margin:18px 0 0;color:#687084;font-size:13px;line-height:1.5;">La prime de 500 € est versée si la transaction est conclue par Les Jumelles Immo, selon les conditions du programme.</p>
+        `,
+      ),
+      subject: "Votre parrainage Les Jumelles Immo est enregistré",
+      text: `Bonjour ${input.sponsorFirstName}, votre parrainage de ${input.referredFirstName} est enregistré. Projet : ${projectLabel}, ${propertyLabels[input.propertyType]}, ${input.propertyCity}. Référence : ${referralId.slice(0, 8).toUpperCase()}.`,
+      to: input.sponsorEmail,
+    },
+    {
+      html: emailLayout(
+        "Nouveau parrainage immobilier",
+        `
+          <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Une nouvelle recommandation a été enregistrée depuis la page parrainage.</p>
+          <div style="border:1px solid #e8e0d8;border-radius:8px;padding:16px;color:#555f70;line-height:1.8;">
+            <strong style="color:#111;">Parrain :</strong> ${escapeHtml(`${input.sponsorFirstName} ${input.sponsorLastName}`)}<br />
+            <strong style="color:#111;">Contact :</strong> <a href="mailto:${escapeHtml(input.sponsorEmail)}" style="color:#9f5d33;">${escapeHtml(input.sponsorEmail)}</a> · ${escapeHtml(input.sponsorPhone)}<br />
+            <strong style="color:#111;">Proche :</strong> ${escapeHtml(`${input.referredFirstName} ${input.referredLastName}`)}<br />
+            <strong style="color:#111;">Contact :</strong> ${escapeHtml(input.referredPhone)}${input.referredEmail ? ` · ${escapeHtml(input.referredEmail)}` : ""}<br />
+            <strong style="color:#111;">Projet :</strong> ${escapeHtml(projectLabel)} · ${escapeHtml(propertyLabels[input.propertyType])} · ${escapeHtml(input.propertyCity)}<br />
+            <strong style="color:#111;">Référence :</strong> ${escapeHtml(referralId)}
+          </div>
+          ${input.message ? `<p style="margin:18px 0 0;color:#555f70;line-height:1.6;"><strong style="color:#111;">Message :</strong> ${escapeHtml(input.message)}</p>` : ""}
+        `,
+      ),
+      subject: `🔔 Nouveau parrainage — ${input.propertyCity}`,
+      text: `Nouveau parrainage\nParrain : ${input.sponsorFirstName} ${input.sponsorLastName}, ${input.sponsorEmail}, ${input.sponsorPhone}\nProche : ${input.referredFirstName} ${input.referredLastName}, ${input.referredPhone}\nProjet : ${projectLabel}, ${propertyLabels[input.propertyType]}, ${input.propertyCity}\nRéférence : ${referralId}`,
+      to: adminRecipient,
+    },
+  ];
+
+  await Promise.all(messages.map(async (message) => {
+    try {
+      await sendEmail(config, message);
+    } catch (error) {
+      console.error("Referral email failed", error);
+      warnings.push(`Email non envoyé : ${message.subject}`);
+    }
+  }));
+
+  return { warnings };
 }
 
 function getEmailConfig(): EmailConfig | null {

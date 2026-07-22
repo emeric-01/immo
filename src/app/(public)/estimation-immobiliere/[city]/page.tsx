@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCityBySlug, southCities } from "@/lib/cities";
 import { createPageMetadata } from "@/lib/seo";
-import { CityEstimationPage } from "../aubagne/page";
+import { CityEstimationPage } from "../aubagne/CityEstimationPage";
 
 type EstimationCityPageProps = {
   params: Promise<{ city: string }>;
