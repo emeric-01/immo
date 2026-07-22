@@ -8,6 +8,7 @@ type CityPriceMapProps = {
   accessToken: string;
   cityName: string;
   fitToSalePoints?: boolean;
+  salePointsFitMode?: "map" | "hero";
   center: {
     longitude: number;
     latitude: number;
@@ -114,6 +115,7 @@ export function CityPriceMap({
   accessToken,
   cityName,
   fitToSalePoints = false,
+  salePointsFitMode = "map",
   center,
   zones,
   salePoints,
@@ -250,10 +252,29 @@ export function CityPriceMap({
         });
 
         if (!bounds.isEmpty()) {
+          const containerWidth = containerRef.current?.clientWidth ?? 0;
+          const containerHeight = containerRef.current?.clientHeight ?? 0;
+          const isMobileHero = salePointsFitMode === "hero" && containerWidth <= 720;
+          const padding = salePointsFitMode === "hero"
+            ? isMobileHero
+              ? {
+                  top: 28,
+                  right: 28,
+                  bottom: Math.round(containerHeight * 0.66),
+                  left: 28,
+                }
+              : {
+                  top: 56,
+                  right: 56,
+                  bottom: 56,
+                  left: Math.round(containerWidth * 0.56),
+                }
+            : 56;
+
           map.fitBounds(bounds, {
             duration: 0,
             maxZoom: 14,
-            padding: 56,
+            padding,
           });
         }
       }
@@ -316,7 +337,15 @@ export function CityPriceMap({
       popupRef.current = null;
       mapRef.current = null;
     };
-  }, [accessToken, center.latitude, center.longitude, fitToSalePoints, salePoints, zones]);
+  }, [
+    accessToken,
+    center.latitude,
+    center.longitude,
+    fitToSalePoints,
+    salePoints,
+    salePointsFitMode,
+    zones,
+  ]);
 
   useEffect(() => {
     const map = mapRef.current;

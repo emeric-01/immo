@@ -151,6 +151,7 @@ export default async function AubagneEstimationPage() {
             cityName={city.name}
             fitToSalePoints
             salePoints={market.salePoints.slice(0, 30)}
+            salePointsFitMode="hero"
             zones={[]}
           />
         </div>
