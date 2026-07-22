@@ -6579,12 +6579,18 @@ button:focus-visible {
 
 @media (max-width: 760px) {
   .city-price-modern .city-overview-grid {
+    display: grid;
     grid-template-columns: 1fr;
+    overflow: visible;
+    padding: 0;
+    scroll-snap-type: none;
   }
 
   .city-price-modern .city-market-price-card,
   .city-price-modern .city-market-signal-card {
+    min-width: 0;
     min-height: 166px;
+    scroll-snap-align: none;
   }
 
   .city-price-modern .city-market-signal-card {
