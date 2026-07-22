@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EstimationForm } from "@/app/estimation-form";
 import type { AddressSuggestion } from "@/lib/immo-data";
+import type { RealtyType } from "@/lib/immo-data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({ title: "Estimation immobilière | Les Jumelles Immo", description: "Obtenez une estimation immobilière argumentée à partir de votre adresse, des caractéristiques du bien et des ventes locales.", path: "/estimation" });
@@ -32,5 +33,18 @@ export default async function EstimationPage({ searchParams }: EstimationPagePro
         }
       : undefined;
 
-  return <EstimationForm initialAddress={initialAddress} />;
+  const propertyType = getParam(params.propertyType);
+  const initialPropertyType: RealtyType | undefined =
+    propertyType === "house" || propertyType === "apartment" ? propertyType : undefined;
+  const initialSurfaceM2 = Number(getParam(params.surfaceM2));
+  const initialRooms = Number(getParam(params.rooms));
+
+  return (
+    <EstimationForm
+      initialAddress={initialAddress}
+      initialPropertyType={initialPropertyType}
+      initialRooms={Number.isFinite(initialRooms) ? initialRooms : undefined}
+      initialSurfaceM2={Number.isFinite(initialSurfaceM2) ? initialSurfaceM2 : undefined}
+    />
+  );
 }

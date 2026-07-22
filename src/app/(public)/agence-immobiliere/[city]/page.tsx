@@ -269,12 +269,25 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           </p>
         </div>
         <div className={styles.processGrid}>
-          <article><div><b>01</b><SearchCheck /></div><h3>Visite du bien</h3><p>Écoute de votre projet et analyse des caractéristiques sur place.</p></article>
-          <article><div><b>02</b><ClipboardCheck /></div><h3>Estimation et stratégie</h3><p>Prix argumenté, positionnement et plan de commercialisation.</p></article>
-          <article><div><b>03</b><Sparkles /></div><h3>Préparation et diffusion</h3><p>Mise en valeur, photos, annonce et diffusion auprès du bon réseau.</p></article>
-          <article><div><b>04</b><Eye /></div><h3>Visites qualifiées</h3><p>Sélection des acquéreurs, organisation des visites et retours précis.</p></article>
-          <article><div><b>05</b><Handshake /></div><h3>Offre et négociation</h3><p>Analyse des offres et défense de vos intérêts jusqu’à l’accord.</p></article>
-          <article><div><b>06</b><FileSearch /></div><h3>Dossier et signature</h3><p>Coordination du dossier, du compromis à la signature définitive.</p></article>
+          <article><div><b>01</b><SearchCheck /></div><h3>Découverte du bien</h3><p>Visite sur place, écoute de votre projet et analyse des caractéristiques qui influencent sa valeur.</p></article>
+          <article><div><b>02</b><ClipboardCheck /></div><h3>Estimation et stratégie</h3><p>Prix argumenté, positionnement et plan de commercialisation adapté au marché local.</p></article>
+          <article><div><b>03</b><Sparkles /></div><h3>Mise en valeur et diffusion</h3><p>Conseils, photos, annonce, diffusion ciblée et sélection des acquéreurs avant les visites.</p></article>
+          <article><div><b>04</b><Handshake /></div><h3>Visites, négociation et signature</h3><p>Retours qualifiés, analyse des offres et coordination du compromis jusqu’à la signature définitive.</p></article>
+        </div>
+      </section>
+
+      <section className={styles.finalCta} aria-labelledby="final-cta-title">
+        <div>
+          <p className={styles.eyebrow}>Votre bien mérite une vraie stratégie</p>
+          <h2 id="final-cta-title">Révéler ses atouts. Défendre son prix. Sécuriser sa vente.</h2>
+          <p>
+            À {city.name}, nous préparons chaque bien pour convaincre les bons acquéreurs
+            et vous accompagnons personnellement jusqu’à la signature.
+          </p>
+          <Link href="/estimation">Découvrir la valeur de mon bien <ArrowRight size={16} /></Link>
+        </div>
+        <div className={styles.finalImage}>
+          <Image alt="Maison contemporaine avec jardin" fill sizes="40vw" src="/images/local-agency/maison-contemporaine-jardin.jpg" />
         </div>
       </section>
 
@@ -412,17 +425,6 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         </div>
       </section>
 
-      <section className={styles.finalCta} aria-labelledby="final-cta-title">
-        <div>
-          <p className={styles.eyebrow}>Votre projet commence ici</p>
-          <h2 id="final-cta-title">Vous envisagez de vendre à {city.name} ?</h2>
-          <p>Commençons par regarder ce qui rend votre bien unique.</p>
-          <Link href="/estimation">Demander une estimation <ArrowRight size={16} /></Link>
-        </div>
-        <div className={styles.finalImage}>
-          <Image alt="Maison contemporaine avec jardin" fill sizes="40vw" src="/images/local-agency/maison-contemporaine-jardin.jpg" />
-        </div>
-      </section>
     </main>
   );
 }

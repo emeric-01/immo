@@ -14,7 +14,7 @@ export function PublicFooter() {
         </div>
         <div className={styles.footerColumns} id="a-propos">
           <nav aria-label="Services"><strong>Services</strong><Link href="/biens">Nos biens à vendre</Link><Link href="/prix-m2">Prix immobilier par ville</Link><Link href="/agence-immobiliere/la-ciotat">Agence immobilière à La Ciotat</Link><Link href="/estimation">Estimer mon bien</Link><Link href="/recherche">Recherche accompagnée</Link></nav>
-          <nav aria-label="Ressources"><strong>Ressources</strong><Link href="/contenus">Conseils & analyses</Link><Link href="/#secteurs">Nos secteurs</Link><Link href="/client">Espace client</Link></nav>
+          <nav aria-label="Ressources"><strong>Ressources</strong><Link href="/contenus">Conseils & analyses</Link><Link href="/#secteurs">Nos secteurs</Link><Link href="/client">Espace client</Link><Link href="/mentions-legales">Mentions légales & confidentialité</Link></nav>
           <nav aria-label="L'agence"><strong>L’agence</strong><Link href="/qui-sommes-nous">Qui sommes-nous</Link><Link href="/nous-rejoindre">Nous rejoindre</Link><Link href="/honoraires">Honoraires</Link><Link href="/recherche">Nous confier un projet</Link><Link href="/estimation">Nous contacter</Link></nav>
         </div>
       </div>

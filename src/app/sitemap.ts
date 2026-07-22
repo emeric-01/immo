@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/qui-sommes-nous"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/nous-rejoindre"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/honoraires"), changeFrequency: "monthly", priority: 0.5 },
+    { url: absoluteUrl("/mentions-legales"), changeFrequency: "yearly", priority: 0.3 },
     { url: absoluteUrl("/agence-immobiliere/la-ciotat"), changeFrequency: "weekly", priority: 0.9 },
   ];
 

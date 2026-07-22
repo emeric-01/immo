@@ -11,6 +11,7 @@ export const legacyWordPressRedirects = [
   { source: "/estimation-immobiliere", destination: "/estimation", permanent: true },
   { source: "/actualite-du-marche-immobilier-et-expertise-de-notre-agence", destination: "/contenus", permanent: true },
   { source: "/honoraires-agence", destination: "/honoraires", permanent: true },
+  { source: "/politique-de-confidentialite", destination: "/mentions-legales", permanent: true },
   { source: "/architecte-interieur-nos-realisations", destination: "/biens", permanent: true },
   { source: "/les-jumelles-immo", destination: "/qui-sommes-nous", permanent: true },
   { source: "/home", destination: "/qui-sommes-nous", permanent: true },

@@ -1032,14 +1032,14 @@
 
 .processGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-top: 38px;
 }
 
 .processGrid article {
   position: relative;
-  min-height: 196px;
+  min-height: 210px;
   border: 1px solid #48433d;
   border-radius: 10px;
   background: #292724;

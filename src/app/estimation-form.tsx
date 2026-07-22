@@ -168,11 +168,28 @@ function buildTrendPath(points: Array<{ value: number }>) {
     .join(" ");
 }
 
-export function EstimationForm({ initialAddress }: { initialAddress?: AddressSuggestion }) {
+type EstimationFormProps = {
+  initialAddress?: AddressSuggestion;
+  initialPropertyType?: RealtyType;
+  initialRooms?: number;
+  initialSurfaceM2?: number;
+};
+
+export function EstimationForm({
+  initialAddress,
+  initialPropertyType,
+  initialRooms,
+  initialSurfaceM2,
+}: EstimationFormProps) {
   const [step, setStep] = useState<FlowStep>(initialAddress ? "essential" : "address");
   const [form, setForm] = useState<FormState>(() => ({
     ...initialForm,
     address: initialAddress?.label ?? "",
+    propertyType: initialPropertyType ?? initialForm.propertyType,
+    rooms: initialRooms && initialRooms > 0 ? String(initialRooms) : initialForm.rooms,
+    surfaceM2: initialSurfaceM2 && initialSurfaceM2 > 0
+      ? String(clampSurface(String(initialSurfaceM2)))
+      : initialForm.surfaceM2,
   }));
   const [selectedAddress, setSelectedAddress] =
     useState<AddressSuggestion | null>(initialAddress ?? null);
