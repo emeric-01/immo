@@ -2,12 +2,32 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowRight, LoaderCircle, MapPin, Phone } from "lucide-react";
+import { prioritizeAddressSuggestions } from "@/lib/address-suggestions";
 import type { AddressSuggestion } from "@/lib/immo-data";
 import styles from "./local-agency.module.css";
 
 const agencyPhone = "+33619821984";
 
-export function LocalAgencyQuickActions({ cityName }: { cityName: string }) {
+async function requestAddressSuggestions(query: string, signal: AbortSignal) {
+  const response = await fetch(`/api/addresses?q=${encodeURIComponent(query)}`, {
+    signal,
+  });
+  const data = (await response.json()) as AddressSuggestion[] | { error?: string };
+
+  if (!response.ok || !Array.isArray(data)) {
+    throw new Error(!Array.isArray(data) && data.error ? data.error : "Recherche indisponible.");
+  }
+
+  return data;
+}
+
+export function LocalAgencyQuickActions({
+  cityName,
+  inseeCode,
+}: {
+  cityName: string;
+  inseeCode: string;
+}) {
   const [query, setQuery] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion | null>(null);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
@@ -30,11 +50,22 @@ export function LocalAgencyQuickActions({ cityName }: { cityName: string }) {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`/api/addresses?q=${encodeURIComponent(value)}`, {
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        setSuggestions(response.ok && Array.isArray(data) ? data : []);
+        const [cityResult, broadResult] = await Promise.allSettled([
+          requestAddressSuggestions(`${value} ${cityName}`, controller.signal),
+          requestAddressSuggestions(value, controller.signal),
+        ]);
+        const citySuggestions = cityResult.status === "fulfilled" ? cityResult.value : [];
+        const broadSuggestions = broadResult.status === "fulfilled" ? broadResult.value : [];
+
+        if (cityResult.status === "rejected" && broadResult.status === "rejected") {
+          throw cityResult.reason;
+        }
+
+        setSuggestions(prioritizeAddressSuggestions(
+          citySuggestions,
+          broadSuggestions,
+          inseeCode,
+        ));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           setSuggestions([]);
@@ -45,7 +76,7 @@ export function LocalAgencyQuickActions({ cityName }: { cityName: string }) {
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [query, selectedAddress]);
+  }, [cityName, inseeCode, query, selectedAddress]);
 
   function startEstimation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

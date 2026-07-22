@@ -3,6 +3,7 @@
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { prioritizeAddressSuggestions } from "@/lib/address-suggestions";
 import type { AddressSuggestion } from "@/lib/immo-data";
 import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
 
@@ -12,11 +13,17 @@ type CityAddressSearchProps = {
   postalCode: string;
 };
 
-function normalize(value?: string) {
-  return value
-    ?.normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("fr-FR");
+async function requestAddressSuggestions(query: string, signal: AbortSignal) {
+  const response = await fetch(`/api/addresses?q=${encodeURIComponent(query)}`, {
+    signal,
+  });
+  const payload = (await response.json()) as AddressSuggestion[] | { error?: string };
+
+  if (!response.ok || !Array.isArray(payload)) {
+    throw new Error(Array.isArray(payload) ? "Recherche indisponible." : payload.error);
+  }
+
+  return payload;
 }
 
 function buildEstimationUrl(address: AddressSuggestion) {
@@ -66,23 +73,24 @@ export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddre
       setIsLoading(true);
 
       try {
-        const response = await fetch(
-          `/api/addresses?q=${encodeURIComponent(`${trimmedQuery}, ${postalCode} ${cityName}`)}`,
-          { signal: controller.signal },
-        );
-        const payload = (await response.json()) as AddressSuggestion[] | { error?: string };
+        const [cityResult, broadResult] = await Promise.allSettled([
+          requestAddressSuggestions(`${trimmedQuery}, ${postalCode} ${cityName}`, controller.signal),
+          requestAddressSuggestions(trimmedQuery, controller.signal),
+        ]);
+        const citySuggestions = cityResult.status === "fulfilled" ? cityResult.value : [];
+        const broadSuggestions = broadResult.status === "fulfilled" ? broadResult.value : [];
 
-        if (!response.ok || !Array.isArray(payload)) {
-          throw new Error(Array.isArray(payload) ? "Recherche indisponible." : payload.error);
+        if (cityResult.status === "rejected" && broadResult.status === "rejected") {
+          throw cityResult.reason;
         }
 
-        const citySuggestions = payload.filter(
-          (suggestion) =>
-            suggestion.inseeCode === inseeCode ||
-            normalize(suggestion.cityName) === normalize(cityName),
+        const prioritizedSuggestions = prioritizeAddressSuggestions(
+          citySuggestions,
+          broadSuggestions,
+          inseeCode,
         );
-        setSuggestions(citySuggestions);
-        setError(citySuggestions.length ? null : `Aucune adresse trouvée à ${cityName}.`);
+        setSuggestions(prioritizedSuggestions);
+        setError(prioritizedSuggestions.length ? null : "Aucune adresse trouvée.");
       } catch (requestError) {
         if (requestError instanceof DOMException && requestError.name === "AbortError") return;
         setSuggestions([]);

@@ -223,7 +223,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             qui rend votre bien différent pour fixer un prix cohérent, soigner sa
             présentation et attirer des acquéreurs réellement qualifiés.
           </p>
-          <LocalAgencyQuickActions cityName={city.name} />
+          <LocalAgencyQuickActions cityName={city.name} inseeCode={city.inseeCode} />
         </div>
         <aside className={styles.leadCard} aria-labelledby="lead-form-title">
           <p className={styles.eyebrow}>Premier échange</p>
