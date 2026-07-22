@@ -14,15 +14,14 @@ Le détail exhaustif et la destination proposée se trouvent dans `wordpress-url
 ## Résultat du rapprochement
 
 - 24 redirections permanentes sont suffisamment précises et sont préparées dans `src/lib/seo/legacy-redirects.ts`.
-- 1 URL (`/`) est conservée sans redirection.
-- 12 URL doivent être recréées, fusionnées ou remises en ligne avant la bascule du domaine.
+- 2 URL (`/` et `/estimation-immobiliere/`) sont conservées sans redirection.
+- 11 URL doivent être recréées, fusionnées ou remises en ligne avant la bascule du domaine.
 - 2 URL techniques peuvent être retirées ou répondre en 410 après validation.
 
 ## À migrer avant la bascule
 
 ### Pages
 
-- Mentions légales et politique de confidentialité
 - Contact
 - Nos prestations d’architecture intérieure
 - Atelier Les Jumelles

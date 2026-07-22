@@ -2,9 +2,9 @@ old_path,type,destination,status,reason
 /,page,/,keep,Accueil conservé
 /prix-au-m2-aubagne-2/,page,/prix-m2/aubagne,redirect_ready,Équivalent prix au m² exact
 /prix-au-m2-aubagne-2-2/,page,/estimation,redirect_ready,Ancienne page Estimez votre bien
-/estimation-immobiliere/,page,/estimation,redirect_ready,Équivalent fonctionnel exact
+/estimation-immobiliere/,page,/estimation-immobiliere,keep_equivalent,L’URL est conservée et dispose désormais d’une page équivalente
 /actualite-du-marche-immobilier-et-expertise-de-notre-agence/,page,/contenus,redirect_ready,Index éditorial du nouveau site
-/politique-de-confidentialite/,page,,migrate_before_switch,Créer la page légale avant redirection
+/politique-de-confidentialite/,page,/mentions-legales,redirect_ready,Page légale créée et redirection permanente configurée
 /honoraires-agence/,page,/honoraires,redirect_ready,Équivalent exact
 /architecte-interieur-nos-realisations/,page,/biens,redirect_ready,La page WordPress présente les annonces immobilières
 /contact/,page,,migrate_before_switch,Créer une vraie page contact avant redirection

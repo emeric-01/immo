@@ -53,9 +53,11 @@ describe("referral account linking", () => {
 
     await createReferral(input);
 
-    const requestedUrls = fetchMock.mock.calls.map(([url]) => String(url));
-    expect(requestedUrls).toHaveLength(2);
-    expect(requestedUrls.every((url) => !url.includes("client_accounts?select=id"))).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const accountCreationAttempted = fetchMock.mock.calls.some(([url, options]) => (
+      String(url).includes("client_accounts") && (options as RequestInit | undefined)?.method === "POST"
+    ));
+    expect(accountCreationAttempted).toBe(false);
     const body = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body));
     expect(body.sponsor_client_account_id).toBeNull();
   });
