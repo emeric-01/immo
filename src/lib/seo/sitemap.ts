@@ -12,6 +12,7 @@ export const publicSitemapRoutes = [
   { path: "/recherche", changeFrequency: "monthly", priority: 0.8 },
   { path: "/contenus", changeFrequency: "weekly", priority: 0.8 },
   { path: "/qui-sommes-nous", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
   { path: "/nous-rejoindre", changeFrequency: "monthly", priority: 0.7 },
   { path: "/parrainage", changeFrequency: "monthly", priority: 0.7 },
   { path: "/honoraires", changeFrequency: "monthly", priority: 0.5 },

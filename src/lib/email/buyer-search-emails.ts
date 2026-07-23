@@ -166,6 +166,50 @@ export async function sendEstimationVolumeAlertEmail({
   });
 }
 
+export async function sendContactRequestEmail({
+  email,
+  message,
+  name,
+  phone,
+  subject,
+}: {
+  email?: string;
+  message: string;
+  name: string;
+  phone?: string;
+  subject: string;
+}) {
+  const config = getEmailConfig();
+
+  if (!config) {
+    throw new Error("Emails transactionnels non configures.");
+  }
+
+  const recipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const safeEmail = email ? escapeHtml(email) : "Non renseigné";
+  const safePhone = phone ? escapeHtml(phone) : "Non renseigné";
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br />");
+
+  await sendEmail(config, {
+    html: emailLayout(
+      "Nouveau message depuis le site",
+      `
+        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Une nouvelle demande a été envoyée depuis la page Contact.</p>
+        <div style="border:1px solid #e8e0d8;border-radius:8px;padding:16px;margin:18px 0;color:#555f70;line-height:1.8;">
+          <strong style="color:#111;">Nom :</strong> ${escapeHtml(name)}<br />
+          <strong style="color:#111;">Objet :</strong> ${escapeHtml(subject)}<br />
+          <strong style="color:#111;">Email :</strong> ${email ? `<a href="mailto:${safeEmail}" style="color:#9f5d33;">${safeEmail}</a>` : safeEmail}<br />
+          <strong style="color:#111;">Téléphone :</strong> ${phone ? `<a href="tel:${escapeHtml(phone.replace(/\s/g, ""))}" style="color:#9f5d33;">${safePhone}</a>` : safePhone}
+        </div>
+        <div style="border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:16px;color:#111;line-height:1.7;">${safeMessage}</div>
+      `,
+    ),
+    subject: `🔔 Contact site — ${subject}`,
+    text: `Nouveau message depuis le site\nNom : ${name}\nObjet : ${subject}\nEmail : ${email || "Non renseigné"}\nTéléphone : ${phone || "Non renseigné"}\n\n${message}`,
+    to: recipient,
+  });
+}
+
 export async function sendSellerLeadNotificationEmail({
   address,
   city,

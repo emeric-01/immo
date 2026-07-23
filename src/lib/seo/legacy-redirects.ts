@@ -15,7 +15,6 @@ export const legacyWordPressRedirects = [
   { source: "/les-jumelles-immo", destination: "/qui-sommes-nous", statusCode: 301 },
   { source: "/home", destination: "/qui-sommes-nous", statusCode: 301 },
   { source: "/nos-inspirations-deco", destination: "/contenus", statusCode: 301 },
-  { source: "/contact", destination: "/", statusCode: 301 },
   { source: "/nos-prestations", destination: "/", statusCode: 301 },
   { source: "/atelier-les-jumelles", destination: "/", statusCode: 301 },
   { source: "/global-styles", destination: "/", statusCode: 301 },

@@ -9,7 +9,6 @@ export const legacyAgenceAsmRedirects = [
   // Pages et services principaux
   { source: "/estimation-immobiliere-en-ligne", destination: "/estimation", permanent: true },
   { source: "/honoraires-baremes", destination: "/honoraires", permanent: true },
-  { source: "/contact", destination: "/estimation", permanent: true },
   { source: "/estimation-immobiliere-gemenos", destination: "/estimation-immobiliere/gemenos", permanent: true },
   { source: "/estimation-immobiliere-la-ciotat", destination: "/estimation-immobiliere/la-ciotat", permanent: true },
   { source: "/estimation-immobiliere-aubagne", destination: "/estimation-immobiliere/aubagne", permanent: true },
