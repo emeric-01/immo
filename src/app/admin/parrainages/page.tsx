@@ -53,7 +53,7 @@ export default async function AdminReferralsPage({ searchParams }: { searchParam
 }
 
 function AdminSidebar() {
-  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link href="/admin/estimations">Estimations</Link><Link data-active href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link></nav></aside>;
+  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link href="/admin/estimations">Estimations</Link><Link data-active href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link></nav></aside>;
 }
 
 function ReferralStats({ referrals }: { referrals: AdminReferral[] }) {
