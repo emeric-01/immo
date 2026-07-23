@@ -45,8 +45,8 @@ export function ContactForm() {
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.formHeading}>
         <p>Votre demande</p>
-        <h2>Écrivez-nous simplement.</h2>
-        <span>Nous vous répondons personnellement, sans réponse automatique impersonnelle.</span>
+        <h2>Parlez-nous de votre projet.</h2>
+        <span>Quelques lignes suffisent. Nous vous recontactons rapidement.</span>
       </div>
       <div className={styles.formGrid}>
         <label className={styles.fullField}><span>Nom et prénom *</span><input autoComplete="name" name="name" required /></label>
