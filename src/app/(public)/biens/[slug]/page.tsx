@@ -9,12 +9,40 @@ import { PropertyGallery } from "./PropertyGallery";
 import { PropertyLocationMap } from "./PropertyLocationMap";
 import { PropertyAnalyticsTracker, TrackedPropertyLink } from "./PropertyAnalytics";
 import { geocodePropertyAddress } from "@/lib/property-geocoding";
+import { createSocialImageUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import styles from "./property.module.css";
 
 export const dynamic = "force-dynamic";
 const money = (value: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ apercu?: string }> }): Promise<Metadata> { const slug=(await params).slug;const isPreview=(await searchParams).apercu==="1";if(isPreview)return {title:"Aperçu d’un bien immobilier",robots:{index:false,follow:false,noarchive:true}};const property=await getPublishedProperty(slug).catch(()=>null);if(!property)return {title:"Bien immobilier",robots:{index:false,follow:false}};const soldPrefix=property.status==="sold"?"Vendu — ":"";const title=property.seo_title||`${soldPrefix}${property.title} à ${property.city_name} | Les Jumelles Immo`;const description=property.seo_description||(property.status==="sold"?`${property.title} à ${property.city_name}, vendu par Les Jumelles Immo. Vous avez un bien similaire ? Découvrez notre accompagnement vendeur.`:property.short_description||`${property.title} à ${property.city_name}. Découvrez les photos, le prix et les caractéristiques de ce bien immobilier.`);const path=`/biens/${property.slug}`;const images=property.images.map(image=>({url:image.public_url,alt:image.alt_text||property.title}));return {title,description,alternates:{canonical:path},robots:property.seo_noindex?{index:false,follow:false}:{index:true,follow:true},openGraph:{type:"website",locale:"fr_FR",siteName:"Les Jumelles Immo",title,description,url:path,images},twitter:{card:"summary_large_image",title,description,images:images.map(image=>image.url)}}; }
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ apercu?: string }> }): Promise<Metadata> {
+  const slug = (await params).slug;
+  const isPreview = (await searchParams).apercu === "1";
+  if (isPreview) return { title: "Aperçu d’un bien immobilier", robots: { index: false, follow: false, noarchive: true } };
+
+  const property = await getPublishedProperty(slug).catch(() => null);
+  if (!property) return { title: "Bien immobilier", robots: { index: false, follow: false } };
+
+  const soldPrefix = property.status === "sold" ? "Vendu — " : "";
+  const title = property.seo_title || `${soldPrefix}${property.title} à ${property.city_name} | Les Jumelles Immo`;
+  const description = property.seo_description || (property.status === "sold"
+    ? `${property.title} à ${property.city_name}, vendu par Les Jumelles Immo. Vous avez un bien similaire ? Découvrez notre accompagnement vendeur.`
+    : property.short_description || `${property.title} à ${property.city_name}. Découvrez les photos, le prix et les caractéristiques de ce bien immobilier.`);
+  const path = `/biens/${property.slug}`;
+  const fallbackImage = createSocialImageUrl({ title: property.title, description, eyebrow: property.city_name });
+  const images = property.images.length
+    ? property.images.map((image) => ({ url: image.public_url, alt: image.alt_text || property.title }))
+    : [{ url: fallbackImage, width: 1200, height: 630, alt: property.title }];
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: property.seo_noindex ? { index: false, follow: false } : { index: true, follow: true },
+    openGraph: { type: "website", locale: "fr_FR", siteName: "Les Jumelles Immo", title, description, url: path, images },
+    twitter: { card: "summary_large_image", title, description, images: images.map((image) => image.url) },
+  };
+}
 
 export default async function PropertyPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ apercu?: string }> }) {
   const slug = (await params).slug;

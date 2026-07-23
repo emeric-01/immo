@@ -15,7 +15,9 @@ type SocialImageOptions = {
 };
 
 export function createSocialImageUrl({ title, description, eyebrow = "Les Jumelles Immo" }: SocialImageOptions) {
-  const params = new URLSearchParams({ title, eyebrow });
+  // Keep a version in the URL so social networks refresh their long-lived preview cache
+  // whenever the shared visual system changes.
+  const params = new URLSearchParams({ title, eyebrow, v: "20260723" });
 
   if (description) {
     params.set("description", description);

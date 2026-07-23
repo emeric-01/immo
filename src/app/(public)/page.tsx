@@ -30,6 +30,7 @@ export const metadata: Metadata = createPageMetadata({
   title: "Les Jumelles Immo | Estimer, vendre et acheter avec méthode",
   description: "Prix immobiliers locaux, estimation fiable et recherche accompagnée autour d'Aubagne, Cassis, Gémenos, Saint-Cyr-sur-Mer et Aix-en-Provence.",
   path: "/",
+  image: "/images/og/les-jumelles-immo.jpg",
 });
 
 const featuredSlugs = ["aix-en-provence", "aubagne", "gemenos", "cassis", "saint-cyr-sur-mer"];
