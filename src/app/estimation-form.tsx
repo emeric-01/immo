@@ -66,7 +66,7 @@ type LocationHint = {
 
 const surfaceMin = 9;
 const surfaceMax = 300;
-const defaultSurface = 75;
+const defaultSurface = 0;
 const agencyPhoneHref = "tel:+33619821984";
 const agencyPhoneLabel = "06 19 82 19 84";
 const roomOptions = ["1", "2", "3", "4", "5", "6"] as const;
@@ -85,7 +85,7 @@ const initialForm: FormState = {
   address: "",
   propertyType: "apartment",
   surfaceM2: String(defaultSurface),
-  rooms: "3",
+  rooms: "0",
   condition: "",
   dpe: "",
   bathrooms: "",
@@ -146,7 +146,7 @@ function optionalNumber(value: string): number | undefined {
 function clampSurface(value: string) {
   const surface = Number(value);
 
-  if (!Number.isFinite(surface)) {
+  if (!Number.isFinite(surface) || surface <= 0) {
     return defaultSurface;
   }
 
@@ -251,8 +251,9 @@ export function EstimationForm({
     ? `Entrez une adresse (ex : 12 rue de la Republique, ${locationHint.city})`
     : "Entrez une adresse (ex : 12 rue de la Paix, 75002 Paris)";
   const surfaceValue = clampSurface(form.surfaceM2);
-  const surfaceProgress =
-    ((surfaceValue - surfaceMin) / (surfaceMax - surfaceMin)) * 100;
+  const surfaceProgress = surfaceValue === 0
+    ? 0
+    : ((surfaceValue - surfaceMin) / (surfaceMax - surfaceMin)) * 100;
   const surfaceRangeStyle = {
     "--range-progress": `${surfaceProgress}%`,
   } as CSSProperties;
