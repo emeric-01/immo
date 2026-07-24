@@ -433,6 +433,9 @@ export function EstimationForm({
           city: selectedAddress?.cityName ?? "Secteur du bien",
           propertyType: form.propertyType,
           requestType: leadIntent,
+          firstName: formData.get("firstName"),
+          lastName: formData.get("lastName"),
+          email: formData.get("email"),
           phone: formData.get("phone"),
           consent: formData.get("consent"),
           website: formData.get("website"),
@@ -871,72 +874,41 @@ export function EstimationForm({
         <div className="result-layout">
           <section className="valuation-card result-valuation-hero" aria-labelledby="result-title">
             <div className="valuation-main">
-              <span className="result-source">Données de marché et ventes comparables</span>
+              <span className="result-source">Votre estimation immobilière</span>
               <p className="result-address">{estimation.addressLabel}</p>
-              <p className="valuation-kicker">Votre première fourchette</p>
-              <h1 id="result-title">Une estimation de marché, à affiner avec votre bien</h1>
+              <h1 id="result-title">Votre bien est estimé entre</h1>
               <div className="result-price-range" aria-label={`Entre ${currencyFormatter.format(estimation.lowPrice)} et ${currencyFormatter.format(estimation.highPrice)}`}>
                 <strong>{currencyFormatter.format(estimation.lowPrice)}</strong>
-                <span>à</span>
+                <span>—</span>
                 <strong>{currencyFormatter.format(estimation.highPrice)}</strong>
               </div>
-              <p className="result-range result-range-explanation">
-                Cette fourchette volontairement prudente donne un repère à partir des
-                transactions locales et des informations renseignées. Elle ne remplace pas
-                l&apos;analyse du bien, de son environnement et de son potentiel réel.
-              </p>
               <div className="valuation-scale" aria-label="Position du point central statistique dans la fourchette">
                 <div className="valuation-track">
                   <span className="valuation-fill" style={{ width: `${medianPosition}%` }} />
                   <span className="valuation-marker" style={{ left: `${medianPosition}%` }} />
                 </div>
-                <div><span>Fourchette basse</span><strong>Repère statistique {currencyFormatter.format(estimation.medianPrice)}</strong><span>Fourchette haute</span></div>
+                <div><span>Fourchette basse</span><strong>Repère central {currencyFormatter.format(estimation.medianPrice)}</strong><span>Fourchette haute</span></div>
               </div>
+              <p className="result-range result-range-explanation">Une première lecture fondée sur les caractéristiques renseignées, les prix du secteur et les ventes comparables disponibles.</p>
             </div>
-            <aside className="valuation-expert-panel">
-              <span className="expert-panel-kicker"><CheckCircle2 aria-hidden="true" /> Fourchette obtenue · prochaine étape</span>
-              <h2>Transformons ce repère en avis de valeur.</h2>
-              <p>
-                Nous reprenons les données, sélectionnons les comparables réellement pertinents
-                et intégrons ce qu&apos;un algorithme ne peut pas voir dans votre bien.
-              </p>
-              <ul className="expert-benefit-list">
-                <li><Check aria-hidden="true" /> Lecture du micro-secteur et des ventes comparables</li>
-                <li><Check aria-hidden="true" /> Analyse de l&apos;état, de la vue et des prestations</li>
-                <li><Check aria-hidden="true" /> Premier conseil de positionnement pour vendre</li>
-              </ul>
-              <div className="expert-primary-actions">
-                <a
-                  className="expert-main-action"
-                  href="#confier-mon-bien"
-                  onClick={() => setLeadIntent("detailed_study")}
-                >
-                  <FileSearch aria-hidden="true" />
-                  <span>
-                    <strong>Demander mon étude approfondie</strong>
-                    <small>Gratuite et sans engagement</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" />
-                </a>
-                <a
-                  className="expert-call-action"
-                  href={agencyPhoneHref}
-                >
-                  <PhoneCall aria-hidden="true" />
-                  <span>
-                    <small>Vous préférez échanger maintenant&nbsp;?</small>
-                    <strong>Appeler l&apos;agence · {agencyPhoneLabel}</strong>
-                  </span>
-                </a>
+            <aside className="valuation-expert-panel property-snapshot">
+              <span className="expert-panel-kicker">Le bien estimé</span>
+              <h2>{propertyLabel} de {numberFormatter.format(Number(form.surfaceM2))} m²</h2>
+              <div className="summary-chips">
+                {resultChips.slice(2).map((chip) => <span key={chip}>{chip}</span>)}
               </div>
-              <small className="expert-panel-reassurance">Un premier échange suffit pour comprendre votre projet et vous orienter.</small>
+              <div className="snapshot-proof">
+                <span><strong>{numberFormatter.format(estimation.pricePerM2)} €/m²</strong>Prix estimé du bien</span>
+                <span><strong>{estimation.confidenceScore}/5</strong>Fiabilité des données</span>
+                <span><strong>{estimation.comparables.length}</strong>Ventes comparables</span>
+              </div>
             </aside>
           </section>
 
           <section className="result-reading-grid summary-card" aria-labelledby="summary-title">
             <article className="result-card data-reading-card">
-              <span className="section-index">01 — CE QUE LES DONNÉES NOUS DISENT</span>
-              <h2 id="summary-title">Les repères disponibles aujourd&apos;hui</h2>
+              <span className="section-index">01 — VOTRE BIEN</span>
+              <h2 id="summary-title">Les informations prises en compte</h2>
               <div className="summary-chips">
                 {resultChips.map((chip) => (
                   <span key={chip}>{chip}</span>
@@ -951,8 +923,8 @@ export function EstimationForm({
             </article>
 
             <article className="result-card visit-reading-card">
-              <span className="section-index">02 — CE QUE LA VISITE DOIT RÉVÉLER</span>
-              <h2>Les critères qui font vraiment varier la valeur</h2>
+              <span className="section-index">02 — AU-DELÀ DES DONNÉES</span>
+              <h2>Ce qu&apos;une visite permet d&apos;affiner</h2>
               <div className="visit-factor-list">
                 <span><MapPin aria-hidden="true" /><strong>Adresse et micro-emplacement</strong></span>
                 <span><Eye aria-hidden="true" /><strong>Vue, lumière et nuisances</strong></span>
@@ -1004,12 +976,12 @@ export function EstimationForm({
 
           <aside className="result-side">
             <section className="result-card market-card" aria-labelledby="market-title">
-              <span className="section-index">01 — VOTRE MICRO-MARCHÉ</span>
+              <span className="section-index">03 — VOTRE MICRO-MARCHÉ</span>
               <h2 id="market-title">Le marché en un coup d&apos;œil</h2>
-              <p className="market-intro">Ce que les acheteurs voient aujourd&apos;hui autour de votre bien.</p>
+              <p className="market-intro">Cinq années de recul pour situer votre estimation dans son contexte local.</p>
               <div className="price-trend">
                 <div className="price-trend-heading">
-                  <span>Évolution sur 12 mois</span>
+                  <span>Évolution du prix au m² sur 5 ans</span>
                   <strong>
                     {market?.priceEvolution12Months !== undefined
                       ? `${market.priceEvolution12Months > 0 ? "+" : ""}${market.priceEvolution12Months} %`
@@ -1134,12 +1106,12 @@ export function EstimationForm({
 
           <section className="mandate-conversion" id="etude-approfondie" aria-labelledby="mandate-title">
             <div className="mandate-conversion-copy">
-              <span className="section-index">VOTRE ANALYSE APPROFONDIE</span>
-              <h2 id="mandate-title">Votre estimation mérite maintenant un regard professionnel.</h2>
+              <span className="section-index">04 — LA PROCHAINE ÉTAPE</span>
+              <h2 id="mandate-title">Donnez à cette estimation toute sa précision.</h2>
               <p>
-                Nous partons de cette fourchette pour produire un avis plus précis, comprendre
-                les qualités propres au bien et préparer, si vous souhaitez vendre, une stratégie
-                cohérente avec votre marché local.
+                Les données donnent un repère solide. Une visite révèle l&apos;état réel, la lumière,
+                la vue, les nuisances, la qualité des prestations et le potentiel que les chiffres
+                seuls ne peuvent pas mesurer.
               </p>
               <div className="mandate-benefits">
                 <span><FileSearch aria-hidden="true" /><strong>Comparables sélectionnés</strong>Les références vraiment pertinentes autour du bien</span>
@@ -1147,7 +1119,7 @@ export function EstimationForm({
                 <span><Ruler aria-hidden="true" /><strong>Potentiel vérifié</strong>Urbanisme, volumes, travaux et usages possibles</span>
                 <span><Handshake aria-hidden="true" /><strong>Conseil de mise en vente</strong>Prix de lancement, présentation et stratégie</span>
               </div>
-              <p className="mandate-signature">La donnée donne un repère. Le regard métier permet de défendre la valeur.</p>
+              <p className="mandate-signature">La donnée situe votre bien. Notre regard permet d&apos;en défendre la valeur.</p>
             </div>
 
             <aside className="mandate-lead-card" id="confier-mon-bien">
@@ -1192,14 +1164,15 @@ export function EstimationForm({
                 </div>
               ) : (
                 <form className="mandate-lead-form" onSubmit={handleLeadSubmit}>
-                  <label>
-                    <span>Bien concerné</span>
-                    <input readOnly value={`${propertyLabel} · ${estimation.addressLabel}`} />
-                  </label>
-                  <label>
-                    <span>Votre téléphone</span>
-                    <input autoComplete="tel" inputMode="tel" name="phone" placeholder="06 12 34 56 78" required type="tel" />
-                  </label>
+                  <label className="lead-property-field"><span>Bien concerné</span><input readOnly value={`${propertyLabel} · ${estimation.addressLabel}`} /></label>
+                  <div className="lead-name-grid">
+                    <label><span>Prénom</span><input autoComplete="given-name" name="firstName" required /></label>
+                    <label><span>Nom</span><input autoComplete="family-name" name="lastName" required /></label>
+                  </div>
+                  <div className="lead-name-grid">
+                    <label><span>E-mail</span><input autoComplete="email" inputMode="email" name="email" placeholder="vous@exemple.fr" required type="email" /></label>
+                    <label><span>Téléphone</span><input autoComplete="tel" inputMode="tel" name="phone" placeholder="06 12 34 56 78" required type="tel" /></label>
+                  </div>
                   <label className="mandate-honeypot" aria-hidden="true">
                     <span>Ne pas remplir</span>
                     <input autoComplete="off" name="website" tabIndex={-1} />

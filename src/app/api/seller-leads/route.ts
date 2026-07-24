@@ -11,6 +11,9 @@ type SellerLeadPayload = {
   estimatedMedianPrice?: unknown;
   estimatedPricePerM2?: unknown;
   estimationId?: unknown;
+  email?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
   phone?: unknown;
   propertyType?: unknown;
   requestType?: unknown;
@@ -49,6 +52,9 @@ export async function POST(request: Request) {
     const address = typeof payload.address === "string" ? payload.address.trim() : "";
     const city = typeof payload.city === "string" ? payload.city.trim() : "";
     const phone = typeof payload.phone === "string" ? payload.phone.trim() : "";
+    const email = typeof payload.email === "string" ? payload.email.trim() : "";
+    const firstName = readShortString(payload.firstName, 80);
+    const lastName = readShortString(payload.lastName, 80);
     const propertyType = typeof payload.propertyType === "string" ? payload.propertyType : "";
     const requestType = typeof payload.requestType === "string" ? payload.requestType : "detailed_study";
 
@@ -56,6 +62,9 @@ export async function POST(request: Request) {
       address.length < 5 ||
       city.length < 2 ||
       !phonePattern.test(phone) ||
+      !/^\S+@\S+\.\S+$/.test(email) ||
+      !firstName ||
+      !lastName ||
       !propertyTypes.has(propertyType) ||
       !requestTypes.has(requestType) ||
       payload.consent !== "accepted"
@@ -75,6 +84,9 @@ export async function POST(request: Request) {
       estimatedMedianPrice: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
       estimatedPricePerM2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
       estimationId: readShortString(payload.estimationId),
+      email,
+      firstName,
+      lastName,
       phone,
       propertyType,
       requestType,

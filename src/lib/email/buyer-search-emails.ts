@@ -219,6 +219,9 @@ export async function sendSellerLeadNotificationEmail({
   estimatedMedianPrice,
   estimatedPricePerM2,
   estimationId,
+  email,
+  firstName,
+  lastName,
   phone,
   propertyType,
   requestType,
@@ -233,6 +236,9 @@ export async function sendSellerLeadNotificationEmail({
   estimatedMedianPrice?: number;
   estimatedPricePerM2?: number;
   estimationId?: string;
+  email: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   propertyType: string;
   requestType: string;
@@ -299,6 +305,8 @@ export async function sendSellerLeadNotificationEmail({
         <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">${escapeHtml(requestIntro)}</p>
         <div style="border:1px solid #e8e0d8;border-radius:8px;padding:16px;margin:18px 0;color:#555f70;line-height:1.8;">
           <strong style="color:#111;">Demande :</strong> ${escapeHtml(requestLabel)}<br />
+          <strong style="color:#111;">Contact :</strong> ${escapeHtml(firstName)} ${escapeHtml(lastName)}<br />
+          <strong style="color:#111;">E-mail :</strong> <a href="mailto:${escapeHtml(email)}" style="color:#9f5d33;">${escapeHtml(email)}</a><br />
           <strong style="color:#111;">Type de bien :</strong> ${escapeHtml(propertyLabel)}<br />
           <strong style="color:#111;">Adresse :</strong> ${escapeHtml(address)}<br />
           <strong style="color:#111;">Secteur :</strong> ${escapeHtml(city)}<br />
@@ -313,7 +321,7 @@ export async function sendSellerLeadNotificationEmail({
       `,
     ),
     subject: `🔔 ${requestLabel} — ${city}`,
-    text: `${requestLabel}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}${estimationText ? `\n\nEstimation consultée\n${estimationText}` : ""}`,
+    text: `${requestLabel}\nContact : ${firstName} ${lastName}\nE-mail : ${email}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}${estimationText ? `\n\nEstimation consultée\n${estimationText}` : ""}`,
     to: recipient,
   });
 }
