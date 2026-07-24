@@ -44,6 +44,11 @@ export type PropertyEstimation = {
       period: string;
       value: number;
     }>;
+    cityPriceHistory?: Array<{
+      period: string;
+      apartment: number;
+      house: number;
+    }>;
     saleDurationDays?: number;
     supplyLevel?: "Faible" | "Modere" | "Eleve";
     demandLevel?: "Faible" | "Bonne demande" | "Forte demande";

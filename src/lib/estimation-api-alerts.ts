@@ -14,7 +14,13 @@ type UsageCounter = {
 
 export async function recordEstimationApiUsage(request: Request) {
   try {
-    const ipHash = hashClientIp(getClientIp(request));
+    const clientIp = getClientIp(request);
+
+    if (isMonitoringExcludedIp(clientIp)) {
+      return;
+    }
+
+    const ipHash = hashClientIp(clientIp);
     const counters = await clientSupabaseRequest<UsageCounter[]>(
       "rpc/record_estimation_api_usage",
       {
@@ -38,6 +44,15 @@ export async function recordEstimationApiUsage(request: Request) {
     // Monitoring must never prevent a legitimate estimation.
     console.error("Estimation API monitoring failed", error);
   }
+}
+
+function isMonitoringExcludedIp(ipAddress: string) {
+  const excludedIps = process.env.ESTIMATION_MONITORING_EXCLUDED_IPS
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean) ?? [];
+
+  return excludedIps.includes(ipAddress);
 }
 
 function getClientIp(request: Request) {

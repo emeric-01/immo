@@ -28,6 +28,7 @@ import type {
   RealtyType,
 } from "@/lib/immo-data";
 import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
+import { CityMarketChart } from "@/app/(public)/prix-immobilier/[city]/city-market-chart";
 
 type FormState = {
   address: string;
@@ -912,6 +913,14 @@ export function EstimationForm({
                 <span><strong>{estimation.confidenceScore}/5</strong>Fiabilité des données</span>
                 <span><strong>{estimation.comparables.length}</strong>Ventes comparables</span>
               </div>
+              <div className="snapshot-actions">
+                <a href="#confier-mon-bien" onClick={() => setLeadIntent("human_estimate")}>
+                  Prendre rendez-vous <ArrowRight aria-hidden="true" />
+                </a>
+                <a href="#confier-mon-bien" onClick={() => setLeadIntent("detailed_study")}>
+                  Recevoir l&apos;étude approfondie
+                </a>
+              </div>
             </aside>
           </section>
 
@@ -998,7 +1007,14 @@ export function EstimationForm({
                       : "Indisponible"}
                   </strong>
                 </div>
-                {trendPath ? (
+                {market?.cityPriceHistory?.length ? (
+                  <CityMarketChart
+                    averagePrice={sectorPrice ?? estimation.pricePerM2}
+                    cityName={selectedAddress?.cityName ?? "du secteur"}
+                    defaultPeriod="5y"
+                    points={market.cityPriceHistory}
+                  />
+                ) : trendPath ? (
                   <svg
                     aria-label="Courbe d'evolution des prix"
                     className="price-trend-chart"
@@ -1011,7 +1027,7 @@ export function EstimationForm({
                 ) : (
                   <p className="empty-small">Historique indisponible sur ce secteur.</p>
                 )}
-                {firstTrendPoint && lastTrendPoint ? (
+                {!market?.cityPriceHistory?.length && firstTrendPoint && lastTrendPoint ? (
                   <div className="price-trend-footer">
                     <span>{firstTrendPoint.period}</span>
                     <span>{numberFormatter.format(lastTrendPoint.value)} EUR/m2</span>

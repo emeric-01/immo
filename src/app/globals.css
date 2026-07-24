@@ -7350,8 +7350,8 @@ button:focus-visible {
 .estimation-page .comparables-card { grid-column: 1 / -1; }
 .estimation-page .result-valuation-hero { order: 1; grid-template-columns: minmax(0,1.45fr) minmax(310px,.72fr); border: 1px solid #e3d8cd; background: #fffdfa; color: #171612; }
 .estimation-page .result-reading-grid { order: 2; }
-.estimation-page .result-side { order: 3; display: block; }
-.estimation-page .mandate-conversion { order: 4; }
+.estimation-page .mandate-conversion { order: 3; }
+.estimation-page .result-side { order: 4; display: block; }
 .estimation-page .comparables-card { order: 5; }
 .estimation-page .result-privacy { order: 6; }
 .estimation-page .meaning-card,
@@ -7370,6 +7370,10 @@ button:focus-visible {
 .estimation-page .result-valuation-hero .valuation-scale > div:last-child strong { color: #171612; }
 .estimation-page .property-snapshot { margin: 16px; background: #f7f1ea; color: #171612; }
 .estimation-page .property-snapshot h2 { color: #171612; }
+.estimation-page .snapshot-actions { display: grid; gap: 9px; margin-top: auto; padding-top: 18px; }
+.estimation-page .snapshot-actions a { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 10px; border: 1px solid #cfa98e; border-radius: 8px; color: #171612; font-size: .76rem; font-weight: 800; text-align: center; text-decoration: none; }
+.estimation-page .snapshot-actions a:first-child { border-color: #171612; background: #171612; color: #fff; }
+.estimation-page .snapshot-actions svg { width: 17px; height: 17px; }
 .estimation-page .result-reading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .estimation-page .market-card { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(390px,.75fr); gap: 10px 34px; padding: clamp(28px,4vw,48px); }
 .estimation-page .market-card > .section-index,
@@ -7377,6 +7381,9 @@ button:focus-visible {
 .estimation-page .market-card > .market-intro { grid-column: 1 / -1; }
 .estimation-page .market-card .price-trend { grid-column: 1; grid-row: 4 / span 3; margin: 0; }
 .estimation-page .market-card .price-trend-chart { height: 180px; }
+.estimation-page .market-card .city-interactive-chart { min-height: 0; padding: 0; background: transparent; }
+.estimation-page .market-card .city-interactive-chart .city-chart-controls { margin-bottom: 4px; }
+.estimation-page .market-card .city-interactive-chart .city-chart-controls > span { display: block; }
 .estimation-page .market-card .market-grid { grid-column: 2; grid-row: 4; grid-template-columns: 1fr; }
 .estimation-page .market-card .market-verdict { grid-column: 2; grid-row: 5; }
 .estimation-page .mandate-conversion { grid-template-columns: minmax(0,.9fr) minmax(440px,1.1fr); border: 1px solid #e1d4c7; background: #f4ebe2; color: #171612; }
