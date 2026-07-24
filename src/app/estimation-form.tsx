@@ -447,6 +447,15 @@ export function EstimationForm({
           confidenceScore: estimation?.confidenceScore,
           surfaceM2: Number(form.surfaceM2),
           rooms: Number(form.rooms),
+          estimationInput: {
+            address: form.address.trim(),
+            propertyType: form.propertyType,
+            surfaceM2: Number(form.surfaceM2),
+            rooms: Number(form.rooms),
+            condition: form.condition || undefined,
+            selectedAddress: selectedAddress ?? undefined,
+          },
+          estimationResult: estimation,
         }),
       });
       const result = (await response.json()) as { error?: string };
@@ -866,7 +875,7 @@ export function EstimationForm({
             <span>Cette estimation est enregistrée dans votre espace client.</span>
           ) : (
             <span>
-              <Link href="/client/login">Connectez-vous à votre espace client</Link> avant une prochaine estimation pour la conserver.
+              <Link href="/client/login">Enregistrez cette estimation dans votre espace client</Link> pour la retrouver et suivre votre projet.
             </span>
           )}
         </div>
@@ -1181,6 +1190,7 @@ export function EstimationForm({
                     <input name="consent" required type="checkbox" value="accepted" />
                     <span>J&apos;accepte d&apos;être recontacté au sujet de mon projet immobilier.</span>
                   </label>
+                  <p className="lead-account-note"><LockKeyhole aria-hidden="true" /> Votre demande crée ou rattache automatiquement votre espace client afin d&apos;y conserver cette estimation.</p>
                   <button disabled={leadState === "loading"} type="submit">
                     {leadState === "loading" ? <LoaderCircle className="mandate-spinner" aria-hidden="true" /> : null}
                     {leadIntent === "human_estimate"

@@ -2712,6 +2712,458 @@ button:focus-visible {
   }
 }
 
+/* Estimation — restitution éditoriale 2026 */
+.estimation-page .result-page {
+  width: min(1220px, 100%);
+  padding-top: 20px;
+}
+
+.estimation-page .result-topbar {
+  margin-bottom: 10px;
+}
+
+.estimation-page .result-layout {
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+.estimation-page .result-valuation-hero,
+.estimation-page .result-reading-grid,
+.estimation-page .result-side,
+.estimation-page .mandate-conversion,
+.estimation-page .comparables-card {
+  grid-column: 1 / -1;
+}
+
+.estimation-page .result-valuation-hero { order: 1; }
+.estimation-page .result-reading-grid { order: 2; }
+.estimation-page .result-side { order: 3; }
+.estimation-page .mandate-conversion { order: 4; }
+.estimation-page .comparables-card { order: 5; }
+.estimation-page .result-privacy { order: 6; }
+
+.estimation-page .meaning-card,
+.estimation-page .result-case-section,
+.estimation-page .result-content-section {
+  display: none;
+}
+
+.estimation-page .result-valuation-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(310px, 0.72fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #e3d8cd;
+  border-radius: 16px;
+  background: #fffdfa;
+  padding: 0;
+  color: #171612;
+  box-shadow: 0 22px 60px rgba(55, 39, 26, 0.07);
+}
+
+.estimation-page .result-valuation-hero .valuation-main {
+  min-height: 430px;
+  align-content: center;
+  gap: 9px;
+  padding: clamp(36px, 5vw, 68px);
+}
+
+.estimation-page .result-valuation-hero .result-source {
+  background: transparent;
+  padding: 0;
+  color: #b6673d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.estimation-page .result-valuation-hero .result-address {
+  margin: 2px 0 12px;
+  color: #6e675f;
+  font-size: 0.82rem;
+}
+
+.estimation-page .result-valuation-hero h1 {
+  max-width: none;
+  margin: 0;
+  color: #171612;
+  font-size: clamp(2rem, 3.2vw, 3.7rem);
+  line-height: 1.02;
+}
+
+.estimation-page .result-price-range {
+  flex-wrap: nowrap;
+  gap: 14px;
+  margin: 14px 0 8px;
+}
+
+.estimation-page .result-price-range strong {
+  color: #b9663c;
+  font-size: clamp(2.45rem, 4.1vw, 4.55rem);
+  white-space: nowrap;
+}
+
+.estimation-page .result-price-range span {
+  color: #b9a99b;
+  font-size: 1.6rem;
+}
+
+.estimation-page .result-valuation-hero .valuation-scale {
+  max-width: 720px;
+  margin-top: 18px;
+}
+
+.estimation-page .result-valuation-hero .valuation-track {
+  height: 4px;
+  background: #e8e0d8;
+}
+
+.estimation-page .result-valuation-hero .valuation-fill {
+  background: #bd754b;
+}
+
+.estimation-page .result-valuation-hero .valuation-marker {
+  border-color: #fffdfa;
+  background: #171612;
+  box-shadow: 0 0 0 1px #171612;
+}
+
+.estimation-page .result-valuation-hero .valuation-scale > div:last-child {
+  color: #8a8179;
+}
+
+.estimation-page .result-valuation-hero .valuation-scale > div:last-child strong {
+  color: #171612;
+}
+
+.estimation-page .result-valuation-hero .result-range-explanation {
+  max-width: 710px;
+  margin: 16px 0 0;
+  color: #716961;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.estimation-page .property-snapshot {
+  align-content: center;
+  gap: 17px;
+  margin: 16px;
+  border: 1px solid #eadfd5;
+  border-radius: 12px;
+  background: #f7f1ea;
+  padding: clamp(24px, 3vw, 38px);
+}
+
+.estimation-page .property-snapshot h2 {
+  margin: 0;
+  color: #171612;
+  font-size: clamp(1.55rem, 2.4vw, 2.35rem);
+}
+
+.property-snapshot .summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.property-snapshot .summary-chips span {
+  border: 1px solid #dfd3c8;
+  border-radius: 999px;
+  background: rgba(255,255,255,.7);
+  padding: 7px 10px;
+  color: #4d4741;
+  font-size: 0.68rem;
+}
+
+.snapshot-proof {
+  display: grid;
+  margin-top: 4px;
+  border-top: 1px solid #dfd3c8;
+}
+
+.snapshot-proof span {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #dfd3c8;
+  padding: 14px 0;
+  color: #786f67;
+  font-size: 0.68rem;
+}
+
+.snapshot-proof strong {
+  grid-column: 2;
+  grid-row: 1;
+  color: #171612;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.estimation-page .result-reading-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.estimation-page .result-reading-grid .result-card {
+  min-height: 300px;
+  border-color: #e6ddd5;
+  box-shadow: none;
+}
+
+.estimation-page .result-side {
+  display: block;
+}
+
+.estimation-page .market-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(390px, 0.75fr);
+  gap: 10px 34px;
+  min-height: 390px;
+  border: 1px solid #e3d8cd;
+  border-radius: 14px;
+  background: #fffdfa;
+  padding: clamp(28px, 4vw, 48px);
+  box-shadow: none;
+}
+
+.estimation-page .market-card > .section-index,
+.estimation-page .market-card > h2,
+.estimation-page .market-card > .market-intro {
+  grid-column: 1 / -1;
+}
+
+.estimation-page .market-card > h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 3rem);
+}
+
+.estimation-page .market-card .price-trend {
+  grid-column: 1;
+  grid-row: 4 / span 3;
+  margin: 0;
+  border: 1px solid #ebe2da;
+  background: #ffffff;
+  padding: 20px;
+}
+
+.estimation-page .market-card .price-trend-chart {
+  height: 180px;
+}
+
+.estimation-page .market-card .market-grid {
+  grid-column: 2;
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.estimation-page .market-card .market-grid article {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 68px;
+  border-top: 1px solid #e9e0d8;
+  padding: 12px 0;
+}
+
+.estimation-page .market-card .market-grid article strong {
+  text-align: right;
+}
+
+.estimation-page .market-card .market-verdict {
+  grid-column: 2;
+  grid-row: 5;
+  margin: 12px 0 0;
+}
+
+.estimation-page .mandate-conversion {
+  grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr);
+  gap: clamp(28px, 5vw, 62px);
+  border: 1px solid #e1d4c7;
+  border-radius: 16px;
+  background: #f4ebe2;
+  padding: clamp(34px, 5vw, 64px);
+  color: #171612;
+  box-shadow: 0 20px 55px rgba(75, 48, 28, 0.08);
+}
+
+.estimation-page .mandate-conversion .section-index {
+  color: #ae6239 !important;
+}
+
+.estimation-page .mandate-conversion-copy h2 {
+  color: #171612;
+  font-size: clamp(2.2rem, 3.7vw, 4rem);
+}
+
+.estimation-page .mandate-conversion-copy > p:not(.mandate-signature) {
+  color: #675f58;
+}
+
+.estimation-page .mandate-benefits {
+  border-color: #d9c8b8;
+}
+
+.estimation-page .mandate-benefits span,
+.estimation-page .mandate-benefits span:nth-child(odd) {
+  border-color: #d9c8b8;
+  color: #786f67;
+}
+
+.estimation-page .mandate-benefits strong,
+.estimation-page .mandate-signature {
+  color: #171612;
+}
+
+.estimation-page .mandate-benefits svg {
+  color: #b9663c;
+}
+
+.estimation-page .mandate-lead-card {
+  border: 1px solid #e0d5cb;
+  box-shadow: 0 16px 42px rgba(55, 38, 24, 0.08);
+}
+
+.lead-name-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lead-account-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  border-radius: 7px;
+  background: #f7f2ed;
+  padding: 10px 11px;
+  color: #70675f;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.lead-account-note svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: #b9663c;
+}
+
+.estimation-page .comparables-card {
+  border: 1px solid #e6ddd5;
+  box-shadow: none;
+}
+
+@media (max-width: 980px) {
+  .estimation-page .result-valuation-hero,
+  .estimation-page .market-card,
+  .estimation-page .mandate-conversion {
+    grid-template-columns: 1fr;
+  }
+
+  .estimation-page .market-card .price-trend,
+  .estimation-page .market-card .market-grid,
+  .estimation-page .market-card .market-verdict {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .estimation-page .result-page {
+    padding: 10px 14px 98px;
+  }
+
+  .estimation-page .result-status,
+  .estimation-page .result-account-note {
+    font-size: 0.68rem;
+  }
+
+  .estimation-page .result-reading-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .estimation-page .result-valuation-hero .valuation-main {
+    min-height: 0;
+    padding: 28px 20px 24px;
+  }
+
+  .estimation-page .result-valuation-hero h1 {
+    font-size: 2rem;
+  }
+
+  .estimation-page .result-price-range {
+    display: grid;
+    gap: 0;
+  }
+
+  .estimation-page .result-price-range strong {
+    font-size: clamp(2.5rem, 13vw, 3.45rem);
+  }
+
+  .estimation-page .result-price-range span {
+    height: 12px;
+    font-size: 0;
+  }
+
+  .estimation-page .result-price-range span::after {
+    content: "à";
+    display: block;
+    color: #a59a90;
+    font-size: 0.85rem;
+  }
+
+  .estimation-page .result-valuation-hero .valuation-scale > div:last-child {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .estimation-page .result-valuation-hero .valuation-scale > div:last-child strong {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: left;
+  }
+
+  .estimation-page .property-snapshot {
+    margin: 0 10px 10px;
+    padding: 22px 18px;
+  }
+
+  .estimation-page .result-reading-grid .result-card {
+    min-height: 0;
+    padding: 24px 19px;
+  }
+
+  .estimation-page .market-card {
+    min-height: 0;
+    padding: 26px 18px;
+  }
+
+  .estimation-page .market-card .price-trend-chart {
+    height: 135px;
+  }
+
+  .estimation-page .mandate-conversion {
+    padding: 30px 18px;
+  }
+
+  .estimation-page .mandate-conversion-copy h2 {
+    font-size: 2.45rem;
+  }
+
+  .lead-name-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .estimation-page .comparables-card {
+    padding: 22px 18px;
+  }
+}
+
 /* Page ville — composition finale issue de la maquette validée */
 .city-price-modern {
   background: #fbfaf8;
@@ -6887,4 +7339,72 @@ button:focus-visible {
   .city-market-range-values {
     align-items: flex-start;
   }
+}
+
+/* Keep the final estimation composition last in the cascade. */
+.estimation-page .result-layout { grid-template-columns: 1fr; gap: 22px; }
+.estimation-page .result-valuation-hero,
+.estimation-page .result-reading-grid,
+.estimation-page .result-side,
+.estimation-page .mandate-conversion,
+.estimation-page .comparables-card { grid-column: 1 / -1; }
+.estimation-page .result-valuation-hero { order: 1; grid-template-columns: minmax(0,1.45fr) minmax(310px,.72fr); border: 1px solid #e3d8cd; background: #fffdfa; color: #171612; }
+.estimation-page .result-reading-grid { order: 2; }
+.estimation-page .result-side { order: 3; display: block; }
+.estimation-page .mandate-conversion { order: 4; }
+.estimation-page .comparables-card { order: 5; }
+.estimation-page .result-privacy { order: 6; }
+.estimation-page .meaning-card,
+.estimation-page .result-case-section,
+.estimation-page .result-content-section { display: none; }
+.estimation-page .result-valuation-hero .valuation-main { min-height: 430px; padding: clamp(36px,5vw,68px); }
+.estimation-page .result-valuation-hero .result-source { background: transparent; padding: 0; color: #b6673d; }
+.estimation-page .result-valuation-hero .result-address { color: #6e675f; }
+.estimation-page .result-valuation-hero h1 { color: #171612; font-size: clamp(2rem,3.2vw,3.7rem); }
+.estimation-page .result-price-range strong { color: #b9663c; font-size: clamp(2.45rem,4.1vw,4.55rem); }
+.estimation-page .result-price-range span { color: #b9a99b; }
+.estimation-page .result-valuation-hero .result-range-explanation { color: #716961; }
+.estimation-page .result-valuation-hero .valuation-track { background: #e8e0d8; }
+.estimation-page .result-valuation-hero .valuation-marker { border-color: #fffdfa; background: #171612; box-shadow: 0 0 0 1px #171612; }
+.estimation-page .result-valuation-hero .valuation-scale > div:last-child { color: #8a8179; }
+.estimation-page .result-valuation-hero .valuation-scale > div:last-child strong { color: #171612; }
+.estimation-page .property-snapshot { margin: 16px; background: #f7f1ea; color: #171612; }
+.estimation-page .property-snapshot h2 { color: #171612; }
+.estimation-page .result-reading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.estimation-page .market-card { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(390px,.75fr); gap: 10px 34px; padding: clamp(28px,4vw,48px); }
+.estimation-page .market-card > .section-index,
+.estimation-page .market-card > h2,
+.estimation-page .market-card > .market-intro { grid-column: 1 / -1; }
+.estimation-page .market-card .price-trend { grid-column: 1; grid-row: 4 / span 3; margin: 0; }
+.estimation-page .market-card .price-trend-chart { height: 180px; }
+.estimation-page .market-card .market-grid { grid-column: 2; grid-row: 4; grid-template-columns: 1fr; }
+.estimation-page .market-card .market-verdict { grid-column: 2; grid-row: 5; }
+.estimation-page .mandate-conversion { grid-template-columns: minmax(0,.9fr) minmax(440px,1.1fr); border: 1px solid #e1d4c7; background: #f4ebe2; color: #171612; }
+.estimation-page .mandate-conversion .section-index { color: #ae6239 !important; }
+.estimation-page .mandate-conversion-copy h2,
+.estimation-page .mandate-benefits strong,
+.estimation-page .mandate-signature { color: #171612; }
+.estimation-page .mandate-conversion-copy > p:not(.mandate-signature),
+.estimation-page .mandate-benefits span { color: #675f58; }
+.estimation-page .mandate-benefits,
+.estimation-page .mandate-benefits span,
+.estimation-page .mandate-benefits span:nth-child(odd) { border-color: #d9c8b8; }
+.estimation-page .mandate-benefits svg { color: #b9663c; }
+
+@media (max-width: 980px) {
+  .estimation-page .result-valuation-hero,
+  .estimation-page .market-card,
+  .estimation-page .mandate-conversion { grid-template-columns: 1fr; }
+  .estimation-page .market-card .price-trend,
+  .estimation-page .market-card .market-grid,
+  .estimation-page .market-card .market-verdict { grid-column: 1; grid-row: auto; }
+}
+
+@media (max-width: 700px) {
+  .estimation-page .result-reading-grid { grid-template-columns: 1fr; }
+  .estimation-page .result-valuation-hero .valuation-main { min-height: 0; padding: 28px 20px 24px; }
+  .estimation-page .result-valuation-hero .result-price-range { display: grid; }
+  .estimation-page .property-snapshot { margin: 0 10px 10px; }
+  .estimation-page .market-card .price-trend-chart { height: 135px; }
+  .lead-name-grid { grid-template-columns: 1fr; }
 }

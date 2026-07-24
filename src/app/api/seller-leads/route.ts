@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendSellerLeadNotificationEmail } from "@/lib/email/buyer-search-emails";
+import { clientSupabaseRequest } from "@/lib/client-access/supabase";
 
 type SellerLeadPayload = {
   address?: unknown;
@@ -20,6 +21,8 @@ type SellerLeadPayload = {
   rooms?: unknown;
   surfaceM2?: unknown;
   website?: unknown;
+  estimationInput?: unknown;
+  estimationResult?: unknown;
 };
 
 const propertyTypes = new Set(["house", "apartment", "land", "other"]);
@@ -39,6 +42,80 @@ function readShortString(value: unknown, maximumLength = 120) {
 
   const normalized = value.trim();
   return normalized && normalized.length <= maximumLength ? normalized : undefined;
+}
+
+async function saveLeadAccountAndEstimation({
+  email,
+  firstName,
+  lastName,
+  phone,
+  payload,
+}: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  payload: SellerLeadPayload;
+}) {
+  const normalizedEmail = email.toLowerCase();
+  const existing = await clientSupabaseRequest<Array<{ id: string }>>(
+    `client_accounts?email=eq.${encodeURIComponent(normalizedEmail)}&select=id&limit=1`,
+  );
+  let accountId = existing[0]?.id;
+
+  if (accountId) {
+    await clientSupabaseRequest(`client_accounts?id=eq.${encodeURIComponent(accountId)}`, {
+      body: JSON.stringify({ first_name: firstName, last_name: lastName, phone }),
+      method: "PATCH",
+    });
+  } else {
+    const created = await clientSupabaseRequest<Array<{ id: string }>>(
+      "client_accounts?select=id",
+      {
+        body: JSON.stringify({
+          access_enabled: true,
+          email: normalizedEmail,
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          preferred_channel: "email",
+        }),
+        headers: { Prefer: "return=representation" },
+        method: "POST",
+      },
+    );
+    accountId = created[0]?.id;
+  }
+
+  if (!accountId || payload.estimationId || !payload.estimationInput || !payload.estimationResult) {
+    return;
+  }
+
+  const input = payload.estimationInput as Record<string, unknown>;
+  const result = payload.estimationResult as Record<string, unknown>;
+  const selectedAddress = input.selectedAddress as Record<string, unknown> | undefined;
+  const postCodes = selectedAddress?.postCode;
+
+  await clientSupabaseRequest("property_estimations", {
+    body: JSON.stringify({
+      address_label: readShortString(result.addressLabel, 250) || readShortString(payload.address, 250),
+      city_name: readShortString(payload.city, 120),
+      client_account_id: accountId,
+      confidence_score: readPositiveNumber(payload.confidenceScore, 5),
+      high_price: readPositiveNumber(payload.estimatedHighPrice, 100_000_000),
+      input_payload: input,
+      low_price: readPositiveNumber(payload.estimatedLowPrice, 100_000_000),
+      median_price: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
+      postal_code: Array.isArray(postCodes) ? readShortString(postCodes[0], 12) : undefined,
+      price_per_m2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
+      property_type: payload.propertyType,
+      result_payload: result,
+      rooms: readPositiveNumber(payload.rooms, 100),
+      source: readShortString(result.source, 120) || "Immo Data",
+      surface_m2: readPositiveNumber(payload.surfaceM2, 100_000),
+    }),
+    method: "POST",
+  });
 }
 
 export async function POST(request: Request) {
@@ -74,6 +151,8 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    await saveLeadAccountAndEstimation({ email, firstName, lastName, phone, payload });
 
     await sendSellerLeadNotificationEmail({
       address,
