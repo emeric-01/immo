@@ -66,8 +66,8 @@ export function BuyerSearchConfirmation() {
                 <header className={styles.confirmationScoreIntro}>
                   <Info size={20} aria-hidden="true" />
                   <div>
-                    <h2>Ce que le marché indique</h2>
-                    <p>Nous comparons simplement votre budget et vos critères aux prix observés sur le marché immobilier local.</p>
+                    <h2>Votre recherche face au marché</h2>
+                    <p>Un repère simple pour voir où votre budget correspond le mieux aux prix observés.</p>
                   </div>
                 </header>
                 <MarketScoreCard

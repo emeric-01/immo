@@ -109,10 +109,32 @@ export async function analyzeBuyerSearchMarket(
     ),
   };
   const score = bestMatch.score;
+  const combinations = candidates
+    .map<BuyerSearchMarketCombination>((marketCandidate) => {
+      const isBestMatch =
+        marketCandidate.city.cityCode === candidate.city.cityCode &&
+        marketCandidate.city.name === candidate.city.name &&
+        marketCandidate.propertyType === candidate.propertyType;
+
+      if (isBestMatch) {
+        return bestMatch;
+      }
+
+      return {
+        cityCode: marketCandidate.city.cityCode,
+        cityName: marketCandidate.city.name,
+        comparableTransactions: 0,
+        gapPercent: marketCandidate.gapPercent,
+        marketPricePerM2: marketCandidate.marketPricePerM2,
+        propertyType: marketCandidate.propertyType,
+        score: marketCandidate.preliminaryScore,
+      };
+    })
+    .sort((left, right) => right.gapPercent - left.gapPercent);
 
   return {
     bestMatch,
-    combinations: [bestMatch],
+    combinations,
     computedAt: new Date().toISOString(),
     factors: buildFactors(data, bestMatch),
     label: marketScoreLabel(score),

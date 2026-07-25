@@ -149,7 +149,7 @@ describe("buyer search market score", () => {
     expect(transactionUrl).toContain("minRoom=4");
   });
 
-  it("only queries comparable transactions for the most affordable city", async () => {
+  it("keeps every city for comparison and only queries transactions for the strongest match", async () => {
     vi.stubEnv("IMMO_DATA_API_KEY", "test-token");
     vi.stubEnv("IMMO_DATA_BASE_URL", "https://api.example.test");
 
@@ -196,6 +196,10 @@ describe("buyer search market score", () => {
     );
 
     expect(result?.bestMatch.cityName).toBe("Aubagne");
+    expect(result?.combinations.map((combination) => combination.cityName)).toEqual([
+      "Aubagne",
+      "Marseille",
+    ]);
     expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(transactionCalls).toHaveLength(1);
     expect(String(transactionCalls[0][0])).toContain("latitude=43.2928");

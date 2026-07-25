@@ -49,10 +49,35 @@ describe("MarketScoreCard", () => {
   it("presents a market position without displaying a numeric score", () => {
     render(<MarketScoreCard score={score} />);
 
-    expect(screen.getByText("Votre recherche paraît réaliste")).toBeInTheDocument();
+    expect(screen.getByText("Votre projet semble bien engagé")).toBeInTheDocument();
     expect(screen.getByText("Recherche cohérente")).toBeInTheDocument();
     expect(screen.queryByText("68")).not.toBeInTheDocument();
     expect(screen.queryByText("/100")).not.toBeInTheDocument();
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "Recherche cohérente");
+  });
+
+  it("ranks distinct selected sectors without exposing technical scores", () => {
+    const multiSectorScore: BuyerSearchMarketScore = {
+      ...score,
+      combinations: [
+        score.bestMatch,
+        {
+          cityCode: "13055",
+          cityName: "Marseille",
+          comparableTransactions: 0,
+          gapPercent: -22,
+          marketPricePerM2: 5_100,
+          propertyType: "apartment",
+          score: 42,
+        },
+      ],
+    };
+
+    render(<MarketScoreCard score={multiSectorScore} />);
+
+    expect(screen.getByText("Où votre recherche semble la plus accessible ?")).toBeInTheDocument();
+    expect(screen.getByText("Quelques compromis à prévoir")).toBeInTheDocument();
+    expect(screen.getByText("Secteur plus difficile")).toBeInTheDocument();
+    expect(screen.queryByText("42")).not.toBeInTheDocument();
   });
 });

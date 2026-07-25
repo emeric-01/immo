@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  ArrowUpRight,
   BarChart3,
   CheckCircle2,
   Info,
@@ -8,7 +9,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-import type { BuyerSearchMarketFactorTone, BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
+import type {
+  BuyerSearchMarketCombination,
+  BuyerSearchMarketFactorTone,
+  BuyerSearchMarketScore,
+} from "@/lib/buyer-search/market-score-types";
 import { propertyTypeLabels } from "@/lib/buyer-search/options";
 import { getCityByMarketIdentifier } from "@/lib/cities";
 import styles from "./market-score-card.module.css";
@@ -27,6 +32,7 @@ export function MarketScoreCard({
   });
   const markerPosition = Math.min(98, Math.max(2, score.score));
   const reading = getMarketReading(score.status);
+  const sectorMatches = getSectorMatches(score);
   const hasTrends = Boolean(
     score.trends &&
       (score.trends.sixMonthsPercent !== null ||
@@ -37,7 +43,7 @@ export function MarketScoreCard({
     <article className={styles.card} data-status={score.status}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Lecture de votre recherche</p>
+          <p className={styles.eyebrow}>Votre recherche</p>
           <h2 className={styles.readingTitle}>{reading.title}</h2>
           <p className={styles.readingText}>{reading.description}</p>
         </div>
@@ -46,7 +52,7 @@ export function MarketScoreCard({
 
       <section className={styles.scoreGauge} aria-label="Position de la recherche sur le marché">
         <div className={styles.gaugeHeading}>
-          <span>Position par rapport au marché</span>
+          <span>Votre budget face aux prix du secteur</span>
           <strong>{formatGap(match.gapPercent)}</strong>
         </div>
         <div
@@ -72,15 +78,15 @@ export function MarketScoreCard({
 
       <dl className={styles.marketMetrics}>
         <div>
-          <dt>Votre capacité estimée</dt>
+          <dt>Votre budget ramené au m²</dt>
           <dd>{formatCapacityRange(score.target.idealCapacityPerM2, score.target.maximumCapacityPerM2)}</dd>
         </div>
         <div>
-          <dt>Prix moyen observé</dt>
+          <dt>Prix moyen du secteur</dt>
           <dd>{formatPricePerM2(match.marketPricePerM2)}</dd>
         </div>
         <div>
-          <dt>Écart</dt>
+          <dt>Position du budget</dt>
           <dd data-tone={match.gapPercent >= -10 ? "positive" : "warning"}>{formatGap(match.gapPercent)}</dd>
         </div>
       </dl>
@@ -105,12 +111,12 @@ export function MarketScoreCard({
 
       <p className={styles.comparables}>
         <BarChart3 size={18} aria-hidden="true" />
-        {match.comparableTransactions} vente{match.comparableTransactions > 1 ? "s" : ""} comparable
-        {match.comparableTransactions > 1 ? "s" : ""} observée{match.comparableTransactions > 1 ? "s" : ""}
+        {match.comparableTransactions} vente{match.comparableTransactions > 1 ? "s" : ""} similaire
+        {match.comparableTransactions > 1 ? "s" : ""} prise{match.comparableTransactions > 1 ? "s" : ""} en compte
       </p>
 
       <section className={styles.factors}>
-        <h3>Comment lire ce résultat&nbsp;?</h3>
+        <h3>À retenir</h3>
         <ul>
           {score.factors.map((factor) => (
             <li key={factor.label} data-tone={factor.tone}>
@@ -121,9 +127,11 @@ export function MarketScoreCard({
         </ul>
       </section>
 
-      {showBestMatch ? (
+      {showBestMatch && sectorMatches.length > 1 ? (
+        <SectorComparison matches={sectorMatches} />
+      ) : showBestMatch ? (
         <p className={styles.bestMatch}>
-          Meilleure correspondance : <strong>{propertyTypeLabels[match.propertyType]} à {" "}
+          Secteur le plus compatible : <strong>{propertyTypeLabels[match.propertyType]} à {" "}
           {cityPage ? (
             <Link href={`/prix-m2/${cityPage.slug}`}>{match.cityName}</Link>
           ) : (
@@ -133,6 +141,98 @@ export function MarketScoreCard({
       ) : null}
     </article>
   );
+}
+
+function SectorComparison({ matches }: { matches: BuyerSearchMarketCombination[] }) {
+  return (
+    <section className={styles.sectorComparison}>
+      <header>
+        <p className={styles.eyebrow}>Vos secteurs</p>
+        <h3>Où votre recherche semble la plus accessible&nbsp;?</h3>
+        <span>Nous comparons votre budget aux prix moyens observés dans chaque ville sélectionnée.</span>
+      </header>
+      <ol>
+        {matches.slice(0, 3).map((match, index) => {
+          const cityPage = getCityByMarketIdentifier({
+            inseeCode: match.cityCode,
+            name: match.cityName,
+          });
+          const reading = getSectorReading(match.gapPercent);
+
+          return (
+            <li key={`${match.cityCode ?? match.cityName}-${match.propertyType}`} data-tone={reading.tone}>
+              <span className={styles.sectorRank}>{index + 1}</span>
+              <div className={styles.sectorCopy}>
+                <div>
+                  <h4>{match.cityName}</h4>
+                  <strong>{reading.label}</strong>
+                </div>
+                <p>{reading.description}</p>
+                <small>
+                  {propertyTypeLabels[match.propertyType]} · Prix moyen {formatPricePerM2(match.marketPricePerM2)} · {formatGap(match.gapPercent)}
+                </small>
+              </div>
+              {cityPage ? (
+                <Link href={`/prix-m2/${cityPage.slug}`} aria-label={`Voir les prix à ${match.cityName}`}>
+                  Voir les prix
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                </Link>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+      <p className={styles.sectorDisclaimer}>Ce classement indique une compatibilité avec les prix du marché, pas le nombre de biens actuellement disponibles.</p>
+    </section>
+  );
+}
+
+function getSectorMatches(score: BuyerSearchMarketScore) {
+  const matchesByCity = new Map<string, BuyerSearchMarketCombination>();
+  const combinations = score.combinations.length > 0 ? score.combinations : [score.bestMatch];
+
+  combinations.forEach((match) => {
+    const key = match.cityCode || match.cityName.toLocaleLowerCase("fr-FR");
+    const current = matchesByCity.get(key);
+
+    if (!current || match.gapPercent > current.gapPercent) {
+      matchesByCity.set(key, match);
+    }
+  });
+
+  return [...matchesByCity.values()].sort((left, right) => right.gapPercent - left.gapPercent);
+}
+
+function getSectorReading(gapPercent: number) {
+  if (gapPercent >= 0) {
+    return {
+      description: "Votre budget laisse une marge par rapport au prix moyen observé.",
+      label: "Très compatible",
+      tone: "positive",
+    } as const;
+  }
+
+  if (gapPercent >= -10) {
+    return {
+      description: "Votre budget est proche des prix moyens du secteur.",
+      label: "Recherche réaliste",
+      tone: "coherent",
+    } as const;
+  }
+
+  if (gapPercent >= -20) {
+    return {
+      description: "Le projet reste possible en ajustant certains critères.",
+      label: "Quelques compromis à prévoir",
+      tone: "warning",
+    } as const;
+  }
+
+  return {
+    description: "La surface, le quartier ou l’état du bien pourront devoir évoluer.",
+    label: "Secteur plus difficile",
+    tone: "difficult",
+  } as const;
 }
 
 function TrendMetric({ label, value }: { label: string; value: number | null }) {
@@ -195,8 +295,8 @@ function getMarketReading(status: BuyerSearchMarketScore["status"]) {
     return {
       badge: "Budget confortable",
       description:
-        "Votre budget offre une marge par rapport aux prix moyens observés, à confirmer selon le quartier et les caractéristiques du bien.",
-      title: "Votre recherche paraît réaliste",
+        "Votre budget laisse de la marge par rapport aux prix moyens observés. Le quartier et les caractéristiques du bien feront ensuite la différence.",
+      title: "Votre budget est bien positionné",
     };
   }
 
@@ -204,8 +304,8 @@ function getMarketReading(status: BuyerSearchMarketScore["status"]) {
     return {
       badge: "Recherche cohérente",
       description:
-        "Votre budget est globalement aligné avec les prix observés sur le secteur retenu.",
-      title: "Votre recherche paraît réaliste",
+        "Votre budget est proche des prix observés dans le secteur choisi.",
+      title: "Votre projet semble bien engagé",
     };
   }
 
@@ -213,7 +313,7 @@ function getMarketReading(status: BuyerSearchMarketScore["status"]) {
     return {
       badge: "Compromis à prévoir",
       description:
-        "La surface, le secteur ou l’état du bien pourront devoir être ajustés pour élargir les possibilités.",
+        "Un peu de souplesse sur la surface, le quartier ou l’état du bien ouvrira davantage de possibilités.",
       title: "Votre recherche reste possible",
     };
   }
@@ -221,8 +321,8 @@ function getMarketReading(status: BuyerSearchMarketScore["status"]) {
   return {
     badge: "Budget à ajuster",
     description:
-      "Votre budget se situe sous les prix moyens observés pour les critères actuellement retenus.",
-    title: "Votre recherche mérite d’être ajustée",
+      "Avec les critères actuels, le budget est inférieur aux prix moyens observés. Quelques ajustements peuvent débloquer la recherche.",
+    title: "Quelques ajustements peuvent aider",
   };
 }
 
