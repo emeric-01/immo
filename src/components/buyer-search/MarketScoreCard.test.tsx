@@ -79,5 +79,10 @@ describe("MarketScoreCard", () => {
     expect(screen.getByText("Quelques compromis à prévoir")).toBeInTheDocument();
     expect(screen.getByText("Secteur plus difficile")).toBeInTheDocument();
     expect(screen.queryByText("42")).not.toBeInTheDocument();
+    expect(
+      screen
+        .getByText("Où votre recherche semble la plus accessible ?")
+        .compareDocumentPosition(screen.getByRole("meter")) & 4,
+    ).toBe(4);
   });
 });

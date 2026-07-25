@@ -33,6 +33,7 @@ export function MarketScoreCard({
   const markerPosition = Math.min(98, Math.max(2, score.score));
   const reading = getMarketReading(score.status);
   const sectorMatches = getSectorMatches(score);
+  const hasSectorComparison = showBestMatch && sectorMatches.length > 1;
   const hasTrends = Boolean(
     score.trends &&
       (score.trends.sixMonthsPercent !== null ||
@@ -49,6 +50,8 @@ export function MarketScoreCard({
         </div>
         <span className={styles.statusPill}>{reading.badge}</span>
       </header>
+
+      {hasSectorComparison ? <SectorComparison matches={sectorMatches} /> : null}
 
       <section className={styles.scoreGauge} aria-label="Position de la recherche sur le marché">
         <div className={styles.gaugeHeading}>
@@ -127,9 +130,7 @@ export function MarketScoreCard({
         </ul>
       </section>
 
-      {showBestMatch && sectorMatches.length > 1 ? (
-        <SectorComparison matches={sectorMatches} />
-      ) : showBestMatch ? (
+      {showBestMatch && !hasSectorComparison ? (
         <p className={styles.bestMatch}>
           Secteur le plus compatible : <strong>{propertyTypeLabels[match.propertyType]} à {" "}
           {cityPage ? (
