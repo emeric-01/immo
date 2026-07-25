@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BedDouble, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, BedDouble, CalendarDays, Euro, Gauge, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
@@ -92,6 +92,14 @@ export default async function AdminBuyerSearchDetailPage({
       ) : null}
 
       <section className={styles.detailGrid}>
+        {search.market_score !== null ? (
+          <InternalPotentialScore
+            computedAt={search.market_scored_at}
+            label={search.market_score_label}
+            score={search.market_score}
+          />
+        ) : null}
+
         {search.market_score_payload ? <MarketScoreCard score={search.market_score_payload} /> : null}
 
         <InfoPanel title="Synthese">
@@ -168,6 +176,70 @@ export default async function AdminBuyerSearchDetailPage({
       </section>
     </DetailFrame>
   );
+}
+
+function InternalPotentialScore({
+  computedAt,
+  label,
+  score,
+}: {
+  computedAt: string | null;
+  label: string | null;
+  score: number;
+}) {
+  const boundedScore = Math.min(100, Math.max(0, score));
+  const reading = getInternalScoreReading(boundedScore);
+
+  return (
+    <article className={styles.internalScorePanel} data-tone={reading.tone}>
+      <div className={styles.internalScoreHeading}>
+        <div className={styles.internalScoreIcon}>
+          <Gauge size={22} aria-hidden="true" />
+        </div>
+        <div>
+          <p className={styles.eyebrow}>Indicateur interne</p>
+          <h2>Score de potentiel de la recherche</h2>
+        </div>
+      </div>
+
+      <div className={styles.internalScoreValue}>
+        <strong>{boundedScore}</strong>
+        <span>/100</span>
+        <em>{reading.label}</em>
+      </div>
+
+      <div className={styles.internalScoreGauge} aria-hidden="true">
+        <span style={{ width: `${boundedScore}%` }} />
+      </div>
+
+      <div className={styles.internalScoreCopy}>
+        <p>
+          Indicateur calculé à partir du budget, des prix observés, de la zone recherchée et du nombre de ventes comparables.
+          Il aide à prioriser le suivi commercial, sans remplacer la qualification par un membre de l&apos;équipe.
+        </p>
+        <small>
+          {label ? `${label} · ` : ""}
+          {computedAt ? `Calculé le ${formatDate(computedAt)}` : "Calcul automatique"}
+        </small>
+      </div>
+    </article>
+  );
+}
+
+function getInternalScoreReading(score: number) {
+  if (score >= 80) {
+    return { label: "Potentiel élevé", tone: "positive" };
+  }
+
+  if (score >= 60) {
+    return { label: "À qualifier en priorité", tone: "coherent" };
+  }
+
+  if (score >= 40) {
+    return { label: "Recherche exigeante", tone: "warning" };
+  }
+
+  return { label: "Critères à ajuster", tone: "difficult" };
 }
 
 function DetailFrame({ children }: { children: React.ReactNode }) {
