@@ -34,7 +34,7 @@ describe("MarketScoreCard", () => {
   it("hides the best match for a single-city search", () => {
     render(<MarketScoreCard score={score} showBestMatch={false} />);
 
-    expect(screen.queryByText(/Meilleure coherence/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Meilleure correspondance/i)).not.toBeInTheDocument();
   });
 
   it("links the best match when a city market page exists", () => {
@@ -44,5 +44,15 @@ describe("MarketScoreCard", () => {
       "href",
       "/prix-m2/aubagne",
     );
+  });
+
+  it("presents a market position without displaying a numeric score", () => {
+    render(<MarketScoreCard score={score} />);
+
+    expect(screen.getByText("Votre recherche paraît réaliste")).toBeInTheDocument();
+    expect(screen.getByText("Recherche cohérente")).toBeInTheDocument();
+    expect(screen.queryByText("68")).not.toBeInTheDocument();
+    expect(screen.queryByText("/100")).not.toBeInTheDocument();
+    expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "Recherche cohérente");
   });
 });

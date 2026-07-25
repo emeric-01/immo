@@ -61,8 +61,8 @@ export function BuyerSearchConfirmation() {
                 <header className={styles.confirmationScoreIntro}>
                   <Info size={20} aria-hidden="true" />
                   <div>
-                    <h2>Pertinence de votre projet</h2>
-                    <p>Ce score permet de verifier la coherence de votre recherche face aux prix observes sur le marche immobilier local.</p>
+                    <h2>Ce que le marché indique</h2>
+                    <p>Nous comparons simplement votre budget et vos critères aux prix observés sur le marché immobilier local.</p>
                   </div>
                 </header>
                 <MarketScoreCard

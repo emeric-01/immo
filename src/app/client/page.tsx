@@ -103,8 +103,8 @@ export default async function ClientDashboardPage() {
                   </div>
                   <div className={styles.projectMeta}>
                     <span><Euro size={15} aria-hidden="true" /> {formatCurrency(search.maximum_budget)}</span>
-                    {search.market_score !== null ? (
-                      <span className={styles.scorePill}>{search.market_score}/100</span>
+                    {search.market_score_status ? (
+                      <span className={styles.scorePill}>{formatMarketPosition(search.market_score_status)}</span>
                     ) : null}
                   </div>
                   <div className={styles.projectActions}>
@@ -224,6 +224,22 @@ function EmptySection({ icon: Icon, title, text, href }: { icon: typeof Search; 
 
 function formatPropertyTypes(types: Array<"house" | "apartment">) {
   return types.length > 0 ? types.map((type) => propertyTypeLabels[type]).join(" et ") : "Bien immobilier";
+}
+
+function formatMarketPosition(status: string) {
+  if (status === "excellent") {
+    return "Budget confortable";
+  }
+
+  if (status === "coherent") {
+    return "Recherche cohérente";
+  }
+
+  if (status === "tight") {
+    return "Compromis à prévoir";
+  }
+
+  return "Budget à ajuster";
 }
 
 function formatCurrency(value: number | null) {

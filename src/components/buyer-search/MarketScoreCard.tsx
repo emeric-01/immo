@@ -26,6 +26,7 @@ export function MarketScoreCard({
     name: match.cityName,
   });
   const markerPosition = Math.min(98, Math.max(2, score.score));
+  const reading = getMarketReading(score.status);
   const hasTrends = Boolean(
     score.trends &&
       (score.trends.sixMonthsPercent !== null ||
@@ -36,53 +37,50 @@ export function MarketScoreCard({
     <article className={styles.card} data-status={score.status}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Coherence avec le marche</p>
-          <div className={styles.scoreLine}>
-            <strong>{score.score}</strong>
-            <span>/100</span>
-          </div>
+          <p className={styles.eyebrow}>Lecture de votre recherche</p>
+          <h2 className={styles.readingTitle}>{reading.title}</h2>
+          <p className={styles.readingText}>{reading.description}</p>
         </div>
-        <span className={styles.statusPill}>{score.label}</span>
+        <span className={styles.statusPill}>{reading.badge}</span>
       </header>
 
       <section className={styles.scoreGauge} aria-label="Position de la recherche sur le marché">
         <div className={styles.gaugeHeading}>
-          <span>Position de votre recherche</span>
+          <span>Position par rapport au marché</span>
           <strong>{formatGap(match.gapPercent)}</strong>
         </div>
         <div
           aria-valuemax={100}
           aria-valuemin={0}
           aria-valuenow={score.score}
+          aria-valuetext={reading.badge}
           className={styles.gaugeTrack}
           role="meter"
         >
           <span
             className={styles.gaugeMarker}
-            data-negative={match.gapPercent < 0 || undefined}
+            data-status={score.status}
             style={{ left: `${markerPosition}%` }}
           />
         </div>
-        <div className={styles.gaugeLabels} aria-hidden="true">
-          <span>0</span>
-          <span>50</span>
-          <span>100</span>
+        <div className={styles.gaugeLabels}>
+          <span>À ajuster</span>
+          <span>Cohérente</span>
+          <span>Budget confortable</span>
         </div>
       </section>
 
       <dl className={styles.marketMetrics}>
         <div>
-          <dt>Votre capacite</dt>
-          <dd>
-            {formatPricePerM2(score.target.idealCapacityPerM2)} a {formatPricePerM2(score.target.maximumCapacityPerM2)}
-          </dd>
+          <dt>Votre capacité estimée</dt>
+          <dd>{formatCapacityRange(score.target.idealCapacityPerM2, score.target.maximumCapacityPerM2)}</dd>
         </div>
         <div>
-          <dt>Prix observe</dt>
+          <dt>Prix moyen observé</dt>
           <dd>{formatPricePerM2(match.marketPricePerM2)}</dd>
         </div>
         <div>
-          <dt>Ecart</dt>
+          <dt>Écart</dt>
           <dd data-tone={match.gapPercent >= -10 ? "positive" : "warning"}>{formatGap(match.gapPercent)}</dd>
         </div>
       </dl>
@@ -108,11 +106,11 @@ export function MarketScoreCard({
       <p className={styles.comparables}>
         <BarChart3 size={18} aria-hidden="true" />
         {match.comparableTransactions} vente{match.comparableTransactions > 1 ? "s" : ""} comparable
-        {match.comparableTransactions > 1 ? "s" : ""} observee{match.comparableTransactions > 1 ? "s" : ""}
+        {match.comparableTransactions > 1 ? "s" : ""} observée{match.comparableTransactions > 1 ? "s" : ""}
       </p>
 
       <section className={styles.factors}>
-        <h3>Ce qui influence le score</h3>
+        <h3>Comment lire ce résultat&nbsp;?</h3>
         <ul>
           {score.factors.map((factor) => (
             <li key={factor.label} data-tone={factor.tone}>
@@ -125,7 +123,7 @@ export function MarketScoreCard({
 
       {showBestMatch ? (
         <p className={styles.bestMatch}>
-          Meilleure coherence : <strong>{propertyTypeLabels[match.propertyType]} a {" "}
+          Meilleure correspondance : <strong>{propertyTypeLabels[match.propertyType]} à {" "}
           {cityPage ? (
             <Link href={`/prix-m2/${cityPage.slug}`}>{match.cityName}</Link>
           ) : (
@@ -167,7 +165,15 @@ function FactorIcon({ tone }: { tone: BuyerSearchMarketFactorTone }) {
 }
 
 function formatPricePerM2(value: number) {
-  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value)} EUR/m2`;
+  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value)} €/m²`;
+}
+
+function formatCapacityRange(ideal: number, maximum: number) {
+  if (ideal === maximum) {
+    return formatPricePerM2(ideal);
+  }
+
+  return `${formatPricePerM2(ideal)} à ${formatPricePerM2(maximum)}`;
 }
 
 function formatGap(value: number) {
@@ -181,7 +187,43 @@ function formatGap(value: number) {
     return `${rounded} % au-dessus du prix moyen`;
   }
 
-  return "Aligne avec le prix moyen";
+  return "Aligné avec le prix moyen";
+}
+
+function getMarketReading(status: BuyerSearchMarketScore["status"]) {
+  if (status === "excellent") {
+    return {
+      badge: "Budget confortable",
+      description:
+        "Votre budget offre une marge par rapport aux prix moyens observés, à confirmer selon le quartier et les caractéristiques du bien.",
+      title: "Votre recherche paraît réaliste",
+    };
+  }
+
+  if (status === "coherent") {
+    return {
+      badge: "Recherche cohérente",
+      description:
+        "Votre budget est globalement aligné avec les prix observés sur le secteur retenu.",
+      title: "Votre recherche paraît réaliste",
+    };
+  }
+
+  if (status === "tight") {
+    return {
+      badge: "Compromis à prévoir",
+      description:
+        "La surface, le secteur ou l’état du bien pourront devoir être ajustés pour élargir les possibilités.",
+      title: "Votre recherche reste possible",
+    };
+  }
+
+  return {
+    badge: "Budget à ajuster",
+    description:
+      "Votre budget se situe sous les prix moyens observés pour les critères actuellement retenus.",
+    title: "Votre recherche mérite d’être ajustée",
+  };
 }
 
 function formatTrend(value: number | null) {

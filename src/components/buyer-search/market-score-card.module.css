@@ -24,24 +24,22 @@
   text-transform: uppercase;
 }
 
-.scoreLine {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  margin-top: 4px;
-}
-
-.scoreLine strong {
+.readingTitle {
+  max-width: 540px;
+  margin: 9px 0 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 4.4rem;
+  font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 500;
-  line-height: 0.95;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
 }
 
-.scoreLine span {
-  color: #d2a476;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.6rem;
+.readingText {
+  max-width: 650px;
+  margin: 13px 0 0;
+  color: #687084;
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
 
 .statusPill {
@@ -54,6 +52,22 @@
   color: #5f402b;
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.card[data-status="excellent"] .statusPill,
+.card[data-status="coherent"] .statusPill {
+  background: #edf5ef;
+  color: #2d6d3d;
+}
+
+.card[data-status="tight"] .statusPill {
+  background: #fbf2e3;
+  color: #8b5a1f;
+}
+
+.card[data-status="difficult"] .statusPill {
+  background: #fbebe8;
+  color: #8e3428;
 }
 
 .scoreGauge {
@@ -120,15 +134,24 @@
   transform: translate(-50%, -50%);
 }
 
-.gaugeMarker[data-negative] {
+.gaugeMarker[data-status="difficult"] {
   background: #b53227;
+}
+
+.gaugeMarker[data-status="tight"] {
+  background: #d29b3d;
+}
+
+.gaugeMarker[data-status="coherent"] {
+  background: #6f9455;
 }
 
 .gaugeLabels {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   color: #7a8190;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 650;
 }
 
 .gaugeLabels span:nth-child(2) {
@@ -341,12 +364,16 @@
     gap: 12px;
   }
 
-  .scoreLine strong {
-    font-size: 3.8rem;
-  }
-
   .statusPill {
     width: fit-content;
+  }
+
+  .readingTitle {
+    font-size: 2rem;
+  }
+
+  .gaugeLabels {
+    font-size: 0.61rem;
   }
 
   .gaugeHeading {
