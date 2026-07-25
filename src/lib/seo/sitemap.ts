@@ -16,6 +16,7 @@ export const publicSitemapRoutes = [
   { path: "/nous-rejoindre", changeFrequency: "monthly", priority: 0.7 },
   { path: "/parrainage", changeFrequency: "monthly", priority: 0.7 },
   { path: "/honoraires", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/utilisation-des-donnees", changeFrequency: "yearly", priority: 0.3 },
   { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.3 },
 ] as const satisfies ReadonlyArray<{
   changeFrequency: NonNullable<SitemapEntry["changeFrequency"]>;

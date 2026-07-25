@@ -1205,7 +1205,12 @@ export function EstimationForm({
                   </label>
                   <label className="mandate-consent">
                     <input name="consent" required type="checkbox" value="accepted" />
-                    <span>J&apos;accepte d&apos;être recontacté au sujet de mon projet immobilier.</span>
+                    <span>
+                      J&apos;accepte d&apos;être recontacté au sujet de mon projet immobilier.{" "}
+                      <Link href="/utilisation-des-donnees" target="_blank">
+                        Utilisation de mes données
+                      </Link>
+                    </span>
                   </label>
                   <p className="lead-account-note"><LockKeyhole aria-hidden="true" /> Votre demande crée ou rattache automatiquement votre espace client afin d&apos;y conserver cette estimation.</p>
                   <button disabled={leadState === "loading"} type="submit">
@@ -1230,7 +1235,8 @@ export function EstimationForm({
 
           <p className="privacy-note result-privacy">
             <span className="privacy-lock" aria-hidden="true" />
-            Vos données sont protégées. Aucune revente de données.
+            Vos données sont protégées. Aucune revente de données. {" "}
+            <Link href="/utilisation-des-donnees">En savoir plus</Link>
           </p>
         </div>
         <nav className="result-mobile-conversion" aria-label="Affiner ou discuter de cette estimation">

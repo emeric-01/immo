@@ -6946,6 +6946,20 @@ button:focus-visible {
   line-height: 1.4;
 }
 
+.mandate-consent a,
+.estimation-page .result-privacy a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: #c27a4d;
+  text-underline-offset: 3px;
+}
+
+.mandate-consent a:hover,
+.estimation-page .result-privacy a:hover {
+  color: #9d5c36;
+}
+
 .mandate-honeypot {
   position: absolute !important;
   left: -10000px !important;

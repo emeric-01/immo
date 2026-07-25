@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type mapboxgl from "mapbox-gl";
 import {
@@ -1020,7 +1021,9 @@ function StepContact({ clientEmail, form }: StepProps & { clientEmail: string | 
         <input type="checkbox" {...register("contact.consent")} />
         <span>
           J&apos;accepte d&apos;etre recontacte au sujet de ma recherche immobiliere et de recevoir des biens correspondant a mes criteres.
-          <a href="#">En savoir plus sur l&apos;utilisation de vos donnees</a>
+          <Link href="/utilisation-des-donnees" target="_blank">
+            En savoir plus sur l&apos;utilisation de vos donnees
+          </Link>
         </span>
       </label>
       <FormError errors={form.formState.errors} path="contact.consent" />
