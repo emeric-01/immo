@@ -57,6 +57,7 @@ const search: BuyerSearchFormData = {
     firstName: "Test",
     lastName: "Client",
     phone: "0612345678",
+    preferredChannels: ["email"],
     preferredChannel: "email",
   },
 };

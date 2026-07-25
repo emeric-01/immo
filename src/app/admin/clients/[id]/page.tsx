@@ -5,6 +5,7 @@ import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import { requireAdminSession } from "@/lib/admin/auth";
 import type { AdminReferral } from "@/lib/admin/referrals";
 import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus } from "@/lib/referrals";
+import { preferredChannelLabels } from "@/lib/buyer-search/options";
 import {
   formatAdminClientName,
   formatAdminClientPropertyTypes,
@@ -85,6 +86,17 @@ export default async function AdminClientDetailPage({
       <section className={styles.detailGrid}>
         <InfoPanel title="Profil client">
           <Metric icon={UserRound} label="Nom" value={formatAdminClientName(client)} />
+          <Metric
+            icon={Mail}
+            label="Moyens de contact souhaites"
+            value={
+              preferredChannelLabels(
+                client.preferred_channels?.length
+                  ? client.preferred_channels
+                  : client.preferred_channel,
+              ) || "Non renseigne"
+            }
+          />
           <Metric icon={ShieldCheck} label="Acces espace client" value={client.access_enabled ? "Actif" : "Desactive"} />
           <Metric icon={CalendarDays} label="Creation" value={formatDate(client.created_at)} />
           <Metric icon={CalendarDays} label="Derniere mise a jour" value={formatDate(client.updated_at)} />

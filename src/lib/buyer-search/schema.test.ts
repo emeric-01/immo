@@ -19,7 +19,36 @@ describe("buyer search step schemas", () => {
       lastName: "Dupont",
       email: "claire@example.fr",
       phone: "06 12 34 56 78",
+      preferredChannels: ["email", "sms"],
       preferredChannel: "email",
+      consent: true,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("requires at least one contact channel", () => {
+    const result = stepSchemas.contact.safeParse({
+      firstName: "Claire",
+      lastName: "Dupont",
+      email: "claire@example.fr",
+      phone: "06 12 34 56 78",
+      preferredChannels: [],
+      preferredChannel: null,
+      consent: true,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["preferredChannels"]);
+  });
+
+  it("keeps accepting a legacy single contact channel", () => {
+    const result = stepSchemas.contact.safeParse({
+      firstName: "Claire",
+      lastName: "Dupont",
+      email: "claire@example.fr",
+      phone: "06 12 34 56 78",
+      preferredChannel: "phone",
       consent: true,
     });
 

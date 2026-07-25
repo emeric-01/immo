@@ -41,6 +41,7 @@ import {
   citySuggestions,
   financingOptions,
   getPreferenceOptions,
+  normalizePreferredChannels,
   normalizePropertyTypes,
   optionLabel,
   preferredChannelOptions,
@@ -930,6 +931,23 @@ function StepPriorities({ form }: StepProps) {
 function StepContact({ clientEmail, form }: StepProps & { clientEmail: string | null }) {
   const { register, setValue, watch } = form;
   const contact = watch("contact");
+  const selectedChannels = normalizePreferredChannels(
+    contact.preferredChannels?.length ? contact.preferredChannels : contact.preferredChannel,
+  );
+
+  function togglePreferredChannel(channel: BuyerSearchFormData["contact"]["preferredChannels"][number]) {
+    const nextChannels = selectedChannels.includes(channel)
+      ? selectedChannels.filter((value) => value !== channel)
+      : [...selectedChannels, channel];
+
+    setValue("contact.preferredChannels", nextChannels, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("contact.preferredChannel", nextChannels[0] ?? null, {
+      shouldDirty: true,
+    });
+  }
 
   return (
     <section className={styles.contactLayout}>
@@ -965,31 +983,38 @@ function StepContact({ clientEmail, form }: StepProps & { clientEmail: string | 
         <FormError errors={form.formState.errors} path="contact.phone" />
       </label>
       <div className={styles.optionBlock}>
-        <h3>Contact privilegie *</h3>
+        <h3>Comment souhaitez-vous etre prevenu ? *</h3>
+        <p className={styles.optionHint}>Vous pouvez choisir plusieurs options.</p>
         <div className={styles.channelGrid}>
-          {preferredChannelOptions.map((option) => (
-            <button
-              type="button"
-              className={styles.channelCard}
-              data-selected={contact.preferredChannel === option.key || undefined}
-              key={option.key}
-              onClick={() =>
-                setValue("contact.preferredChannel", option.key as BuyerSearchFormData["contact"]["preferredChannel"], {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            >
-              <span className={styles.radioDot} aria-hidden="true" />
-              {option.key === "email" ? <Mail size={24} /> : option.key === "sms" ? <MessageIcon /> : <Phone size={24} />}
-              <span>
-                <strong>{option.label}</strong>
-                <small>{option.helper}</small>
-              </span>
-            </button>
-          ))}
+          {preferredChannelOptions.map((option) => {
+            const channel = option.key as BuyerSearchFormData["contact"]["preferredChannels"][number];
+            const selected = selectedChannels.includes(channel);
+
+            return (
+              <label
+                className={styles.channelCard}
+                data-selected={selected || undefined}
+                key={option.key}
+              >
+                <input
+                  checked={selected}
+                  className={styles.channelCheckbox}
+                  onChange={() => togglePreferredChannel(channel)}
+                  type="checkbox"
+                />
+                <span className={styles.checkCircle} aria-hidden="true">
+                  {selected ? <Check size={14} /> : null}
+                </span>
+                {option.key === "email" ? <Mail size={24} /> : option.key === "sms" ? <MessageIcon /> : <Phone size={24} />}
+                <span>
+                  <strong>{option.label}</strong>
+                  <small>{option.helper}</small>
+                </span>
+              </label>
+            );
+          })}
         </div>
-        <FormError errors={form.formState.errors} path="contact.preferredChannel" />
+        <FormError errors={form.formState.errors} path="contact.preferredChannels" />
       </div>
       <label className={styles.consentBox}>
         <input type="checkbox" {...register("contact.consent")} />

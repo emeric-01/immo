@@ -4,7 +4,7 @@ import { ArrowRight, CalendarClock, CheckCircle2, Euro, Inbox, Phone, Search, Us
 import {
   type AdminBuyerSearchRow,
   formatAdminPropertyTypes,
-  formatPreferredChannel,
+  formatPreferredChannels,
   getAdminBuyerSearches,
   getBuyerSearchAdminStats,
 } from "@/lib/admin/buyer-searches";
@@ -184,7 +184,7 @@ function SearchTable({
                 )}
               </td>
               <td>
-                <strong>{formatPreferredChannel(search.preferred_channel)}</strong>
+                <strong>{formatPreferredChannels(search.preferred_channels, search.preferred_channel)}</strong>
                 <small>{search.contact_email}</small>
               </td>
               <td>

@@ -14,6 +14,7 @@ const contact = {
   firstName: "Claire",
   lastName: "Dupont",
   phone: "06 12 34 56 78",
+  preferredChannels: ["phone" as const, "sms" as const],
   preferredChannel: "phone" as const,
 };
 

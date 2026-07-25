@@ -56,6 +56,8 @@ export type BuyerSearchFormData = {
     lastName: string;
     email: string;
     phone: string;
+    preferredChannels: PreferredChannel[];
+    /** Compatibilite avec les recherches enregistrees avant le choix multiple. */
     preferredChannel: PreferredChannel | null;
     consent: boolean;
   };
@@ -123,6 +125,7 @@ export const defaultBuyerSearchData: BuyerSearchFormData = {
     lastName: "",
     email: "",
     phone: "",
+    preferredChannels: [],
     preferredChannel: null,
     consent: false,
   },

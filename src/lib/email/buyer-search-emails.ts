@@ -3,7 +3,7 @@ import "server-only";
 import {
   normalizePropertyTypes,
   optionLabel,
-  preferredChannelOptions,
+  preferredChannelLabels,
   propertyTypeLabels,
   purchaseTimelineOptions,
 } from "@/lib/buyer-search/options";
@@ -611,7 +611,7 @@ function buildAdminContactBlock(data: BuyerSearchFormData) {
         ${escapeHtml(data.contact.firstName)} ${escapeHtml(data.contact.lastName)}<br />
         ${escapeHtml(data.contact.email)}<br />
         ${escapeHtml(data.contact.phone)}<br />
-        Canal privilegie : ${escapeHtml(optionLabel(preferredChannelOptions, data.contact.preferredChannel) || "Non renseigne")}
+        Moyens de contact : ${escapeHtml(preferredChannelLabels(data.contact.preferredChannels?.length ? data.contact.preferredChannels : data.contact.preferredChannel) || "Non renseigne")}
       </p>
     </div>
   `;

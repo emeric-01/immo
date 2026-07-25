@@ -79,6 +79,7 @@ async function saveLeadAccountAndEstimation({
           last_name: lastName,
           phone,
           preferred_channel: "email",
+          preferred_channels: ["email"],
         }),
         headers: { Prefer: "return=representation" },
         method: "POST",

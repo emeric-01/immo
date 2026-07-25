@@ -1,6 +1,6 @@
 import { analyzeBuyerSearchMarket } from "./market-score";
 import type { BuyerSearchMarketScore } from "./market-score-types";
-import { normalizePropertyTypes } from "./options";
+import { normalizePreferredChannels, normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData } from "./types";
 
 type BuyerSearchStorage = "database" | "local";
@@ -184,12 +184,16 @@ async function calculateAndStoreMarketScore(
 
 async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData) {
   const normalizedEmail = data.contact.email.trim().toLowerCase();
+  const preferredChannels = normalizePreferredChannels(
+    data.contact.preferredChannels?.length ? data.contact.preferredChannels : data.contact.preferredChannel,
+  );
   const payload = {
     email: normalizedEmail,
     first_name: data.contact.firstName.trim(),
     last_name: data.contact.lastName.trim(),
     phone: data.contact.phone.trim(),
-    preferred_channel: data.contact.preferredChannel,
+    preferred_channel: preferredChannels[0] ?? null,
+    preferred_channels: preferredChannels,
   };
 
   const existing = await fetchSupabaseRows<ClientAccountRow[]>(
@@ -375,6 +379,9 @@ function buildBuyerSearchRow(
   const postalCodes = Array.from(
     new Set(cities.flatMap((city) => city.postalCodes ?? (city.postalCode ? [city.postalCode] : []))),
   );
+  const preferredChannels = normalizePreferredChannels(
+    data.contact.preferredChannels?.length ? data.contact.preferredChannels : data.contact.preferredChannel,
+  );
 
   return {
     city_codes: cities.flatMap((city) => (city.cityCode ? [city.cityCode] : [])),
@@ -402,7 +409,8 @@ function buildBuyerSearchRow(
     minimum_living_area: data.characteristics.minimumLivingArea,
     minimum_rooms: data.characteristics.minimumRooms,
     postal_codes: postalCodes,
-    preferred_channel: data.contact.preferredChannel,
+    preferred_channel: preferredChannels[0] ?? null,
+    preferred_channels: preferredChannels,
     preferences: data.preferences,
     priorities: data.priorities,
     property_types: normalizePropertyTypes(data.property.types?.length ? data.property.types : data.property.type),

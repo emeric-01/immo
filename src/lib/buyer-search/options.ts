@@ -1,4 +1,4 @@
-import type { BuyerSearchCity, PropertyType } from "./types";
+import type { BuyerSearchCity, PreferredChannel, PropertyType } from "./types";
 
 export type BuyerSearchOption = {
   key: string;
@@ -125,6 +125,23 @@ export const preferredChannelOptions: BuyerSearchOption[] = [
   { key: "sms", label: "Par SMS", helper: "Rapide et pratique", category: "Contact privilegie" },
   { key: "phone", label: "Par telephone", helper: "Echange direct", category: "Contact privilegie" },
 ];
+
+export function normalizePreferredChannels(
+  selection?: PreferredChannel | PreferredChannel[] | null,
+): PreferredChannel[] {
+  const values = Array.isArray(selection) ? selection : selection ? [selection] : [];
+
+  return Array.from(
+    new Set(values.filter((value): value is PreferredChannel => ["email", "sms", "phone"].includes(value))),
+  );
+}
+
+export function preferredChannelLabels(selection?: PreferredChannel | PreferredChannel[] | null) {
+  return normalizePreferredChannels(selection)
+    .map((channel) => optionLabel(preferredChannelOptions, channel))
+    .filter(Boolean)
+    .join(", ");
+}
 
 export function optionLabel(options: BuyerSearchOption[], key?: string | null) {
   return options.find((option) => option.key === key)?.label ?? "";

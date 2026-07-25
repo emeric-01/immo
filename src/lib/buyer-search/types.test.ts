@@ -23,6 +23,7 @@ describe("default buyer search", () => {
       purchaseTimeline: null,
     });
     expect(defaultBuyerSearchData.contact.preferredChannel).toBeNull();
+    expect(defaultBuyerSearchData.contact.preferredChannels).toEqual([]);
     expect(defaultBuyerSearchData.contact.consent).toBe(false);
   });
 });

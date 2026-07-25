@@ -1,7 +1,7 @@
 import "server-only";
 
 import { enrichMarketScoreTrends } from "@/lib/buyer-search/market-score";
-import { allPreferenceOptions, optionLabel, preferredChannelOptions, propertyTypeLabels } from "@/lib/buyer-search/options";
+import { allPreferenceOptions, preferredChannelLabels, propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 
@@ -40,6 +40,7 @@ export type AdminBuyerSearchRow = {
   minimum_rooms: number | null;
   notes: string | null;
   preferred_channel: BuyerSearchFormData["contact"]["preferredChannel"];
+  preferred_channels: BuyerSearchFormData["contact"]["preferredChannels"] | null;
   preferences: BuyerSearchFormData["preferences"];
   priorities: BuyerSearchFormData["priorities"];
   property_types: PropertyType[];
@@ -128,7 +129,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
+      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
 
   if (filters.status && filters.status !== "all") {
@@ -312,8 +313,11 @@ export function formatAdminPreferences(search: AdminBuyerSearchRow) {
   });
 }
 
-export function formatPreferredChannel(channel: AdminBuyerSearchRow["preferred_channel"]) {
-  return optionLabel(preferredChannelOptions, channel) || "Non renseigne";
+export function formatPreferredChannels(
+  channels: AdminBuyerSearchRow["preferred_channels"],
+  legacyChannel?: AdminBuyerSearchRow["preferred_channel"],
+) {
+  return preferredChannelLabels(channels?.length ? channels : legacyChannel) || "Non renseigne";
 }
 
 async function supabaseAdminFetch<T>(config: AdminSupabaseConfig, path: string): Promise<AdminDataState<T>> {

@@ -62,7 +62,8 @@ export const buyerSearchSchema = z
       lastName: z.string(),
       email: z.string(),
       phone: z.string(),
-      preferredChannel: z.enum(["email", "sms", "phone"]).nullable(),
+      preferredChannels: z.array(z.enum(["email", "sms", "phone"])).max(3).default([]),
+      preferredChannel: z.enum(["email", "sms", "phone"]).nullish().default(null),
       consent: z.boolean(),
     }),
   })
@@ -180,11 +181,11 @@ export const stepSchemas = {
         path: ["phone"],
       });
     }
-    if (!contact.preferredChannel) {
+    if (contact.preferredChannels.length === 0 && !contact.preferredChannel) {
       ctx.addIssue({
         code: "custom",
-        message: "Choisissez un canal de contact privilegie.",
-        path: ["preferredChannel"],
+        message: "Choisissez au moins un moyen pour etre prevenu.",
+        path: ["preferredChannels"],
       });
     }
     if (!contact.consent) {

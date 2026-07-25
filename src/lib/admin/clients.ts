@@ -21,6 +21,7 @@ export type AdminClientAccount = {
   metadata: Record<string, unknown>;
   phone: string;
   preferred_channel: BuyerSearchFormData["contact"]["preferredChannel"];
+  preferred_channels: BuyerSearchFormData["contact"]["preferredChannels"] | null;
   updated_at: string;
 };
 

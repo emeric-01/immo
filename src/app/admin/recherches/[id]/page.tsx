@@ -5,7 +5,7 @@ import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
   formatAdminPropertyTypes,
-  formatPreferredChannel,
+  formatPreferredChannels,
   getAdminBuyerSearch,
 } from "@/lib/admin/buyer-searches";
 import { optionLabel, financingOptions, purchaseTimelineOptions, situationOptions } from "@/lib/buyer-search/options";
@@ -155,7 +155,11 @@ export default async function AdminBuyerSearchDetailPage({
 
         <InfoPanel title="Contact et consentement" wide>
           <div className={styles.contactSummary}>
-            <Metric icon={UserRound} label="Canal privilegie" value={formatPreferredChannel(search.preferred_channel)} />
+            <Metric
+              icon={UserRound}
+              label="Moyens de contact"
+              value={formatPreferredChannels(search.preferred_channels, search.preferred_channel)}
+            />
             <Metric icon={ShieldCheck} label="Consentement" value={search.consent ? "Accepte" : "Non accepte"} />
             <Metric icon={CalendarDays} label="Date de depot" value={formatDate(search.created_at)} />
           </div>
