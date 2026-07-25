@@ -4,7 +4,7 @@ import {
   type PropertyEstimationInput,
 } from "@/lib/immo-data";
 import { getClientSession } from "@/lib/client-access/auth";
-import { saveClientEstimation } from "@/lib/client-access/estimations";
+import { savePropertyEstimation } from "@/lib/client-access/estimations";
 import { recordEstimationApiUsage } from "@/lib/estimation-api-alerts";
 import { getCityByMarketIdentifier } from "@/lib/cities";
 import { readCityMarketCache } from "@/lib/city-market-cache";
@@ -60,14 +60,16 @@ export async function POST(request: Request) {
         }
       : estimation;
     const session = await getClientSession();
-    const estimationId = session
-      ? await saveClientEstimation(session, input, enrichedEstimation)
-      : null;
+    const estimationId = await savePropertyEstimation(
+      session,
+      input,
+      enrichedEstimation,
+    );
 
     return NextResponse.json({
       ...enrichedEstimation,
       clientEstimationId: estimationId,
-      savedToClientAccount: Boolean(estimationId),
+      savedToClientAccount: Boolean(session && estimationId),
     });
   } catch (error) {
     console.error(error);

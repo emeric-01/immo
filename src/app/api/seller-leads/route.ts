@@ -87,7 +87,23 @@ async function saveLeadAccountAndEstimation({
     accountId = created[0]?.id;
   }
 
-  if (!accountId || payload.estimationId || !payload.estimationInput || !payload.estimationResult) {
+  if (!accountId) {
+    return;
+  }
+
+  const estimationId = readShortString(payload.estimationId);
+  if (estimationId) {
+    await clientSupabaseRequest(
+      `property_estimations?id=eq.${encodeURIComponent(estimationId)}&client_account_id=is.null`,
+      {
+        body: JSON.stringify({ client_account_id: accountId }),
+        method: "PATCH",
+      },
+    );
+    return;
+  }
+
+  if (!payload.estimationInput || !payload.estimationResult) {
     return;
   }
 

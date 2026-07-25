@@ -52,7 +52,9 @@ export async function getAdminEstimations(filters: { q?: string; status?: string
   const clients = new Map(clientsResult.data.map((client) => [client.id, client]));
   const rows = estimationsResult.data.map((estimation) => ({
     ...estimation,
-    client: clients.get(estimation.client_account_id) ?? null,
+    client: estimation.client_account_id
+      ? clients.get(estimation.client_account_id) ?? null
+      : null,
   }));
   const query = filters.q?.trim().toLowerCase();
 
@@ -81,6 +83,10 @@ export async function getAdminEstimation(id: string): Promise<AdminDataState<Adm
   const estimation = rows.data[0];
   if (!estimation) return { data: null, status: "ready" };
 
+  if (!estimation.client_account_id) {
+    return { data: { ...estimation, client: null }, status: "ready" };
+  }
+
   const clients = await fetchAdmin<AdminClientAccount[]>(
     config,
     `client_accounts?id=eq.${encodeURIComponent(estimation.client_account_id)}&select=*&limit=1`,
@@ -98,7 +104,7 @@ export function getAdminEstimationStats(rows: AdminEstimation[]): AdminEstimatio
     averagePrice: rows.length ? Math.round(rows.reduce((sum, row) => sum + row.median_price, 0) / rows.length) : 0,
     recentCount: rows.filter((row) => new Date(row.created_at) >= sevenDaysAgo).length,
     total: rows.length,
-    uniqueClients: new Set(rows.map((row) => row.client_account_id)).size,
+    uniqueClients: new Set(rows.map((row) => row.client_account_id).filter(Boolean)).size,
   };
 }
 

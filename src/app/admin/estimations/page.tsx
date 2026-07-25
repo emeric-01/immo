@@ -20,7 +20,7 @@ export default async function AdminEstimationsPage({ searchParams }: { searchPar
       <Sidebar />
       <section className={styles.content}>
         <section className={styles.pageHeader}>
-          <div><p className={styles.eyebrow}>Estimations vendeurs</p><h1>Demandes d&apos;estimation</h1><p>Consultez les biens estimés, leur valeur et les comptes clients associés.</p></div>
+          <div><p className={styles.eyebrow}>Estimations vendeurs</p><h1>Toutes les estimations</h1><p>Consultez chaque estimation réalisée, avec ou sans contact identifié.</p></div>
           <form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form>
         </section>
         {result.status !== "ready" ? <EmptyState title="Lecture BDD a finaliser" text={result.message} /> : <EstimationContent rows={result.data} params={params} />}
@@ -38,7 +38,7 @@ function EstimationContent({ rows, params }: { rows: AdminEstimation[]; params: 
   const cards = [
     { icon: BarChart3, label: "Estimations", value: stats.total },
     { icon: Gauge, label: "Actives", value: stats.activeCount },
-    { icon: UserRound, label: "Clients", value: stats.uniqueClients },
+    { icon: UserRound, label: "Avec contact", value: stats.uniqueClients },
     { icon: CalendarClock, label: "7 derniers jours", value: stats.recentCount },
     { icon: Euro, label: "Valeur moyenne", value: formatCurrency(stats.averagePrice) },
   ];
@@ -50,7 +50,7 @@ function EstimationContent({ rows, params }: { rows: AdminEstimation[]; params: 
 }
 
 function EstimationTable({ rows }: { rows: AdminEstimation[] }) {
-  return <div className={styles.tablePanel}><table><thead><tr><th>Client</th><th>Bien</th><th>Estimation</th><th>Confiance</th><th>Date</th><th aria-label="Detail" /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><div className={styles.clientCell}><span><UserRound aria-hidden="true" size={18} /></span><div><strong>{row.client ? formatAdminClientName(row.client) : "Client inconnu"}</strong><small>{row.client?.email ?? "Compte indisponible"}</small></div></div></td><td><strong>{row.property_type === "house" ? "Maison" : "Appartement"}</strong><small>{row.address_label}</small><small>{row.surface_m2} m2 · {row.rooms} pièces</small></td><td><strong>{formatCurrency(row.median_price)}</strong><small>{formatCurrency(row.low_price)} – {formatCurrency(row.high_price)}</small></td><td><span className={styles.marketScoreBadge} data-score={confidenceTone(row.confidence_score)}>{row.confidence_score ?? 0}/5</span><small>{row.source === "immo-data" ? "Immo Data" : "Démonstration"}</small></td><td><strong>{formatDate(row.created_at)}</strong><small><span className={styles.statusBadge} data-status={row.status === "active" ? "matched" : "paused"}>{row.status === "active" ? "Active" : "Archivée"}</span></small></td><td><Link aria-label={`Voir l'estimation de ${row.address_label}`} className={styles.iconLink} href={`/admin/estimations/${row.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
+  return <div className={styles.tablePanel}><table><thead><tr><th>Contact</th><th>Bien</th><th>Estimation</th><th>Confiance</th><th>Date</th><th aria-label="Detail" /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><div className={styles.clientCell}><span><UserRound aria-hidden="true" size={18} /></span><div><strong>{row.client ? formatAdminClientName(row.client) : "Sans contact"}</strong><small>{row.client?.email ?? "Estimation anonyme"}</small></div></div></td><td><strong>{row.property_type === "house" ? "Maison" : "Appartement"}</strong><small>{row.address_label}</small><small>{row.surface_m2} m2 · {row.rooms} pièces</small></td><td><strong>{formatCurrency(row.median_price)}</strong><small>{formatCurrency(row.low_price)} – {formatCurrency(row.high_price)}</small></td><td><span className={styles.marketScoreBadge} data-score={confidenceTone(row.confidence_score)}>{row.confidence_score ?? 0}/5</span><small>{row.source === "immo-data" ? "Immo Data" : "Démonstration"}</small></td><td><strong>{formatDate(row.created_at)}</strong><small><span className={styles.statusBadge} data-status={row.status === "active" ? "matched" : "paused"}>{row.status === "active" ? "Active" : "Archivée"}</span></small></td><td><Link aria-label={`Voir l'estimation de ${row.address_label}`} className={styles.iconLink} href={`/admin/estimations/${row.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) { return <section className={styles.emptyState}><Inbox aria-hidden="true" size={26} /><h2>{title}</h2><p>{text}</p></section>; }

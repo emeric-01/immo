@@ -11,7 +11,7 @@ import { clientSupabaseRequest } from "./supabase";
 export type ClientEstimationRow = {
   address_label: string;
   city_name: string | null;
-  client_account_id: string;
+  client_account_id: string | null;
   confidence_score: number | null;
   created_at: string;
   high_price: number;
@@ -30,8 +30,8 @@ export type ClientEstimationRow = {
   updated_at: string;
 };
 
-export async function saveClientEstimation(
-  session: ClientSession,
+export async function savePropertyEstimation(
+  session: ClientSession | null,
   input: PropertyEstimationInput,
   result: PropertyEstimation,
 ) {
@@ -42,7 +42,7 @@ export async function saveClientEstimation(
       body: JSON.stringify({
         address_label: result.addressLabel,
         city_name: selectedAddress?.cityName ?? null,
-        client_account_id: session.id,
+        client_account_id: session?.id ?? null,
         confidence_score: result.confidenceScore,
         high_price: result.highPrice,
         input_payload: input,
