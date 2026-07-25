@@ -49,8 +49,13 @@ export function BuyerSearchConfirmation() {
                 <ConfirmationItem icon={Home} title="Type de bien" value={formatPropertyTypes(data)} />
                 <ConfirmationItem icon={MapPin} title="Localisation" value={<ConfirmationLocations cities={data.location.cities} />} />
                 <ConfirmationItem icon={WalletCards} title="Budget maximum" value={formatCurrency(data.property.maximumBudget)} />
+                <ConfirmationItem
+                  icon={Ruler}
+                  title="Surface habitable minimale"
+                  value={data.characteristics.minimumLivingArea ? `${data.characteristics.minimumLivingArea} m²` : "Non renseignée"}
+                />
                 {data.preferences.minimumLandArea ? (
-                  <ConfirmationItem icon={Ruler} title="Terrain minimum" value={`${data.preferences.minimumLandArea} m2`} />
+                  <ConfirmationItem icon={Ruler} title="Terrain minimum" value={`${data.preferences.minimumLandArea} m²`} />
                 ) : null}
                 <ConfirmationItem icon={BedDouble} title="Chambres" value={`${data.characteristics.minimumBedrooms ?? 0} chambre(s) minimum`} />
                 <ConfirmationItem icon={CalendarDays} title="Delai d'achat" value={optionLabel(purchaseTimelineOptions, data.project.purchaseTimeline)} />
