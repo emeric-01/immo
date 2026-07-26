@@ -52,7 +52,11 @@ import {
   situationOptions,
 } from "@/lib/buyer-search/options";
 import { stepSchemas } from "@/lib/buyer-search/schema";
-import { loadBuyerSearchDraft, saveBuyerSearchDraft } from "@/lib/buyer-search/storage";
+import {
+  loadBuyerSearchDraft,
+  loadSubmittedBuyerSearch,
+  saveBuyerSearchDraft,
+} from "@/lib/buyer-search/storage";
 import { submitBuyerSearch } from "@/lib/buyer-search/submit";
 import {
   buyerSearchSteps,
@@ -123,6 +127,7 @@ export function BuyerSearchWizard() {
   const [stepIndex, setStepIndex] = useState(0);
   const [draftReady, setDraftReady] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [canReuseContact, setCanReuseContact] = useState(false);
   const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
   const form = useForm<BuyerSearchFormData>({
     defaultValues: defaultBuyerSearchData,
@@ -130,7 +135,13 @@ export function BuyerSearchWizard() {
   });
   const { clearErrors, formState, getValues, handleSubmit, reset, setError, setValue, watch } =
     form;
-  const activeStep = buyerSearchSteps[stepIndex];
+  const visibleSteps = useMemo(
+    () => canReuseContact
+      ? buyerSearchSteps.filter((step) => step.id !== "contact")
+      : buyerSearchSteps,
+    [canReuseContact],
+  );
+  const activeStep = visibleSteps[stepIndex] ?? visibleSteps[visibleSteps.length - 1];
   const data = watch();
 
   useEffect(() => {
@@ -140,8 +151,23 @@ export function BuyerSearchWizard() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    if (params.get("source") === "client") {
+    const source = params.get("source");
+
+    if (source === "client") {
       void loadClientProjectIntoForm(params.get("searchId"));
+      return;
+    }
+
+    if (source === "submitted") {
+      const submittedSearch = loadSubmittedBuyerSearch();
+
+      if (submittedSearch) {
+        reset({ ...defaultBuyerSearchData, ...submittedSearch });
+        setClientEmail(submittedSearch.contact.email);
+        setCanReuseContact(stepSchemas.contact.safeParse(submittedSearch.contact).success);
+      }
+
+      setDraftReady(true);
       return;
     }
 
@@ -188,24 +214,30 @@ export function BuyerSearchWizard() {
         }
 
         const payload = (await response.json()) as {
-          profile?: { email: string; firstName: string; lastName: string };
+          contact?: BuyerSearchFormData["contact"];
+          profile?: { email: string; firstName: string; lastName: string; phone?: string };
           search?: BuyerSearchFormData;
         };
 
         if (payload.search) {
           reset({ ...defaultBuyerSearchData, ...payload.search });
           setClientEmail(payload.search.contact.email);
+          setCanReuseContact(stepSchemas.contact.safeParse(payload.search.contact).success);
         } else if (payload.profile) {
+          const contact = {
+            ...defaultBuyerSearchData.contact,
+            ...payload.contact,
+            email: payload.profile.email,
+            firstName: payload.profile.firstName,
+            lastName: payload.profile.lastName,
+            phone: payload.contact?.phone || payload.profile.phone || "",
+          };
           reset({
             ...defaultBuyerSearchData,
-            contact: {
-              ...defaultBuyerSearchData.contact,
-              email: payload.profile.email,
-              firstName: payload.profile.firstName,
-              lastName: payload.profile.lastName,
-            },
+            contact,
           });
           setClientEmail(payload.profile.email);
+          setCanReuseContact(stepSchemas.contact.safeParse(contact).success);
         }
       } finally {
         setDraftReady(true);
@@ -271,7 +303,7 @@ export function BuyerSearchWizard() {
   }
 
   function goToStep(step: WizardStepId) {
-    const nextIndex = buyerSearchSteps.findIndex((candidate) => candidate.id === step);
+    const nextIndex = visibleSteps.findIndex((candidate) => candidate.id === step);
 
     if (nextIndex >= 0) {
       clearErrors();
@@ -285,7 +317,7 @@ export function BuyerSearchWizard() {
       return;
     }
 
-    if (stepIndex < buyerSearchSteps.length - 1) {
+    if (stepIndex < visibleSteps.length - 1) {
       setStepIndex((current) => current + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -299,6 +331,8 @@ export function BuyerSearchWizard() {
 
   async function onFinalSubmit(values: BuyerSearchFormData) {
     if (!validateStep("contact")) {
+      setCanReuseContact(false);
+      setStepIndex(buyerSearchSteps.findIndex((step) => step.id === "contact"));
       return;
     }
 
@@ -335,7 +369,7 @@ export function BuyerSearchWizard() {
   return (
     <main className={styles.page}>
       <form className={styles.shell} onSubmit={(event) => event.preventDefault()}>
-        <ProgressStepper activeIndex={stepIndex} />
+        <ProgressStepper activeIndex={stepIndex} steps={visibleSteps} />
         <header className={styles.stepHeader}>
           <div>
             <h1>{activeStep.id === "contact" ? "Derniere etape !" : stepCopy[activeStep.id].title}</h1>
@@ -367,14 +401,14 @@ export function BuyerSearchWizard() {
         {stepComponent}
         <WizardNavigation
           isFirst={stepIndex === 0}
-          isLast={stepIndex === buyerSearchSteps.length - 1}
+          isLast={stepIndex === visibleSteps.length - 1}
           onBack={previousStep}
           onNext={nextStep}
           onSubmit={handleSubmit(onFinalSubmit)}
           nextLabel={
             activeStep.id === "summary"
               ? "Definir mes priorites"
-              : activeStep.id === "contact"
+              : activeStep.id === "contact" || stepIndex === visibleSteps.length - 1
                 ? "Enregistrer ma recherche"
                 : "Continuer"
           }
@@ -389,10 +423,16 @@ export function BuyerSearchWizard() {
   );
 }
 
-function ProgressStepper({ activeIndex }: { activeIndex: number }) {
+function ProgressStepper({
+  activeIndex,
+  steps,
+}: {
+  activeIndex: number;
+  steps: typeof buyerSearchSteps;
+}) {
   return (
     <ol className={styles.progress} aria-label="Progression du formulaire">
-      {buyerSearchSteps.map((step, index) => {
+      {steps.map((step, index) => {
         const isDone = index < activeIndex;
         const isActive = index === activeIndex;
 

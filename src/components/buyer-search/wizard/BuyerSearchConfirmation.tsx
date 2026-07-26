@@ -95,7 +95,7 @@ export function BuyerSearchConfirmation() {
           </section>
         ) : null}
         <div className={styles.navigation}>
-          <Link className={styles.backButton} href="/recherche">
+          <Link className={styles.backButton} href="/recherche?source=submitted">
             <ArrowLeft size={18} aria-hidden="true" />
             Modifier ma recherche
           </Link>
