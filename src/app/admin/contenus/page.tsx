@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpenText, FilePenLine, FileText, Plus, Search } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { hasAdminPermission } from "@/lib/admin/permissions";
+import { hasAdminPermission, requireAdminPermission } from "@/lib/admin/permissions";
 import { formatArticleDate } from "@/lib/content/article-utils";
 import { getAdminContentArticles } from "@/lib/content/articles";
 import admin from "../admin.module.css";
@@ -25,24 +25,10 @@ export default async function AdminContentPage({
   searchParams: Promise<{ error?: string; q?: string; status?: string }>;
 }) {
   const session = await requireAdminSession();
-  const canRead = await hasAdminPermission(session, "contents:read");
+  await requireAdminPermission(session, "contents:read");
+  const canRead = true;
   const canWrite = await hasAdminPermission(session, "contents:write");
   const params = await searchParams;
-
-  if (!canRead) {
-    return (
-      <main className={admin.adminPage}>
-        <AdminContentSidebar />
-        <section className={admin.content}>
-          <div className={admin.emptyState}>
-            <FileText size={34} />
-            <h1>Accès contenu indisponible</h1>
-            <p>Votre rôle admin ne permet pas de consulter les contenus éditoriaux.</p>
-          </div>
-        </section>
-      </main>
-    );
-  }
 
   const articles = await getAdminContentArticles({ q: params.q, status: params.status });
   const data = articles.status === "ready" ? articles.data : [];

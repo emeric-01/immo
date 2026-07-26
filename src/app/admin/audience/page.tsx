@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Bot, Eye, MousePointerClick, ShieldCheck, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getSiteAnalytics } from "@/lib/site-analytics";
 import admin from "../admin.module.css";
 import styles from "./audience.module.css";
@@ -9,13 +11,14 @@ import { AudienceCharts } from "./AudienceCharts";
 export const dynamic = "force-dynamic";
 
 export default async function AudiencePage({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "audience:read");
   const requested = Number((await searchParams).periode || 30);
   const days = [7, 30, 90].includes(requested) ? requested : 30;
   const summary = await getSiteAnalytics(days).catch(() => ({ totals: { humanViews: 0, botViews: 0, suspectedViews: 0, uniqueVisitors: 0, conversions: 0, conversionRate: 0 }, daily: [], audience: [], devices: [], pages: [], sources: [], bots: [], channels: [], campaigns: [], conversionKinds: [] }));
   const deviceLabel = (name: string) => name === "mobile" ? "Mobile" : name === "tablet" ? "Tablette" : "Ordinateur";
   return <main className={admin.adminPage}>
-    <aside className={admin.sidebar}><div className={admin.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link href="/admin/estimations">Estimations</Link><Link href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link data-active href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link><Link href="/admin/mes-liens">Mes liens</Link></nav></aside>
+    <AdminSidebar active="/admin/audience" session={session}/>
     <section className={admin.content}><header className={admin.pageHeader}><div><p className={admin.eyebrow}>Mesure d’audience</p><h1>Trafic du site</h1><p>Une lecture claire des visites, des parcours et du trafic automatisé identifié.</p></div></header>
       <div className={styles.filters}><div>{[7, 30, 90].map((period) => <Link data-active={period === days ? "" : undefined} href={`/admin/audience?periode=${period}`} key={period}>{period} jours</Link>)}</div></div>
       <section className={styles.metrics}><article><Eye/><span>Pages vues humaines</span><strong>{summary.totals.humanViews}</strong><small>sur {days} jours</small></article><article><UsersRound/><span>Visiteurs estimés</span><strong>{summary.totals.uniqueVisitors}</strong><small>identifiants pseudonymisés</small></article><article><Bot/><span>Robots identifiés</span><strong>{summary.totals.botViews}</strong><small>pages interrogées</small></article><article><MousePointerClick/><span>Conversions</span><strong>{summary.totals.conversions}</strong><small>{summary.totals.conversionRate}% des vues</small></article><article><ShieldCheck/><span>Trafic incertain</span><strong>{summary.totals.suspectedViews}</strong><small>à surveiller</small></article></section>

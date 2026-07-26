@@ -17,6 +17,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const property = await getAdminProperty((await params).id);
     if (!property) return NextResponse.json({ error: "Bien introuvable" }, { status: 404 });
+    const canManageAll = await hasAdminPermission(session, "properties:write");
+    const canUpdateOwn = await hasAdminPermission(session, "properties:update_own");
+    if (!canManageAll && !(canUpdateOwn && property.created_by_admin_id === session.id)) {
+      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const pdf = await renderPropertyPdf(property, { siteOrigin: new URL(request.url).origin });
     const fileName = propertyPdfFileName(property);

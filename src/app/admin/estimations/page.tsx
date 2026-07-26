@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BarChart3, CalendarClock, Euro, Gauge, Inbox, Search, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { formatAdminClientName } from "@/lib/admin/clients";
 import { getAdminEstimations, getAdminEstimationStats, type AdminEstimation } from "@/lib/admin/estimations";
 import { logoutAdmin } from "../login/actions";
@@ -19,7 +20,7 @@ export default async function AdminEstimationsPage({ searchParams }: { searchPar
 
   return (
     <main className={styles.adminPage}>
-      <Sidebar />
+      <AdminSidebar active="/admin/estimations" session={session}/>
       <section className={styles.content}>
         <section className={styles.pageHeader}>
           <div><p className={styles.eyebrow}>Estimations vendeurs</p><h1>Toutes les estimations</h1><p>Consultez chaque estimation réalisée, avec ou sans contact identifié.</p></div>
@@ -29,10 +30,6 @@ export default async function AdminEstimationsPage({ searchParams }: { searchPar
       </section>
     </main>
   );
-}
-
-function Sidebar() {
-  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link data-active href="/admin/estimations">Estimations</Link><Link href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link><Link href="/admin/mes-liens">Mes liens</Link></nav></aside>;
 }
 
 function EstimationContent({ rows, params }: { rows: AdminEstimation[]; params: { q?: string; status?: string } }) {

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Gift, HeartHandshake, Inbox, Search, UserRoundCheck } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getAdminReferrals, getAdminReferralStats, type AdminReferral } from "@/lib/admin/referrals";
 import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus, referralStatuses } from "@/lib/referrals";
 import { logoutAdmin } from "../login/actions";
@@ -11,13 +13,14 @@ export const metadata: Metadata = { title: "Parrainages | Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminReferralsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "referrals:read");
   const params = await searchParams;
   const result = await getAdminReferrals(params);
 
   return (
     <main className={styles.adminPage}>
-      <AdminSidebar />
+      <AdminSidebar active="/admin/parrainages" session={session}/>
       <section className={styles.content}>
         <section className={styles.pageHeader}>
           <div>
@@ -50,10 +53,6 @@ export default async function AdminReferralsPage({ searchParams }: { searchParam
       </section>
     </main>
   );
-}
-
-function AdminSidebar() {
-  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link href="/admin/estimations">Estimations</Link><Link data-active href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link></nav></aside>;
 }
 
 function ReferralStats({ referrals }: { referrals: AdminReferral[] }) {

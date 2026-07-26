@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarClock, CheckCircle2, CircleDashed, Inbox, Search, TrendingUp } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getAdminCitySearchMisses, type AdminCitySearchMisses } from "@/lib/admin/city-search-misses";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
@@ -17,13 +19,14 @@ export default async function AdminCitySearchMissesPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "city_searches:read");
   const params = await searchParams;
   const result = await getAdminCitySearchMisses({ q: params.q, status: params.status });
 
   return (
     <main className={styles.adminPage}>
-      <Sidebar />
+      <AdminSidebar active="/admin/recherches-villes" session={session}/>
       <section className={styles.content}>
         <section className={styles.pageHeader}>
           <div>
@@ -45,30 +48,6 @@ export default async function AdminCitySearchMissesPage({
         )}
       </section>
     </main>
-  );
-}
-
-function Sidebar() {
-  return (
-    <aside className={styles.sidebar}>
-      <div className={styles.brandMark}>
-        <span>les jumelles</span>
-        <strong>IMMO</strong>
-      </div>
-      <nav>
-        <Link href="/admin/biens">Biens</Link>
-        <Link href="/admin/recherches">Recherches</Link>
-        <Link href="/admin/estimations">Estimations</Link>
-        <Link href="/admin/parrainages">Parrainages</Link>
-        <Link href="/admin/clients">Clients</Link>
-        <Link data-active href="/admin/recherches-villes">
-          Villes recherchées
-        </Link>
-        <Link href="/admin/audience">Audience</Link>
-        <Link href="/admin/contenus">Contenus</Link>
-        <Link href="/admin/utilisateurs">Utilisateurs</Link>
-      </nav>
-    </aside>
   );
 }
 

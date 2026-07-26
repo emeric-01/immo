@@ -10,6 +10,8 @@ import {
 } from "@/lib/admin/buyer-searches";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import type { AdminSession } from "@/lib/admin/auth";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
 
@@ -41,7 +43,7 @@ export default async function AdminBuyerSearchesPage({
   const result = await getAdminBuyerSearches({ q: params.q, status: params.status }, session);
 
   return (
-    <AdminFrame>
+    <AdminFrame session={session}>
       <section className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Recherches acheteurs</p>
@@ -81,29 +83,10 @@ export default async function AdminBuyerSearchesPage({
   );
 }
 
-function AdminFrame({ children }: { children: React.ReactNode }) {
+function AdminFrame({ children, session }: { children: React.ReactNode; session: AdminSession }) {
   return (
     <main className={styles.adminPage}>
-      <aside className={styles.sidebar}>
-        <div className={styles.brandMark}>
-          <span>les jumelles</span>
-          <strong>IMMO</strong>
-        </div>
-        <nav>
-          <Link href="/admin/biens">Biens</Link>
-          <Link data-active href="/admin/recherches">
-            Recherches
-          </Link>
-          <Link href="/admin/estimations">Estimations</Link>
-          <Link href="/admin/parrainages">Parrainages</Link>
-          <Link href="/admin/clients">Clients</Link>
-          <Link href="/admin/recherches-villes">Villes recherchées</Link>
-          <Link href="/admin/audience">Audience</Link>
-          <Link href="/admin/contenus">Contenus</Link>
-          <Link href="/admin/utilisateurs">Utilisateurs</Link>
-          <Link href="/admin/mes-liens">Mes liens</Link>
-        </nav>
-      </aside>
+      <AdminSidebar active="/admin/recherches" session={session}/>
       <section className={styles.content}>{children}</section>
     </main>
   );

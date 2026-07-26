@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight, CalendarClock, Inbox, Search, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import type { AdminSession } from "@/lib/admin/auth";
 import {
   type AdminClientListItem,
   formatAdminClientName,
@@ -30,7 +32,7 @@ export default async function AdminClientsPage({
   const result = await getAdminClients({ q: params.q }, session);
 
   return (
-    <AdminFrame>
+    <AdminFrame session={session}>
       <section className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Comptes clients</p>
@@ -67,29 +69,10 @@ export default async function AdminClientsPage({
   );
 }
 
-function AdminFrame({ children }: { children: React.ReactNode }) {
+function AdminFrame({ children, session }: { children: React.ReactNode; session: AdminSession }) {
   return (
     <main className={styles.adminPage}>
-      <aside className={styles.sidebar}>
-        <div className={styles.brandMark}>
-          <span>les jumelles</span>
-          <strong>IMMO</strong>
-        </div>
-        <nav>
-          <Link href="/admin/biens">Biens</Link>
-          <Link href="/admin/recherches">Recherches</Link>
-          <Link href="/admin/estimations">Estimations</Link>
-          <Link href="/admin/parrainages">Parrainages</Link>
-          <Link data-active href="/admin/clients">
-            Clients
-          </Link>
-          <Link href="/admin/recherches-villes">Villes recherchées</Link>
-          <Link href="/admin/audience">Audience</Link>
-          <Link href="/admin/contenus">Contenus</Link>
-          <Link href="/admin/utilisateurs">Utilisateurs</Link>
-          <Link href="/admin/mes-liens">Mes liens</Link>
-        </nav>
-      </aside>
+      <AdminSidebar active="/admin/clients" session={session}/>
       <section className={styles.content}>{children}</section>
     </main>
   );
