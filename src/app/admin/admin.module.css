@@ -1181,3 +1181,35 @@
     flex-wrap: wrap;
   }
 }
+.errorActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.errorActions button,
+.errorActions a {
+  align-items: center;
+  border: 1px solid #d8c9bc;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
+.errorActions button {
+  background: #171612;
+  color: #fff;
+}
+
+.errorActions a {
+  background: #fff;
+  color: #171612;
+}

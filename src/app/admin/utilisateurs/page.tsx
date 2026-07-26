@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
+import { ArrowLeft, ShieldCheck, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { listAdminAttributionLinks, listAdminUsers } from "@/lib/admin/users";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import styles from "../admin.module.css";
-import { createAdminUserAction } from "./actions";
+import { CreateAdminUserForm } from "./CreateAdminUserForm";
 
 export const metadata: Metadata = {
   title: "Utilisateurs admin | Les Jumelles Immo",
@@ -46,27 +46,9 @@ export default async function AdminUsersPage({
         <section className={styles.userGrid}>
           <article className={styles.infoPanel}>
             <h2>Nouvel utilisateur</h2>
-            {params.created ? <p className={styles.successText}>Utilisateur cree.</p> : null}
+            {params.created ? <p className={styles.successText}>Utilisateur créé.</p> : null}
             {params.error ? <p className={styles.errorText}>{params.error}</p> : null}
-            <form action={createAdminUserAction} className={styles.userForm}>
-              <label htmlFor="fullName">Nom</label>
-              <input id="fullName" name="fullName" placeholder="Claire Dupont" />
-              <label htmlFor="email">Email</label>
-              <input id="email" name="email" placeholder="claire@lesjumelles.immo" required type="email" />
-              <label htmlFor="password">Mot de passe provisoire</label>
-              <input id="password" minLength={10} name="password" required type="password" />
-              <label htmlFor="role">Role</label>
-              <select id="role" name="role" defaultValue="manager">
-                <option value="manager">Manager</option>
-                <option value="editor">Editeur contenus</option>
-                <option value="agent">Agent commercial</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button type="submit">
-                <UserPlus size={18} aria-hidden="true" />
-                Creer l&apos;acces
-              </button>
-            </form>
+            <CreateAdminUserForm />
           </article>
 
           <article className={styles.infoPanel}>
