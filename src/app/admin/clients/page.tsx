@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, Inbox, Search, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import {
   type AdminClientListItem,
   formatAdminClientName,
@@ -23,9 +24,10 @@ export default async function AdminClientsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "clients:read");
   const params = await searchParams;
-  const result = await getAdminClients({ q: params.q });
+  const result = await getAdminClients({ q: params.q }, session);
 
   return (
     <AdminFrame>
@@ -85,6 +87,7 @@ function AdminFrame({ children }: { children: React.ReactNode }) {
           <Link href="/admin/audience">Audience</Link>
           <Link href="/admin/contenus">Contenus</Link>
           <Link href="/admin/utilisateurs">Utilisateurs</Link>
+          <Link href="/admin/mes-liens">Mes liens</Link>
         </nav>
       </aside>
       <section className={styles.content}>{children}</section>
@@ -142,6 +145,7 @@ function ClientTable({ clients }: { clients: AdminClientListItem[] }) {
                     <strong>{formatAdminClientName(client)}</strong>
                     <small>{client.email}</small>
                     <small>{client.phone || "Telephone non renseigne"}</small>
+                    <small>Origine : {formatAttribution(client.first_attribution)}</small>
                   </div>
                 </div>
               </td>
@@ -187,4 +191,10 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatAttribution(snapshot: AdminClientListItem["first_attribution"]) {
+  return "first" in snapshot
+    ? `${snapshot.first.source} / ${snapshot.first.medium}${snapshot.first.campaign ? ` · ${snapshot.first.campaign}` : ""}`
+    : "Non attribue";
 }

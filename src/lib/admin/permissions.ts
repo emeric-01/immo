@@ -21,6 +21,7 @@ const fallbackPermissions: Record<AdminSession["role"], AdminPermission[]> = {
   admin: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write", "users:manage"],
   bootstrap: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write", "users:manage"],
   editor: ["contents:read", "contents:write"],
+  agent: ["buyer_searches:read", "clients:read", "estimations:read"],
   manager: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write"],
 };
 

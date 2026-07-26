@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { PublicFooter } from "@/components/public-site/PublicFooter";
 import { PublicHeader } from "@/components/public-site/PublicHeader";
 import { GoogleAnalyticsConsent } from "@/components/analytics/GoogleAnalyticsConsent";
+import { AttributionTracker } from "@/components/analytics/AttributionTracker";
+import { Suspense } from "react";
 import styles from "@/components/public-site/public-site.module.css";
 import { absoluteUrl } from "@/lib/site";
 
@@ -16,6 +18,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <PublicHeader />
       <div className={styles.content}>{children}</div>
       <PublicFooter />
+      <Suspense fallback={null}><AttributionTracker /></Suspense>
       <GoogleAnalyticsConsent />
     </div>
   );

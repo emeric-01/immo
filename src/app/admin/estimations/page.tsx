@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BarChart3, CalendarClock, Euro, Gauge, Inbox, Search, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminClientName } from "@/lib/admin/clients";
 import { getAdminEstimations, getAdminEstimationStats, type AdminEstimation } from "@/lib/admin/estimations";
 import { logoutAdmin } from "../login/actions";
@@ -11,9 +12,10 @@ export const metadata: Metadata = { title: "Estimations | Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminEstimationsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "estimations:read");
   const params = await searchParams;
-  const result = await getAdminEstimations(params);
+  const result = await getAdminEstimations(params, session);
 
   return (
     <main className={styles.adminPage}>
@@ -30,7 +32,7 @@ export default async function AdminEstimationsPage({ searchParams }: { searchPar
 }
 
 function Sidebar() {
-  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link data-active href="/admin/estimations">Estimations</Link><Link href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link></nav></aside>;
+  return <aside className={styles.sidebar}><div className={styles.brandMark}><span>les jumelles</span><strong>IMMO</strong></div><nav><Link href="/admin/biens">Biens</Link><Link href="/admin/recherches">Recherches</Link><Link data-active href="/admin/estimations">Estimations</Link><Link href="/admin/parrainages">Parrainages</Link><Link href="/admin/clients">Clients</Link><Link href="/admin/recherches-villes">Villes recherchées</Link><Link href="/admin/audience">Audience</Link><Link href="/admin/contenus">Contenus</Link><Link href="/admin/utilisateurs">Utilisateurs</Link><Link href="/admin/mes-liens">Mes liens</Link></nav></aside>;
 }
 
 function EstimationContent({ rows, params }: { rows: AdminEstimation[]; params: { q?: string; status?: string } }) {
@@ -50,10 +52,11 @@ function EstimationContent({ rows, params }: { rows: AdminEstimation[]; params: 
 }
 
 function EstimationTable({ rows }: { rows: AdminEstimation[] }) {
-  return <div className={styles.tablePanel}><table><thead><tr><th>Contact</th><th>Bien</th><th>Estimation</th><th>Confiance</th><th>Date</th><th aria-label="Detail" /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><div className={styles.clientCell}><span><UserRound aria-hidden="true" size={18} /></span><div><strong>{row.client ? formatAdminClientName(row.client) : "Sans contact"}</strong><small>{row.client?.email ?? "Estimation anonyme"}</small></div></div></td><td><strong>{row.property_type === "house" ? "Maison" : "Appartement"}</strong><small>{row.address_label}</small><small>{row.surface_m2} m2 · {row.rooms} pièces</small></td><td><strong>{formatCurrency(row.median_price)}</strong><small>{formatCurrency(row.low_price)} – {formatCurrency(row.high_price)}</small></td><td><span className={styles.marketScoreBadge} data-score={confidenceTone(row.confidence_score)}>{row.confidence_score ?? 0}/5</span><small>{row.source === "immo-data" ? "Immo Data" : "Démonstration"}</small></td><td><strong>{formatDate(row.created_at)}</strong><small><span className={styles.statusBadge} data-status={row.status === "active" ? "matched" : "paused"}>{row.status === "active" ? "Active" : "Archivée"}</span></small></td><td><Link aria-label={`Voir l'estimation de ${row.address_label}`} className={styles.iconLink} href={`/admin/estimations/${row.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
+  return <div className={styles.tablePanel}><table><thead><tr><th>Contact</th><th>Bien</th><th>Estimation</th><th>Confiance</th><th>Date</th><th aria-label="Detail" /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><div className={styles.clientCell}><span><UserRound aria-hidden="true" size={18} /></span><div><strong>{row.client ? formatAdminClientName(row.client) : "Sans contact"}</strong><small>{row.client?.email ?? "Estimation anonyme"}</small><small>Origine : {formatAttribution(row.attribution_snapshot)}</small></div></div></td><td><strong>{row.property_type === "house" ? "Maison" : "Appartement"}</strong><small>{row.address_label}</small><small>{row.surface_m2} m2 · {row.rooms} pièces</small></td><td><strong>{formatCurrency(row.median_price)}</strong><small>{formatCurrency(row.low_price)} – {formatCurrency(row.high_price)}</small></td><td><span className={styles.marketScoreBadge} data-score={confidenceTone(row.confidence_score)}>{row.confidence_score ?? 0}/5</span><small>{row.source === "immo-data" ? "Immo Data" : "Démonstration"}</small></td><td><strong>{formatDate(row.created_at)}</strong><small><span className={styles.statusBadge} data-status={row.status === "active" ? "matched" : "paused"}>{row.status === "active" ? "Active" : "Archivée"}</span></small></td><td><Link aria-label={`Voir l'estimation de ${row.address_label}`} className={styles.iconLink} href={`/admin/estimations/${row.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) { return <section className={styles.emptyState}><Inbox aria-hidden="true" size={26} /><h2>{title}</h2><p>{text}</p></section>; }
 function formatCurrency(value: number) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value); }
 function formatDate(value: string) { return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)); }
 function confidenceTone(value: number | null) { return (value ?? 0) >= 4 ? "positive" : (value ?? 0) >= 3 ? "warning" : "difficult"; }
+function formatAttribution(snapshot: AdminEstimation["attribution_snapshot"]) { return snapshot && "first" in snapshot ? `${snapshot.first.source} / ${snapshot.first.medium}${snapshot.first.campaign ? ` · ${snapshot.first.campaign}` : ""}` : "Non attribue"; }

@@ -4,6 +4,7 @@ import { enrichMarketScoreTrends } from "@/lib/buyer-search/market-score";
 import { allPreferenceOptions, preferredChannelLabels, propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
+import type { AdminSession } from "./auth";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -13,6 +14,9 @@ type AdminSupabaseConfig = {
 export type AdminBuyerSearchRow = {
   id: string;
   assigned_to: string | null;
+  assigned_admin_user_id: string | null;
+  attributed_admin_user_id: string | null;
+  attribution_snapshot: import("@/lib/attribution").AttributionSnapshot | Record<string, never>;
   city_names: string[];
   consent: boolean;
   consent_at: string | null;
@@ -118,6 +122,7 @@ function getAdminSupabaseConfig(): AdminSupabaseConfig | null {
 
 export async function getAdminBuyerSearches(
   filters: BuyerSearchListFilters = {},
+  session?: AdminSession,
 ): Promise<AdminDataState<AdminBuyerSearchRow[]>> {
   const config = getAdminSupabaseConfig();
 
@@ -129,8 +134,9 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
+      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,assigned_admin_user_id,attributed_admin_user_id,attribution_snapshot,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
+  applyAgentScope(params, session);
 
   if (filters.status && filters.status !== "all") {
     params.set("status", `eq.${filters.status}`);
@@ -165,7 +171,7 @@ export async function getAdminBuyerSearches(
   };
 }
 
-export async function getAdminBuyerSearch(id: string): Promise<AdminDataState<AdminBuyerSearchDetail | null>> {
+export async function getAdminBuyerSearch(id: string, session?: AdminSession): Promise<AdminDataState<AdminBuyerSearchDetail | null>> {
   const config = getAdminSupabaseConfig();
 
   if (!config) {
@@ -177,6 +183,7 @@ export async function getAdminBuyerSearch(id: string): Promise<AdminDataState<Ad
     limit: "1",
     select: "*",
   });
+  applyAgentScope(searchParams, session);
 
   const searchResult = await supabaseAdminFetch<AdminBuyerSearchRow[]>(config, `buyer_searches?${searchParams.toString()}`);
 
@@ -235,6 +242,10 @@ export async function getAdminBuyerSearch(id: string): Promise<AdminDataState<Ad
     },
     status: "ready",
   };
+}
+
+function applyAgentScope(params: URLSearchParams, session?: AdminSession) {
+  if (session?.role === "agent") params.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
 }
 
 async function patchAdminBuyerSearchScore(

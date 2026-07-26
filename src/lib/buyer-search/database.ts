@@ -2,6 +2,7 @@ import { analyzeBuyerSearchMarket } from "./market-score";
 import type { BuyerSearchMarketScore } from "./market-score-types";
 import { normalizePreferredChannels, normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData } from "./types";
+import type { AttributionSnapshot } from "@/lib/attribution";
 
 type BuyerSearchStorage = "database" | "local";
 
@@ -17,6 +18,7 @@ export type BuyerSearchSubmissionMetadata = {
   ipAddress?: string | null;
   source?: string;
   userAgent?: string | null;
+  attribution?: AttributionSnapshot | null;
 };
 
 type SupabaseConfig = {
@@ -61,7 +63,7 @@ export async function createBuyerSearchRecord(
   }
 
   const buyerSearchId = crypto.randomUUID();
-  const clientAccount = await upsertClientAccount(config, data);
+  const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
 
   await insertSupabaseRows(
     config,
@@ -117,7 +119,7 @@ export async function updateBuyerSearchRecord(
   updateRow.market_score_status = null;
   updateRow.market_scored_at = null;
 
-  const clientAccount = await upsertClientAccount(config, data);
+  const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
   updateRow.client_account_id = clientAccount.id;
 
   await updateSupabaseRows(config, "buyer_searches", `id=eq.${encodeURIComponent(buyerSearchId)}`, updateRow);
@@ -182,7 +184,7 @@ async function calculateAndStoreMarketScore(
   }
 }
 
-async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData) {
+async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData, attribution?: AttributionSnapshot | null) {
   const normalizedEmail = data.contact.email.trim().toLowerCase();
   const preferredChannels = normalizePreferredChannels(
     data.contact.preferredChannels?.length ? data.contact.preferredChannels : data.contact.preferredChannel,
@@ -203,11 +205,21 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
 
   if (existing[0]) {
     await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}`, payload);
+    if (attribution) {
+      await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}&attribution_visitor_id=is.null`, {
+        attribution_visitor_id: attribution.visitorAttributionId,
+        attributed_admin_user_id: attribution.attributedAdminUserId,
+        first_attribution: attribution,
+      });
+    }
     await linkExistingReferrals(config, existing[0].id, normalizedEmail);
     return existing[0];
   }
 
-  const inserted = await insertSupabaseRows<ClientAccountRow>(config, "client_accounts", payload, true);
+  const inserted = await insertSupabaseRows<ClientAccountRow>(config, "client_accounts", {
+    ...payload,
+    ...(attribution ? { attribution_visitor_id: attribution.visitorAttributionId, attributed_admin_user_id: attribution.attributedAdminUserId, first_attribution: attribution } : {}),
+  }, true);
   const account = inserted[0];
 
   if (!account) {
@@ -403,6 +415,11 @@ function buildBuyerSearchRow(
       ip_address: metadata.ipAddress ?? null,
       user_agent: metadata.userAgent ?? null,
     },
+    ...(metadata.attribution ? {
+      attribution_visitor_id: metadata.attribution.visitorAttributionId,
+      attributed_admin_user_id: metadata.attribution.attributedAdminUserId,
+      attribution_snapshot: metadata.attribution,
+    } : {}),
     minimum_bathrooms: data.characteristics.minimumBathrooms,
     minimum_bedrooms: data.characteristics.minimumBedrooms,
     minimum_land_area: data.preferences.minimumLandArea ?? null,

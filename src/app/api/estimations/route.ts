@@ -8,6 +8,7 @@ import { savePropertyEstimation } from "@/lib/client-access/estimations";
 import { recordEstimationApiUsage } from "@/lib/estimation-api-alerts";
 import { getCityByMarketIdentifier } from "@/lib/cities";
 import { readCityMarketCache } from "@/lib/city-market-cache";
+import { getCurrentAttribution, recordAttributedConversion } from "@/lib/attribution";
 
 function isValidEstimationInput(
   input: Partial<PropertyEstimationInput>,
@@ -60,11 +61,14 @@ export async function POST(request: Request) {
         }
       : estimation;
     const session = await getClientSession();
+    const attribution = await getCurrentAttribution();
     const estimationId = await savePropertyEstimation(
       session,
       input,
       enrichedEstimation,
+      attribution,
     );
+    await recordAttributedConversion(attribution, "estimation", estimationId, "/estimation");
 
     return NextResponse.json({
       ...enrichedEstimation,

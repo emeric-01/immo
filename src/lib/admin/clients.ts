@@ -4,6 +4,7 @@ import { propertyTypeLabels } from "@/lib/buyer-search/options";
 import type { BuyerSearchFormData, PropertyType } from "@/lib/buyer-search/types";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import type { AdminReferral } from "@/lib/admin/referrals";
+import type { AdminSession } from "@/lib/admin/auth";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -23,6 +24,9 @@ export type AdminClientAccount = {
   preferred_channel: BuyerSearchFormData["contact"]["preferredChannel"];
   preferred_channels: BuyerSearchFormData["contact"]["preferredChannels"] | null;
   updated_at: string;
+  attributed_admin_user_id: string | null;
+  assigned_admin_user_id: string | null;
+  first_attribution: import("@/lib/attribution").AttributionSnapshot | Record<string, never>;
 };
 
 export type AdminClientSearch = {
@@ -75,6 +79,7 @@ function getAdminSupabaseConfig(): AdminSupabaseConfig | null {
 
 export async function getAdminClients(
   filters: AdminClientListFilters = {},
+  session?: AdminSession,
 ): Promise<AdminDataState<AdminClientListItem[]>> {
   const config = getAdminSupabaseConfig();
 
@@ -93,6 +98,10 @@ export async function getAdminClients(
     select:
       "id,created_at,updated_at,deleted_at,status,contact_email,location_summary,property_types,maximum_budget,minimum_living_area,client_account_id",
   });
+  if (session?.role === "agent") {
+    clientsParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
+    searchesParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
+  }
 
   const [clientsResult, searchesResult] = await Promise.all([
     supabaseAdminFetch<AdminClientAccount[]>(config, `client_accounts?${clientsParams.toString()}`),
@@ -144,7 +153,7 @@ export async function getAdminClients(
   };
 }
 
-export async function getAdminClient(id: string): Promise<AdminDataState<AdminClientDetail | null>> {
+export async function getAdminClient(id: string, session?: AdminSession): Promise<AdminDataState<AdminClientDetail | null>> {
   const config = getAdminSupabaseConfig();
 
   if (!config) {
@@ -156,6 +165,7 @@ export async function getAdminClient(id: string): Promise<AdminDataState<AdminCl
     limit: "1",
     select: "*",
   });
+  if (session?.role === "agent") clientParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
   const clientResult = await supabaseAdminFetch<AdminClientAccount[]>(config, `client_accounts?${clientParams.toString()}`);
 
   if (clientResult.status !== "ready") {

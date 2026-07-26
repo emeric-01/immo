@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendSellerLeadNotificationEmail } from "@/lib/email/buyer-search-emails";
 import { clientSupabaseRequest } from "@/lib/client-access/supabase";
+import { attributionColumns, getCurrentAttribution, recordAttributedConversion, type AttributionSnapshot } from "@/lib/attribution";
 
 type SellerLeadPayload = {
   address?: unknown;
@@ -50,12 +51,14 @@ async function saveLeadAccountAndEstimation({
   lastName,
   phone,
   payload,
+  attribution,
 }: {
   email: string;
   firstName: string;
   lastName: string;
   phone: string;
   payload: SellerLeadPayload;
+  attribution: AttributionSnapshot | null;
 }) {
   const normalizedEmail = email.toLowerCase();
   const existing = await clientSupabaseRequest<Array<{ id: string }>>(
@@ -68,6 +71,7 @@ async function saveLeadAccountAndEstimation({
       body: JSON.stringify({ first_name: firstName, last_name: lastName, phone }),
       method: "PATCH",
     });
+    if (attribution) await clientSupabaseRequest(`client_accounts?id=eq.${encodeURIComponent(accountId)}&attribution_visitor_id=is.null`, { body: JSON.stringify({ attribution_visitor_id: attribution.visitorAttributionId, attributed_admin_user_id: attribution.attributedAdminUserId, first_attribution: attribution }), method: "PATCH" });
   } else {
     const created = await clientSupabaseRequest<Array<{ id: string }>>(
       "client_accounts?select=id",
@@ -80,6 +84,7 @@ async function saveLeadAccountAndEstimation({
           phone,
           preferred_channel: "email",
           preferred_channels: ["email"],
+          ...(attribution ? { attribution_visitor_id: attribution.visitorAttributionId, attributed_admin_user_id: attribution.attributedAdminUserId, first_attribution: attribution } : {}),
         }),
         headers: { Prefer: "return=representation" },
         method: "POST",
@@ -89,7 +94,7 @@ async function saveLeadAccountAndEstimation({
   }
 
   if (!accountId) {
-    return;
+    return accountId;
   }
 
   const estimationId = readShortString(payload.estimationId);
@@ -101,7 +106,7 @@ async function saveLeadAccountAndEstimation({
         method: "PATCH",
       },
     );
-    return;
+    return accountId;
   }
 
   if (!payload.estimationInput || !payload.estimationResult) {
@@ -130,9 +135,11 @@ async function saveLeadAccountAndEstimation({
       rooms: readPositiveNumber(payload.rooms, 100),
       source: readShortString(result.source, 120) || "Immo Data",
       surface_m2: readPositiveNumber(payload.surfaceM2, 100_000),
+      ...attributionColumns(attribution),
     }),
     method: "POST",
   });
+  return accountId;
 }
 
 export async function POST(request: Request) {
@@ -169,7 +176,9 @@ export async function POST(request: Request) {
       );
     }
 
-    await saveLeadAccountAndEstimation({ email, firstName, lastName, phone, payload });
+    const attribution = await getCurrentAttribution();
+    const accountId = await saveLeadAccountAndEstimation({ email, firstName, lastName, phone, payload, attribution });
+    await recordAttributedConversion(attribution, "contact", accountId ?? null, "/estimation/resultat");
 
     await sendSellerLeadNotificationEmail({
       address,

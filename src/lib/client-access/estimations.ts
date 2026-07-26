@@ -7,6 +7,7 @@ import type {
 } from "@/lib/immo-data";
 import type { ClientSession } from "./auth";
 import { clientSupabaseRequest } from "./supabase";
+import { attributionColumns, type AttributionSnapshot } from "@/lib/attribution";
 
 export type ClientEstimationRow = {
   address_label: string;
@@ -28,12 +29,16 @@ export type ClientEstimationRow = {
   status: "active" | "archived";
   surface_m2: number;
   updated_at: string;
+  attributed_admin_user_id?: string | null;
+  assigned_admin_user_id?: string | null;
+  attribution_snapshot?: AttributionSnapshot | Record<string, never>;
 };
 
 export async function savePropertyEstimation(
   session: ClientSession | null,
   input: PropertyEstimationInput,
   result: PropertyEstimation,
+  attribution: AttributionSnapshot | null = null,
 ) {
   const selectedAddress = input.selectedAddress;
   const rows = await clientSupabaseRequest<Array<{ id: string }>>(
@@ -55,6 +60,7 @@ export async function savePropertyEstimation(
         rooms: input.rooms,
         source: result.source,
         surface_m2: input.surfaceM2,
+        ...attributionColumns(attribution),
       }),
       headers: { Prefer: "return=representation" },
       method: "POST",

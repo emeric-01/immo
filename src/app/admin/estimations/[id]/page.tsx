@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, BarChart3, CalendarDays, Euro, Gauge, Home, Mail, MapPin, Ruler, ShieldCheck, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminClientName } from "@/lib/admin/clients";
 import { getAdminEstimation } from "@/lib/admin/estimations";
 import styles from "../../admin.module.css";
@@ -10,9 +11,10 @@ export const metadata: Metadata = { title: "Détail estimation | Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminEstimationDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "estimations:read");
   const { id } = await params;
-  const result = await getAdminEstimation(id);
+  const result = await getAdminEstimation(id, session);
   if (result.status !== "ready" || !result.data) return <Frame><section className={styles.emptyState}><ShieldCheck size={26} /><h1>Estimation indisponible</h1><p>{result.status === "ready" ? "Cette estimation n’existe pas." : result.message}</p></section></Frame>;
   const estimation = result.data;
   return <Frame>

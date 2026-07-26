@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import type { AdminClientAccount, AdminDataState } from "@/lib/admin/clients";
+import type { AdminSession } from "@/lib/admin/auth";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -29,7 +30,7 @@ function getConfig(): AdminSupabaseConfig | null {
     : null;
 }
 
-export async function getAdminEstimations(filters: { q?: string; status?: string } = {}): Promise<AdminDataState<AdminEstimation[]>> {
+export async function getAdminEstimations(filters: { q?: string; status?: string } = {}, session?: AdminSession): Promise<AdminDataState<AdminEstimation[]>> {
   const config = getConfig();
   if (!config) return missingConfig();
 
@@ -41,6 +42,7 @@ export async function getAdminEstimations(filters: { q?: string; status?: string
   if (filters.status === "active" || filters.status === "archived") {
     estimationParams.set("status", `eq.${filters.status}`);
   }
+  if (session?.role === "agent") estimationParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
 
   const [estimationsResult, clientsResult] = await Promise.all([
     fetchAdmin<ClientEstimationRow[]>(config, `property_estimations?${estimationParams}`),
@@ -71,13 +73,13 @@ export async function getAdminEstimations(filters: { q?: string; status?: string
   };
 }
 
-export async function getAdminEstimation(id: string): Promise<AdminDataState<AdminEstimation | null>> {
+export async function getAdminEstimation(id: string, session?: AdminSession): Promise<AdminDataState<AdminEstimation | null>> {
   const config = getConfig();
   if (!config) return missingConfig();
 
   const rows = await fetchAdmin<ClientEstimationRow[]>(
     config,
-    `property_estimations?id=eq.${encodeURIComponent(id)}&select=*&limit=1`,
+    `property_estimations?id=eq.${encodeURIComponent(id)}${session?.role === "agent" ? `&or=(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})` : ""}&select=*&limit=1`,
   );
   if (rows.status !== "ready") return rows;
   const estimation = rows.data[0];

@@ -5,6 +5,7 @@ import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import { getClientSession } from "@/lib/client-access/auth";
 import { clientOwnsBuyerSearch } from "@/lib/client-access/project";
 import { sendBuyerSearchCreatedEmails, sendBuyerSearchUpdatedEmails } from "@/lib/email/buyer-search-emails";
+import { getCurrentAttribution, recordAttributedConversion } from "@/lib/attribution";
 
 type SubmissionValidationResult =
   | { data: BuyerSearchFormData; success: true }
@@ -57,10 +58,12 @@ export async function POST(request: NextRequest) {
           },
         }
       : validation.data;
+    const attribution = await getCurrentAttribution();
     const metadata = {
       ipAddress: getClientIp(request),
       source: session ? "client_space" : "website",
       userAgent: request.headers.get("user-agent"),
+      attribution,
     };
     const result = requestedSearchId
       ? await updateBuyerSearchRecord(requestedSearchId, data, metadata)
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest) {
       ...result,
       warnings: [...(result.warnings ?? []), ...emailDelivery.warnings],
     };
+    await recordAttributedConversion(attribution, "buyer_search", result.id, "/rechercher");
 
     return NextResponse.json(responseBody, {
       status: requestedSearchId ? 200 : result.persisted ? 201 : 202,

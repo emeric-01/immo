@@ -9,6 +9,7 @@ import {
   getBuyerSearchAdminStats,
 } from "@/lib/admin/buyer-searches";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
 
@@ -34,9 +35,10 @@ export default async function AdminBuyerSearchesPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "buyer_searches:read");
   const params = await searchParams;
-  const result = await getAdminBuyerSearches({ q: params.q, status: params.status });
+  const result = await getAdminBuyerSearches({ q: params.q, status: params.status }, session);
 
   return (
     <AdminFrame>
@@ -99,6 +101,7 @@ function AdminFrame({ children }: { children: React.ReactNode }) {
           <Link href="/admin/audience">Audience</Link>
           <Link href="/admin/contenus">Contenus</Link>
           <Link href="/admin/utilisateurs">Utilisateurs</Link>
+          <Link href="/admin/mes-liens">Mes liens</Link>
         </nav>
       </aside>
       <section className={styles.content}>{children}</section>
@@ -163,6 +166,7 @@ function SearchTable({
                       {search.contact_first_name} {search.contact_last_name}
                     </strong>
                     <small>{formatDate(search.created_at)}</small>
+                    <small>Origine : {formatAttribution(search.attribution_snapshot)}</small>
                   </div>
                 </div>
               </td>
@@ -233,6 +237,12 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatAttribution(snapshot: AdminBuyerSearchRow["attribution_snapshot"]) {
+  if (!("first" in snapshot)) return "Non attribue";
+  const campaign = snapshot.first.campaign ? ` · ${snapshot.first.campaign}` : "";
+  return `${snapshot.first.source} / ${snapshot.first.medium}${campaign}`;
 }
 
 function formatStatus(status: string) {

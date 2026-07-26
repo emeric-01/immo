@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { listAdminUsers } from "@/lib/admin/users";
+import { listAdminAttributionLinks, listAdminUsers } from "@/lib/admin/users";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import styles from "../admin.module.css";
 import { createAdminUserAction } from "./actions";
 
@@ -18,8 +19,10 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ created?: string; error?: string }>;
 }) {
   const session = await requireAdminSession();
+  await requireAdminPermission(session, "users:manage");
   const params = await searchParams;
   const users = await listAdminUsers();
+  const links = await listAdminAttributionLinks();
 
   return (
     <main className={styles.detailPage}>
@@ -56,6 +59,7 @@ export default async function AdminUsersPage({
               <select id="role" name="role" defaultValue="manager">
                 <option value="manager">Manager</option>
                 <option value="editor">Editeur contenus</option>
+                <option value="agent">Agent commercial</option>
                 <option value="admin">Admin</option>
               </select>
               <button type="submit">
@@ -81,6 +85,9 @@ export default async function AdminUsersPage({
                       <small>
                         {user.email} - {user.role} - {user.is_active ? "actif" : "desactive"}
                       </small>
+                      {links.status === "ready" ? links.data.filter((link) => link.admin_user_id === user.id).map((link) => (
+                        <small key={link.id}>Lien : {`https://jumellesimmo.fr${link.landing_path}?ref=${link.code}&utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`}</small>
+                      )) : null}
                     </div>
                   </div>
                 ))}

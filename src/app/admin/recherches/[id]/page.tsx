@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/buyer-searches";
 import { optionLabel, financingOptions, purchaseTimelineOptions, situationOptions } from "@/lib/buyer-search/options";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import styles from "../../admin.module.css";
 
 export const metadata: Metadata = {
@@ -23,9 +24,10 @@ export default async function AdminBuyerSearchDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "buyer_searches:read");
   const { id } = await params;
-  const result = await getAdminBuyerSearch(id);
+  const result = await getAdminBuyerSearch(id, session);
 
   if (result.status !== "ready") {
     return (

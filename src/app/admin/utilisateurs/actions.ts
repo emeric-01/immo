@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import { createAdminUser, type AdminUser } from "@/lib/admin/users";
 
 export async function createAdminUserAction(formData: FormData) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "users:manage");
 
   const result = await createAdminUser({
     email: String(formData.get("email") ?? ""),
@@ -24,5 +26,5 @@ export async function createAdminUserAction(formData: FormData) {
 }
 
 function parseRole(value: string): AdminUser["role"] {
-  return value === "admin" || value === "editor" ? value : "manager";
+  return value === "admin" || value === "editor" || value === "agent" ? value : "manager";
 }

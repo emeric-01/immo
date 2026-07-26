@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarDays, Euro, Home, Mail, MapPin, Phone, ShieldCheck, UserRound } from "lucide-react";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import type { AdminReferral } from "@/lib/admin/referrals";
 import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus } from "@/lib/referrals";
 import { preferredChannelLabels } from "@/lib/buyer-search/options";
@@ -25,9 +26,10 @@ export default async function AdminClientDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "clients:read");
   const { id } = await params;
-  const result = await getAdminClient(id);
+  const result = await getAdminClient(id, session);
 
   if (result.status !== "ready") {
     return (

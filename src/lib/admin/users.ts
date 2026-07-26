@@ -15,7 +15,7 @@ export type AdminUser = {
   is_active: boolean;
   last_login_at: string | null;
   password_hash: string;
-  role: "admin" | "manager" | "editor";
+  role: "admin" | "manager" | "editor" | "agent";
   updated_at: string;
 };
 
@@ -87,14 +87,14 @@ export async function createAdminUser(input: {
     };
   }
 
-  const response = await fetch(`${config.url}/rest/v1/admin_users`, {
+  const response = await fetch(`${config.url}/rest/v1/admin_users?select=id,email,full_name,role,is_active,created_at,updated_at,last_login_at`, {
     body: JSON.stringify({
       email,
       full_name: input.fullName.trim() || email,
       password_hash: hashAdminPassword(input.password),
       role: input.role,
     }),
-    headers: adminHeaders(config, "return=minimal"),
+    headers: adminHeaders(config, "return=representation"),
     method: "POST",
   });
 
@@ -106,7 +106,30 @@ export async function createAdminUser(input: {
     };
   }
 
+  const [created] = await response.json() as SafeAdminUser[];
+  if (created) await ensureDefaultAttributionLink(config, created);
+
   return { success: true };
+}
+
+export type AdminAttributionLink = { id: string; admin_user_id: string; code: string; label: string; landing_path: string; utm_source: string; utm_medium: string; utm_campaign: string; is_active: boolean };
+
+export async function listAdminAttributionLinks(adminUserId?: string) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { data: [] as AdminAttributionLink[], status: "missing_config" as const, message: "Configuration Supabase absente." };
+  const query = new URLSearchParams({ select: "*", order: "created_at.desc" });
+  if (adminUserId) query.set("admin_user_id", `eq.${adminUserId}`);
+  return supabaseAdminFetch<AdminAttributionLink[]>(config, `attribution_links?${query}`);
+}
+
+async function ensureDefaultAttributionLink(config: AdminSupabaseConfig, user: SafeAdminUser) {
+  const base = user.full_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || user.id.slice(0, 8);
+  const code = `${base}-${user.id.slice(0, 5)}`;
+  const response = await fetch(`${config.url}/rest/v1/attribution_links`, {
+    method: "POST", headers: adminHeaders(config, "return=minimal"),
+    body: JSON.stringify({ admin_user_id: user.id, code, label: "Lien principal", landing_path: "/", utm_source: code, utm_medium: "referral", utm_campaign: "agent" }),
+  });
+  if (!response.ok) console.error("Default attribution link creation failed", await response.text());
 }
 
 export async function authenticateAdminUser(email: string, password: string) {
