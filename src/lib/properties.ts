@@ -16,6 +16,7 @@ export type Property = {
   property_condition: string | null; kitchen_type: string | null; land_is_buildable: boolean | null; land_is_serviced: boolean | null;
   seo_title: string | null; seo_description: string | null; seo_noindex: boolean;
   contact_phone: string | null; contact_email: string | null; published_at: string | null; created_at: string; updated_at: string | null; images: PropertyImage[];
+  created_by_admin_id: string | null; updated_by_admin_id: string | null;
 };
 
 export function isExclusiveProperty(property: Pick<Property, "amenities">) {

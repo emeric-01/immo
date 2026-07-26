@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
+import { hasAdminPermission } from "@/lib/admin/permissions";
 import { adminRest, getSupabaseAdminConfig } from "@/lib/properties";
 import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 import { geocodePropertyAddress } from "@/lib/property-geocoding";
@@ -10,7 +11,9 @@ const slugify = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036
 const propertyStatuses = new Set(["draft", "published", "sold", "archived"]);
 
 export async function POST(request: Request) {
-  if (!(await getAdminSession())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!(await hasAdminPermission(session, "properties:create"))) return NextResponse.json({ error: "Vous ne pouvez pas créer de bien." }, { status: 403 });
   try {
     const form = await request.formData();
     const title = text(form, "title"); const city = text(form, "city_name");
@@ -40,6 +43,8 @@ export async function POST(request: Request) {
       contact_name: text(form, "contact_name") || "Les Jumelles Immo", contact_phone: text(form, "contact_phone") || null,
       contact_email: text(form, "contact_email") || null, published_at: ["published", "sold"].includes(status) ? new Date().toISOString() : null,
       seo_title: text(form, "seo_title") || null, seo_description: text(form, "seo_description") || null, seo_noindex: form.has("seo_noindex"),
+      created_by_admin_id: session.id === "bootstrap" ? null : session.id,
+      updated_by_admin_id: session.id === "bootstrap" ? null : session.id,
     };
     const [property] = await adminRest<{ id: string; slug: string }[]>("properties", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
     const config = getSupabaseAdminConfig(); const files = form.getAll("photos").filter((item): item is File => item instanceof File && item.size > 0);

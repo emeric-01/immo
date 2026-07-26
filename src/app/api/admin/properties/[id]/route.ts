@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
-import { adminRest, getSupabaseAdminConfig, type PropertyImage } from "@/lib/properties";
+import { hasAdminPermission } from "@/lib/admin/permissions";
+import { adminRest, getAdminProperty, getSupabaseAdminConfig, type PropertyImage } from "@/lib/properties";
 import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 import { geocodePropertyAddress } from "@/lib/property-geocoding";
 
@@ -9,9 +10,17 @@ const number = (form: FormData, key: string) => text(form, key) ? Number(text(fo
 const propertyStatuses = new Set(["draft", "published", "sold", "archived"]);
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await getAdminSession())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   try {
     const { id } = await params;
+    const existingProperty = await getAdminProperty(id);
+    if (!existingProperty) return NextResponse.json({ error: "Bien introuvable" }, { status: 404 });
+    const canUpdateAll = await hasAdminPermission(session, "properties:write");
+    const canUpdateOwn = await hasAdminPermission(session, "properties:update_own");
+    if (!canUpdateAll && !(canUpdateOwn && existingProperty.created_by_admin_id === session.id)) {
+      return NextResponse.json({ error: "Vous pouvez modifier uniquement les biens que vous avez créés." }, { status: 403 });
+    }
     const form = await request.formData();
     const requestedStatus = text(form, "status");
     const status = propertyStatuses.has(requestedStatus) ? requestedStatus : "draft";
@@ -42,6 +51,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       seo_title: text(form, "seo_title") || null, seo_description: text(form, "seo_description") || null,
       seo_noindex: form.has("seo_noindex"), published_at: ["published", "sold"].includes(status) ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
+      updated_by_admin_id: session.id === "bootstrap" ? null : session.id,
     };
     const [property] = await adminRest<{ slug: string }[]>(`properties?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
     if (!property) return NextResponse.json({ error: "Bien introuvable" }, { status: 404 });
@@ -76,7 +86,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await getAdminSession())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!(await hasAdminPermission(session, "properties:write"))) return NextResponse.json({ error: "Seuls les responsables peuvent supprimer un bien." }, { status: 403 });
   try {
     const { id } = await params;
     const encodedId = encodeURIComponent(id);

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { pbkdf2Sync, randomBytes, timingSafeEqual } from "crypto";
+import { adminPermissions, type AdminPermission } from "./permission-definitions";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -109,7 +110,37 @@ export async function createAdminUser(input: {
   const [created] = await response.json() as SafeAdminUser[];
   if (created) await ensureDefaultAttributionLink(config, created);
 
-  return { success: true };
+  return { success: true, user: created };
+}
+
+export type AdminUserPermissionRow = {
+  admin_user_id: string;
+  is_allowed: boolean;
+  permission: AdminPermission;
+};
+
+export async function listAdminUserPermissions() {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { data: [] as AdminUserPermissionRow[], status: "missing_config" as const, message: "Configuration Supabase absente." };
+  return supabaseAdminFetch<AdminUserPermissionRow[]>(config, "admin_user_permissions?select=admin_user_id,permission,is_allowed&order=permission.asc");
+}
+
+export async function replaceAdminUserPermissions(adminUserId: string, allowedPermissions: AdminPermission[]) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { message: "Configuration Supabase absente.", success: false as const };
+
+  const response = await fetch(`${config.url}/rest/v1/admin_user_permissions?on_conflict=admin_user_id,permission`, {
+    body: JSON.stringify(adminPermissions.map((permission) => ({
+      admin_user_id: adminUserId,
+      is_allowed: allowedPermissions.includes(permission),
+      permission,
+    }))),
+    headers: adminHeaders(config, "resolution=merge-duplicates,return=minimal"),
+    method: "POST",
+  });
+
+  if (!response.ok) return { message: await response.text(), success: false as const };
+  return { success: true as const };
 }
 
 export type AdminAttributionLink = { id: string; admin_user_id: string; code: string; label: string; landing_path: string; utm_source: string; utm_medium: string; utm_campaign: string; is_active: boolean };

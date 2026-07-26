@@ -1,28 +1,13 @@
 import "server-only";
 
 import type { AdminSession } from "./auth";
+import { adminPermissions, defaultPermissionsByRole, type AdminPermission } from "./permission-definitions";
 
-export type AdminPermission =
-  | "buyer_searches:read"
-  | "clients:read"
-  | "contents:read"
-  | "contents:write"
-  | "estimations:read"
-  | "properties:read"
-  | "properties:write"
-  | "users:manage";
+export type { AdminPermission } from "./permission-definitions";
 
 type Config = {
   key: string;
   url: string;
-};
-
-const fallbackPermissions: Record<AdminSession["role"], AdminPermission[]> = {
-  admin: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write", "users:manage"],
-  bootstrap: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write", "users:manage"],
-  editor: ["contents:read", "contents:write"],
-  agent: ["buyer_searches:read", "clients:read", "estimations:read"],
-  manager: ["buyer_searches:read", "clients:read", "contents:read", "contents:write", "estimations:read", "properties:read", "properties:write"],
 };
 
 function getConfig(): Config | null {
@@ -33,41 +18,41 @@ function getConfig(): Config | null {
 }
 
 export async function hasAdminPermission(session: AdminSession, permission: AdminPermission) {
-  if (session.role === "bootstrap" || session.role === "admin") {
-    return true;
-  }
+  return (await getAdminPermissions(session)).includes(permission);
+}
+
+export async function getAdminPermissions(session: AdminSession): Promise<AdminPermission[]> {
+  if (session.role === "bootstrap" || session.role === "admin") return [...adminPermissions];
 
   const config = getConfig();
 
-  if (!config) {
-    return fallbackPermissions[session.role].includes(permission);
-  }
+  if (!config) return [...defaultPermissionsByRole[session.role]];
 
-  const params = new URLSearchParams({
-    limit: "1",
-    permission: `eq.${permission}`,
+  const userParams = new URLSearchParams({
+    admin_user_id: `eq.${session.id}`,
+    order: "permission.asc",
+    select: "permission,is_allowed",
+  });
+
+  const roleParams = new URLSearchParams({
     role: `eq.${session.role}`,
     select: "permission",
   });
 
   try {
-    const response = await fetch(`${config.url}/rest/v1/admin_role_permissions?${params.toString()}`, {
-      cache: "no-store",
-      headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
-      },
-    });
-
-    if (!response.ok) {
-      return fallbackPermissions[session.role].includes(permission);
+    const headers = { apikey: config.key, Authorization: `Bearer ${config.key}` };
+    const userResponse = await fetch(`${config.url}/rest/v1/admin_user_permissions?${userParams}`, { cache: "no-store", headers });
+    if (userResponse.ok) {
+      const rows = await userResponse.json() as Array<{ is_allowed: boolean; permission: AdminPermission }>;
+      if (rows.length > 0) return rows.filter((row) => row.is_allowed).map((row) => row.permission);
     }
 
-    const rows = (await response.json()) as { permission: AdminPermission }[];
-
-    return rows.length > 0;
+    const roleResponse = await fetch(`${config.url}/rest/v1/admin_role_permissions?${roleParams}`, { cache: "no-store", headers });
+    if (!roleResponse.ok) return [...defaultPermissionsByRole[session.role]];
+    const roleRows = await roleResponse.json() as Array<{ permission: AdminPermission }>;
+    return roleRows.length ? roleRows.map((row) => row.permission) : [...defaultPermissionsByRole[session.role]];
   } catch {
-    return fallbackPermissions[session.role].includes(permission);
+    return [...defaultPermissionsByRole[session.role]];
   }
 }
 

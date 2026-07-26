@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { listAdminAttributionLinks, listAdminUsers } from "@/lib/admin/users";
+import { defaultPermissionsByRole, type AdminPermission } from "@/lib/admin/permission-definitions";
+import { listAdminAttributionLinks, listAdminUserPermissions, listAdminUsers } from "@/lib/admin/users";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import styles from "../admin.module.css";
 import { CreateAdminUserForm } from "./CreateAdminUserForm";
+import { AdminUserPermissionsForm } from "./AdminUserPermissionsForm";
 
 export const metadata: Metadata = {
   title: "Utilisateurs admin | Les Jumelles Immo",
@@ -23,6 +25,7 @@ export default async function AdminUsersPage({
   const params = await searchParams;
   const users = await listAdminUsers();
   const links = await listAdminAttributionLinks();
+  const permissionRows = await listAdminUserPermissions();
 
   return (
     <main className={styles.detailPage}>
@@ -70,6 +73,14 @@ export default async function AdminUsersPage({
                       {links.status === "ready" ? links.data.filter((link) => link.admin_user_id === user.id).map((link) => (
                         <small key={link.id}>Lien : {`https://jumellesimmo.fr${link.landing_path}?ref=${link.code}&utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`}</small>
                       )) : null}
+                      {user.role !== "admin" ? (
+                        <AdminUserPermissionsForm
+                          initialPermissions={permissionRows.status === "ready" && permissionRows.data.some((row) => row.admin_user_id === user.id)
+                            ? permissionRows.data.filter((row) => row.admin_user_id === user.id && row.is_allowed).map((row) => row.permission)
+                            : defaultPermissionsByRole[user.role] as AdminPermission[]}
+                          userId={user.id}
+                        />
+                      ) : <small>Un administrateur dispose de tous les accès.</small>}
                     </div>
                   </div>
                 ))}

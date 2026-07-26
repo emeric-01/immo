@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
 import { hasAdminPermission } from "@/lib/admin/permissions";
-import { createAdminUser, type AdminUser } from "@/lib/admin/users";
+import { defaultPermissionsByRole, isAdminPermission } from "@/lib/admin/permission-definitions";
+import { createAdminUser, replaceAdminUserPermissions, type AdminUser } from "@/lib/admin/users";
 
 const allowedRoles = new Set<AdminUser["role"]>(["admin", "manager", "editor", "agent"]);
 
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       email: string;
       fullName: string;
       password: string;
+      permissions: unknown[];
       role: string;
     }>;
     const role = allowedRoles.has(input.role as AdminUser["role"])
@@ -35,6 +37,16 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       return NextResponse.json({ error: result.message ?? "Création impossible." }, { status: 400 });
+    }
+
+    if (result.user && role !== "admin") {
+      const requestedPermissions = Array.isArray(input.permissions)
+        ? input.permissions.filter(isAdminPermission)
+        : defaultPermissionsByRole[role];
+      const permissionsResult = await replaceAdminUserPermissions(result.user.id, requestedPermissions);
+      if (!permissionsResult.success) {
+        return NextResponse.json({ error: `Le compte a été créé, mais ses accès n'ont pas pu être enregistrés : ${permissionsResult.message}` }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ created: true }, { status: 201 });

@@ -3,7 +3,9 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
+import { defaultPermissionsByRole, type AdminPermission } from "@/lib/admin/permission-definitions";
 import styles from "../admin.module.css";
+import { PermissionChecklist } from "./PermissionChecklist";
 
 type SubmissionState =
   | { message: string; status: "error" | "success" }
@@ -13,6 +15,13 @@ export function CreateAdminUserForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const [submission, setSubmission] = useState<SubmissionState>({ message: "", status: "idle" });
+  const [role, setRole] = useState<"admin" | "agent" | "editor" | "manager">("agent");
+  const [permissions, setPermissions] = useState<AdminPermission[]>(defaultPermissionsByRole.agent);
+
+  function selectRole(nextRole: "admin" | "agent" | "editor" | "manager") {
+    setRole(nextRole);
+    setPermissions(defaultPermissionsByRole[nextRole]);
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,7 +35,8 @@ export function CreateAdminUserForm() {
           email: String(formData.get("email") ?? ""),
           fullName: String(formData.get("fullName") ?? ""),
           password: String(formData.get("password") ?? ""),
-          role: String(formData.get("role") ?? "manager"),
+          permissions,
+          role,
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -64,12 +74,17 @@ export function CreateAdminUserForm() {
         <label htmlFor="password">Mot de passe provisoire</label>
         <input id="password" minLength={10} name="password" required type="password" />
         <label htmlFor="role">Rôle</label>
-        <select id="role" name="role" defaultValue="manager">
+        <select id="role" name="role" onChange={(event) => selectRole(event.target.value as typeof role)} value={role}>
           <option value="manager">Manager</option>
           <option value="editor">Éditeur contenus</option>
           <option value="agent">Agent commercial</option>
           <option value="admin">Admin</option>
         </select>
+        <fieldset className={styles.permissionFieldset}>
+          <legend>Menus et actions autorisés</legend>
+          <p>Vous pourrez modifier ces accès à tout moment. Un agent ne peut gérer que les biens qu’il a lui-même créés.</p>
+          <PermissionChecklist disabled={role === "admin"} onChange={setPermissions} value={permissions} />
+        </fieldset>
         <button disabled={submission.status === "submitting"} type="submit">
           <UserPlus size={18} aria-hidden="true" />
           {submission.status === "submitting" ? "Création…" : "Créer l’accès"}
