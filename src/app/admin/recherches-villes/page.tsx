@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CalendarClock, CheckCircle2, CircleDashed, Inbox, Search, TrendingUp } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";

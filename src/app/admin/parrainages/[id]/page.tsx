@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Building2, CalendarDays, Gift, HeartHandshake, Mail, MapPin, MessageSquareText, Phone, ShieldCheck, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { requireAdminPermission } from "@/lib/admin/permissions";
 import { getAdminReferral } from "@/lib/admin/referrals";
 import { formatReferralProjectKind, formatReferralPropertyType, formatReferralStatus, referralStatuses } from "@/lib/referrals";
 import styles from "../../admin.module.css";
@@ -11,7 +12,8 @@ export const metadata: Metadata = { title: "Détail parrainage | Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminReferralDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "referrals:read");
   const { id } = await params;
   const result = await getAdminReferral(id);
 

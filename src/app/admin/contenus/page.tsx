@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpenText, FilePenLine, FileText, Plus, Search } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin/permissions";
 import { formatArticleDate } from "@/lib/content/article-utils";
 import { getAdminContentArticles } from "@/lib/content/articles";
@@ -26,7 +27,6 @@ export default async function AdminContentPage({
 }) {
   const session = await requireAdminSession();
   await requireAdminPermission(session, "contents:read");
-  const canRead = true;
   const canWrite = await hasAdminPermission(session, "contents:write");
   const params = await searchParams;
 
@@ -37,7 +37,7 @@ export default async function AdminContentPage({
 
   return (
     <main className={admin.adminPage}>
-      <AdminContentSidebar />
+      <AdminSidebar active="/admin/contenus" session={session}/>
       <section className={admin.content}>
         <header className={admin.pageHeader}>
           <div>
@@ -102,24 +102,5 @@ export default async function AdminContentPage({
         )}
       </section>
     </main>
-  );
-}
-
-export function AdminContentSidebar() {
-  return (
-    <aside className={admin.sidebar}>
-      <div className={admin.brandMark}><span>les jumelles</span><strong>IMMO</strong></div>
-      <nav>
-        <Link href="/admin/biens">Biens</Link>
-        <Link href="/admin/recherches">Recherches</Link>
-        <Link href="/admin/estimations">Estimations</Link>
-        <Link href="/admin/parrainages">Parrainages</Link>
-        <Link href="/admin/clients">Clients</Link>
-        <Link href="/admin/recherches-villes">Villes recherchées</Link>
-        <Link href="/admin/audience">Audience</Link>
-        <Link data-active href="/admin/contenus">Contenus</Link>
-        <Link href="/admin/utilisateurs">Utilisateurs</Link>
-      </nav>
-    </aside>
   );
 }

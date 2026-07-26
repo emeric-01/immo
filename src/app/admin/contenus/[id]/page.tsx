@@ -3,11 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { getAdminContentArticle } from "@/lib/content/articles";
 import admin from "../../admin.module.css";
 import { ContentArticleForm } from "../ContentArticleForm";
-import { AdminContentSidebar } from "../page";
 
 export const metadata: Metadata = {
   title: "Modifier un contenu | Admin Les Jumelles Immo",
@@ -33,7 +33,7 @@ export default async function EditContentPage({
 
   return (
     <main className={admin.adminPage}>
-      <AdminContentSidebar />
+      <AdminSidebar active="/admin/contenus" session={session}/>
       <section className={admin.content}>
         <header className={admin.pageHeader}>
           <div>
