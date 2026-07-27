@@ -789,6 +789,17 @@
   font-weight: 700;
 }
 
+.referralPreview {
+  margin: -3px 0 4px;
+  color: #707789;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.referralPreview strong {
+  color: #4f3725;
+}
+
 .userList {
   display: grid;
   gap: 12px;

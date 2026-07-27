@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Link2, ShieldCheck, UserRound } from "lucide-react";
+import { ShieldCheck, UserRound } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { listAdminAttributionLinks } from "@/lib/admin/users";
@@ -35,15 +35,12 @@ export default async function AdminAccountPage() {
             <div><p className={admin.eyebrow}>Attribution</p><h2>Mes liens d’affiliation</h2></div>
             <p>Les recherches, estimations et créations de compte réalisées après un clic sur ces liens vous sont automatiquement rattachées.</p>
             {activeLinks.length ? <div className={styles.links}>{activeLinks.map((link) => {
-              const fullUrl = `https://jumellesimmo.fr${link.landing_path}?ref=${link.code}&utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`;
-              const shortUrl = `https://jumellesimmo.fr/l/${link.code}`;
+              const shareUrl = `https://jumellesimmo.fr${link.landing_path}?ref=${link.code}`;
               return <article className={styles.linkCard} key={link.id}>
                 <div className={styles.linkLabel}><ShieldCheck size={16}/>{link.label}</div>
-                <h3>Lien court à partager</h3>
-                <div className={styles.urlLine}><code>{shortUrl}</code><CopyLinkButton value={shortUrl}/></div>
-                <small>Ce lien redirige vers la page prévue et conserve automatiquement le suivi d’affiliation.</small>
-                <div className={styles.linkLabel}><Link2 size={16}/>Lien complet</div>
-                <div className={styles.urlLine}><code>{fullUrl}</code><CopyLinkButton value={fullUrl}/></div>
+                <h3>Lien à partager</h3>
+                <div className={styles.urlLine}><code>{shareUrl}</code><CopyLinkButton value={shareUrl}/></div>
+                <small>Les paramètres de suivi sont appliqués automatiquement depuis votre code d’affiliation.</small>
               </article>;
             })}</div> : <p className={styles.accountNotice}>Aucun lien actif n’est encore rattaché à ce compte. Un administrateur peut recréer le lien depuis la gestion des utilisateurs.</p>}
           </section>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { pbkdf2Sync, randomBytes, timingSafeEqual } from "crypto";
 import { adminPermissions, type AdminPermission } from "./permission-definitions";
+import { attributionCodePattern, normalizeAttributionCode, suggestAttributionCode } from "@/lib/attribution-code";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -68,6 +69,7 @@ export async function createAdminUser(input: {
   email: string;
   fullName: string;
   password: string;
+  referralCode?: string;
   role: AdminUser["role"];
 }) {
   const config = getAdminSupabaseConfig();
@@ -80,10 +82,25 @@ export async function createAdminUser(input: {
   }
 
   const email = normalizeEmail(input.email);
+  const referralCode = normalizeAttributionCode(input.referralCode || suggestAttributionCode(input.fullName));
 
   if (!email || input.password.length < 10) {
     return {
       message: "Renseignez un email valide et un mot de passe d'au moins 10 caracteres.",
+      success: false,
+    };
+  }
+
+  if (!attributionCodePattern.test(referralCode)) {
+    return {
+      message: "Le code du lien doit contenir entre 3 et 40 caractères : lettres minuscules, chiffres ou tirets.",
+      success: false,
+    };
+  }
+
+  if (await getAdminAttributionLinkByCode(referralCode)) {
+    return {
+      message: `Le code « ${referralCode} » est déjà utilisé. Choisissez-en un autre.`,
       success: false,
     };
   }
@@ -108,7 +125,16 @@ export async function createAdminUser(input: {
   }
 
   const [created] = await response.json() as SafeAdminUser[];
-  if (created) await ensureDefaultAttributionLink(config, created);
+  if (created) {
+    const linkResult = await createDefaultAttributionLink(config, created, referralCode);
+    if (!linkResult.success) {
+      await fetch(`${config.url}/rest/v1/admin_users?id=eq.${encodeURIComponent(created.id)}`, {
+        headers: adminHeaders(config),
+        method: "DELETE",
+      });
+      return { message: linkResult.message, success: false };
+    }
+  }
 
   return { success: true, user: created };
 }
@@ -161,14 +187,20 @@ export async function getAdminAttributionLinkByCode(code: string) {
   return result.status === "ready" ? result.data[0] ?? null : null;
 }
 
-async function ensureDefaultAttributionLink(config: AdminSupabaseConfig, user: SafeAdminUser) {
-  const base = user.full_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || user.id.slice(0, 8);
-  const code = `${base}-${user.id.slice(0, 5)}`;
+async function createDefaultAttributionLink(config: AdminSupabaseConfig, user: SafeAdminUser, code: string) {
   const response = await fetch(`${config.url}/rest/v1/attribution_links`, {
     method: "POST", headers: adminHeaders(config, "return=minimal"),
     body: JSON.stringify({ admin_user_id: user.id, code, label: "Lien principal", landing_path: "/", utm_source: code, utm_medium: "referral", utm_campaign: "agent" }),
   });
-  if (!response.ok) console.error("Default attribution link creation failed", await response.text());
+  if (response.ok) return { success: true as const };
+  const error = await response.text();
+  console.error("Default attribution link creation failed", error);
+  return {
+    message: response.status === 409
+      ? `Le code « ${code} » vient d’être attribué. Choisissez-en un autre.`
+      : "Le lien d’attribution n’a pas pu être créé. Le compte n’a pas été enregistré.",
+    success: false as const,
+  };
 }
 
 export async function authenticateAdminUser(email: string, password: string) {

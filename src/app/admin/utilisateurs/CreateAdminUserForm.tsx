@@ -6,6 +6,7 @@ import { UserPlus } from "lucide-react";
 import { defaultPermissionsByRole, type AdminPermission } from "@/lib/admin/permission-definitions";
 import styles from "../admin.module.css";
 import { PermissionChecklist } from "./PermissionChecklist";
+import { normalizeAttributionCode, suggestAttributionCode } from "@/lib/attribution-code";
 
 type SubmissionState =
   | { message: string; status: "error" | "success" }
@@ -17,6 +18,9 @@ export function CreateAdminUserForm() {
   const [submission, setSubmission] = useState<SubmissionState>({ message: "", status: "idle" });
   const [role, setRole] = useState<"admin" | "agent" | "editor" | "manager">("agent");
   const [permissions, setPermissions] = useState<AdminPermission[]>(defaultPermissionsByRole.agent);
+  const [fullName, setFullName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [customReferralCode, setCustomReferralCode] = useState(false);
 
   function selectRole(nextRole: "admin" | "agent" | "editor" | "manager") {
     setRole(nextRole);
@@ -36,6 +40,7 @@ export function CreateAdminUserForm() {
           fullName: String(formData.get("fullName") ?? ""),
           password: String(formData.get("password") ?? ""),
           permissions,
+          referralCode,
           role,
         }),
         headers: { "Content-Type": "application/json" },
@@ -48,6 +53,9 @@ export function CreateAdminUserForm() {
       }
 
       formRef.current?.reset();
+      setFullName("");
+      setReferralCode("");
+      setCustomReferralCode(false);
       setSubmission({ message: "Le compte a bien été créé.", status: "success" });
       router.refresh();
     } catch (error) {
@@ -68,11 +76,33 @@ export function CreateAdminUserForm() {
       ) : null}
       <form ref={formRef} onSubmit={handleSubmit} className={styles.userForm}>
         <label htmlFor="fullName">Nom</label>
-        <input id="fullName" name="fullName" placeholder="Claire Dupont" />
+        <input id="fullName" name="fullName" onChange={(event) => {
+          const nextName = event.target.value;
+          setFullName(nextName);
+          if (!customReferralCode) setReferralCode(suggestAttributionCode(nextName));
+        }} placeholder="Claire Dupont" value={fullName} />
         <label htmlFor="email">Email</label>
         <input id="email" name="email" placeholder="claire@lesjumelles.immo" required type="email" />
         <label htmlFor="password">Mot de passe provisoire</label>
         <input id="password" minLength={10} name="password" required type="password" />
+        <label htmlFor="referralCode">Code du lien d’attribution</label>
+        <input
+          autoCapitalize="none"
+          id="referralCode"
+          maxLength={40}
+          minLength={3}
+          name="referralCode"
+          onChange={(event) => {
+            setCustomReferralCode(true);
+            setReferralCode(normalizeAttributionCode(event.target.value));
+          }}
+          pattern="[a-z0-9][a-z0-9-]{2,39}"
+          placeholder="claire"
+          required
+          spellCheck={false}
+          value={referralCode}
+        />
+        <small className={styles.referralPreview}>Lien à partager : <strong>jumellesimmo.fr/?ref={referralCode || "votre-code"}</strong></small>
         <label htmlFor="role">Rôle</label>
         <select id="role" name="role" onChange={(event) => selectRole(event.target.value as typeof role)} value={role}>
           <option value="manager">Manager</option>

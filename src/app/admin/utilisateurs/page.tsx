@@ -71,7 +71,7 @@ export default async function AdminUsersPage({
                         {user.email} - {user.role} - {user.is_active ? "actif" : "desactive"}
                       </small>
                       {links.status === "ready" ? links.data.filter((link) => link.admin_user_id === user.id).map((link) => (
-                        <small key={link.id}>Lien : {`https://jumellesimmo.fr${link.landing_path}?ref=${link.code}&utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`}</small>
+                        <small key={link.id}>Lien : {`https://jumellesimmo.fr${link.landing_path}?ref=${link.code}`}</small>
                       )) : null}
                       {user.role !== "admin" ? (
                         <AdminUserPermissionsForm

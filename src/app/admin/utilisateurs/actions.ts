@@ -14,6 +14,7 @@ export async function createAdminUserAction(formData: FormData) {
     email: String(formData.get("email") ?? ""),
     fullName: String(formData.get("fullName") ?? ""),
     password: String(formData.get("password") ?? ""),
+    referralCode: String(formData.get("referralCode") ?? ""),
     role: parseRole(String(formData.get("role") ?? "manager")),
   });
 

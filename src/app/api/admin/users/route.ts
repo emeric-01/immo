@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       fullName: string;
       password: string;
       permissions: unknown[];
+      referralCode: string;
       role: string;
     }>;
     const role = allowedRoles.has(input.role as AdminUser["role"])
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       email: input.email ?? "",
       fullName: input.fullName ?? "",
       password: input.password ?? "",
+      referralCode: input.referralCode ?? "",
       role,
     });
 
