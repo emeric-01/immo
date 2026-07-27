@@ -13,5 +13,5 @@ export default async function AdminPage() {
     ["referrals:read", "/admin/parrainages"],
     ["contents:read", "/admin/contenus"],
   ].find(([permission]) => permissions.includes(permission as never));
-  redirect(firstPage?.[1] ?? "/admin/mes-liens");
+  redirect(firstPage?.[1] ?? "/admin/mon-compte");
 }

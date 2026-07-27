@@ -420,11 +420,24 @@ export function EstimationForm({
 
   async function handleLeadSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLeadState("loading");
     setLeadMessage("");
 
     const leadForm = event.currentTarget;
     const formData = new FormData(leadForm);
+
+    if (!leadForm.checkValidity()) {
+      const consentAccepted = formData.get("consent") === "accepted";
+      setLeadState("error");
+      setLeadMessage(
+        consentAccepted
+          ? "Vérifiez les coordonnées renseignées avant d’envoyer votre demande."
+          : "Cochez votre accord pour être recontacté afin d’envoyer la demande.",
+      );
+      leadForm.querySelector<HTMLElement>(":invalid")?.focus();
+      return;
+    }
+
+    setLeadState("loading");
 
     try {
       const response = await fetch("/api/seller-leads", {
@@ -1189,7 +1202,7 @@ export function EstimationForm({
                   <p>{leadMessage}</p>
                 </div>
               ) : (
-                <form className="mandate-lead-form" onSubmit={handleLeadSubmit}>
+                <form className="mandate-lead-form" noValidate onSubmit={handleLeadSubmit}>
                   <label className="lead-property-field"><span>Bien concerné</span><input readOnly value={`${propertyLabel} · ${estimation.addressLabel}`} /></label>
                   <div className="lead-name-grid">
                     <label><span>Prénom</span><input autoComplete="given-name" name="firstName" required /></label>
@@ -1220,7 +1233,7 @@ export function EstimationForm({
                       : "Recevoir mon étude détaillée"}
                     {leadState !== "loading" ? <ArrowRight aria-hidden="true" /> : null}
                   </button>
-                  {leadState === "error" ? <p className="mandate-error" role="alert">{leadMessage}</p> : null}
+                  {leadState === "error" ? <p aria-live="assertive" className="mandate-error" role="alert">{leadMessage}</p> : null}
                 </form>
               )}
               <small><LockKeyhole aria-hidden="true" /> Échange gratuit, confidentiel et sans engagement.</small>

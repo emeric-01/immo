@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendContactRequestEmail } from "@/lib/email/buyer-search-emails";
+import { getCurrentAttribution } from "@/lib/attribution";
 
 type ContactPayload = {
   consent?: unknown;
@@ -61,7 +62,8 @@ export async function POST(request: Request) {
       );
     }
 
-    await sendContactRequestEmail({ email: email || undefined, message, name, phone: phone || undefined, subject });
+    const attribution = await getCurrentAttribution();
+    await sendContactRequestEmail({ attribution, email: email || undefined, message, name, phone: phone || undefined, subject });
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     console.error("Contact form submission failed", error);

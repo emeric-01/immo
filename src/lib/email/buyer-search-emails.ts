@@ -10,6 +10,11 @@ import {
 import type { BuyerSearchSubmissionResult } from "@/lib/buyer-search/database";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 import type { ReferralInput } from "@/lib/referrals";
+import {
+  getAttributionNotificationContext,
+  type AttributionNotificationContext,
+  type AttributionSnapshot,
+} from "@/lib/attribution";
 
 type EmailDeliveryResult = {
   warnings: string[];
@@ -31,9 +36,11 @@ type EmailConfig = {
 };
 
 export async function sendBuyerSearchCreatedEmails({
+  attribution,
   data,
   result,
 }: {
+  attribution?: AttributionSnapshot | null;
   data: BuyerSearchFormData;
   result: BuyerSearchSubmissionResult;
 }): Promise<EmailDeliveryResult> {
@@ -47,10 +54,8 @@ export async function sendBuyerSearchCreatedEmails({
 
   const warnings: string[] = [];
   const messages: EmailMessage[] = [buildClientConfirmationEmail(config, data)];
-
-  if (config.adminEmail) {
-    messages.push(buildAdminNewSearchEmail(config, data, result.id));
-  }
+  const delivery = await getOperationalDelivery(config, attribution);
+  messages.push(buildAdminNewSearchEmail(config, data, result.id, delivery.origin, delivery.recipients));
 
   await Promise.all(
     messages.map(async (message) => {
@@ -67,20 +72,26 @@ export async function sendBuyerSearchCreatedEmails({
 }
 
 export async function sendBuyerSearchUpdatedEmails({
+  attribution,
   data,
   searchId,
 }: {
+  attribution?: AttributionSnapshot | null;
   data: BuyerSearchFormData;
   searchId: string;
 }): Promise<EmailDeliveryResult> {
   const config = getEmailConfig();
 
-  if (!config?.adminEmail) {
+  if (!config) {
     return { warnings: [] };
   }
 
   try {
-    await sendEmail(config, buildAdminUpdatedSearchEmail(config, data, searchId));
+    const delivery = await getOperationalDelivery(config, attribution);
+    await sendEmail(
+      config,
+      buildAdminUpdatedSearchEmail(config, data, searchId, delivery.origin, delivery.recipients),
+    );
     return { warnings: [] };
   } catch (error) {
     console.error("Buyer search update email failed", error);
@@ -167,12 +178,14 @@ export async function sendEstimationVolumeAlertEmail({
 }
 
 export async function sendContactRequestEmail({
+  attribution,
   email,
   message,
   name,
   phone,
   subject,
 }: {
+  attribution?: AttributionSnapshot | null;
   email?: string;
   message: string;
   name: string;
@@ -185,7 +198,7 @@ export async function sendContactRequestEmail({
     throw new Error("Emails transactionnels non configures.");
   }
 
-  const recipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const delivery = await getOperationalDelivery(config, attribution);
   const safeEmail = email ? escapeHtml(email) : "Non renseigné";
   const safePhone = phone ? escapeHtml(phone) : "Non renseigné";
   const safeMessage = escapeHtml(message).replace(/\n/g, "<br />");
@@ -202,15 +215,17 @@ export async function sendContactRequestEmail({
           <strong style="color:#111;">Téléphone :</strong> ${phone ? `<a href="tel:${escapeHtml(phone.replace(/\s/g, ""))}" style="color:#9f5d33;">${safePhone}</a>` : safePhone}
         </div>
         <div style="border:1px solid #e6d4c2;border-radius:8px;background:#fbf7f2;padding:16px;color:#111;line-height:1.7;">${safeMessage}</div>
+        ${buildOriginBlock(delivery.origin)}
       `,
     ),
     subject: `🔔 Contact site — ${subject}`,
-    text: `Nouveau message depuis le site\nNom : ${name}\nObjet : ${subject}\nEmail : ${email || "Non renseigné"}\nTéléphone : ${phone || "Non renseigné"}\n\n${message}`,
-    to: recipient,
+    text: `Nouveau message depuis le site\nNom : ${name}\nObjet : ${subject}\nEmail : ${email || "Non renseigné"}\nTéléphone : ${phone || "Non renseigné"}\nOrigine : ${delivery.origin.label}\n\n${message}`,
+    to: delivery.recipients,
   });
 }
 
 export async function sendSellerLeadNotificationEmail({
+  attribution,
   address,
   city,
   confidenceScore,
@@ -228,6 +243,7 @@ export async function sendSellerLeadNotificationEmail({
   rooms,
   surfaceM2,
 }: {
+  attribution?: AttributionSnapshot | null;
   address: string;
   city: string;
   confidenceScore?: number;
@@ -251,7 +267,7 @@ export async function sendSellerLeadNotificationEmail({
     throw new Error("Emails transactionnels non configures.");
   }
 
-  const recipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const delivery = await getOperationalDelivery(config, attribution);
   const typeLabels: Record<string, string> = {
     apartment: "Appartement",
     house: "Maison",
@@ -318,18 +334,21 @@ export async function sendSellerLeadNotificationEmail({
             ${estimationDetails.join("<br />")}
           </div>
         ` : ""}
+        ${buildOriginBlock(delivery.origin)}
       `,
     ),
     subject: `🔔 ${requestLabel} — ${city}`,
-    text: `${requestLabel}\nContact : ${firstName} ${lastName}\nE-mail : ${email}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}${estimationText ? `\n\nEstimation consultée\n${estimationText}` : ""}`,
-    to: recipient,
+    text: `${requestLabel}\nContact : ${firstName} ${lastName}\nE-mail : ${email}\nType : ${propertyLabel}\nAdresse : ${address}\nSecteur : ${city}\nTéléphone : ${phone}\nOrigine : ${delivery.origin.label}${estimationText ? `\n\nEstimation consultée\n${estimationText}` : ""}`,
+    to: delivery.recipients,
   });
 }
 
 export async function sendReferralLeadEmails({
+  attribution,
   input,
   referralId,
 }: {
+  attribution?: AttributionSnapshot | null;
   input: ReferralInput;
   referralId: string;
 }): Promise<EmailDeliveryResult> {
@@ -347,7 +366,7 @@ export async function sendReferralLeadEmails({
     land: "Terrain",
     other: "Autre bien",
   };
-  const adminRecipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const delivery = await getOperationalDelivery(config, attribution);
   const messages: EmailMessage[] = [
     {
       html: emailLayout(
@@ -380,12 +399,13 @@ export async function sendReferralLeadEmails({
             <strong style="color:#111;">Projet :</strong> ${escapeHtml(projectLabel)} · ${escapeHtml(propertyLabels[input.propertyType])} · ${escapeHtml(input.propertyCity)}<br />
             <strong style="color:#111;">Référence :</strong> ${escapeHtml(referralId)}
           </div>
+          ${buildOriginBlock(delivery.origin)}
           ${input.message ? `<p style="margin:18px 0 0;color:#555f70;line-height:1.6;"><strong style="color:#111;">Message :</strong> ${escapeHtml(input.message)}</p>` : ""}
         `,
       ),
       subject: `🔔 Nouveau parrainage — ${input.propertyCity}`,
-      text: `Nouveau parrainage\nParrain : ${input.sponsorFirstName} ${input.sponsorLastName}, ${input.sponsorEmail}, ${input.sponsorPhone}\nProche : ${input.referredFirstName} ${input.referredLastName}, ${input.referredPhone}\nProjet : ${projectLabel}, ${propertyLabels[input.propertyType]}, ${input.propertyCity}\nRéférence : ${referralId}`,
-      to: adminRecipient,
+      text: `Nouveau parrainage\nParrain : ${input.sponsorFirstName} ${input.sponsorLastName}, ${input.sponsorEmail}, ${input.sponsorPhone}\nProche : ${input.referredFirstName} ${input.referredLastName}, ${input.referredPhone}\nProjet : ${projectLabel}, ${propertyLabels[input.propertyType]}, ${input.propertyCity}\nRéférence : ${referralId}\nOrigine : ${delivery.origin.label}`,
+      to: delivery.recipients,
     },
   ];
 
@@ -399,6 +419,31 @@ export async function sendReferralLeadEmails({
   }));
 
   return { warnings };
+}
+
+async function getOperationalDelivery(
+  config: EmailConfig,
+  attribution?: AttributionSnapshot | null,
+) {
+  const origin = await getAttributionNotificationContext(attribution ?? null);
+  const adminEmail = config.adminEmail || "contact@jumellesimmo.fr";
+  const recipients = Array.from(
+    new Map(
+      [adminEmail, origin.agentEmail]
+        .filter((email): email is string => Boolean(email))
+        .map((email) => [email.toLowerCase(), email]),
+    ).values(),
+  );
+
+  return { origin, recipients };
+}
+
+function buildOriginBlock(origin: AttributionNotificationContext) {
+  return `
+    <div style="border-top:1px solid #eee6df;margin-top:20px;padding-top:14px;color:#687084;font-size:13px;line-height:1.6;">
+      <strong style="color:#111;">Origine de la demande :</strong> ${escapeHtml(origin.label)}
+    </div>
+  `;
 }
 
 function getEmailConfig(): EmailConfig | null {
@@ -545,7 +590,13 @@ function buildClientConfirmationEmail(
   };
 }
 
-function buildAdminNewSearchEmail(config: EmailConfig, data: BuyerSearchFormData, searchId: string): EmailMessage {
+function buildAdminNewSearchEmail(
+  config: EmailConfig,
+  data: BuyerSearchFormData,
+  searchId: string,
+  origin: AttributionNotificationContext,
+  recipients: string[],
+): EmailMessage {
   const detailUrl = `${config.appUrl}/admin/recherches/${searchId}`;
   const title = "Nouvelle demande acheteur";
 
@@ -556,6 +607,7 @@ function buildAdminNewSearchEmail(config: EmailConfig, data: BuyerSearchFormData
         <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Une nouvelle demande acheteur vient d'etre enregistree.</p>
         ${buildAdminContactBlock(data)}
         ${buildSearchSummary(data)}
+        ${buildOriginBlock(origin)}
         <p style="margin:24px 0 0;">
           <a href="${escapeHtml(detailUrl)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700;">Voir la demande</a>
         </p>
@@ -567,14 +619,21 @@ function buildAdminNewSearchEmail(config: EmailConfig, data: BuyerSearchFormData
       `${data.contact.firstName} ${data.contact.lastName}`,
       data.contact.email,
       data.contact.phone,
+      `Origine : ${origin.label}`,
       `Detail admin : ${detailUrl}`,
       formatTextSummary(data),
     ].join("\n"),
-    to: config.adminEmail ?? "",
+    to: recipients,
   };
 }
 
-function buildAdminUpdatedSearchEmail(config: EmailConfig, data: BuyerSearchFormData, searchId: string): EmailMessage {
+function buildAdminUpdatedSearchEmail(
+  config: EmailConfig,
+  data: BuyerSearchFormData,
+  searchId: string,
+  origin: AttributionNotificationContext,
+  recipients: string[],
+): EmailMessage {
   const detailUrl = `${config.appUrl}/admin/recherches/${searchId}`;
   const title = "Recherche modifiee par le client";
 
@@ -585,6 +644,7 @@ function buildAdminUpdatedSearchEmail(config: EmailConfig, data: BuyerSearchForm
         <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Un client a modifie sa recherche depuis son espace client.</p>
         ${buildAdminContactBlock(data)}
         ${buildSearchSummary(data)}
+        ${buildOriginBlock(origin)}
         <p style="margin:24px 0 0;">
           <a href="${escapeHtml(detailUrl)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700;">Voir la demande</a>
         </p>
@@ -596,10 +656,11 @@ function buildAdminUpdatedSearchEmail(config: EmailConfig, data: BuyerSearchForm
       `${data.contact.firstName} ${data.contact.lastName}`,
       data.contact.email,
       data.contact.phone,
+      `Origine : ${origin.label}`,
       `Detail admin : ${detailUrl}`,
       formatTextSummary(data),
     ].join("\n"),
-    to: config.adminEmail ?? "",
+    to: recipients,
   };
 }
 

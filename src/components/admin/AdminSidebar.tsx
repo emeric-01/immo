@@ -13,7 +13,7 @@ const menuItems: Array<{ href: string; label: string; permission?: AdminPermissi
   { href: "/admin/audience", label: "Audience", permission: "audience:read" },
   { href: "/admin/contenus", label: "Contenus", permission: "contents:read" },
   { href: "/admin/utilisateurs", label: "Utilisateurs", permission: "users:manage" },
-  { href: "/admin/mes-liens", label: "Mes liens" },
+  { href: "/admin/mon-compte", label: "Mon espace" },
 ];
 
 export async function AdminSidebar({ active, session }: { active: string; session: AdminSession }) {

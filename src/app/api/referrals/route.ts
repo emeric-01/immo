@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendReferralLeadEmails } from "@/lib/email/buyer-search-emails";
 import { createReferral, referralSchema } from "@/lib/referrals";
+import { getCurrentAttribution } from "@/lib/attribution";
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +20,8 @@ export async function POST(request: Request) {
     }
 
     const referral = await createReferral(parsed.data);
-    const emailResult = await sendReferralLeadEmails({ input: parsed.data, referralId: referral.id });
+    const attribution = await getCurrentAttribution();
+    const emailResult = await sendReferralLeadEmails({ attribution, input: parsed.data, referralId: referral.id });
 
     return NextResponse.json(
       { id: referral.id, success: true, warnings: emailResult.warnings },

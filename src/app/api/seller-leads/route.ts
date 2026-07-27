@@ -181,6 +181,7 @@ export async function POST(request: Request) {
     await recordAttributedConversion(attribution, "contact", accountId ?? null, "/estimation/resultat");
 
     await sendSellerLeadNotificationEmail({
+      attribution,
       address,
       city,
       confidenceScore: readPositiveNumber(payload.confidenceScore, 5),

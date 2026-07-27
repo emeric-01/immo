@@ -13,15 +13,9 @@ export function PermissionChecklist({
   value: AdminPermission[];
 }) {
   function toggle(permission: AdminPermission) {
-    const next = value.includes(permission) ? value.filter((item) => item !== permission) : [...value, permission];
-    if (!next.includes("properties:read")) {
-      onChange(next.filter((item) => !["properties:create", "properties:update_own", "properties:write"].includes(item)));
-      return;
-    }
-    if (!next.includes("contents:read")) {
-      onChange(next.filter((item) => item !== "contents:write"));
-      return;
-    }
+    let next = value.includes(permission) ? value.filter((item) => item !== permission) : [...value, permission];
+    if (!next.includes("properties:read")) next = next.filter((item) => !["properties:create", "properties:update_own", "properties:write"].includes(item));
+    if (!next.includes("contents:read")) next = next.filter((item) => item !== "contents:write");
     onChange(next);
   }
 

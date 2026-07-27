@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
       ? await updateBuyerSearchRecord(requestedSearchId, data, metadata)
       : await createBuyerSearchRecord(data, metadata);
     const emailDelivery = requestedSearchId
-      ? await sendBuyerSearchUpdatedEmails({ data, searchId: result.id })
-      : await sendBuyerSearchCreatedEmails({ data, result });
+      ? await sendBuyerSearchUpdatedEmails({ attribution, data, searchId: result.id })
+      : await sendBuyerSearchCreatedEmails({ attribution, data, result });
     const responseBody = {
       ...result,
       warnings: [...(result.warnings ?? []), ...emailDelivery.warnings],

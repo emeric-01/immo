@@ -44,6 +44,15 @@ export type AttributionSnapshot = {
   visitorAttributionId: string;
 };
 
+export type AttributionNotificationContext = {
+  agentEmail: string | null;
+  agentName: string | null;
+  campaign: string | null;
+  label: string;
+  medium: string;
+  source: string;
+};
+
 type VisitInput = { isEntry?: boolean; path: string; referrer?: string | null; ref?: string | null; utmCampaign?: string | null; utmContent?: string | null; utmMedium?: string | null; utmSource?: string | null };
 
 function secret() {
@@ -132,6 +141,50 @@ export async function getCurrentAttribution(): Promise<AttributionSnapshot | nul
     attributedAdminUserId: row.first_admin_user_id || row.last_admin_user_id,
     first: { source: row.first_source, medium: row.first_medium, campaign: row.first_campaign, content: row.first_content, referrerHost: row.first_referrer_host, landingPath: row.first_landing_path },
     last: { source: row.last_source, medium: row.last_medium, campaign: row.last_campaign, content: row.last_content, referrerHost: row.last_referrer_host, landingPath: row.last_landing_path },
+  };
+}
+
+export async function getAttributionNotificationContext(
+  snapshot: AttributionSnapshot | null,
+): Promise<AttributionNotificationContext> {
+  if (!snapshot) {
+    return {
+      agentEmail: null,
+      agentName: null,
+      campaign: null,
+      label: "Accès direct — origine non attribuée",
+      medium: "none",
+      source: "direct",
+    };
+  }
+
+  const touch = snapshot.attributedAdminUserId && snapshot.last.medium === "referral"
+    ? snapshot.last
+    : snapshot.first;
+  let agentEmail: string | null = null;
+  let agentName: string | null = null;
+
+  if (snapshot.attributedAdminUserId) {
+    const users = await adminRest<Array<{ email: string; full_name: string }>>(
+      `admin_users?id=eq.${encodeURIComponent(snapshot.attributedAdminUserId)}&is_active=eq.true&select=email,full_name&limit=1`,
+    );
+    const agent = users[0];
+    agentEmail = agent?.email?.trim().toLowerCase() || null;
+    agentName = agent?.full_name?.trim() || null;
+  }
+
+  const campaign = touch.campaign?.trim() || null;
+  const sourceAndMedium = `${touch.source || "direct"} / ${touch.medium || "none"}`;
+
+  return {
+    agentEmail,
+    agentName,
+    campaign,
+    label: agentEmail
+      ? `Lien d’affiliation — ${agentName || agentEmail} (${sourceAndMedium})`
+      : `${sourceAndMedium}${campaign ? ` · ${campaign}` : ""}`,
+    medium: touch.medium || "none",
+    source: touch.source || "direct",
   };
 }
 

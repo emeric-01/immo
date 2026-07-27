@@ -153,6 +153,14 @@ export async function listAdminAttributionLinks(adminUserId?: string) {
   return supabaseAdminFetch<AdminAttributionLink[]>(config, `attribution_links?${query}`);
 }
 
+export async function getAdminAttributionLinkByCode(code: string) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return null;
+  const query = new URLSearchParams({ code: `eq.${code}`, is_active: "eq.true", limit: "1", select: "*" });
+  const result = await supabaseAdminFetch<AdminAttributionLink[]>(config, `attribution_links?${query}`);
+  return result.status === "ready" ? result.data[0] ?? null : null;
+}
+
 async function ensureDefaultAttributionLink(config: AdminSupabaseConfig, user: SafeAdminUser) {
   const base = user.full_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || user.id.slice(0, 8);
   const code = `${base}-${user.id.slice(0, 5)}`;
@@ -210,6 +218,32 @@ export async function authenticateAdminUser(email: string, password: string) {
     role: user.role,
     updated_at: user.updated_at,
   };
+}
+
+export async function changeAdminUserPassword(input: { currentPassword: string; newPassword: string; userId: string }) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { message: "Configuration Supabase absente.", success: false as const };
+  if (input.newPassword.length < 12) return { message: "Le nouveau mot de passe doit contenir au moins 12 caractères.", success: false as const };
+  if (input.currentPassword === input.newPassword) return { message: "Choisissez un mot de passe différent de l’ancien.", success: false as const };
+
+  const params = new URLSearchParams({
+    id: `eq.${input.userId}`,
+    is_active: "eq.true",
+    limit: "1",
+    select: "id,password_hash",
+  });
+  const result = await supabaseAdminFetch<Array<Pick<AdminUser, "id" | "password_hash">>>(config, `admin_users?${params}`);
+  if (result.status !== "ready" || !result.data[0] || !verifyAdminPassword(input.currentPassword, result.data[0].password_hash)) {
+    return { message: "Le mot de passe actuel est incorrect.", success: false as const };
+  }
+
+  const response = await fetch(`${config.url}/rest/v1/admin_users?id=eq.${encodeURIComponent(input.userId)}`, {
+    body: JSON.stringify({ password_hash: hashAdminPassword(input.newPassword), updated_at: new Date().toISOString() }),
+    headers: adminHeaders(config, "return=minimal"),
+    method: "PATCH",
+  });
+  if (!response.ok) return { message: "La modification du mot de passe a échoué.", success: false as const };
+  return { success: true as const };
 }
 
 function hashAdminPassword(password: string) {
