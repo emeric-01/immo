@@ -263,6 +263,18 @@
   align-items: center;
 }
 
+.clientCell > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.clientCell strong,
+.clientCell small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;

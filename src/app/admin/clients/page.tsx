@@ -14,6 +14,7 @@ import {
 } from "@/lib/admin/clients";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
+import { formatAdminAttribution } from "@/lib/admin/attribution-display";
 
 export const metadata: Metadata = {
   title: "Clients | Admin",
@@ -128,7 +129,7 @@ function ClientTable({ clients }: { clients: AdminClientListItem[] }) {
                     <strong>{formatAdminClientName(client)}</strong>
                     <small>{client.email}</small>
                     <small>{client.phone || "Telephone non renseigne"}</small>
-                    <small>Origine : {formatAttribution(client.first_attribution)}</small>
+                    <small>Origine : {formatAdminAttribution(client.first_attribution)}</small>
                   </div>
                 </div>
               </td>
@@ -174,10 +175,4 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function formatAttribution(snapshot: AdminClientListItem["first_attribution"]) {
-  return "first" in snapshot
-    ? `${snapshot.first.source} / ${snapshot.first.medium}${snapshot.first.campaign ? ` · ${snapshot.first.campaign}` : ""}`
-    : "Non attribue";
 }

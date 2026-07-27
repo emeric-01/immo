@@ -14,6 +14,8 @@ import {
   type AdminClientSearch,
 } from "@/lib/admin/clients";
 import styles from "../../admin.module.css";
+import { formatAdminAttribution, formatAdminAttributionCampaign } from "@/lib/admin/attribution-display";
+import { getAdminUserSummary } from "@/lib/admin/users";
 
 export const metadata: Metadata = {
   title: "Detail client | Admin",
@@ -56,6 +58,9 @@ export default async function AdminClientDetailPage({
 
   const { client, estimations, referrals, searches } = result.data;
   const latestSearch = searches.find((search) => search.status !== "deleted_by_client") ?? null;
+  const assignedAgent = await getAdminUserSummary(client.assigned_admin_user_id);
+  const attributedAgent = await getAdminUserSummary(client.attributed_admin_user_id);
+  const commercialAgent = assignedAgent ?? attributedAgent;
 
   return (
     <DetailFrame>
@@ -109,6 +114,13 @@ export default async function AdminClientDetailPage({
           <Metric icon={MapPin} label="Secteur" value={latestSearch?.location_summary || "Non renseigne"} />
           <Metric icon={Euro} label="Budget maximum" value={formatCurrency(latestSearch?.maximum_budget)} />
           <Metric icon={ShieldCheck} label="Connexion client" value="Code temporaire par email" />
+        </InfoPanel>
+
+        <InfoPanel title="Attribution commerciale">
+          <Metric icon={UserRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} />
+          <Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} />
+          <Metric icon={ShieldCheck} label="Origine" value={formatAdminAttribution(client.first_attribution)} />
+          <Metric icon={MapPin} label="Campagne" value={formatAdminAttributionCampaign(client.first_attribution)} />
         </InfoPanel>
 
         <InfoPanel title={`Demandes liees (${searches.length})`} wide>

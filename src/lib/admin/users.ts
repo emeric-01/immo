@@ -65,6 +65,19 @@ export async function listAdminUsers(): Promise<AdminUsersState> {
   return result;
 }
 
+export async function getAdminUserSummary(id?: string | null) {
+  const config = getAdminSupabaseConfig();
+  if (!config || !id) return null;
+  const params = new URLSearchParams({
+    id: `eq.${id}`,
+    is_active: "eq.true",
+    limit: "1",
+    select: "id,email,full_name,role",
+  });
+  const result = await supabaseAdminFetch<Array<Pick<SafeAdminUser, "email" | "full_name" | "id" | "role">>>(config, `admin_users?${params}`);
+  return result.status === "ready" ? result.data[0] ?? null : null;
+}
+
 export async function createAdminUser(input: {
   email: string;
   fullName: string;

@@ -14,6 +14,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import type { AdminSession } from "@/lib/admin/auth";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
+import { formatAdminAttribution } from "@/lib/admin/attribution-display";
 
 export const metadata: Metadata = {
   title: "Recherches acheteurs | Admin",
@@ -149,7 +150,7 @@ function SearchTable({
                       {search.contact_first_name} {search.contact_last_name}
                     </strong>
                     <small>{formatDate(search.created_at)}</small>
-                    <small>Origine : {formatAttribution(search.attribution_snapshot)}</small>
+                    <small>Origine : {formatAdminAttribution(search.attribution_snapshot)}</small>
                   </div>
                 </div>
               </td>
@@ -220,12 +221,6 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function formatAttribution(snapshot: AdminBuyerSearchRow["attribution_snapshot"]) {
-  if (!("first" in snapshot)) return "Non attribue";
-  const campaign = snapshot.first.campaign ? ` · ${snapshot.first.campaign}` : "";
-  return `${snapshot.first.source} / ${snapshot.first.medium}${campaign}`;
 }
 
 function formatStatus(status: string) {

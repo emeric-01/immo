@@ -11,6 +11,8 @@ import {
 import { optionLabel, financingOptions, purchaseTimelineOptions, situationOptions } from "@/lib/buyer-search/options";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
+import { formatAdminAttribution, formatAdminAttributionCampaign } from "@/lib/admin/attribution-display";
+import { getAdminUserSummary } from "@/lib/admin/users";
 import styles from "../../admin.module.css";
 
 export const metadata: Metadata = {
@@ -54,6 +56,9 @@ export default async function AdminBuyerSearchDetailPage({
 
   const { consents, locations, priorities, search } = result.data;
   const preferences = formatAdminPreferences(search);
+  const assignedAgent = await getAdminUserSummary(search.assigned_admin_user_id);
+  const attributedAgent = await getAdminUserSummary(search.attributed_admin_user_id);
+  const commercialAgent = assignedAgent ?? attributedAgent;
 
   return (
     <DetailFrame>
@@ -109,6 +114,13 @@ export default async function AdminBuyerSearchDetailPage({
           <Metric icon={Euro} label="Budget maximum" value={formatCurrency(search.maximum_budget)} />
           <Metric icon={BedDouble} label="Surface et pieces" value={formatSpace(search)} />
           <Metric icon={CalendarDays} label="Projet" value={formatProject(search)} />
+        </InfoPanel>
+
+        <InfoPanel title="Attribution commerciale">
+          <Metric icon={UserRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} />
+          <Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} />
+          <Metric icon={ShieldCheck} label="Origine" value={formatAdminAttribution(search.attribution_snapshot)} />
+          <Metric icon={Gauge} label="Campagne" value={formatAdminAttributionCampaign(search.attribution_snapshot)} />
         </InfoPanel>
 
         <InfoPanel title="Localisation">
