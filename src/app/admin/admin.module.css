@@ -780,12 +780,92 @@
 }
 
 .userForm input,
-.userForm select {
+.userForm select,
+.userForm textarea {
   min-height: 46px;
   border: 1px solid #d7dfe9;
   border-radius: 8px;
   background: #ffffff;
   padding: 0 12px;
+}
+
+.userForm textarea {
+  min-height: 110px;
+  padding-block: 12px;
+  resize: vertical;
+  font: inherit;
+}
+
+.userForm label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.userForm label small {
+  color: #707789;
+  font-weight: 500;
+}
+
+.noticeBox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: start;
+}
+
+.noticeBox p {
+  grid-column: 2;
+  margin: 0;
+}
+
+.sectionHeading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sectionHeading h2,
+.sectionHeading p {
+  margin: 0;
+}
+
+.activityList {
+  display: grid;
+  gap: 10px;
+}
+
+.activityItem {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #ebe5df;
+  border-radius: 8px;
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.activityItem > span {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f6eee6;
+  color: #70401e;
+}
+
+.activityItem div {
+  display: grid;
+  gap: 3px;
+}
+
+.activityItem small {
+  color: #707789;
 }
 
 .userForm button {
@@ -1333,6 +1413,75 @@
 
 .permissionActions small { color: #28713c; }
 .permissionActions small[data-error] { color: #a64035; }
+
+.userOverview {
+  border: 1px solid #e3dcd4;
+  border-radius: 18px;
+  background: #fff;
+  padding: 24px;
+}
+
+.countPill {
+  border-radius: 999px;
+  background: #f6eee7;
+  color: #754221;
+  font-size: .8rem;
+  font-weight: 800;
+  padding: 7px 11px;
+}
+
+.userCardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.userCard {
+  align-items: center;
+  border: 1px solid #e7dfd7;
+  border-radius: 14px;
+  color: #171612;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 18px;
+  text-decoration: none;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.userCard:hover,
+.userCard:focus-visible {
+  border-color: #bd6e42;
+  box-shadow: 0 12px 28px rgb(69 45 28 / 10%);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.userAvatar {
+  align-items: center;
+  background: #f6eee7;
+  border-radius: 50%;
+  color: #8b4f2c;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.userCardBody { min-width: 0; }
+.userCardBody p { color: #747b8b; margin: 5px 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.userCardHeading { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.userCardMeta { display: flex; flex-wrap: wrap; gap: 7px; }
+.userCardMeta span { background: #f7f5f2; border-radius: 999px; color: #676d79; font-size: .74rem; padding: 5px 8px; }
+.userCardArrow { color: #a15d36; transition: transform .18s ease; }
+.userCard:hover .userCardArrow { transform: translateX(3px); }
+
+@media (max-width: 760px) {
+  .userCardGrid { grid-template-columns: 1fr; }
+  .userOverview { padding: 18px; }
+}
 
 @media (max-width: 760px) {
   .permissionGrid { grid-template-columns: 1fr; }

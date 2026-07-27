@@ -12,10 +12,13 @@ type AdminSupabaseConfig = {
 };
 
 export type AdminBuyerSearchRow = {
+  admin_agent?: { email: string; full_name: string; id: string } | null;
   id: string;
   assigned_to: string | null;
   assigned_admin_user_id: string | null;
   attributed_admin_user_id: string | null;
+  created_by_admin_user_id: string | null;
+  crm_contact_id: string | null;
   attribution_snapshot: import("@/lib/attribution").AttributionSnapshot | Record<string, never>;
   city_names: string[];
   consent: boolean;
@@ -50,6 +53,7 @@ export type AdminBuyerSearchRow = {
   property_types: PropertyType[];
   purchase_timeline: string | null;
   raw_payload: BuyerSearchFormData;
+  record_origin: "admin" | "client" | "public";
   source: string;
   status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed" | "deleted_by_client";
   updated_at: string;
@@ -134,7 +138,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,deleted_at,status,source,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,assigned_admin_user_id,attributed_admin_user_id,attribution_snapshot,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
+      "id,created_at,updated_at,deleted_at,status,source,record_origin,crm_contact_id,created_by_admin_user_id,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,assigned_admin_user_id,attributed_admin_user_id,attribution_snapshot,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
   applyAgentScope(params, session);
 
@@ -148,20 +152,32 @@ export async function getAdminBuyerSearches(
     return result;
   }
 
+  const usersResult = await supabaseAdminFetch<Array<{ email: string; full_name: string; id: string }>>(
+    config,
+    "admin_users?is_active=eq.true&select=id,email,full_name",
+  );
+  if (usersResult.status !== "ready") return usersResult;
+  const users = new Map(usersResult.data.map((user) => [user.id, user]));
+  const enriched = result.data.map((search) => ({
+    ...search,
+    admin_agent: users.get(search.assigned_admin_user_id || search.attributed_admin_user_id || search.created_by_admin_user_id || "") ?? null,
+  }));
+
   const query = filters.q?.trim().toLowerCase();
 
   if (!query) {
-    return result;
+    return { data: enriched, status: "ready" };
   }
 
   return {
-    data: result.data.filter((search) =>
+    data: enriched.filter((search) =>
       [
         search.contact_first_name,
         search.contact_last_name,
         search.contact_email,
         search.contact_phone,
         search.location_summary ?? "",
+        search.admin_agent?.full_name ?? "",
       ]
         .join(" ")
         .toLowerCase()

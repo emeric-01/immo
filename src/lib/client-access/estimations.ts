@@ -32,6 +32,9 @@ export type ClientEstimationRow = {
   attributed_admin_user_id?: string | null;
   assigned_admin_user_id?: string | null;
   attribution_snapshot?: AttributionSnapshot | Record<string, never>;
+  created_by_admin_user_id?: string | null;
+  crm_contact_id?: string | null;
+  record_origin?: "admin" | "client" | "public";
 };
 
 export async function savePropertyEstimation(
@@ -57,6 +60,7 @@ export async function savePropertyEstimation(
         price_per_m2: result.pricePerM2,
         property_type: input.propertyType,
         result_payload: result,
+        record_origin: session ? "client" : "public",
         rooms: input.rooms,
         source: result.source,
         surface_m2: input.surfaceM2,

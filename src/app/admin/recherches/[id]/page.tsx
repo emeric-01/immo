@@ -11,7 +11,7 @@ import {
 import { optionLabel, financingOptions, purchaseTimelineOptions, situationOptions } from "@/lib/buyer-search/options";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
-import { formatAdminAttribution, formatAdminAttributionCampaign } from "@/lib/admin/attribution-display";
+import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
 import { getAdminUserSummary } from "@/lib/admin/users";
 import styles from "../../admin.module.css";
 
@@ -58,7 +58,8 @@ export default async function AdminBuyerSearchDetailPage({
   const preferences = formatAdminPreferences(search);
   const assignedAgent = await getAdminUserSummary(search.assigned_admin_user_id);
   const attributedAgent = await getAdminUserSummary(search.attributed_admin_user_id);
-  const commercialAgent = assignedAgent ?? attributedAgent;
+  const creatorAgent = await getAdminUserSummary(search.created_by_admin_user_id);
+  const commercialAgent = assignedAgent ?? attributedAgent ?? creatorAgent;
 
   return (
     <DetailFrame>
@@ -119,6 +120,7 @@ export default async function AdminBuyerSearchDetailPage({
         <InfoPanel title="Attribution commerciale">
           <Metric icon={UserRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} />
           <Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} />
+          <Metric icon={ShieldCheck} label="Mode de création" value={formatRecordOrigin(search.record_origin)} />
           <Metric icon={ShieldCheck} label="Origine" value={formatAdminAttribution(search.attribution_snapshot)} />
           <Metric icon={Gauge} label="Campagne" value={formatAdminAttributionCampaign(search.attribution_snapshot)} />
         </InfoPanel>

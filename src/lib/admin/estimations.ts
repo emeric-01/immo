@@ -3,6 +3,7 @@ import "server-only";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import type { AdminClientAccount, AdminDataState } from "@/lib/admin/clients";
 import type { AdminSession } from "@/lib/admin/auth";
+import type { CrmContact } from "@/lib/admin/crm-contacts";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -10,7 +11,9 @@ type AdminSupabaseConfig = {
 };
 
 export type AdminEstimation = ClientEstimationRow & {
+  adminAgent: { email: string; full_name: string; id: string } | null;
   client: AdminClientAccount | null;
+  crmContact: CrmContact | null;
 };
 
 export type AdminEstimationStats = {
@@ -44,26 +47,34 @@ export async function getAdminEstimations(filters: { q?: string; status?: string
   }
   if (session?.role === "agent") estimationParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
 
-  const [estimationsResult, clientsResult] = await Promise.all([
+  const [estimationsResult, clientsResult, crmContactsResult, usersResult] = await Promise.all([
     fetchAdmin<ClientEstimationRow[]>(config, `property_estimations?${estimationParams}`),
     fetchAdmin<AdminClientAccount[]>(config, "client_accounts?select=*&limit=500"),
+    fetchAdmin<CrmContact[]>(config, "crm_contacts?select=*&limit=500"),
+    fetchAdmin<Array<{ email: string; full_name: string; id: string }>>(config, "admin_users?is_active=eq.true&select=id,email,full_name"),
   ]);
   if (estimationsResult.status !== "ready") return estimationsResult;
   if (clientsResult.status !== "ready") return clientsResult;
+  if (crmContactsResult.status !== "ready") return crmContactsResult;
+  if (usersResult.status !== "ready") return usersResult;
 
   const clients = new Map(clientsResult.data.map((client) => [client.id, client]));
+  const crmContacts = new Map(crmContactsResult.data.map((contact) => [contact.id, contact]));
+  const users = new Map(usersResult.data.map((user) => [user.id, user]));
   const rows = estimationsResult.data.map((estimation) => ({
     ...estimation,
+    adminAgent: users.get(estimation.assigned_admin_user_id || estimation.attributed_admin_user_id || estimation.created_by_admin_user_id || "") ?? null,
     client: estimation.client_account_id
       ? clients.get(estimation.client_account_id) ?? null
       : null,
+    crmContact: estimation.crm_contact_id ? crmContacts.get(estimation.crm_contact_id) ?? null : null,
   }));
   const query = filters.q?.trim().toLowerCase();
 
   return {
     data: query
       ? rows.filter((row) =>
-          [row.address_label, row.city_name ?? "", row.postal_code ?? "", row.client?.first_name ?? "", row.client?.last_name ?? "", row.client?.email ?? ""]
+          [row.address_label, row.city_name ?? "", row.postal_code ?? "", row.client?.first_name ?? "", row.client?.last_name ?? "", row.client?.email ?? "", row.crmContact?.first_name ?? "", row.crmContact?.last_name ?? "", row.crmContact?.email ?? ""]
             .join(" ")
             .toLowerCase()
             .includes(query),
@@ -85,17 +96,14 @@ export async function getAdminEstimation(id: string, session?: AdminSession): Pr
   const estimation = rows.data[0];
   if (!estimation) return { data: null, status: "ready" };
 
-  if (!estimation.client_account_id) {
-    return { data: { ...estimation, client: null }, status: "ready" };
-  }
-
-  const clients = await fetchAdmin<AdminClientAccount[]>(
-    config,
-    `client_accounts?id=eq.${encodeURIComponent(estimation.client_account_id)}&select=*&limit=1`,
-  );
+  const [clients, crmContacts] = await Promise.all([
+    estimation.client_account_id ? fetchAdmin<AdminClientAccount[]>(config, `client_accounts?id=eq.${encodeURIComponent(estimation.client_account_id)}&select=*&limit=1`) : Promise.resolve({ data: [], status: "ready" as const }),
+    estimation.crm_contact_id ? fetchAdmin<CrmContact[]>(config, `crm_contacts?id=eq.${encodeURIComponent(estimation.crm_contact_id)}&select=*&limit=1`) : Promise.resolve({ data: [], status: "ready" as const }),
+  ]);
   if (clients.status !== "ready") return clients;
+  if (crmContacts.status !== "ready") return crmContacts;
 
-  return { data: { ...estimation, client: clients.data[0] ?? null }, status: "ready" };
+  return { data: { ...estimation, adminAgent: null, client: clients.data[0] ?? null, crmContact: crmContacts.data[0] ?? null }, status: "ready" };
 }
 
 export function getAdminEstimationStats(rows: AdminEstimation[]): AdminEstimationStats {

@@ -1,96 +1,57 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { defaultPermissionsByRole, type AdminPermission } from "@/lib/admin/permission-definitions";
-import { listAdminAttributionLinks, listAdminUserPermissions, listAdminUsers } from "@/lib/admin/users";
+import { listAdminAttributionLinks, listAdminUsers } from "@/lib/admin/users";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import styles from "../admin.module.css";
-import { CreateAdminUserForm } from "./CreateAdminUserForm";
-import { AdminUserPermissionsForm } from "./AdminUserPermissionsForm";
 
-export const metadata: Metadata = {
-  title: "Utilisateurs admin | Les Jumelles Immo",
-};
-
+export const metadata: Metadata = { title: "Utilisateurs admin | Les Jumelles Immo" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ created?: string; error?: string }>;
-}) {
+export default async function AdminUsersPage() {
   const session = await requireAdminSession();
   await requireAdminPermission(session, "users:manage");
-  const params = await searchParams;
-  const users = await listAdminUsers();
-  const links = await listAdminAttributionLinks();
-  const permissionRows = await listAdminUserPermissions();
+  const [users, links] = await Promise.all([listAdminUsers(), listAdminAttributionLinks()]);
 
   return (
     <main className={styles.detailPage}>
       <div className={styles.detailShell}>
-        <Link className={styles.backLink} href="/admin/recherches">
-          <ArrowLeft size={18} aria-hidden="true" />
-          Retour aux recherches
-        </Link>
+        <Link className={styles.backLink} href="/admin/recherches"><ArrowLeft size={18} />Retour aux recherches</Link>
         <section className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Acces admin</p>
-            <h1>Utilisateurs</h1>
-            <p>Ajoutez les personnes qui peuvent consulter les formulaires enregistres.</p>
-          </div>
-          <div className={styles.sessionPill}>
-            <ShieldCheck size={18} aria-hidden="true" />
-            {session.fullName}
+          <div><p className={styles.eyebrow}>Accès admin</p><h1>Utilisateurs</h1><p>Consultez les comptes puis ouvrez une fiche pour gérer ses accès.</p></div>
+          <div className={styles.headerActions}>
+            <div className={styles.sessionPill}><ShieldCheck size={18} />{session.fullName}</div>
+            <Link className={styles.secondaryButton} href="/admin/utilisateurs/nouveau"><Plus size={18} />Nouvel utilisateur</Link>
           </div>
         </section>
 
-        <section className={styles.userGrid}>
-          <article className={styles.infoPanel}>
-            <h2>Nouvel utilisateur</h2>
-            {params.created ? <p className={styles.successText}>Utilisateur créé.</p> : null}
-            {params.error ? <p className={styles.errorText}>{params.error}</p> : null}
-            <CreateAdminUserForm />
-          </article>
-
-          <article className={styles.infoPanel}>
-            <h2>Comptes actifs</h2>
-            {users.status !== "ready" ? (
-              <p className={styles.mutedText}>{users.message}</p>
-            ) : users.data.length > 0 ? (
-              <div className={styles.userList}>
-                {users.data.map((user) => (
-                  <div key={user.id}>
-                    <span>
-                      <UsersRound size={18} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <strong>{user.full_name}</strong>
-                      <small>
-                        {user.email} - {user.role} - {user.is_active ? "actif" : "desactive"}
-                      </small>
-                      {links.status === "ready" ? links.data.filter((link) => link.admin_user_id === user.id).map((link) => (
-                        <small key={link.id}>Lien : {`https://jumellesimmo.fr${link.landing_path}?ref=${link.code}`}</small>
-                      )) : null}
-                      {user.role !== "admin" ? (
-                        <AdminUserPermissionsForm
-                          initialPermissions={permissionRows.status === "ready" && permissionRows.data.some((row) => row.admin_user_id === user.id)
-                            ? permissionRows.data.filter((row) => row.admin_user_id === user.id && row.is_allowed).map((row) => row.permission)
-                            : defaultPermissionsByRole[user.role] as AdminPermission[]}
-                          userId={user.id}
-                        />
-                      ) : <small>Un administrateur dispose de tous les accès.</small>}
+        <section className={styles.userOverview}>
+          <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Équipe</p><h2>Comptes actifs</h2></div>{users.status === "ready" ? <span className={styles.countPill}>{users.data.length} compte{users.data.length > 1 ? "s" : ""}</span> : null}</div>
+          {users.status !== "ready" ? <p className={styles.mutedText}>{users.message}</p> : users.data.length ? (
+            <div className={styles.userCardGrid}>
+              {users.data.map((user) => {
+                const attributionLink = links.status === "ready" ? links.data.find((link) => link.admin_user_id === user.id) : null;
+                return (
+                  <Link className={styles.userCard} href={`/admin/utilisateurs/${user.id}`} key={user.id}>
+                    <span className={styles.userAvatar}><UserRound size={22} /></span>
+                    <div className={styles.userCardBody}>
+                      <div className={styles.userCardHeading}><strong>{user.full_name}</strong><span className={styles.statusBadge} data-status={user.is_active ? "matched" : "paused"}>{user.is_active ? "Actif" : "Désactivé"}</span></div>
+                      <p>{user.email}</p>
+                      <div className={styles.userCardMeta}><span>{formatRole(user.role)}</span>{attributionLink ? <span>ref={attributionLink.code}</span> : <span>Aucun lien</span>}</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.mutedText}>Aucun utilisateur en base pour le moment.</p>
-            )}
-          </article>
+                    <ArrowRight className={styles.userCardArrow} size={20} />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : <div className={styles.emptyState}><UsersRound size={24} /><h2>Aucun utilisateur</h2><p>Créez le premier accès à l’administration.</p></div>}
         </section>
       </div>
     </main>
   );
+}
+
+function formatRole(role: "admin" | "agent" | "editor" | "manager") {
+  return { admin: "Administrateur", agent: "Agent commercial", editor: "Éditeur", manager: "Manager" }[role];
 }

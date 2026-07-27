@@ -3,6 +3,7 @@ import type { BuyerSearchMarketScore } from "./market-score-types";
 import { normalizePreferredChannels, normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData } from "./types";
 import type { AttributionSnapshot } from "@/lib/attribution";
+import { linkCrmContactsToClientAccount } from "@/lib/admin/crm-contacts";
 
 type BuyerSearchStorage = "database" | "local";
 
@@ -213,6 +214,7 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
       });
     }
     await linkExistingReferrals(config, existing[0].id, normalizedEmail);
+    await linkCrmContactsToClientAccount(existing[0].id, normalizedEmail, data.contact.phone.trim());
     return existing[0];
   }
 
@@ -227,6 +229,7 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
   }
 
   await linkExistingReferrals(config, account.id, normalizedEmail);
+  await linkCrmContactsToClientAccount(account.id, normalizedEmail, data.contact.phone.trim());
   return account;
 }
 
@@ -433,6 +436,7 @@ function buildBuyerSearchRow(
     property_types: normalizePropertyTypes(data.property.types?.length ? data.property.types : data.property.type),
     purchase_timeline: data.project.purchaseTimeline,
     raw_payload: data,
+    record_origin: clientAccountId ? "client" : "public",
     source: metadata.source ?? "website",
   };
 }

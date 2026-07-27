@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Inbox, Search, ShieldCheck, UserRound, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarClock, Inbox, Plus, Search, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -15,6 +15,8 @@ import {
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
 import { formatAdminAttribution } from "@/lib/admin/attribution-display";
+import { getCrmContacts, type CrmContact } from "@/lib/admin/crm-contacts";
+import { getAdminUserSummary } from "@/lib/admin/users";
 
 export const metadata: Metadata = {
   title: "Clients | Admin",
@@ -30,7 +32,7 @@ export default async function AdminClientsPage({
   const session = await requireAdminSession();
   await requireAdminPermission(session, "clients:read");
   const params = await searchParams;
-  const result = await getAdminClients({ q: params.q }, session);
+  const [result, crmResult] = await Promise.all([getAdminClients({ q: params.q }, session), getCrmContacts(session)]);
 
   return (
     <AdminFrame session={session}>
@@ -40,11 +42,7 @@ export default async function AdminClientsPage({
           <h1>Vue globale de vos clients</h1>
           <p>Consultez vos clients, leur dernière demande et leur activité.</p>
         </div>
-        <form action={logoutAdmin}>
-          <button className={styles.secondaryButton} type="submit">
-            Deconnexion
-          </button>
-        </form>
+        <div className={styles.headerActions}><Link className={styles.secondaryButton} href="/admin/clients/nouveau"><Plus size={18}/>Ajouter un contact</Link><form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form></div>
       </section>
 
       {result.status !== "ready" ? (
@@ -52,6 +50,7 @@ export default async function AdminClientsPage({
       ) : (
         <>
           <StatsGrid clients={result.data} />
+          {crmResult.status === "ready" ? <CrmContactsPanel contacts={crmResult.data} /> : <EmptyState title="Contacts CRM indisponibles" text={crmResult.message} />}
           <form className={styles.filterBar} data-compact>
             <label className={styles.searchField}>
               <Search size={18} aria-hidden="true" />
@@ -68,6 +67,14 @@ export default async function AdminClientsPage({
       )}
     </AdminFrame>
   );
+}
+
+async function CrmContactsPanel({ contacts }: { contacts: CrmContact[] }) {
+  const agents = new Map<string, Awaited<ReturnType<typeof getAdminUserSummary>>>();
+  await Promise.all(contacts.map(async (contact) => {
+    if (contact.assigned_admin_user_id && !agents.has(contact.assigned_admin_user_id)) agents.set(contact.assigned_admin_user_id, await getAdminUserSummary(contact.assigned_admin_user_id));
+  }));
+  return <section className={styles.infoPanel} data-wide><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>CRM interne</p><h2>Fiches contacts ({contacts.length})</h2><p>Contacts enregistrés par l’équipe, avec ou sans espace client.</p></div><Link className={styles.secondaryButton} href="/admin/clients/nouveau"><Plus size={18}/>Nouveau contact</Link></div>{contacts.length ? <div className={styles.tablePanel}><table><thead><tr><th>Contact</th><th>Coordonnées</th><th>Agent responsable</th><th>Espace client</th><th aria-label="Détail"/></tr></thead><tbody>{contacts.map((contact) => { const agent = contact.assigned_admin_user_id ? agents.get(contact.assigned_admin_user_id) : null; return <tr key={contact.id}><td><strong>{contact.first_name} {contact.last_name}</strong><small>Fiche CRM interne</small></td><td><strong>{contact.email || "E-mail non renseigné"}</strong><small>{contact.phone || "Téléphone non renseigné"}</small></td><td><strong>{agent?.full_name ?? "Non attribué"}</strong><small>{agent?.email ?? "—"}</small></td><td><span className={styles.statusBadge} data-status={contact.linked_client_account_id ? "matched" : "paused"}>{contact.linked_client_account_id ? "Compte rattaché" : "CRM uniquement"}</span></td><td><Link className={styles.iconLink} href={`/admin/clients/crm/${contact.id}`}><ArrowRight size={18}/></Link></td></tr>; })}</tbody></table></div> : <p className={styles.mutedText}>Aucune fiche CRM. Ajoutez le premier contact de l’équipe.</p>}</section>;
 }
 
 function AdminFrame({ children, session }: { children: React.ReactNode; session: AdminSession }) {

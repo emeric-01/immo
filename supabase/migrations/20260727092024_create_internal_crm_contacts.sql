@@ -19,6 +19,8 @@ create index if not exists crm_contacts_created_at_idx
   on public.crm_contacts (created_at desc);
 create index if not exists crm_contacts_assigned_admin_idx
   on public.crm_contacts (assigned_admin_user_id, updated_at desc);
+create index if not exists crm_contacts_created_by_admin_idx
+  on public.crm_contacts (created_by_admin_user_id, created_at desc);
 create index if not exists crm_contacts_linked_client_idx
   on public.crm_contacts (linked_client_account_id)
   where linked_client_account_id is not null;

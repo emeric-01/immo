@@ -14,7 +14,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import type { AdminSession } from "@/lib/admin/auth";
 import { logoutAdmin } from "../login/actions";
 import styles from "../admin.module.css";
-import { formatAdminAttribution } from "@/lib/admin/attribution-display";
+import { formatAdminAttribution, formatRecordOrigin } from "@/lib/admin/attribution-display";
 
 export const metadata: Metadata = {
   title: "Recherches acheteurs | Admin",
@@ -129,6 +129,7 @@ function SearchTable({
         <thead>
           <tr>
             <th>Client</th>
+            <th>Agent</th>
             <th>Recherche</th>
             <th>Budget</th>
             <th>Coherence</th>
@@ -150,10 +151,12 @@ function SearchTable({
                       {search.contact_first_name} {search.contact_last_name}
                     </strong>
                     <small>{formatDate(search.created_at)}</small>
+                    <small>{formatRecordOrigin(search.record_origin)}</small>
                     <small>Origine : {formatAdminAttribution(search.attribution_snapshot)}</small>
                   </div>
                 </div>
               </td>
+              <td><strong>{search.admin_agent?.full_name ?? "Non attribué"}</strong><small>{search.admin_agent?.email ?? "—"}</small></td>
               <td>
                 <strong>{formatAdminPropertyTypes(search.property_types)}</strong>
                 <small>{search.location_summary || "Secteur non renseigne"}</small>

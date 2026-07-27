@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sendSellerLeadNotificationEmail } from "@/lib/email/buyer-search-emails";
 import { clientSupabaseRequest } from "@/lib/client-access/supabase";
 import { attributionColumns, getCurrentAttribution, recordAttributedConversion, type AttributionSnapshot } from "@/lib/attribution";
+import { linkCrmContactsToClientAccount } from "@/lib/admin/crm-contacts";
 
 type SellerLeadPayload = {
   address?: unknown;
@@ -97,6 +98,8 @@ async function saveLeadAccountAndEstimation({
     return accountId;
   }
 
+  await linkCrmContactsToClientAccount(accountId, normalizedEmail, phone);
+
   const estimationId = readShortString(payload.estimationId);
   if (estimationId) {
     await clientSupabaseRequest(
@@ -132,6 +135,7 @@ async function saveLeadAccountAndEstimation({
       price_per_m2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
       property_type: payload.propertyType,
       result_payload: result,
+      record_origin: "client",
       rooms: readPositiveNumber(payload.rooms, 100),
       source: readShortString(result.source, 120) || "Immo Data",
       surface_m2: readPositiveNumber(payload.surfaceM2, 100_000),
