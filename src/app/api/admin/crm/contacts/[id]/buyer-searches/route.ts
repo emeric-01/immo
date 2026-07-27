@@ -20,5 +20,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
   const result = await createInternalBuyerSearch(contactResult.data.contact, session, parsed.data);
   if (!result.success) return NextResponse.json({ error: result.message }, { status: 500 });
-  return NextResponse.json({ id: result.id, internal: true }, { status: 201 });
+  return NextResponse.json({ id: result.id, internal: true, marketScore: result.marketScore }, { status: 201 });
 }

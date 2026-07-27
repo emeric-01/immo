@@ -58,6 +58,8 @@ import {
   saveBuyerSearchDraft,
 } from "@/lib/buyer-search/storage";
 import { submitBuyerSearch } from "@/lib/buyer-search/submit";
+import type { BuyerSearchMarketScore } from "@/lib/buyer-search/market-score-types";
+import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   buyerSearchSteps,
   defaultBuyerSearchData,
@@ -135,6 +137,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
   const [draftReady, setDraftReady] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [canReuseContact, setCanReuseContact] = useState(isCrm);
+  const [crmResult, setCrmResult] = useState<{ data: BuyerSearchFormData; id: string; marketScore?: BuyerSearchMarketScore } | null>(null);
   const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
   const form = useForm<BuyerSearchFormData>({
     defaultValues: initialData ?? defaultBuyerSearchData,
@@ -361,9 +364,11 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
           headers: { "Content-Type": "application/json" },
           method: "POST",
         });
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        const payload = await response.json().catch(() => null) as { error?: string; id?: string; marketScore?: BuyerSearchMarketScore } | null;
         if (!response.ok) throw new Error(payload?.error || "Création impossible.");
-        router.push(`/admin/clients/crm/${crmContactId}?searchCreated=1`);
+        if (!payload?.id) throw new Error("Résultat CRM incomplet.");
+        setCrmResult({ data: finalData, id: payload.id, marketScore: payload.marketScore });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         await submitBuyerSearch(finalData);
         router.push("/recherche/confirmation");
@@ -389,6 +394,24 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
       contact: <StepContact clientEmail={clientEmail} form={form} goToStep={goToStep} />,
     } satisfies Record<WizardStepId, React.ReactNode>
   )[activeStep.id];
+
+  if (isCrm && crmResult && crmContactId) {
+    const selectedTypes = normalizePropertyTypes(crmResult.data.property.types?.length ? crmResult.data.property.types : crmResult.data.property.type);
+    return <main className={styles.page}><section className={`${styles.shell} ${styles.confirmationShell}`}>
+      <div className={styles.confirmationHero}><span className={styles.confirmationIcon}><Check size={34}/></span><h1>Recherche interne enregistrée</h1><p>Le résultat est disponible ci-dessous et reste strictement réservé à votre équipe.</p></div>
+      <div className={`${styles.confirmationContent} ${crmResult.marketScore ? "" : styles.confirmationContentSingle}`}>
+        <section className={styles.confirmationSearchColumn}><header className={styles.confirmationColumnHeader}><p>Recherche CRM</p><h2>Critères enregistrés</h2></header><div className={styles.confirmationSummaryGrid}>
+          <article className={styles.summaryCard}><span className={styles.iconBubble}><Home size={24}/></span><div><h3>Type de bien</h3><p>{selectedTypes.map((type) => propertyTypeLabels[type]).join(", ")}</p></div></article>
+          <article className={styles.summaryCard}><span className={styles.iconBubble}><MapPin size={24}/></span><div><h3>Localisation</h3><p>{crmResult.data.location.cities.map((city) => `${city.name} (${city.radiusKm ?? 2} km)`).join(", ")}</p></div></article>
+          <article className={styles.summaryCard}><span className={styles.iconBubble}><WalletCards size={24}/></span><div><h3>Budget maximum</h3><p>{crmResult.data.property.maximumBudget ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(crmResult.data.property.maximumBudget) : "Non renseigné"}</p></div></article>
+          <article className={styles.summaryCard}><span className={styles.iconBubble}><Ruler size={24}/></span><div><h3>Surface minimale</h3><p>{crmResult.data.characteristics.minimumLivingArea ? `${crmResult.data.characteristics.minimumLivingArea} m²` : "Non renseignée"}</p></div></article>
+        </div></section>
+        {crmResult.marketScore ? <section className={styles.confirmationScoreColumn}><header className={styles.confirmationScoreIntro}><Info size={20}/><div><h2>Recherche face au marché</h2><p>Analyse de la cohérence entre le budget et les secteurs sélectionnés.</p></div></header><MarketScoreCard score={crmResult.marketScore} showBestMatch={crmResult.data.location.cities.length > 1}/></section> : null}
+      </div>
+      <section className={styles.clientAccessCard}><span className={styles.iconBubble}><CircleUserRound size={24}/></span><div><h2>Retrouvez ces informations dans votre compte professionnel</h2><p>Cette recherche est enregistrée dans la fiche CRM du contact et dans la vue Recherches de l’administration. Elle n’est pas visible dans l’espace client.</p></div><Link className={styles.primaryButton} href={`/admin/clients/crm/${crmContactId}`}>Voir la fiche CRM</Link></section>
+      <div className={styles.navigation}><Link className={styles.backButton} href={`/admin/recherches/${crmResult.id}`}><ArrowLeft size={18}/>Voir le détail complet</Link><button className={styles.primaryButton} onClick={() => { setCrmResult(null); setStepIndex(0); }} type="button">Créer une autre recherche</button></div>
+    </section></main>;
+  }
 
   return (
     <main className={styles.page}>

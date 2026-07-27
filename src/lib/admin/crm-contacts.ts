@@ -144,7 +144,7 @@ export async function createInternalBuyerSearch(contact: CrmContact, session: Ad
       createdByAdminUserId: session.id,
       crmContactId: contact.id,
     });
-    return { id: result.id, success: true as const };
+    return { id: result.id, marketScore: result.marketScore, success: true as const };
   } catch (error) {
     return { message: message(error), success: false as const };
   }
