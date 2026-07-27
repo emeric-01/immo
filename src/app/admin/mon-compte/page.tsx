@@ -7,8 +7,9 @@ import admin from "../admin.module.css";
 import { CopyLinkButton } from "../mes-liens/CopyLinkButton";
 import styles from "./account.module.css";
 import { PasswordChangeForm } from "./PasswordChangeForm";
+import { ProfileForm } from "./ProfileForm";
 
-export const metadata: Metadata = { title: "Mon espace | Admin Les Jumelles Immo" };
+export const metadata: Metadata = { title: "Mon compte | Admin Les Jumelles Immo" };
 export const dynamic = "force-dynamic";
 
 const roleLabels = { admin: "Administrateur", agent: "Agent commercial", bootstrap: "Accès bootstrap", editor: "Éditeur", manager: "Manager" };
@@ -16,7 +17,7 @@ const roleLabels = { admin: "Administrateur", agent: "Agent commercial", bootstr
 export default async function AdminAccountPage() {
   const session = await requireAdminSession();
   const links = session.role === "bootstrap" ? null : await listAdminAttributionLinks(session.id);
-  const activeLinks = links?.status === "ready" ? links.data.filter((link) => link.is_active) : [];
+  const activeLinks = links?.status === "ready" ? links.data.filter((link) => link.is_active).slice(0, 1) : [];
 
   return (
     <main className={admin.adminPage}>
@@ -27,6 +28,8 @@ export default async function AdminAccountPage() {
           <section className={styles.panel}>
             <div className={styles.identity}><span><UserRound size={21}/></span><div><strong>{session.fullName}</strong><small>{session.email}</small></div></div>
             <span className={styles.roleBadge}>{roleLabels[session.role]}</span>
+            <h2>Informations personnelles</h2>
+            <ProfileForm disabled={session.role === "bootstrap"} email={session.email} fullName={session.fullName}/>
             <h2>Sécurité du compte</h2>
             <p>Votre mot de passe protège les données clients et les informations commerciales accessibles depuis le back-office.</p>
             <PasswordChangeForm disabled={session.role === "bootstrap"}/>

@@ -278,6 +278,45 @@ export async function changeAdminUserPassword(input: { currentPassword: string; 
   return { success: true as const };
 }
 
+export async function updateAdminUserProfile(input: { currentPassword: string; email: string; fullName: string; userId: string }) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { message: "Configuration Supabase absente.", success: false as const };
+  const email = normalizeEmail(input.email);
+  const fullName = input.fullName.trim();
+  if (!/^\S+@\S+\.\S+$/.test(email) || fullName.length < 2) {
+    return { message: "Renseignez un nom et une adresse e-mail valides.", success: false as const };
+  }
+
+  const params = new URLSearchParams({
+    id: `eq.${input.userId}`,
+    is_active: "eq.true",
+    limit: "1",
+    select: "id,password_hash",
+  });
+  const result = await supabaseAdminFetch<Array<Pick<AdminUser, "id" | "password_hash">>>(config, `admin_users?${params}`);
+  if (result.status !== "ready" || !result.data[0] || !verifyAdminPassword(input.currentPassword, result.data[0].password_hash)) {
+    return { message: "Le mot de passe actuel est incorrect.", success: false as const };
+  }
+
+  const response = await fetch(`${config.url}/rest/v1/admin_users?id=eq.${encodeURIComponent(input.userId)}&select=email,full_name`, {
+    body: JSON.stringify({ email, full_name: fullName, updated_at: new Date().toISOString() }),
+    headers: adminHeaders(config, "return=representation"),
+    method: "PATCH",
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    return {
+      message: response.status === 409 || error.includes("duplicate")
+        ? "Cette adresse e-mail est déjà utilisée par un autre compte."
+        : "La modification du profil a échoué.",
+      success: false as const,
+    };
+  }
+  const [profile] = await response.json() as Array<{ email: string; full_name: string }>;
+  if (!profile) return { message: "La modification du profil a échoué.", success: false as const };
+  return { email: profile.email, fullName: profile.full_name, success: true as const };
+}
+
 function hashAdminPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const hash = pbkdf2Sync(password, salt, passwordIterations, passwordKeyLength, "sha256").toString("hex");

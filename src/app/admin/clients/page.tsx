@@ -36,8 +36,8 @@ export default async function AdminClientsPage({
       <section className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Comptes clients</p>
-          <h1>Vue globale des clients</h1>
-          <p>Consultez les clients crees automatiquement, leur derniere demande et leur activite.</p>
+          <h1>Vue globale de vos clients</h1>
+          <p>Consultez vos clients, leur dernière demande et leur activité.</p>
         </div>
         <form action={logoutAdmin}>
           <button className={styles.secondaryButton} type="submit">

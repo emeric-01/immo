@@ -92,6 +92,10 @@ export async function clearAdminSession() {
   cookieStore.set(adminCookieName, "", { httpOnly: true, maxAge: 0, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
 }
 
+export async function refreshAdminSessionProfile(session: AdminSession, profile: { email: string; fullName: string }) {
+  await writeSessionCookie({ ...session, email: profile.email, fullName: profile.fullName });
+}
+
 async function writeSessionCookie(session: AdminSession) {
   const secret = getSessionSecret();
 
