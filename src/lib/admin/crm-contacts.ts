@@ -6,6 +6,8 @@ import type { AdminClientAccount, AdminDataState } from "@/lib/admin/clients";
 import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import { clientSupabaseRequest } from "@/lib/client-access/supabase";
 import { createImmoDataEstimation, type PropertyEstimationInput } from "@/lib/immo-data";
+import { createInternalBuyerSearchRecord } from "@/lib/buyer-search/database";
+import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
 
 export type CrmContactStatus = "active" | "archived" | "prospect";
 
@@ -134,55 +136,21 @@ export async function getCrmContact(id: string, session: AdminSession): Promise<
   }
 }
 
-export async function createInternalBuyerSearch(contact: CrmContact, session: AdminSession, formData: FormData) {
-  const city = String(formData.get("city") ?? "").trim();
-  const propertyType = String(formData.get("propertyType") ?? "");
-  const maximumBudget = positiveInteger(formData.get("maximumBudget"));
-  if (!city || !["apartment", "house"].includes(propertyType) || !maximumBudget) {
-    return { message: "La ville, le type de bien et le budget maximum sont obligatoires.", success: false as const };
-  }
-  const id = crypto.randomUUID();
-  const minimumLivingArea = positiveInteger(formData.get("minimumLivingArea"));
-  const minimumRooms = positiveInteger(formData.get("minimumRooms"));
-  const row = {
-    assigned_admin_user_id: contact.assigned_admin_user_id || session.id,
-    city_names: [city],
-    consent: false,
-    contact_email: contact.email,
-    contact_first_name: contact.first_name,
-    contact_last_name: contact.last_name,
-    contact_phone: contact.phone,
-    created_by_admin_user_id: session.id,
-    crm_contact_id: contact.id,
-    id,
-    location_summary: city,
-    maximum_budget: maximumBudget,
-    metadata: { internal_crm: true },
-    minimum_living_area: minimumLivingArea,
-    minimum_rooms: minimumRooms,
-    notes: String(formData.get("notes") ?? "").trim(),
-    preferences: {},
-    priorities: [],
-    property_types: [propertyType],
-    raw_payload: { internal_crm: true },
-    record_origin: "admin",
-    source: "admin_import",
-  };
+export async function createInternalBuyerSearch(contact: CrmContact, session: AdminSession, data: BuyerSearchFormData) {
   try {
-    await clientSupabaseRequest("buyer_searches", { body: JSON.stringify(row), method: "POST" });
-    return { id, success: true as const };
+    const internalData = { ...data, contact: { ...data.contact, consent: false, email: contact.email, firstName: contact.first_name, lastName: contact.last_name, phone: contact.phone } };
+    const result = await createInternalBuyerSearchRecord(internalData, {
+      assignedAdminUserId: contact.assigned_admin_user_id || session.id,
+      createdByAdminUserId: session.id,
+      crmContactId: contact.id,
+    });
+    return { id: result.id, success: true as const };
   } catch (error) {
     return { message: message(error), success: false as const };
   }
 }
 
-export async function createInternalEstimation(contact: CrmContact, session: AdminSession, formData: FormData) {
-  const input: PropertyEstimationInput = {
-    address: String(formData.get("address") ?? "").trim(),
-    propertyType: String(formData.get("propertyType") ?? "") as PropertyEstimationInput["propertyType"],
-    rooms: positiveInteger(formData.get("rooms")) ?? 0,
-    surfaceM2: positiveInteger(formData.get("surfaceM2")) ?? 0,
-  };
+export async function createInternalEstimation(contact: CrmContact, session: AdminSession, input: PropertyEstimationInput) {
   if (input.address.length < 5 || !["apartment", "house"].includes(input.propertyType) || !input.rooms || !input.surfaceM2) {
     return { message: "L’adresse, le type de bien, la surface et le nombre de pièces sont obligatoires.", success: false as const };
   }
@@ -210,7 +178,7 @@ export async function createInternalEstimation(contact: CrmContact, session: Adm
       headers: { Prefer: "return=representation" },
       method: "POST",
     });
-    return rows[0] ? { id: rows[0].id, success: true as const } : { message: "L’estimation n’a pas été enregistrée.", success: false as const };
+    return rows[0] ? { estimation: result, id: rows[0].id, success: true as const } : { message: "L’estimation n’a pas été enregistrée.", success: false as const };
   } catch (error) {
     return { message: message(error), success: false as const };
   }
@@ -239,11 +207,6 @@ async function findMatchingClientAccount(email: string, phone: string) {
     if (rows.length === 1) return rows[0].id;
   }
   return null;
-}
-
-function positiveInteger(value: FormDataEntryValue | null) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? Math.round(number) : null;
 }
 
 function message(error: unknown) {

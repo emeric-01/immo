@@ -17,6 +17,7 @@ import {
   MapPin,
   PhoneCall,
   Ruler,
+  ShieldCheck,
   Sparkles,
   Tag,
 } from "lucide-react";
@@ -201,18 +202,23 @@ function buildTrendPath(points: Array<{ value: number }>) {
 }
 
 type EstimationFormProps = {
+  crmContactId?: string;
   initialAddress?: AddressSuggestion;
   initialPropertyType?: RealtyType;
   initialRooms?: number;
   initialSurfaceM2?: number;
+  mode?: "client" | "crm";
 };
 
 export function EstimationForm({
+  crmContactId,
   initialAddress,
   initialPropertyType,
   initialRooms,
   initialSurfaceM2,
+  mode = "client",
 }: EstimationFormProps) {
+  const isCrm = mode === "crm";
   const [step, setStep] = useState<FlowStep>(initialAddress ? "essential" : "address");
   const [form, setForm] = useState<FormState>(() => ({
     ...initialForm,
@@ -386,7 +392,10 @@ export function EstimationForm({
     };
 
     try {
-      const response = await fetch("/api/estimations", {
+      const endpoint = isCrm && crmContactId
+        ? `/api/admin/crm/contacts/${encodeURIComponent(crmContactId)}/estimations`
+        : "/api/estimations";
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -560,10 +569,9 @@ export function EstimationForm({
         <section className="address-step estimation-shell" aria-labelledby="address-step-title">
           <div className="address-hero">
             <p className="estimation-kicker">Estimation immobilière</p>
-            <h1 id="address-step-title">Quelle est la valeur de votre bien&nbsp;?</h1>
+            <h1 id="address-step-title">{isCrm ? "Estimation interne du bien" : <>Quelle est la valeur de votre bien&nbsp;?</>}</h1>
             <p>
-              Obtenez une première estimation en quelques minutes, affinée par
-              notre expertise locale.
+              {isCrm ? "Parcours CRM complet. Le résultat restera invisible dans l’espace client." : "Obtenez une première estimation en quelques minutes, affinée par notre expertise locale."}
             </p>
           </div>
 
@@ -885,8 +893,8 @@ export function EstimationForm({
           <span className="status-check" aria-hidden="true" />
           Resultat de l&apos;estimation
         </div>
-        <div className="result-account-note" data-saved={estimation.savedToClientAccount || undefined}>
-          {estimation.savedToClientAccount ? (
+        <div className="result-account-note" data-saved={isCrm || estimation.savedToClientAccount || undefined}>
+          {isCrm ? <span>Estimation enregistrée uniquement dans le CRM. Aucune notification n’a été envoyée.</span> : estimation.savedToClientAccount ? (
             <span>Cette estimation est enregistrée dans votre espace client.</span>
           ) : (
             <span>
@@ -1161,7 +1169,7 @@ export function EstimationForm({
               <p className="mandate-signature">La donnée situe votre bien. Notre regard permet d&apos;en défendre la valeur.</p>
             </div>
 
-            <aside className="mandate-lead-card" id="confier-mon-bien">
+            {!isCrm ? <aside className="mandate-lead-card" id="confier-mon-bien">
               <div className="mandate-intent-switch" role="group" aria-label="Choisir le type d’accompagnement">
                 <button
                   aria-pressed={leadIntent === "detailed_study"}
@@ -1243,7 +1251,7 @@ export function EstimationForm({
                 <strong>{agencyPhoneLabel}</strong>
               </a>
               <Link href="/honoraires">Consulter nos honoraires</Link>
-            </aside>
+            </aside> : <aside className="mandate-lead-card"><ShieldCheck aria-hidden="true"/><h3>Enregistrement interne terminé</h3><p>Cette estimation est rattachée à la fiche CRM et à l’agent responsable. Elle n’est pas publiée dans l’espace client.</p></aside>}
           </section>
 
           <p className="privacy-note result-privacy">
@@ -1252,14 +1260,14 @@ export function EstimationForm({
             <Link href="/utilisation-des-donnees">En savoir plus</Link>
           </p>
         </div>
-        <nav className="result-mobile-conversion" aria-label="Affiner ou discuter de cette estimation">
+        {!isCrm ? <nav className="result-mobile-conversion" aria-label="Affiner ou discuter de cette estimation">
           <a href="#confier-mon-bien" onClick={() => setLeadIntent("detailed_study")}>
             Affiner mon estimation
           </a>
           <a aria-label={`Appeler l'agence au ${agencyPhoneLabel}`} href={agencyPhoneHref}>
             <PhoneCall aria-hidden="true" />
           </a>
-        </nav>
+        </nav> : null}
         </section>
       </main>
     );

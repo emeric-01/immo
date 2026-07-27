@@ -122,15 +122,22 @@ type StepProps = {
   goToStep: (step: WizardStepId) => void;
 };
 
-export function BuyerSearchWizard() {
+type BuyerSearchWizardProps = {
+  crmContactId?: string;
+  initialData?: BuyerSearchFormData;
+  mode?: "client" | "crm";
+};
+
+export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }: BuyerSearchWizardProps = {}) {
+  const isCrm = mode === "crm";
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [draftReady, setDraftReady] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
-  const [canReuseContact, setCanReuseContact] = useState(false);
+  const [canReuseContact, setCanReuseContact] = useState(isCrm);
   const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
   const form = useForm<BuyerSearchFormData>({
-    defaultValues: defaultBuyerSearchData,
+    defaultValues: initialData ?? defaultBuyerSearchData,
     mode: "onTouched",
   });
   const { clearErrors, formState, getValues, handleSubmit, reset, setError, setValue, watch } =
@@ -149,6 +156,12 @@ export function BuyerSearchWizard() {
   }, [activeStep.id, clearErrors]);
 
   useEffect(() => {
+    if (isCrm) {
+      reset(initialData ?? defaultBuyerSearchData);
+      setCanReuseContact(true);
+      setDraftReady(true);
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
 
     const source = params.get("source");
@@ -243,10 +256,10 @@ export function BuyerSearchWizard() {
         setDraftReady(true);
       }
     }
-  }, [reset]);
+  }, [initialData, isCrm, reset]);
 
   useEffect(() => {
-    if (!draftReady) {
+    if (!draftReady || isCrm) {
       return;
     }
 
@@ -255,7 +268,7 @@ export function BuyerSearchWizard() {
     });
 
     return () => subscription.unsubscribe();
-  }, [draftReady, watch]);
+  }, [draftReady, isCrm, watch]);
 
   useEffect(() => {
     if (activeStep.id !== "priorities") {
@@ -330,7 +343,7 @@ export function BuyerSearchWizard() {
   }
 
   async function onFinalSubmit(values: BuyerSearchFormData) {
-    if (!validateStep("contact")) {
+    if (!isCrm && !validateStep("contact")) {
       setCanReuseContact(false);
       setStepIndex(buyerSearchSteps.findIndex((step) => step.id === "contact"));
       return;
@@ -342,12 +355,23 @@ export function BuyerSearchWizard() {
     };
 
     try {
-      await submitBuyerSearch(finalData);
-      router.push("/recherche/confirmation");
+      if (isCrm && crmContactId) {
+        const response = await fetch(`/api/admin/crm/contacts/${encodeURIComponent(crmContactId)}/buyer-searches`, {
+          body: JSON.stringify(finalData),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        });
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        if (!response.ok) throw new Error(payload?.error || "Création impossible.");
+        router.push(`/admin/clients/crm/${crmContactId}?searchCreated=1`);
+      } else {
+        await submitBuyerSearch(finalData);
+        router.push("/recherche/confirmation");
+      }
     } catch {
       setError("contact.consent" as never, {
         type: "manual",
-        message: "La recherche n'a pas pu etre enregistree. Reessayez dans quelques instants.",
+        message: isCrm ? "La recherche interne n’a pas pu être enregistrée." : "La recherche n'a pas pu etre enregistree. Reessayez dans quelques instants.",
       });
       window.setTimeout(() => firstErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
     }
@@ -369,6 +393,7 @@ export function BuyerSearchWizard() {
   return (
     <main className={styles.page}>
       <form className={styles.shell} onSubmit={(event) => event.preventDefault()}>
+        {isCrm ? <InfoCallout icon={ShieldCheck} text="Mode CRM interne : aucune notification et aucune visibilité dans l’espace client." /> : null}
         <ProgressStepper activeIndex={stepIndex} steps={visibleSteps} />
         <header className={styles.stepHeader}>
           <div>
@@ -409,13 +434,13 @@ export function BuyerSearchWizard() {
             activeStep.id === "summary"
               ? "Definir mes priorites"
               : activeStep.id === "contact" || stepIndex === visibleSteps.length - 1
-                ? "Enregistrer ma recherche"
+                ? isCrm ? "Enregistrer en interne" : "Enregistrer ma recherche"
                 : "Continuer"
           }
         />
         <p className={styles.securityNote}>
           <Lock size={16} aria-hidden="true" />
-          Vos informations restent confidentielles et ne sont jamais partagees.
+          {isCrm ? "Cette recherche restera strictement interne au CRM." : "Vos informations restent confidentielles et ne sont jamais partagees."}
         </p>
       </form>
       <LiveDraftDebugger data={data} />

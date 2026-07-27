@@ -1478,9 +1478,25 @@
 .userCardArrow { color: #a15d36; transition: transform .18s ease; }
 .userCard:hover .userCardArrow { transform: translateX(3px); }
 
+.crmActionGrid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.crmActionCard { align-items: center; border: 1px solid #e6ddd4; border-radius: 14px; color: #171612; display: grid; gap: 14px; grid-template-columns: auto 1fr auto; padding: 18px; text-decoration: none; transition: .18s ease; }
+.crmActionCard:hover, .crmActionCard:focus-visible { border-color: #bd6e42; box-shadow: 0 10px 24px rgb(69 45 28 / 10%); outline: none; transform: translateY(-2px); }
+.crmActionCard > span { align-items: center; background: #f6eee7; border-radius: 50%; color: #8b4f2c; display: flex; height: 46px; justify-content: center; width: 46px; }
+.crmActionCard p { color: #747b8b; font-size: .86rem; line-height: 1.45; margin: 5px 0 0; }
+.paidApiHint { align-items: center; color: #9a5a16; display: flex; font-size: .76rem; font-weight: 800; gap: 5px; margin-top: 10px; }
+.paidApiAlert { align-items: flex-start; background: #fff6df; border: 1px solid #e8c778; border-radius: 13px; color: #754509; display: flex; gap: 12px; margin: 18px auto 0; max-width: 1120px; padding: 15px 18px; }
+.paidApiAlert > svg { flex: 0 0 auto; margin-top: 1px; }
+.paidApiAlert p { color: #80591f; font-size: .88rem; line-height: 1.45; margin: 3px 0 0; }
+.crmActionCard > svg { color: #a15d36; }
+.crmFlowBar { align-items: center; background: #171612; color: #fff; display: flex; justify-content: space-between; padding: 12px max(20px, calc((100vw - 1180px) / 2)); position: relative; z-index: 20; }
+.crmFlowBar a { align-items: center; color: #fff; display: inline-flex; font-weight: 800; gap: 8px; text-decoration: none; }
+.crmFlowBar span { color: #e9c4ab; font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
 @media (max-width: 760px) {
   .userCardGrid { grid-template-columns: 1fr; }
   .userOverview { padding: 18px; }
+  .crmActionGrid { grid-template-columns: 1fr; }
+  .crmFlowBar { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 
 @media (max-width: 760px) {

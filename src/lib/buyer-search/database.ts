@@ -96,6 +96,42 @@ export async function createBuyerSearchRecord(
   };
 }
 
+export async function createInternalBuyerSearchRecord(
+  data: BuyerSearchFormData,
+  context: { assignedAdminUserId: string; createdByAdminUserId: string; crmContactId: string },
+): Promise<BuyerSearchSubmissionResult> {
+  const config = getSupabaseConfig({ requireServiceRole: true });
+  if (!config) throw new Error("La base de données CRM n’est pas configurée.");
+
+  const buyerSearchId = crypto.randomUUID();
+  const row = {
+    ...buildBuyerSearchRow(buyerSearchId, data, { source: "admin_import" }),
+    assigned_admin_user_id: context.assignedAdminUserId,
+    client_account_id: null,
+    consent: false,
+    consent_at: null,
+    created_by_admin_user_id: context.createdByAdminUserId,
+    crm_contact_id: context.crmContactId,
+    metadata: { internal_crm: true },
+    record_origin: "admin",
+    source: "admin_import",
+  };
+  await insertSupabaseRows(config, "buyer_searches", row);
+
+  const warnings: string[] = [];
+  try {
+    await Promise.all([
+      insertLocations(config, buyerSearchId, data),
+      insertPriorities(config, buyerSearchId, data),
+    ]);
+  } catch (error) {
+    console.error("Internal CRM buyer search secondary rows failed", error);
+    warnings.push("La recherche est enregistrée, mais certains détails devront être resynchronisés.");
+  }
+  const marketScore = await calculateAndStoreMarketScore(config, buyerSearchId, data, warnings);
+  return { id: buyerSearchId, marketScore, persisted: true, storage: "database", warnings: warnings.length ? warnings : undefined };
+}
+
 export async function updateBuyerSearchRecord(
   buyerSearchId: string,
   data: BuyerSearchFormData,
