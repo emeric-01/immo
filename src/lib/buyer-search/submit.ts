@@ -2,7 +2,7 @@ import { saveSubmittedBuyerSearch } from "./storage";
 import type { BuyerSearchFormData } from "./types";
 import type { BuyerSearchSubmissionResult } from "./database";
 
-export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<BuyerSearchSubmissionResult> {
+export async function submitBuyerSearch(data: BuyerSearchFormData, submissionId?: string): Promise<BuyerSearchSubmissionResult> {
   const searchId =
     typeof window === "undefined"
       ? null
@@ -14,6 +14,7 @@ export async function submitBuyerSearch(data: BuyerSearchFormData): Promise<Buye
     body: JSON.stringify(data),
     headers: {
       "Content-Type": "application/json",
+      ...(submissionId ? { "Idempotency-Key": submissionId } : {}),
     },
     method: "POST",
   });

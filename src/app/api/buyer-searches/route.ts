@@ -64,18 +64,21 @@ export async function POST(request: NextRequest) {
       source: session ? "client_space" : "website",
       userAgent: request.headers.get("user-agent"),
       attribution,
+      submissionId: validSubmissionId(request.headers.get("idempotency-key")),
     };
     const result = requestedSearchId
       ? await updateBuyerSearchRecord(requestedSearchId, data, metadata)
       : await createBuyerSearchRecord(data, metadata);
-    const emailDelivery = requestedSearchId
+    const emailDelivery = result.deduplicated
+      ? { warnings: [] }
+      : requestedSearchId
       ? await sendBuyerSearchUpdatedEmails({ attribution, data, searchId: result.id })
       : await sendBuyerSearchCreatedEmails({ attribution, data, result });
     const responseBody = {
       ...result,
       warnings: [...(result.warnings ?? []), ...emailDelivery.warnings],
     };
-    await recordAttributedConversion(attribution, "buyer_search", result.id, "/rechercher");
+    if (!result.deduplicated) await recordAttributedConversion(attribution, "buyer_search", result.id, "/rechercher");
 
     return NextResponse.json(responseBody, {
       status: requestedSearchId ? 200 : result.persisted ? 201 : 202,
@@ -90,6 +93,10 @@ export async function POST(request: NextRequest) {
       { status: 502 },
     );
   }
+}
+
+function validSubmissionId(value: string | null) {
+  return value && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : null;
 }
 
 function validateBuyerSearchSubmission(payload: unknown): SubmissionValidationResult {

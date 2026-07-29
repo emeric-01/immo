@@ -8,6 +8,7 @@ import { clientSupabaseRequest } from "@/lib/client-access/supabase";
 import { createImmoDataEstimation, type PropertyEstimationInput } from "@/lib/immo-data";
 import { createInternalBuyerSearchRecord } from "@/lib/buyer-search/database";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
+import { getPersistableAdminUserId } from "@/lib/admin/session-user-id";
 
 export type CrmContactStatus = "active" | "archived" | "prospect";
 
@@ -72,10 +73,14 @@ export async function createCrmContact(input: CreateCrmContactInput, session: Ad
 
   try {
     const linkedClientAccountId = await findMatchingClientAccount(email, phone);
+    const sessionAdminUserId = getPersistableAdminUserId(session);
+    const assignedAdminUserId = session.role === "agent"
+      ? sessionAdminUserId
+      : input.assignedAdminUserId || sessionAdminUserId;
     const rows = await clientSupabaseRequest<CrmContact[]>("crm_contacts?select=*", {
       body: JSON.stringify({
-        assigned_admin_user_id: session.role === "agent" ? session.id : input.assignedAdminUserId || session.id,
-        created_by_admin_user_id: session.id,
+        assigned_admin_user_id: assignedAdminUserId,
+        created_by_admin_user_id: sessionAdminUserId,
         email,
         first_name: firstName,
         last_name: lastName,
@@ -138,10 +143,11 @@ export async function getCrmContact(id: string, session: AdminSession): Promise<
 
 export async function createInternalBuyerSearch(contact: CrmContact, session: AdminSession, data: BuyerSearchFormData) {
   try {
+    const sessionAdminUserId = getPersistableAdminUserId(session);
     const internalData = { ...data, contact: { ...data.contact, consent: false, email: contact.email, firstName: contact.first_name, lastName: contact.last_name, phone: contact.phone } };
     const result = await createInternalBuyerSearchRecord(internalData, {
-      assignedAdminUserId: contact.assigned_admin_user_id || session.id,
-      createdByAdminUserId: session.id,
+      assignedAdminUserId: contact.assigned_admin_user_id || sessionAdminUserId,
+      createdByAdminUserId: sessionAdminUserId,
       crmContactId: contact.id,
     });
     return { id: result.id, marketScore: result.marketScore, success: true as const };
@@ -155,13 +161,14 @@ export async function createInternalEstimation(contact: CrmContact, session: Adm
     return { message: "L’adresse, le type de bien, la surface et le nombre de pièces sont obligatoires.", success: false as const };
   }
   try {
+    const sessionAdminUserId = getPersistableAdminUserId(session);
     const result = await createImmoDataEstimation(input);
     const rows = await clientSupabaseRequest<Array<{ id: string }>>("property_estimations?select=id", {
       body: JSON.stringify({
         address_label: result.addressLabel,
-        assigned_admin_user_id: contact.assigned_admin_user_id || session.id,
+        assigned_admin_user_id: contact.assigned_admin_user_id || sessionAdminUserId,
         confidence_score: result.confidenceScore,
-        created_by_admin_user_id: session.id,
+        created_by_admin_user_id: sessionAdminUserId,
         crm_contact_id: contact.id,
         high_price: result.highPrice,
         input_payload: input,

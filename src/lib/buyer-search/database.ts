@@ -8,6 +8,7 @@ import { linkCrmContactsToClientAccount } from "@/lib/admin/crm-contacts";
 type BuyerSearchStorage = "database" | "local";
 
 export type BuyerSearchSubmissionResult = {
+  deduplicated?: boolean;
   id: string;
   marketScore?: BuyerSearchMarketScore;
   persisted: boolean;
@@ -20,6 +21,7 @@ export type BuyerSearchSubmissionMetadata = {
   source?: string;
   userAgent?: string | null;
   attribution?: AttributionSnapshot | null;
+  submissionId?: string | null;
 };
 
 type SupabaseConfig = {
@@ -63,14 +65,27 @@ export async function createBuyerSearchRecord(
     };
   }
 
-  const buyerSearchId = crypto.randomUUID();
+  const buyerSearchId = metadata.submissionId ?? crypto.randomUUID();
   const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
 
-  await insertSupabaseRows(
-    config,
-    "buyer_searches",
-    buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccount.id),
-  );
+  try {
+    await insertSupabaseRows(
+      config,
+      "buyer_searches",
+      buildBuyerSearchRow(buyerSearchId, data, metadata, clientAccount.id),
+    );
+  } catch (error) {
+    if (metadata.submissionId && isDuplicateInsert(error)) {
+      const existing = await fetchSupabaseRows<Array<{ contact_email: string; id: string }>>(
+        config,
+        `buyer_searches?id=eq.${encodeURIComponent(buyerSearchId)}&select=id,contact_email&limit=1`,
+      );
+      if (existing[0]?.contact_email === data.contact.email.trim().toLowerCase()) {
+        return { deduplicated: true, id: buyerSearchId, persisted: true, storage: "database" };
+      }
+    }
+    throw error;
+  }
 
   const warnings: string[] = [];
 
@@ -98,7 +113,7 @@ export async function createBuyerSearchRecord(
 
 export async function createInternalBuyerSearchRecord(
   data: BuyerSearchFormData,
-  context: { assignedAdminUserId: string; createdByAdminUserId: string; crmContactId: string },
+  context: { assignedAdminUserId: string | null; createdByAdminUserId: string | null; crmContactId: string },
 ): Promise<BuyerSearchSubmissionResult> {
   const config = getSupabaseConfig({ requireServiceRole: true });
   if (!config) throw new Error("La base de données CRM n’est pas configurée.");
@@ -475,4 +490,8 @@ function buildBuyerSearchRow(
     record_origin: clientAccountId ? "client" : "public",
     source: metadata.source ?? "website",
   };
+}
+
+function isDuplicateInsert(error: unknown) {
+  return error instanceof Error && (error.message.includes("(409)") || error.message.includes("23505"));
 }

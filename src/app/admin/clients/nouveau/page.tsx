@@ -28,7 +28,7 @@ export default async function NewCrmContactPage({ searchParams }: { searchParams
           <label htmlFor="lastName">Nom</label><input id="lastName" name="lastName" required />
           <label htmlFor="email">E-mail <small>(facultatif)</small></label><input id="email" name="email" type="email" />
           <label htmlFor="phone">Téléphone <small>(facultatif)</small></label><input id="phone" name="phone" type="tel" />
-          {session.role !== "agent" && agents.length ? <><label htmlFor="assignedAdminUserId">Agent commercial responsable</label><select defaultValue={session.id} id="assignedAdminUserId" name="assignedAdminUserId"><option value={session.id}>Moi-même</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.full_name}</option>)}</select></> : null}
+          {session.role !== "agent" ? <><label htmlFor="assignedAdminUserId">Agent commercial responsable <small>(facultatif)</small></label><select defaultValue="" id="assignedAdminUserId" name="assignedAdminUserId"><option value="">Non attribué</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.full_name}</option>)}</select></> : null}
           <label htmlFor="notes">Notes internes <small>(facultatif)</small></label><textarea id="notes" name="notes" rows={5}/>
           <button type="submit"><UserPlus size={18}/>Créer la fiche CRM</button>
         </form>

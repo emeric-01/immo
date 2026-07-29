@@ -137,7 +137,10 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
   const [draftReady, setDraftReady] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [canReuseContact, setCanReuseContact] = useState(isCrm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [crmResult, setCrmResult] = useState<{ data: BuyerSearchFormData; id: string; marketScore?: BuyerSearchMarketScore } | null>(null);
+  const isSubmittingRef = useRef(false);
+  const submissionIdRef = useRef<string | null>(null);
   const firstErrorRef = useRef<HTMLParagraphElement | null>(null);
   const form = useForm<BuyerSearchFormData>({
     defaultValues: initialData ?? defaultBuyerSearchData,
@@ -346,6 +349,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
   }
 
   async function onFinalSubmit(values: BuyerSearchFormData) {
+    if (isSubmittingRef.current) return;
     if (!isCrm && !validateStep("contact")) {
       setCanReuseContact(false);
       setStepIndex(buyerSearchSteps.findIndex((step) => step.id === "contact"));
@@ -357,6 +361,9 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
       priorities: values.priorities.length > 0 ? values.priorities : buildPriorityItems(values),
     };
 
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+    submissionIdRef.current ??= crypto.randomUUID();
     try {
       if (isCrm && crmContactId) {
         const response = await fetch(`/api/admin/crm/contacts/${encodeURIComponent(crmContactId)}/buyer-searches`, {
@@ -370,10 +377,13 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
         setCrmResult({ data: finalData, id: payload.id, marketScore: payload.marketScore });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        await submitBuyerSearch(finalData);
+        await submitBuyerSearch(finalData, submissionIdRef.current);
         router.push("/recherche/confirmation");
       }
     } catch {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      submissionIdRef.current = null;
       setError("contact.consent" as never, {
         type: "manual",
         message: isCrm ? "La recherche interne n’a pas pu être enregistrée." : "La recherche n'a pas pu etre enregistree. Reessayez dans quelques instants.",
@@ -409,7 +419,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
         {crmResult.marketScore ? <section className={styles.confirmationScoreColumn}><header className={styles.confirmationScoreIntro}><Info size={20}/><div><h2>Recherche face au marché</h2><p>Analyse de la cohérence entre le budget et les secteurs sélectionnés.</p></div></header><MarketScoreCard score={crmResult.marketScore} showBestMatch={crmResult.data.location.cities.length > 1}/></section> : null}
       </div>
       <section className={styles.clientAccessCard}><span className={styles.iconBubble}><CircleUserRound size={24}/></span><div><h2>Retrouvez ces informations dans votre compte professionnel</h2><p>Cette recherche est enregistrée dans la fiche CRM du contact et dans la vue Recherches de l’administration. Elle n’est pas visible dans l’espace client.</p></div><Link className={styles.primaryButton} href={`/admin/clients/crm/${crmContactId}`}>Voir la fiche CRM</Link></section>
-      <div className={styles.navigation}><Link className={styles.backButton} href={`/admin/recherches/${crmResult.id}`}><ArrowLeft size={18}/>Voir le détail complet</Link><button className={styles.primaryButton} onClick={() => { setCrmResult(null); setStepIndex(0); }} type="button">Créer une autre recherche</button></div>
+      <div className={styles.navigation}><Link className={styles.backButton} href={`/admin/recherches/${crmResult.id}`}><ArrowLeft size={18}/>Voir le détail complet</Link><button className={styles.primaryButton} onClick={() => { isSubmittingRef.current = false; submissionIdRef.current = null; setIsSubmitting(false); setCrmResult(null); setStepIndex(0); }} type="button">Créer une autre recherche</button></div>
     </section></main>;
   }
 
@@ -453,6 +463,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
           onBack={previousStep}
           onNext={nextStep}
           onSubmit={handleSubmit(onFinalSubmit)}
+          isSubmitting={isSubmitting}
           nextLabel={
             activeStep.id === "summary"
               ? "Definir mes priorites"
@@ -500,6 +511,7 @@ function ProgressStepper({
 function WizardNavigation({
   isFirst,
   isLast,
+  isSubmitting,
   nextLabel,
   onBack,
   onNext,
@@ -507,6 +519,7 @@ function WizardNavigation({
 }: {
   isFirst: boolean;
   isLast: boolean;
+  isSubmitting: boolean;
   nextLabel: string;
   onBack: () => void;
   onNext: () => void;
@@ -518,9 +531,9 @@ function WizardNavigation({
         <ArrowLeft size={18} aria-hidden="true" />
         Retour
       </button>
-      <button className={styles.primaryButton} type="button" onClick={isLast ? onSubmit : onNext}>
+      <button className={styles.primaryButton} disabled={isSubmitting} type="button" onClick={isLast ? onSubmit : onNext}>
         {isLast ? <Lock size={18} aria-hidden="true" /> : null}
-        {nextLabel}
+        {isSubmitting ? "Enregistrement…" : nextLabel}
         {!isLast ? <ArrowRight size={18} aria-hidden="true" /> : null}
       </button>
     </div>
