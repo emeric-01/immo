@@ -19,8 +19,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const referral = await createReferral(parsed.data);
     const attribution = await getCurrentAttribution();
+    const referral = await createReferral(parsed.data, attribution);
     const emailResult = await sendReferralLeadEmails({ attribution, input: parsed.data, referralId: referral.id });
 
     return NextResponse.json(

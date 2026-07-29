@@ -15,7 +15,7 @@ export async function updateReferralStatusAction(formData: FormData) {
   const id = z.uuid().parse(formData.get("id"));
   const status = statusSchema.parse(formData.get("status"));
 
-  await updateAdminReferralStatus(id, status);
+  await updateAdminReferralStatus(id, status, session);
   revalidatePath("/admin/parrainages");
   revalidatePath(`/admin/parrainages/${id}`);
 }

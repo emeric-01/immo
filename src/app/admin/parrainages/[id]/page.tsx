@@ -15,7 +15,7 @@ export default async function AdminReferralDetailPage({ params }: { params: Prom
   const session = await requireAdminSession();
   await requireAdminPermission(session, "referrals:read");
   const { id } = await params;
-  const result = await getAdminReferral(id);
+  const result = await getAdminReferral(id, session);
 
   if (result.status !== "ready") return <DetailFrame><EmptyState title="Lecture BDD a finaliser" text={result.message} /></DetailFrame>;
   if (!result.data) return <DetailFrame><EmptyState title="Parrainage introuvable" text="Ce parrainage n’existe pas ou n’est plus disponible." /></DetailFrame>;
@@ -40,6 +40,7 @@ export default async function AdminReferralDetailPage({ params }: { params: Prom
         <Metric icon={ShieldCheck} label="Statut actuel" value={formatReferralStatus(referral.status)} />
         <Metric icon={Gift} label="Prime" value={referral.reward_paid_at ? `Versée le ${formatDate(referral.reward_paid_at)}` : "Non versée"} />
         <Metric icon={CalendarDays} label="Dernière mise à jour" value={formatDate(referral.updated_at)} />
+        <Metric icon={UserRound} label="Agent responsable" value={referral.admin_agent?.full_name ?? "Non attribué"} />
       </InfoPanel>
 
       <InfoPanel title="Le parrain">

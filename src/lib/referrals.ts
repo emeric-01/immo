@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { clientSupabaseRequest } from "@/lib/client-access/supabase";
+import type { AttributionSnapshot } from "@/lib/attribution";
 
 const frenchPhonePattern = /^(?:(?:\+33|0)\s?)[1-9](?:[\s.-]?\d{2}){4}$/;
 
@@ -34,6 +35,10 @@ export const referralStatuses = ["new", "contacted", "qualified", "signed", "rew
 export type ReferralStatus = (typeof referralStatuses)[number];
 
 export type ReferralRow = {
+  assigned_admin_user_id: string | null;
+  attributed_admin_user_id: string | null;
+  attribution_snapshot: AttributionSnapshot | null;
+  attribution_visitor_id: string | null;
   consent_recorded_at: string;
   created_at: string;
   id: string;
@@ -56,7 +61,7 @@ export type ReferralRow = {
   updated_at: string;
 };
 
-export async function createReferral(input: ReferralInput) {
+export async function createReferral(input: ReferralInput, attribution?: AttributionSnapshot | null) {
   const normalizedSponsorEmail = input.sponsorEmail.trim().toLowerCase();
   let sponsorClientAccountId: string | null = null;
 
@@ -72,6 +77,10 @@ export async function createReferral(input: ReferralInput) {
   const rows = await clientSupabaseRequest<Array<Pick<ReferralRow, "id">>>("referral_leads?select=id", {
     body: JSON.stringify({
       consent_recorded_at: new Date().toISOString(),
+      assigned_admin_user_id: attribution?.attributedAdminUserId ?? null,
+      attributed_admin_user_id: attribution?.attributedAdminUserId ?? null,
+      attribution_snapshot: attribution ?? null,
+      attribution_visitor_id: attribution?.visitorAttributionId ?? null,
       message: input.message || null,
       project_kind: input.projectKind,
       property_city: input.propertyCity,

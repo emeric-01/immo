@@ -45,6 +45,16 @@
 .links { display: grid; gap: 14px; }
 .linkCard { display: grid; gap: 12px; border: 1px solid #e7dfd7; border-radius: 12px; padding: 17px; }
 .linkLabel { display: flex; align-items: center; gap: 8px; color: #70401e; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.destinationGrid { display: grid; gap: 11px; }
+.destinationCard { display: grid; gap: 10px; border: 1px solid #e7dfd7; border-radius: 10px; background: #fff; padding: 13px; }
+.destinationHeader { display: grid; grid-template-columns: 38px minmax(0, 1fr) 34px; gap: 11px; align-items: center; }
+.destinationHeader > div { display: grid; gap: 2px; }
+.destinationHeader strong { font-size: .9rem; }
+.destinationHeader small { color: #707789; font-size: .75rem; }
+.destinationHeader > a, .destinationIcon { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 8px; }
+.destinationIcon { width: 38px; height: 38px; background: #f6eee6; color: #70401e; }
+.destinationHeader > a { border: 1px solid #e4ddd6; color: #454b56; text-decoration: none; }
+.destinationHeader > a:hover { border-color: #bd6e42; color: #8b4b28; }
 .urlLine { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; border-radius: 9px; background: #f8f5f1; padding: 10px 12px; }
 .urlLine code { min-width: 0; overflow: hidden; color: #3f4653; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .urlLine button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; border: 0; border-radius: 8px; background: #171612; padding: 0 11px; color: #fff; font-weight: 800; cursor: pointer; }

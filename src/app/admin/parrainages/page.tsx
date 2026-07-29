@@ -16,7 +16,7 @@ export default async function AdminReferralsPage({ searchParams }: { searchParam
   const session = await requireAdminSession();
   await requireAdminPermission(session, "referrals:read");
   const params = await searchParams;
-  const result = await getAdminReferrals(params);
+  const result = await getAdminReferrals(params, session);
 
   return (
     <main className={styles.adminPage}>
@@ -26,7 +26,7 @@ export default async function AdminReferralsPage({ searchParams }: { searchParam
           <div>
             <p className={styles.eyebrow}>Programme ambassadeur</p>
             <h1>Parrainages immobiliers</h1>
-            <p>Tous les parrainages restent visibles, qu’ils soient liés ou non à un compte client.</p>
+            <p>{session.role === "agent" ? "Consultez uniquement les parrainages attribués à votre compte." : "Vue globale des parrainages et de leur agent responsable."}</p>
           </div>
           <form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form>
         </section>
@@ -68,7 +68,7 @@ function ReferralStats({ referrals }: { referrals: AdminReferral[] }) {
 }
 
 function ReferralTable({ referrals }: { referrals: AdminReferral[] }) {
-  return <div className={styles.tablePanel}><table><thead><tr><th>Parrain</th><th>Proche présenté</th><th>Projet</th><th>Statut</th><th>Compte</th><th>Date</th><th aria-label="Détail" /></tr></thead><tbody>{referrals.map((referral) => <tr key={referral.id}><td><strong>{referral.sponsor_first_name} {referral.sponsor_last_name}</strong><small>{referral.sponsor_email}</small><small>{referral.sponsor_phone}</small></td><td><strong>{referral.referred_first_name} {referral.referred_last_name}</strong><small>{referral.referred_phone}</small></td><td><strong>{formatReferralProjectKind(referral.project_kind)} · {formatReferralPropertyType(referral.property_type)}</strong><small>{referral.property_city}</small></td><td><span className={styles.statusBadge} data-status={referral.status}>{formatReferralStatus(referral.status)}</span></td><td>{referral.sponsor_client_account_id ? <Link href={`/admin/clients/${referral.sponsor_client_account_id}`}>Compte lié</Link> : <small>Sans compte</small>}</td><td><strong>{formatDate(referral.created_at)}</strong></td><td><Link aria-label="Voir le parrainage" className={styles.iconLink} href={`/admin/parrainages/${referral.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
+  return <div className={styles.tablePanel}><table><thead><tr><th>Parrain</th><th>Proche présenté</th><th>Projet</th><th>Agent</th><th>Statut</th><th>Compte</th><th>Date</th><th aria-label="Détail" /></tr></thead><tbody>{referrals.map((referral) => <tr key={referral.id}><td><strong>{referral.sponsor_first_name} {referral.sponsor_last_name}</strong><small>{referral.sponsor_email}</small><small>{referral.sponsor_phone}</small></td><td><strong>{referral.referred_first_name} {referral.referred_last_name}</strong><small>{referral.referred_phone}</small></td><td><strong>{formatReferralProjectKind(referral.project_kind)} · {formatReferralPropertyType(referral.property_type)}</strong><small>{referral.property_city}</small></td><td><strong>{referral.admin_agent?.full_name ?? "Non attribué"}</strong><small>{referral.admin_agent?.email ?? "Origine directe"}</small></td><td><span className={styles.statusBadge} data-status={referral.status}>{formatReferralStatus(referral.status)}</span></td><td>{referral.sponsor_client_account_id ? <Link href={`/admin/clients/${referral.sponsor_client_account_id}`}>Compte lié</Link> : <small>Sans compte</small>}</td><td><strong>{formatDate(referral.created_at)}</strong></td><td><Link aria-label="Voir le parrainage" className={styles.iconLink} href={`/admin/parrainages/${referral.id}`}><ArrowRight aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table></div>;
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) { return <section className={styles.emptyState}><Inbox aria-hidden="true" size={26} /><h2>{title}</h2><p>{text}</p></section>; }
