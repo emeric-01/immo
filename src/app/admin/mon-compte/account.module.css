@@ -47,6 +47,7 @@
 .linkLabel { display: flex; align-items: center; gap: 8px; color: #70401e; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .destinationGrid { display: grid; gap: 11px; }
 .destinationCard { display: grid; gap: 10px; border: 1px solid #e7dfd7; border-radius: 10px; background: #fff; padding: 13px; }
+.genericLinkCard { border-color: #d9c3b0; background: #fcf8f4; }
 .destinationHeader { display: grid; grid-template-columns: 38px minmax(0, 1fr) 34px; gap: 11px; align-items: center; }
 .destinationHeader > div { display: grid; gap: 2px; }
 .destinationHeader strong { font-size: .9rem; }

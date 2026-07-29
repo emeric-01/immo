@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Calculator, ExternalLink, HeartHandshake, Search, ShieldCheck, UserRound } from "lucide-react";
+import { Calculator, ExternalLink, HeartHandshake, Link2, Search, ShieldCheck, UserRound } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { listAdminAttributionLinks } from "@/lib/admin/users";
@@ -45,9 +45,18 @@ export default async function AdminAccountPage() {
             <div><p className={admin.eyebrow}>Attribution</p><h2>Mes liens d’affiliation</h2></div>
             <p>Les recherches, estimations et créations de compte réalisées après un clic sur ces liens vous sont automatiquement rattachées.</p>
             {activeLinks.length ? <div className={styles.links}>{activeLinks.map((link) => {
+              const genericShareUrl = `${publicSiteUrl}${link.landing_path}?ref=${encodeURIComponent(link.code)}`;
               return <article className={styles.linkCard} key={link.id}>
                 <div className={styles.linkLabel}><ShieldCheck size={16}/>{link.label}</div>
                 <h3>Liens à partager</h3>
+                <section className={`${styles.destinationCard} ${styles.genericLinkCard}`}>
+                  <div className={styles.destinationHeader}>
+                    <span className={styles.destinationIcon}><Link2 size={18}/></span>
+                    <div><strong>Lien générique</strong><small>Lien principal vers le site public</small></div>
+                    <a aria-label="Ouvrir le lien générique" href={genericShareUrl} rel="noreferrer" target="_blank"><ExternalLink size={17}/></a>
+                  </div>
+                  <div className={styles.urlLine}><code>{genericShareUrl}</code><CopyLinkButton value={genericShareUrl}/></div>
+                </section>
                 <div className={styles.destinationGrid}>
                   {publicLinkTargets.map((target) => {
                     const Icon = target.icon;
