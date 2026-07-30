@@ -7,7 +7,7 @@
  */
 export const legacyWordPressRedirects = [
   { source: "/prix-au-m2-aubagne-2", destination: "/prix-m2/aubagne", statusCode: 301 },
-  { source: "/prix-au-m2-aubagne-2-2", destination: "/estimation", statusCode: 301 },
+  { source: "/prix-au-m2-aubagne-2-2", destination: "/prix-m2/aubagne", statusCode: 301 },
   { source: "/actualite-du-marche-immobilier-et-expertise-de-notre-agence", destination: "/contenus", statusCode: 301 },
   { source: "/honoraires-agence", destination: "/honoraires", statusCode: 301 },
   { source: "/politique-de-confidentialite", destination: "/mentions-legales", statusCode: 301 },
