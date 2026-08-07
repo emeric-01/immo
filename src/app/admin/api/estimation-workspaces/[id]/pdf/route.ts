@@ -7,6 +7,9 @@ import { getInseeHousingProfile } from "@/lib/insee-housing";
 import { estimationPdfFileName, renderWorkspaceEstimationPdf } from "@/lib/estimation-pdf";
 import { listEstimationReportSnapshots, nextReportVersion, saveEstimationReportSnapshot } from "@/lib/admin/estimation-reports";
 import { getStaticMapImage } from "@/lib/mapbox-static";
+import { getCityByMarketIdentifier } from "@/lib/cities";
+import { readCityMarketCache } from "@/lib/city-market-cache";
+import { selectWidestCityPriceHistory } from "@/lib/price-history";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,9 +23,12 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const dossier = await getEstimationAgentWorkspace(id, session);
     if (!dossier) return NextResponse.json({ error: "Dossier professionnel introuvable" }, { status: 404 });
     const { source, workspace } = dossier;
-    const estimation = workspaceEstimation(source, workspace);
+    const baseEstimation = workspaceEstimation(source, workspace);
+    const city = getCityByMarketIdentifier({ inseeCode: source.input_payload.selectedAddress?.inseeCode, name: source.input_payload.selectedAddress?.cityName });
     const agentId = workspace.assigned_admin_user_id || source.assigned_admin_user_id || source.attributed_admin_user_id || source.created_by_admin_user_id;
-    const [agent, inseeProfile, snapshots, photos, mapImage] = await Promise.all([getAdminUserSummary(agentId), getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode), listEstimationReportSnapshots(source.id), getEnabledWorkspacePhotoBuffers(workspace), getStaticMapImage(estimation.result_payload.coordinates)]);
+    const [agent, inseeProfile, snapshots, photos, mapImage, cachedMarket] = await Promise.all([getAdminUserSummary(agentId), getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode), listEstimationReportSnapshots(source.id), getEnabledWorkspacePhotoBuffers(workspace), getStaticMapImage(baseEstimation.result_payload.coordinates), city ? readCityMarketCache(city) : Promise.resolve(null)]);
+    const cityPriceHistory = selectWidestCityPriceHistory(baseEstimation.result_payload.market?.cityPriceHistory, cachedMarket?.data.history);
+    const estimation = cityPriceHistory.length ? { ...baseEstimation, result_payload: { ...baseEstimation.result_payload, market: { ...baseEstimation.result_payload.market, cityPriceHistory } } } : baseEstimation;
     const version = nextReportVersion(snapshots);
     const pdf = await renderWorkspaceEstimationPdf(estimation, workspace, agent, { inseeProfile, mapImage, photos, reportVersion: version });
     await saveEstimationReportSnapshot({ estimation, inseeProfile, pdf, session, version, workspace });

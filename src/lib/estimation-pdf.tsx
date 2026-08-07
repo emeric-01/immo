@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { Document, Image, Line, Link as PdfLink, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 import type { InseeDistributionItem, InseeHousingProfile } from "@/lib/insee-housing";
+import { historyDurationLabel } from "@/lib/price-history";
 import type { EstimationAgentWorkspace, EstimationWorkspacePhoto } from "@/lib/admin/estimation-workspaces";
 import type { EstimationReportBlockId } from "@/lib/estimation-report-config";
 
@@ -299,7 +300,8 @@ function PriceHistoryPdf({ estimation }: { estimation: AdminEstimation }) {
   const min = Math.min(...values); const max = Math.max(...values); const range = Math.max(1, max - min);
   const path = points.map((point, index) => `${index ? "L" : "M"} ${18 + index / (points.length - 1) * 464} ${18 + (max - point.value) / range * 104}`).join(" ");
   const delta = (values.at(-1)! - values[0]) / values[0] * 100;
-  return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Évolution du prix au m²</Text><View style={styles.priceHistoryPanel}><Text style={styles.historyValue}>{formatNumber(values.at(-1)!)} €/m² · {delta >= 0 ? "+" : ""}{delta.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % sur la période</Text><Svg style={styles.priceHistorySvg} viewBox="0 0 500 150"><Line stroke="#e2d8cf" strokeDasharray="4 6" x1="18" x2="482" y1="122" y2="122" /><Path d={`${path} L 482 132 L 18 132 Z`} fill="#f2dfd2" /><Path d={path} fill="none" stroke={colors.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} /></Svg><View style={styles.priceHistoryLegend}><Text style={styles.small}>{shortPeriod(points[0].label)}</Text><Text style={styles.small}>{propertyType === "house" ? "Maisons" : "Appartements"}</Text><Text style={styles.small}>{shortPeriod(points.at(-1)!.label)}</Text></View></View></View>;
+  const firstPeriod = points[0].label; const lastPeriod = points.at(-1)!.label;
+  return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Évolution du prix au m²</Text><View style={styles.priceHistoryPanel}><Text style={styles.historyValue}>{formatNumber(values.at(-1)!)} €/m² · {delta >= 0 ? "+" : ""}{delta.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % depuis {shortPeriod(firstPeriod)}</Text><Svg style={styles.priceHistorySvg} viewBox="0 0 500 150"><Line stroke="#e2d8cf" strokeDasharray="4 6" x1="18" x2="482" y1="122" y2="122" /><Path d={`${path} L 482 132 L 18 132 Z`} fill="#f2dfd2" /><Path d={path} fill="none" stroke={colors.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} /></Svg><View style={styles.priceHistoryLegend}><Text style={styles.small}>{shortPeriod(firstPeriod)}</Text><Text style={styles.small}>{historyDurationLabel(firstPeriod, lastPeriod)} · {propertyType === "house" ? "Maisons" : "Appartements"}</Text><Text style={styles.small}>{shortPeriod(lastPeriod)}</Text></View></View></View>;
 }
 
 function InseeKpi({ label, value }: { label: string; value: string }) { return <View style={styles.inseeKpi}><Text style={styles.inseeKpiValue}>{value}</Text><Text style={styles.small}>{label}</Text></View>; }

@@ -423,7 +423,7 @@ async function getMarketEnrichment(
   const priceHistoryParams = marketParams
     ? new URLSearchParams({
         ...Object.fromEntries(marketParams),
-        startDate: previousMonth(12),
+        startDate: "2014-01",
         endDate: previousMonth(0),
       })
     : null;
@@ -534,8 +534,8 @@ async function getMarketEnrichment(
         (point): point is { period: string; value: number } =>
           typeof point.value === "number",
       )
-      .slice(-12) ?? [];
-  const firstHistoryValue = historyValues[0];
+      ?? [];
+  const firstHistoryValue = historyValues[Math.max(0, historyValues.length - 13)];
   const lastHistoryValue = historyValues[historyValues.length - 1];
   const priceEvolution12Months =
     firstHistoryValue && lastHistoryValue
