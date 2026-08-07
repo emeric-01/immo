@@ -443,6 +443,13 @@
   padding: 22px 0 8px;
 }
 
+.detailTopActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .contactBox {
   display: grid;
   gap: 10px;
@@ -1417,6 +1424,11 @@
   .pageHeader,
   .detailHeroGrid {
     display: grid;
+  }
+
+  .detailTopActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .rangeEditorHeading,
