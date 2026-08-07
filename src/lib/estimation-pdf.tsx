@@ -3,6 +3,7 @@ import "server-only";
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 import { Document, Image, Line, Link as PdfLink, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 import type { InseeDistributionItem, InseeHousingProfile } from "@/lib/insee-housing";
@@ -92,8 +93,12 @@ export async function renderEstimationPdf(estimation: AdminEstimation, agent: Ag
 type WorkspacePhotoAsset = { buffer: Buffer; id: string; photo: EstimationWorkspacePhoto };
 
 export async function renderWorkspaceEstimationPdf(estimation: AdminEstimation, workspace: EstimationAgentWorkspace, agent: Agent, options: { inseeProfile?: InseeHousingProfile | null; mapImage?: Buffer | null; photos?: WorkspacePhotoAsset[]; reportVersion?: number } = {}) {
-  const logo = await readFile(path.join(process.cwd(), "public/brand/les-jumelles-logo-noir.png"));
-  return renderToBuffer(<WorkspacePdfDocument agent={agent} estimation={estimation} inseeProfile={options.inseeProfile} logo={logo} mapImage={options.mapImage} photos={options.photos ?? []} reportVersion={options.reportVersion} workspace={workspace} />);
+  const [logo, photos, mapImage] = await Promise.all([
+    readFile(path.join(process.cwd(), "public/brand/les-jumelles-logo-noir.png")),
+    Promise.all((options.photos ?? []).map(async (asset) => ({ ...asset, buffer: await sharp(asset.buffer).rotate().jpeg({ quality: 84 }).toBuffer() }))),
+    options.mapImage ? sharp(options.mapImage).jpeg({ quality: 86 }).toBuffer() : Promise.resolve(null),
+  ]);
+  return renderToBuffer(<WorkspacePdfDocument agent={agent} estimation={estimation} inseeProfile={options.inseeProfile} logo={logo} mapImage={mapImage} photos={photos} reportVersion={options.reportVersion} workspace={workspace} />);
 }
 
 export function estimationPdfFileName(estimation: Pick<AdminEstimation, "address_label" | "id">) {
@@ -263,7 +268,7 @@ function WorkspacePdfDocument({ agent, estimation, inseeProfile, logo, mapImage,
 function WorkspaceReportBlock({ agent, block, estimation, inseeProfile, mapImage, photos, workspace }: { agent: Agent; block: EstimationReportBlockId; estimation: AdminEstimation; inseeProfile?: InseeHousingProfile | null; mapImage?: Buffer | null; photos: WorkspacePhotoAsset[]; workspace: EstimationAgentWorkspace }) {
   const input = estimation.input_payload; const result = estimation.result_payload;
   if (block === "valuation") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Synthèse de l’estimation</Text><View style={styles.grid}><Cell label="Fourchette basse" value={formatCurrency(estimation.low_price)} /><Cell label="Valeur centrale" value={formatCurrency(estimation.median_price)} /><Cell label="Fourchette haute" value={formatCurrency(estimation.high_price)} /><Cell label="Prix estimé au m²" value={`${formatNumber(estimation.price_per_m2)} €/m²`} /></View></View>;
-  if (block === "photos") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Le bien en images</Text>{photos.length ? <View style={styles.photoGrid}>{photos.slice(0, 6).map(({ buffer, photo }) => <View key={photo.id} style={styles.photoCard}><Image src={buffer} style={styles.photoImage} /><Text style={styles.photoCaption}>{photo.caption || photo.name}</Text></View>)}</View> : <Text style={styles.paragraph}>Aucune photographie n’a été ajoutée à cette version du rapport.</Text>}</View>;
+  if (block === "photos") return <View style={styles.section}><Text style={styles.sectionTitle}>Le bien en images</Text>{photos.length ? <View style={styles.photoGrid}>{photos.slice(0, 10).map(({ buffer, photo }) => <View key={photo.id} style={styles.photoCard} wrap={false}><Image src={buffer} style={styles.photoImage} /><Text style={styles.photoCaption}>{photo.caption || photo.name}</Text></View>)}</View> : <Text style={styles.paragraph}>Aucune photographie n’a été ajoutée à cette version du rapport.</Text>}</View>;
   if (block === "property") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Caractéristiques du bien</Text><View style={styles.grid}><Cell label="Type" value={propertyLabel(estimation.property_type)} /><Cell label="Surface" value={`${formatNumber(estimation.surface_m2)} m²`} /><Cell label="Pièces" value={String(estimation.rooms)} /><Cell label="État" value={conditionLabel(input.condition)} /><Cell label="Construction" value={input.constructionYear ? String(input.constructionYear) : "Non renseignée"} /><Cell label="DPE" value={input.dpe ?? "Non renseigné"} /></View>{featureLabels(input).length ? <View style={styles.tags}>{featureLabels(input).map((feature) => <Text key={feature} style={styles.tag}>{feature}</Text>)}</View> : null}</View>;
   if (block === "location") {
     const coordinates = result.coordinates;

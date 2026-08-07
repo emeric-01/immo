@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it, vi } from "vitest";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 
 vi.mock("server-only", () => ({}));
@@ -62,6 +62,7 @@ const estimation = {
   },
   result_payload: {
     addressLabel: "595 Route des Aubes 13400 Aubagne",
+    coordinates: { latitude: 43.301288, longitude: 5.580412 },
     comparables: [
       { id: "sale-1", label: "Route des Aubes", price: 392000, pricePerM2: 3267, propertyType: "apartment", rooms: 4, surfaceM2: 120, distanceMeters: 180, soldAt: "2026-03-12" },
       { id: "sale-2", label: "Quartier des Passons", price: 415000, pricePerM2: 3458, propertyType: "apartment", rooms: 4, surfaceM2: 120, distanceMeters: 640, soldAt: "2025-11-05" },
@@ -70,7 +71,7 @@ const estimation = {
     confidenceScore: 4,
     highPrice: 423100,
     lowPrice: 375200,
-    market: { demandLevel: "Bonne demande", priceEvolution12Months: 1.8, saleDurationDays: 56, sectorPricePerM2: 3210, supplyLevel: "Modere" },
+    market: { demandLevel: "Bonne demande", priceEvolution12Months: 1.8, saleDurationDays: 56, sectorPricePerM2: 3210, supplyLevel: "Modere", cityPriceHistory: Array.from({ length: 12 }, (_, index) => ({ period: String(2015 + index), apartment: 2780 + index * 52 + (index % 3) * 35, house: 3010 + index * 48 })) },
     marketSignals: [],
     medianPrice: 399200,
     negativeFactors: [],
@@ -100,9 +101,12 @@ describe("estimation PDF", () => {
     const workspace = {
       id: "83b6e179-b4f7-42ba-9874-f1f3bcb40922", source_estimation_id: estimation.id, created_at: estimation.created_at, updated_at: estimation.updated_at, created_by_admin_user_id: null, updated_by_admin_user_id: null, assigned_admin_user_id: null, status: "draft", title: "Estimation professionnelle - Route des Aubes", draft_input_payload: estimation.input_payload, draft_result_payload: estimation.result_payload, low_price: 380000, median_price: 405000, high_price: 430000, price_per_m2: 3375,
       agent_analysis: "La luminosité, la distribution et le calme positionnent ce bien au-dessus de la moyenne observée dans son secteur.", strengths: "Volumes équilibrés, extérieur et stationnement.", reservations: "Prévoir une présentation soignée des pièces d’eau.", sale_strategy: "Lancement au prix central, reportage photographique et diffusion ciblée auprès des acquéreurs déjà qualifiés.",
-      report_blocks: ["valuation", "agent_analysis", "property", "strengths", "strategy", "market", "comparables", "insee", "methodology", "agency"].map((id) => ({ enabled: true, id })),
+      photos: [{ id: "photo-1", storagePath: "demo/photo-1.webp", name: "Pièce de vie.webp", caption: "Pièce de vie lumineuse", contentType: "image/webp", size: 125000, enabled: true, createdAt: estimation.created_at }],
+      report_blocks: ["valuation", "photos", "property", "location", "agent_analysis", "strengths", "price_history", "strategy", "market", "comparables", "insee", "methodology", "agency"].map((id) => ({ enabled: true, id })),
     } as EstimationAgentWorkspace;
-    const pdf = await renderWorkspaceEstimationPdf({ ...estimation, low_price: workspace.low_price, median_price: workspace.median_price, high_price: workspace.high_price, price_per_m2: workspace.price_per_m2 }, workspace, { email: "severine@lesjumelles.immo", full_name: "Séverine Masfrand" }, { inseeProfile, reportVersion: 1 });
+    const photo = await readFile("public/images/about/appartement-temoin-piece-de-vie.webp");
+    const mapImage = await readFile("public/images/cities/aubagne.webp");
+    const pdf = await renderWorkspaceEstimationPdf({ ...estimation, low_price: workspace.low_price, median_price: workspace.median_price, high_price: workspace.high_price, price_per_m2: workspace.price_per_m2 }, workspace, { email: "severine@lesjumelles.immo", full_name: "Séverine Masfrand" }, { inseeProfile, mapImage, photos: [{ buffer: photo, id: "photo-1", photo: workspace.photos[0] }], reportVersion: 1 });
     if (process.env.WRITE_ESTIMATION_PDF_FIXTURE) await writeFile("output/pdf/dossier-agent-modulable-exemple.pdf", pdf);
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(20_000);
