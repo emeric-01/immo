@@ -16,3 +16,27 @@ export const reportBlockDefinitions = [
 
 export type EstimationReportBlockId = typeof reportBlockDefinitions[number]["id"];
 export type EstimationReportBlock = { enabled: boolean; id: EstimationReportBlockId };
+
+export function normalizeReportBlocks(blocks: unknown): EstimationReportBlock[] {
+  const allowed = new Set<EstimationReportBlockId>(reportBlockDefinitions.map(({ id }) => id));
+  const seen = new Set<EstimationReportBlockId>();
+  const normalized: EstimationReportBlock[] = [];
+
+  if (Array.isArray(blocks)) {
+    for (const block of blocks) {
+      if (!block || typeof block !== "object") continue;
+      const candidate = block as { enabled?: unknown; id?: unknown };
+      if (typeof candidate.id !== "string" || typeof candidate.enabled !== "boolean") continue;
+      if (!allowed.has(candidate.id as EstimationReportBlockId) || seen.has(candidate.id as EstimationReportBlockId)) continue;
+      const id = candidate.id as EstimationReportBlockId;
+      seen.add(id);
+      normalized.push({ enabled: candidate.enabled, id });
+    }
+  }
+
+  for (const { id } of reportBlockDefinitions) {
+    if (!seen.has(id)) normalized.push({ enabled: true, id });
+  }
+
+  return normalized;
+}

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { AdminSession } from "@/lib/admin/auth";
 import { getAdminEstimation, getAdminEstimations, type AdminEstimation } from "@/lib/admin/estimations";
 import type { PropertyEstimation, PropertyEstimationInput } from "@/lib/immo-data";
-import { reportBlockDefinitions, type EstimationReportBlock } from "@/lib/estimation-report-config";
+import { normalizeReportBlocks, reportBlockDefinitions, type EstimationReportBlock } from "@/lib/estimation-report-config";
 
 export type EstimationAgentWorkspace = {
   id: string;
@@ -66,7 +66,7 @@ export async function getWorkspaceBySourceEstimation(estimationId: string, sessi
   const response = await fetch(`${url}/rest/v1/estimation_agent_workspaces?source_estimation_id=eq.${encodeURIComponent(estimationId)}&select=*&limit=1`, { cache: "no-store", headers: headers(key) });
   if (!response.ok) throw new Error(`Lecture du dossier impossible (${response.status})`);
   const rows = await response.json() as EstimationAgentWorkspace[];
-  return rows[0] ?? null;
+  return rows[0] ? normalizeWorkspace(rows[0]) : null;
 }
 
 export async function getEstimationAgentWorkspaces(session: AdminSession) {
@@ -236,9 +236,6 @@ export function workspaceEstimation(source: AdminEstimation, workspace: Estimati
 }
 
 function normalizeWorkspace(workspace: EstimationAgentWorkspace) {
-  const validIds = new Set(reportBlockDefinitions.map(({ id }) => id));
-  const ordered = (workspace.report_blocks ?? []).filter((block) => validIds.has(block.id));
-  const present = new Set(ordered.map((block) => block.id));
   const photos = Array.isArray(workspace.photos) ? workspace.photos.filter((photo) => photo && typeof photo.id === "string" && typeof photo.storagePath === "string") : [];
-  return { ...workspace, photos, report_blocks: [...ordered, ...reportBlockDefinitions.filter(({ id }) => !present.has(id)).map(({ id }) => ({ id, enabled: true }))] };
+  return { ...workspace, photos, report_blocks: normalizeReportBlocks(workspace.report_blocks) };
 }
