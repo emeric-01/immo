@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { AdminSession } from "@/lib/admin/auth";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 import type { InseeHousingProfile } from "@/lib/insee-housing";
+import type { EstimationAgentWorkspace } from "@/lib/admin/estimation-workspaces";
 
 export type EstimationReportSnapshot = {
   id: string;
@@ -12,6 +13,7 @@ export type EstimationReportSnapshot = {
   created_at: string;
   pdf_storage_path: string;
   pdf_sha256: string;
+  workspace_id?: string | null;
 };
 
 function config() {
@@ -25,9 +27,10 @@ function headers(key: string, extra: Record<string, string> = {}) {
   return { apikey: key, Authorization: `Bearer ${key}`, ...extra };
 }
 
-export async function listEstimationReportSnapshots(estimationId: string) {
+export async function listEstimationReportSnapshots(estimationId: string, workspaceId?: string) {
   const { url, key } = config();
-  const response = await fetch(`${url}/rest/v1/estimation_report_snapshots?estimation_id=eq.${encodeURIComponent(estimationId)}&select=id,estimation_id,version,created_at,pdf_storage_path,pdf_sha256&order=version.desc`, { cache: "no-store", headers: headers(key) });
+  const workspaceFilter = workspaceId ? `&workspace_id=eq.${encodeURIComponent(workspaceId)}` : "";
+  const response = await fetch(`${url}/rest/v1/estimation_report_snapshots?estimation_id=eq.${encodeURIComponent(estimationId)}${workspaceFilter}&select=id,estimation_id,version,created_at,pdf_storage_path,pdf_sha256,workspace_id&order=version.desc`, { cache: "no-store", headers: headers(key) });
   if (!response.ok) return [];
   return response.json() as Promise<EstimationReportSnapshot[]>;
 }
@@ -38,6 +41,7 @@ export async function saveEstimationReportSnapshot(args: {
   pdf: Buffer;
   session: AdminSession;
   version: number;
+  workspace?: EstimationAgentWorkspace;
 }) {
   const { url, key } = config();
   const id = randomUUID();
@@ -63,6 +67,8 @@ export async function saveEstimationReportSnapshot(args: {
     price_per_m2: args.estimation.price_per_m2,
     pdf_storage_path: path,
     pdf_sha256: createHash("sha256").update(args.pdf).digest("hex"),
+    workspace_id: args.workspace?.id ?? null,
+    report_config: args.workspace ? { blocks: args.workspace.report_blocks, agentAnalysis: args.workspace.agent_analysis, reservations: args.workspace.reservations, saleStrategy: args.workspace.sale_strategy, strengths: args.workspace.strengths, title: args.workspace.title } : null,
   };
   const insert = await fetch(`${url}/rest/v1/estimation_report_snapshots`, {
     body: JSON.stringify(row), method: "POST",

@@ -6,6 +6,8 @@ import path from "node:path";
 import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 import type { InseeDistributionItem, InseeHousingProfile } from "@/lib/insee-housing";
+import type { EstimationAgentWorkspace } from "@/lib/admin/estimation-workspaces";
+import type { EstimationReportBlockId } from "@/lib/estimation-report-config";
 
 const colors = {
   accent: "#b96f41",
@@ -72,6 +74,11 @@ type Agent = { email?: string | null; full_name?: string | null } | null;
 export async function renderEstimationPdf(estimation: AdminEstimation, agent: Agent, options: { inseeProfile?: InseeHousingProfile | null; reportVersion?: number } = {}) {
   const logo = await readFile(path.join(process.cwd(), "public/brand/les-jumelles-logo-noir.png"));
   return renderToBuffer(<EstimationPdfDocument agent={agent} estimation={estimation} inseeProfile={options.inseeProfile} logo={logo} reportVersion={options.reportVersion} />);
+}
+
+export async function renderWorkspaceEstimationPdf(estimation: AdminEstimation, workspace: EstimationAgentWorkspace, agent: Agent, options: { inseeProfile?: InseeHousingProfile | null; reportVersion?: number } = {}) {
+  const logo = await readFile(path.join(process.cwd(), "public/brand/les-jumelles-logo-noir.png"));
+  return renderToBuffer(<WorkspacePdfDocument agent={agent} estimation={estimation} inseeProfile={options.inseeProfile} logo={logo} reportVersion={options.reportVersion} workspace={workspace} />);
 }
 
 export function estimationPdfFileName(estimation: Pick<AdminEstimation, "address_label" | "id">) {
@@ -218,6 +225,41 @@ function EstimationPdfDocument({ agent, estimation, inseeProfile, logo, reportVe
     </Page>
   </Document>;
 }
+
+function WorkspacePdfDocument({ agent, estimation, inseeProfile, logo, reportVersion, workspace }: { agent: Agent; estimation: AdminEstimation; inseeProfile?: InseeHousingProfile | null; logo: Buffer; reportVersion?: number; workspace: EstimationAgentWorkspace }) {
+  const enabledBlocks = workspace.report_blocks.filter((block) => block.enabled);
+  const date = formatDate(workspace.updated_at);
+  return <Document author="Les Jumelles Immo" subject={`Estimation professionnelle - ${estimation.address_label}`} title={workspace.title}>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.coverTop}><Image src={logo} style={styles.logo} /><Text style={styles.eyebrow}>Dossier d’estimation professionnelle</Text><Text style={styles.title}>{estimation.address_label}</Text><Text style={styles.subtitle}>{propertyLabel(estimation.property_type)} - {formatNumber(estimation.surface_m2)} m² - {estimation.rooms} pièces</Text></View>
+      <View style={styles.valuation}><Text style={styles.valuationLabel}>Positionnement conseillé par votre agence</Text><View style={styles.range}><Text style={styles.rangePrice}>{formatCurrency(estimation.low_price)}</Text><Text style={styles.rangeDash}>-</Text><Text style={styles.rangePrice}>{formatCurrency(estimation.high_price)}</Text></View><View style={styles.central}><Text style={styles.centralPrice}>{formatCurrency(estimation.median_price)}</Text><Text style={styles.centralCaption}>Valeur centrale conseillée - {formatNumber(estimation.price_per_m2)} €/m²</Text></View></View>
+      <View style={styles.callout}><Text style={styles.calloutTitle}>Une étude construite à partir du calcul initial et de l’expertise terrain</Text><Text style={styles.paragraph}>Le calcul automatique d’origine est conservé dans le dossier. Le présent rapport correspond à la version de travail validée par l’agent et aux rubriques sélectionnées lors de sa génération.</Text></View>
+      <View style={styles.agent}><View><Text style={styles.agentName}>{agent?.full_name || "Les Jumelles Immo"}</Text><Text style={styles.small}>{agent?.email || "contact@lesjumelles.immo"}</Text></View><View><Text style={[styles.small, { textAlign: "right" }]}>Rapport du {date}</Text><Text style={[styles.small, { textAlign: "right" }]}>Réf. {estimation.id.slice(0, 8).toUpperCase()}{reportVersion ? ` · Version ${reportVersion}` : ""}</Text></View></View>
+      <Footer />
+    </Page>
+    <Page size="A4" style={styles.page} wrap>
+      <Text style={styles.eyebrow}>Rapport personnalisé</Text><Text style={styles.title}>{workspace.title}</Text>
+      {enabledBlocks.map((block) => <WorkspaceReportBlock agent={agent} block={block.id} estimation={estimation} inseeProfile={inseeProfile} key={block.id} workspace={workspace} />)}
+      <Footer />
+    </Page>
+  </Document>;
+}
+
+function WorkspaceReportBlock({ agent, block, estimation, inseeProfile, workspace }: { agent: Agent; block: EstimationReportBlockId; estimation: AdminEstimation; inseeProfile?: InseeHousingProfile | null; workspace: EstimationAgentWorkspace }) {
+  const input = estimation.input_payload; const result = estimation.result_payload;
+  if (block === "valuation") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Synthèse de l’estimation</Text><View style={styles.grid}><Cell label="Fourchette basse" value={formatCurrency(estimation.low_price)} /><Cell label="Valeur centrale" value={formatCurrency(estimation.median_price)} /><Cell label="Fourchette haute" value={formatCurrency(estimation.high_price)} /><Cell label="Prix estimé au m²" value={`${formatNumber(estimation.price_per_m2)} €/m²`} /></View></View>;
+  if (block === "property") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Caractéristiques du bien</Text><View style={styles.grid}><Cell label="Type" value={propertyLabel(estimation.property_type)} /><Cell label="Surface" value={`${formatNumber(estimation.surface_m2)} m²`} /><Cell label="Pièces" value={String(estimation.rooms)} /><Cell label="État" value={conditionLabel(input.condition)} /><Cell label="Construction" value={input.constructionYear ? String(input.constructionYear) : "Non renseignée"} /><Cell label="DPE" value={input.dpe ?? "Non renseigné"} /></View>{featureLabels(input).length ? <View style={styles.tags}>{featureLabels(input).map((feature) => <Text key={feature} style={styles.tag}>{feature}</Text>)}</View> : null}</View>;
+  if (block === "agent_analysis") return <TextSection title="Analyse professionnelle" text={workspace.agent_analysis} />;
+  if (block === "strengths") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Atouts et points de vigilance</Text><View style={styles.grid}><Cell label="Points forts" value={workspace.strengths || "À compléter après la visite"} /><Cell label="Points de vigilance" value={workspace.reservations || "Aucun point particulier renseigné"} /></View></View>;
+  if (block === "market") return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Repères du marché</Text><View style={styles.grid}><Cell label="Prix moyen du secteur" value={result.market?.sectorPricePerM2 ? `${formatNumber(result.market.sectorPricePerM2)} €/m²` : "Non disponible"} /><Cell label="Évolution sur 12 mois" value={percent(result.market?.priceEvolution12Months)} /><Cell label="Délai de vente" value={result.market?.saleDurationDays ? `${result.market.saleDurationDays} jours` : "Non disponible"} /><Cell label="Niveau de demande" value={result.market?.demandLevel ?? "Non disponible"} /></View></View>;
+  if (block === "comparables") return <View style={styles.section}><Text style={styles.sectionTitle}>Transactions comparables</Text>{result.comparables.length ? result.comparables.slice(0, 10).map((sale) => <View key={sale.id} style={styles.comparable} wrap={false}><View style={styles.comparableLeft}><Text style={styles.comparableTitle}>{sale.label}</Text><Text style={styles.small}>{sale.surfaceM2 ? `${formatNumber(sale.surfaceM2)} m²` : "Surface NC"} - {sale.rooms ? `${sale.rooms} pièces` : "Pièces NC"}</Text></View><View style={styles.comparableRight}><Text style={styles.comparableTitle}>{formatCurrency(sale.price)}</Text><Text style={styles.small}>{sale.pricePerM2 ? `${formatNumber(sale.pricePerM2)} €/m²` : "Prix/m² NC"}</Text></View></View>) : <Text style={styles.paragraph}>Aucune transaction comparable exploitable.</Text>}</View>;
+  if (block === "insee") return inseeProfile ? <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Portrait résidentiel INSEE - {inseeProfile.cityName}</Text><Text style={styles.paragraph}>{formatNumber(inseeProfile.totalHousing)} logements recensés, millésime {inseeProfile.vintage}.</Text><View style={styles.chartGrid}><DistributionChart items={inseeProfile.housingTypes} title="Maisons et appartements" /><DistributionChart items={inseeProfile.occupancy} title="Occupation du parc" /><DistributionChart items={inseeProfile.rooms} title="Nombre de pièces" /><DistributionChart items={inseeProfile.surfaces} title="Surfaces" /></View><Text style={styles.sourceNote}>Source : INSEE, Recensement {inseeProfile.vintage}, base infracommunale Logement - code {inseeProfile.inseeCode}.</Text></View> : <TextSection title="Portrait résidentiel INSEE" text="Les données INSEE n’étaient pas disponibles pour cette adresse lors de la génération." />;
+  if (block === "strategy") return <TextSection title="Stratégie de commercialisation" text={workspace.sale_strategy} />;
+  if (block === "methodology") return <TextSection title="Méthodologie et portée de l’estimation" text="Cette étude associe les informations déclarées, le calcul automatique conservé dans le dossier, les données de marché disponibles et l’analyse professionnelle de l’agent. La valeur centrale constitue un repère de positionnement et non une garantie de prix ou de délai de vente. Une visite et l’analyse des documents juridiques et techniques restent nécessaires avant la mise en vente." />;
+  return <View style={styles.callout} wrap={false}><Text style={styles.calloutTitle}>Les Jumelles Immo</Text><Text style={styles.paragraph}>Les Jumelles Immo réunit transaction immobilière, estimation, urbanisme et architecture intérieure pour révéler et défendre la valeur de votre bien.</Text><Text style={styles.paragraph}>{agent?.full_name || "Votre interlocutrice Les Jumelles Immo"}{agent?.email ? ` - ${agent.email}` : " - contact@lesjumelles.immo"}</Text></View>;
+}
+
+function TextSection({ text, title }: { text: string; title: string }) { return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>{title}</Text><Text style={styles.paragraph}>{text || "Cette rubrique sera complétée par votre conseillère après la visite du bien."}</Text></View>; }
 
 function Fact({ label, value }: { label: string; value: string }) { return <View style={styles.fact}><Text style={styles.factLabel}>{label}</Text><Text style={styles.factValue}>{value}</Text></View>; }
 function Cell({ label, value }: { label: string; value: string }) { return <View style={styles.cell}><Text style={styles.cellLabel}>{label}</Text><Text style={styles.cellValue}>{value}</Text></View>; }

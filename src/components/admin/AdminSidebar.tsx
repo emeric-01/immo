@@ -7,6 +7,7 @@ const menuItems: Array<{ href: string; label: string; permission?: AdminPermissi
   { href: "/admin/biens", label: "Biens", permission: "properties:read" },
   { href: "/admin/recherches", label: "Recherches", permission: "buyer_searches:read" },
   { href: "/admin/estimations", label: "Estimations", permission: "estimations:read" },
+  { href: "/admin/dossiers-estimation", label: "Dossiers d’estimation", permission: "estimations:read" },
   { href: "/admin/parrainages", label: "Parrainages", permission: "referrals:read" },
   { href: "/admin/clients", label: "Clients", permission: "clients:read" },
   { href: "/admin/recherches-villes", label: "Villes recherchées", permission: "city_searches:read" },

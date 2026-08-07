@@ -595,6 +595,56 @@
   color: #70401e;
 }
 
+.workspaceHero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 1px solid #e8ddd2; padding: 22px 0 26px; }
+.workspaceHero > div:first-child { display: grid; flex: 1; gap: 12px; }
+.workspaceTitleInput { width: min(760px, 100%); border: 0; border-bottom: 1px solid transparent; background: transparent; padding: 0 0 6px; color: #171411; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 4.5vw, 3.7rem); line-height: 1.02; }
+.workspaceTitleInput:focus { border-bottom-color: #bd7446; outline: none; }
+.workspaceActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.workspaceActions button { cursor: pointer; }
+.workspaceActions button:disabled { cursor: wait; opacity: .65; }
+.workspaceStatus { display: grid; gap: 4px; color: #6d665f; font-size: .68rem; font-weight: 800; text-transform: uppercase; }
+.workspaceStatus select { min-height: 44px; border: 1px solid #ded3c8; border-radius: 8px; background: #fff; padding: 0 34px 0 11px; color: #171411; font: inherit; font-size: .78rem; text-transform: none; }
+.workspaceOrigin { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.3fr); gap: 28px; align-items: center; border: 1px solid #d8c5b3; border-radius: 14px; background: #f8efe6; padding: 22px; }
+.workspaceOrigin h2, .workspaceOrigin p { margin: 0; }
+.workspaceOrigin h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 500; }
+.workspaceOrigin > div:first-child { display: grid; gap: 7px; }
+.workspaceOrigin > div:first-child > p:last-child { color: #716a63; line-height: 1.5; }
+.workspaceOrigin > div:last-child { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.workspaceOrigin span { display: grid; gap: 6px; border-left: 1px solid #d9c4b1; padding: 8px 16px; }
+.workspaceOrigin small { color: #80766d; font-size: .72rem; text-transform: uppercase; }
+.workspaceOrigin strong { font-size: 1rem; }
+.workspaceGrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(340px, .75fr); gap: 18px; align-items: start; }
+.workspaceForm, .reportComposer { display: grid; gap: 20px; border: 1px solid #e3dcd4; border-radius: 14px; background: #fff; padding: 24px; box-shadow: 0 18px 44px rgba(34, 27, 20, .05); }
+.workspaceForm header h2, .workspaceForm header p, .reportComposer header h2, .reportComposer header p { margin: 0; }
+.workspaceForm header h2, .reportComposer header h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 500; }
+.reportComposer header > p:last-child { margin-top: 7px; color: #6f6a64; line-height: 1.5; }
+.workspacePriceGrid, .workspaceTextColumns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.workspaceTextColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.workspacePriceGrid label { display: grid; gap: 7px; color: #4b4540; font-size: .78rem; font-weight: 800; }
+.workspacePriceGrid label > div { display: flex; align-items: center; border: 1px solid #d8c5b3; border-radius: 9px; background: #fff; padding-right: 12px; }
+.workspacePriceGrid input { width: 100%; min-height: 48px; border: 0; background: transparent; padding: 0 12px; font: inherit; font-size: 1rem; font-weight: 800; outline: none; }
+.workspacePriceGrid label > div:focus-within { box-shadow: 0 0 0 2px rgba(189, 116, 70, .18); }
+.workspaceTextarea { display: grid; gap: 7px; color: #3e3934; font-size: .82rem; font-weight: 800; }
+.workspaceTextarea small { color: #77716b; font-weight: 500; line-height: 1.4; }
+.workspaceTextarea textarea { width: 100%; resize: vertical; border: 1px solid #ded3c8; border-radius: 9px; background: #fdfbf9; padding: 12px; color: #171411; font: inherit; font-weight: 500; line-height: 1.5; }
+.workspaceTextarea textarea:focus { border-color: #bd7446; outline: none; }
+.reportComposer { position: sticky; top: 18px; }
+.reportBlockList { display: grid; gap: 8px; }
+.reportBlockList article { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid #e7ded5; border-radius: 9px; padding: 10px; transition: opacity .2s, background .2s; }
+.reportBlockList article[data-disabled] { background: #f5f3f0; opacity: .55; }
+.reportBlockList article > span { color: #bd7446; font-size: .7rem; font-weight: 850; }
+.reportBlockList article > strong { font-size: .82rem; }
+.reportBlockList article > div { display: flex; gap: 4px; }
+.reportBlockList button { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border: 1px solid #e1d6cc; border-radius: 6px; background: #fff; color: #3c352f; cursor: pointer; }
+.reportBlockList button:disabled { cursor: default; opacity: .25; }
+.reportPreviewNote { display: flex; gap: 10px; border-top: 1px solid #eee7df; padding-top: 15px; color: #746d66; font-size: .78rem; line-height: 1.5; }
+.reportPreviewNote svg { flex: 0 0 auto; color: #bd7446; }
+.reportHistory { display: grid; gap: 14px; border: 1px solid #e3dcd4; border-radius: 14px; background: #fff; padding: 22px; }
+.reportHistory header { display: grid; gap: 6px; }
+.reportHistory h2, .reportHistory p { margin: 0; }
+.reportHistory h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 500; }
+.reportHistory header > p:last-child { color: #706a64; }
+
 .adminComparableList {
   display: grid;
 }
@@ -1383,6 +1433,9 @@
     grid-template-columns: 1fr;
   }
 
+  .workspaceGrid { grid-template-columns: 1fr; }
+  .reportComposer { position: static; }
+
   .rangeEditor form {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1430,6 +1483,13 @@
     align-items: stretch;
     flex-direction: column;
   }
+
+  .workspaceHero { align-items: stretch; flex-direction: column; }
+  .workspaceActions { display: grid; }
+  .workspaceOrigin { grid-template-columns: 1fr; }
+  .workspaceOrigin > div:last-child { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspacePriceGrid,
+  .workspaceTextColumns { grid-template-columns: 1fr; }
 
   .rangeEditorHeading,
   .rangeEditor form,

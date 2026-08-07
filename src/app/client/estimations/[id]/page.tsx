@@ -22,7 +22,10 @@ export default async function ClientEstimationDetailPage({ params }: { params: P
     );
   }
 
-  const result = estimation.result_payload;
+  const result = estimation.generated_result_payload ?? estimation.result_payload;
+  const lowPrice = estimation.generated_low_price ?? result.lowPrice;
+  const medianPrice = estimation.generated_median_price ?? result.medianPrice;
+  const highPrice = estimation.generated_high_price ?? result.highPrice;
 
   return (
     <main className={styles.clientPage}>
@@ -34,16 +37,16 @@ export default async function ClientEstimationDetailPage({ params }: { params: P
         </header>
         <section className={styles.estimateHero}>
           <p>Valeur estimée</p>
-          <strong>{formatCurrency(estimation.median_price)}</strong>
-          <span>Fourchette de {formatCurrency(estimation.low_price)} à {formatCurrency(estimation.high_price)}</span>
+          <strong>{formatCurrency(medianPrice)}</strong>
+          <span>Fourchette de {formatCurrency(lowPrice)} à {formatCurrency(highPrice)}</span>
         </section>
         <section className={styles.estimateMetrics}>
           <Metric icon={Building2} label="Type" value={estimation.property_type === "house" ? "Maison" : "Appartement"} />
           <Metric icon={Ruler} label="Surface" value={`${estimation.surface_m2} m2`} />
-          <Metric icon={BarChart3} label="Prix au m2" value={`${formatNumber(estimation.price_per_m2)} €/m2`} />
+          <Metric icon={BarChart3} label="Prix au m2" value={`${formatNumber(result.pricePerM2)} €/m2`} />
           <Metric icon={Gauge} label="Confiance" value={`${estimation.confidence_score ?? 0}/5`} />
           <Metric icon={MapPin} label="Localisation" value={estimation.city_name || estimation.address_label} />
-          <Metric icon={CalendarDays} label="Mise à jour" value={formatDate(estimation.updated_at)} />
+          <Metric icon={CalendarDays} label="Calcul initial" value={formatDate(estimation.created_at)} />
         </section>
         {result.marketSignals.length > 0 ? (
           <section className={styles.dashboardSection}><div className={styles.sectionTitle}><div><p className={styles.eyebrow}>Analyse</p><h2>Signaux de marché</h2></div></div><ul className={styles.signalList}>{result.marketSignals.map((signal) => <li key={signal}>{signal}</li>)}</ul></section>

@@ -6,8 +6,9 @@ import type { AdminEstimation } from "@/lib/admin/estimations";
 
 vi.mock("server-only", () => ({}));
 
-import { estimationPdfFileName, renderEstimationPdf } from "@/lib/estimation-pdf";
+import { estimationPdfFileName, renderEstimationPdf, renderWorkspaceEstimationPdf } from "@/lib/estimation-pdf";
 import type { InseeHousingProfile } from "@/lib/insee-housing";
+import type { EstimationAgentWorkspace } from "@/lib/admin/estimation-workspaces";
 
 const inseeProfile: InseeHousingProfile = {
   cityName: "Aubagne", inseeCode: "13005", vintage: 2022, sourceUrl: "https://www.insee.fr/fr/statistiques/8647012", totalHousing: 22859,
@@ -94,4 +95,16 @@ describe("estimation PDF", () => {
   it("builds a stable filename", () => {
     expect(estimationPdfFileName(estimation)).toBe("estimation-595-route-des-aubes-13400-aubagne.pdf");
   });
+
+  it("generates a modular agent report in the configured order", async () => {
+    const workspace = {
+      id: "83b6e179-b4f7-42ba-9874-f1f3bcb40922", source_estimation_id: estimation.id, created_at: estimation.created_at, updated_at: estimation.updated_at, created_by_admin_user_id: null, updated_by_admin_user_id: null, assigned_admin_user_id: null, status: "draft", title: "Estimation professionnelle - Route des Aubes", draft_input_payload: estimation.input_payload, draft_result_payload: estimation.result_payload, low_price: 380000, median_price: 405000, high_price: 430000, price_per_m2: 3375,
+      agent_analysis: "La luminosité, la distribution et le calme positionnent ce bien au-dessus de la moyenne observée dans son secteur.", strengths: "Volumes équilibrés, extérieur et stationnement.", reservations: "Prévoir une présentation soignée des pièces d’eau.", sale_strategy: "Lancement au prix central, reportage photographique et diffusion ciblée auprès des acquéreurs déjà qualifiés.",
+      report_blocks: ["valuation", "agent_analysis", "property", "strengths", "strategy", "market", "comparables", "insee", "methodology", "agency"].map((id) => ({ enabled: true, id })),
+    } as EstimationAgentWorkspace;
+    const pdf = await renderWorkspaceEstimationPdf({ ...estimation, low_price: workspace.low_price, median_price: workspace.median_price, high_price: workspace.high_price, price_per_m2: workspace.price_per_m2 }, workspace, { email: "severine@lesjumelles.immo", full_name: "Séverine Masfrand" }, { inseeProfile, reportVersion: 1 });
+    if (process.env.WRITE_ESTIMATION_PDF_FIXTURE) await writeFile("output/pdf/dossier-agent-modulable-exemple.pdf", pdf);
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+    expect(pdf.length).toBeGreaterThan(20_000);
+  }, 20_000);
 });
