@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
 import { hasAdminPermission } from "@/lib/admin/permissions";
-import { getEstimationAgentWorkspace, workspaceEstimation } from "@/lib/admin/estimation-workspaces";
+import { getEnabledWorkspacePhotoBuffers, getEstimationAgentWorkspace, workspaceEstimation } from "@/lib/admin/estimation-workspaces";
 import { getAdminUserSummary } from "@/lib/admin/users";
 import { getInseeHousingProfile } from "@/lib/insee-housing";
 import { estimationPdfFileName, renderWorkspaceEstimationPdf } from "@/lib/estimation-pdf";
 import { listEstimationReportSnapshots, nextReportVersion, saveEstimationReportSnapshot } from "@/lib/admin/estimation-reports";
+import { getStaticMapImage } from "@/lib/mapbox-static";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,9 +22,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const { source, workspace } = dossier;
     const estimation = workspaceEstimation(source, workspace);
     const agentId = workspace.assigned_admin_user_id || source.assigned_admin_user_id || source.attributed_admin_user_id || source.created_by_admin_user_id;
-    const [agent, inseeProfile, snapshots] = await Promise.all([getAdminUserSummary(agentId), getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode), listEstimationReportSnapshots(source.id)]);
+    const [agent, inseeProfile, snapshots, photos, mapImage] = await Promise.all([getAdminUserSummary(agentId), getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode), listEstimationReportSnapshots(source.id), getEnabledWorkspacePhotoBuffers(workspace), getStaticMapImage(estimation.result_payload.coordinates)]);
     const version = nextReportVersion(snapshots);
-    const pdf = await renderWorkspaceEstimationPdf(estimation, workspace, agent, { inseeProfile, reportVersion: version });
+    const pdf = await renderWorkspaceEstimationPdf(estimation, workspace, agent, { inseeProfile, mapImage, photos, reportVersion: version });
     await saveEstimationReportSnapshot({ estimation, inseeProfile, pdf, session, version, workspace });
     return new Response(new Uint8Array(pdf), { headers: { "Cache-Control": "private, no-store, max-age=0", "Content-Disposition": `attachment; filename="${estimationPdfFileName(estimation)}"`, "Content-Type": "application/pdf", "X-Report-Version": String(version) } });
   } catch (error) {

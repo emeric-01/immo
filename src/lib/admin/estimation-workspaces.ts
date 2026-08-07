@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import type { AdminSession } from "@/lib/admin/auth";
 import { getAdminEstimation, getAdminEstimations, type AdminEstimation } from "@/lib/admin/estimations";
 import type { PropertyEstimation, PropertyEstimationInput } from "@/lib/immo-data";
@@ -26,9 +27,21 @@ export type EstimationAgentWorkspace = {
   reservations: string;
   sale_strategy: string;
   report_blocks: EstimationReportBlock[];
+  photos: EstimationWorkspacePhoto[];
 };
 
-export type WorkspaceUpdate = Pick<EstimationAgentWorkspace, "agent_analysis" | "high_price" | "low_price" | "median_price" | "report_blocks" | "reservations" | "sale_strategy" | "status" | "strengths" | "title">;
+export type EstimationWorkspacePhoto = {
+  id: string;
+  storagePath: string;
+  name: string;
+  caption: string;
+  contentType: "image/jpeg" | "image/png" | "image/webp";
+  size: number;
+  enabled: boolean;
+  createdAt: string;
+};
+
+export type WorkspaceUpdate = Pick<EstimationAgentWorkspace, "agent_analysis" | "high_price" | "low_price" | "median_price" | "photos" | "report_blocks" | "reservations" | "sale_strategy" | "status" | "strengths" | "title">;
 export type { EstimationReportBlock } from "@/lib/estimation-report-config";
 
 function config() {
@@ -117,14 +130,94 @@ export async function createEstimationAgentWorkspace(estimationId: string, sessi
 export async function updateEstimationAgentWorkspace(id: string, update: WorkspaceUpdate, session: AdminSession) {
   const current = await getEstimationAgentWorkspace(id, session);
   if (!current) throw new Error("Dossier professionnel introuvable");
+  const photoUpdates = new Map(update.photos.map((photo) => [photo.id, photo]));
+  const photos = current.workspace.photos.map((photo) => {
+    const candidate = photoUpdates.get(photo.id);
+    return candidate ? { ...photo, caption: candidate.caption.trim().slice(0, 240), enabled: candidate.enabled } : photo;
+  });
   const adminId = session.role === "bootstrap" ? null : session.id;
   const { url, key } = config();
   const response = await fetch(`${url}/rest/v1/estimation_agent_workspaces?id=eq.${encodeURIComponent(id)}&select=*`, {
     method: "PATCH",
-    body: JSON.stringify({ ...update, price_per_m2: Math.round(update.median_price / current.source.surface_m2), updated_at: new Date().toISOString(), updated_by_admin_user_id: adminId }),
+    body: JSON.stringify({ ...update, photos, price_per_m2: Math.round(update.median_price / current.source.surface_m2), updated_at: new Date().toISOString(), updated_by_admin_user_id: adminId }),
     headers: headers(key, { "Content-Type": "application/json", Prefer: "return=representation" }),
   });
   if (!response.ok) throw new Error(`Enregistrement impossible (${response.status}) : ${await response.text()}`);
+  return normalizeWorkspace((await response.json() as EstimationAgentWorkspace[])[0]);
+}
+
+const ASSET_BUCKET = "estimation-report-assets";
+const allowedPhotoTypes = new Set<EstimationWorkspacePhoto["contentType"]>(["image/jpeg", "image/png", "image/webp"]);
+
+export async function uploadEstimationWorkspacePhoto(id: string, file: File, session: AdminSession) {
+  const dossier = await getEstimationAgentWorkspace(id, session);
+  if (!dossier) throw new Error("Dossier professionnel introuvable");
+  if (dossier.workspace.photos.length >= 10) throw new Error("Le rapport accepte au maximum 10 photos.");
+  if (!allowedPhotoTypes.has(file.type as EstimationWorkspacePhoto["contentType"])) throw new Error("Format accepté : JPG, PNG ou WebP.");
+  if (file.size <= 0 || file.size > 12 * 1024 * 1024) throw new Error("Chaque photo doit peser moins de 12 Mo.");
+
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const photo: EstimationWorkspacePhoto = {
+    id: randomUUID(),
+    storagePath: `${id}/${randomUUID()}.${extension}`,
+    name: file.name.slice(0, 180),
+    caption: "",
+    contentType: file.type as EstimationWorkspacePhoto["contentType"],
+    size: file.size,
+    enabled: true,
+    createdAt: new Date().toISOString(),
+  };
+  const { url, key } = config();
+  const upload = await fetch(`${url}/storage/v1/object/${ASSET_BUCKET}/${photo.storagePath}`, {
+    method: "POST",
+    body: new Uint8Array(await file.arrayBuffer()),
+    headers: headers(key, { "Content-Type": photo.contentType, "x-upsert": "false" }),
+  });
+  if (!upload.ok) throw new Error(`Envoi de la photo impossible (${upload.status}) : ${await upload.text()}`);
+
+  try {
+    return await persistWorkspacePhotos(id, [...dossier.workspace.photos, photo], session);
+  } catch (error) {
+    await fetch(`${url}/storage/v1/object/${ASSET_BUCKET}/${photo.storagePath}`, { method: "DELETE", headers: headers(key) });
+    throw error;
+  }
+}
+
+export async function deleteEstimationWorkspacePhoto(id: string, photoId: string, session: AdminSession) {
+  const dossier = await getEstimationAgentWorkspace(id, session);
+  if (!dossier) throw new Error("Dossier professionnel introuvable");
+  const photo = dossier.workspace.photos.find((candidate) => candidate.id === photoId);
+  if (!photo) throw new Error("Photo introuvable");
+  const remaining = dossier.workspace.photos.filter((candidate) => candidate.id !== photoId);
+  const updated = await persistWorkspacePhotos(id, remaining, session);
+  const { url, key } = config();
+  const removal = await fetch(`${url}/storage/v1/object/${ASSET_BUCKET}/${photo.storagePath}`, { method: "DELETE", headers: headers(key) });
+  if (!removal.ok && removal.status !== 404) console.error("Suppression Storage incomplète", await removal.text());
+  return updated;
+}
+
+export async function downloadEstimationWorkspacePhoto(workspace: EstimationAgentWorkspace, photoId: string) {
+  const photo = workspace.photos.find((candidate) => candidate.id === photoId);
+  if (!photo) throw new Error("Photo introuvable");
+  const { url, key } = config();
+  const response = await fetch(`${url}/storage/v1/object/${ASSET_BUCKET}/${photo.storagePath}`, { cache: "no-store", headers: headers(key) });
+  if (!response.ok) throw new Error(`Lecture de la photo impossible (${response.status})`);
+  return { buffer: Buffer.from(await response.arrayBuffer()), photo };
+}
+
+export async function getEnabledWorkspacePhotoBuffers(workspace: EstimationAgentWorkspace) {
+  return Promise.all(workspace.photos.filter((photo) => photo.enabled).map(async (photo) => ({ ...(await downloadEstimationWorkspacePhoto(workspace, photo.id)), id: photo.id })));
+}
+
+async function persistWorkspacePhotos(id: string, photos: EstimationWorkspacePhoto[], session: AdminSession) {
+  const adminId = session.role === "bootstrap" ? null : session.id;
+  const { url, key } = config();
+  const response = await fetch(`${url}/rest/v1/estimation_agent_workspaces?id=eq.${encodeURIComponent(id)}&select=*`, {
+    method: "PATCH",
+    body: JSON.stringify({ photos, updated_at: new Date().toISOString(), updated_by_admin_user_id: adminId }),
+    headers: headers(key, { "Content-Type": "application/json", Prefer: "return=representation" }),
+  });
+  if (!response.ok) throw new Error(`Enregistrement des photos impossible (${response.status}) : ${await response.text()}`);
   return normalizeWorkspace((await response.json() as EstimationAgentWorkspace[])[0]);
 }
 
@@ -146,5 +239,6 @@ function normalizeWorkspace(workspace: EstimationAgentWorkspace) {
   const validIds = new Set(reportBlockDefinitions.map(({ id }) => id));
   const ordered = (workspace.report_blocks ?? []).filter((block) => validIds.has(block.id));
   const present = new Set(ordered.map((block) => block.id));
-  return { ...workspace, report_blocks: [...ordered, ...reportBlockDefinitions.filter(({ id }) => !present.has(id)).map(({ id }) => ({ id, enabled: true }))] };
+  const photos = Array.isArray(workspace.photos) ? workspace.photos.filter((photo) => photo && typeof photo.id === "string" && typeof photo.storagePath === "string") : [];
+  return { ...workspace, photos, report_blocks: [...ordered, ...reportBlockDefinitions.filter(({ id }) => !present.has(id)).map(({ id }) => ({ id, enabled: true }))] };
 }

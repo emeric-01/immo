@@ -68,7 +68,7 @@ export async function saveEstimationReportSnapshot(args: {
     pdf_storage_path: path,
     pdf_sha256: createHash("sha256").update(args.pdf).digest("hex"),
     workspace_id: args.workspace?.id ?? null,
-    report_config: args.workspace ? { blocks: args.workspace.report_blocks, agentAnalysis: args.workspace.agent_analysis, reservations: args.workspace.reservations, saleStrategy: args.workspace.sale_strategy, strengths: args.workspace.strengths, title: args.workspace.title } : null,
+    report_config: args.workspace ? { blocks: args.workspace.report_blocks, agentAnalysis: args.workspace.agent_analysis, photos: args.workspace.photos.map(({ caption, contentType, enabled, id, name, size }) => ({ caption, contentType, enabled, id, name, size })), reservations: args.workspace.reservations, saleStrategy: args.workspace.sale_strategy, strengths: args.workspace.strengths, title: args.workspace.title } : null,
   };
   const insert = await fetch(`${url}/rest/v1/estimation_report_snapshots`, {
     body: JSON.stringify(row), method: "POST",

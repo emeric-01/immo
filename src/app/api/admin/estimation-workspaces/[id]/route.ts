@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
 import { hasAdminPermission } from "@/lib/admin/permissions";
-import { updateEstimationAgentWorkspace, type WorkspaceUpdate } from "@/lib/admin/estimation-workspaces";
+import { updateEstimationAgentWorkspace, type EstimationWorkspacePhoto, type WorkspaceUpdate } from "@/lib/admin/estimation-workspaces";
 import { reportBlockDefinitions, type EstimationReportBlock } from "@/lib/estimation-report-config";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -30,5 +30,6 @@ function parseUpdate(body: Partial<WorkspaceUpdate> | null): { ok: true; update:
   if (blocks.length !== reportBlockDefinitions.length || new Set(blocks.map((block) => block.id)).size !== blocks.length) return { error: "La composition du rapport est invalide.", ok: false };
   const text = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
   const status = body?.status === "ready" || body?.status === "archived" ? body.status : "draft";
-  return { ok: true, update: { agent_analysis: text(body?.agent_analysis, 5000), high_price: high, low_price: low, median_price: median, report_blocks: blocks, reservations: text(body?.reservations, 3000), sale_strategy: text(body?.sale_strategy, 5000), status, strengths: text(body?.strengths, 3000), title: text(body?.title, 180) || "Estimation professionnelle" } };
+  const photos = Array.isArray(body?.photos) ? body.photos.filter((photo): photo is EstimationWorkspacePhoto => Boolean(photo && typeof photo.id === "string" && typeof photo.enabled === "boolean" && typeof photo.caption === "string")) : [];
+  return { ok: true, update: { agent_analysis: text(body?.agent_analysis, 5000), high_price: high, low_price: low, median_price: median, photos, report_blocks: blocks, reservations: text(body?.reservations, 3000), sale_strategy: text(body?.sale_strategy, 5000), status, strengths: text(body?.strengths, 3000), title: text(body?.title, 180) || "Estimation professionnelle" } };
 }
