@@ -4,6 +4,7 @@ import type { ClientEstimationRow } from "@/lib/client-access/estimations";
 import type { AdminClientAccount, AdminDataState } from "@/lib/admin/clients";
 import type { AdminSession } from "@/lib/admin/auth";
 import type { CrmContact } from "@/lib/admin/crm-contacts";
+import { createImmoDataEstimation, type PropertyEstimationInput } from "@/lib/immo-data";
 
 type AdminSupabaseConfig = {
   serviceRoleKey: string;
@@ -22,6 +23,12 @@ export type AdminEstimationStats = {
   recentCount: number;
   total: number;
   uniqueClients: number;
+};
+
+export type AdminEstimationRange = {
+  highPrice: number;
+  lowPrice: number;
+  medianPrice: number;
 };
 
 function getConfig(): AdminSupabaseConfig | null {
@@ -45,7 +52,7 @@ export async function getAdminEstimations(filters: { q?: string; status?: string
   if (filters.status === "active" || filters.status === "archived") {
     estimationParams.set("status", `eq.${filters.status}`);
   }
-  if (session?.role === "agent") estimationParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
+  if (session?.role === "agent") estimationParams.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id},created_by_admin_user_id.eq.${session.id})`);
 
   const [estimationsResult, clientsResult, crmContactsResult, usersResult] = await Promise.all([
     fetchAdmin<ClientEstimationRow[]>(config, `property_estimations?${estimationParams}`),
@@ -90,7 +97,7 @@ export async function getAdminEstimation(id: string, session?: AdminSession): Pr
 
   const rows = await fetchAdmin<ClientEstimationRow[]>(
     config,
-    `property_estimations?id=eq.${encodeURIComponent(id)}${session?.role === "agent" ? `&or=(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})` : ""}&select=*&limit=1`,
+    `property_estimations?id=eq.${encodeURIComponent(id)}${session?.role === "agent" ? `&or=(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id},created_by_admin_user_id.eq.${session.id})` : ""}&select=*&limit=1`,
   );
   if (rows.status !== "ready") return rows;
   const estimation = rows.data[0];
@@ -104,6 +111,119 @@ export async function getAdminEstimation(id: string, session?: AdminSession): Pr
   if (crmContacts.status !== "ready") return crmContacts;
 
   return { data: { ...estimation, adminAgent: null, client: clients.data[0] ?? null, crmContact: crmContacts.data[0] ?? null }, status: "ready" };
+}
+
+export async function createStandaloneAdminEstimation(
+  input: PropertyEstimationInput,
+  session: AdminSession,
+) {
+  const config = getConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour enregistrer les estimations.", success: false as const };
+
+  try {
+    const result = await createImmoDataEstimation(input);
+    const persistableAdminId = session.role === "bootstrap" ? null : session.id;
+    const response = await fetch(`${config.url}/rest/v1/property_estimations?select=id`, {
+      body: JSON.stringify({
+        address_label: result.addressLabel,
+        assigned_admin_user_id: persistableAdminId,
+        city_name: input.selectedAddress?.cityName ?? null,
+        confidence_score: result.confidenceScore,
+        created_by_admin_user_id: persistableAdminId,
+        generated_high_price: result.highPrice,
+        generated_low_price: result.lowPrice,
+        generated_median_price: result.medianPrice,
+        high_price: result.highPrice,
+        input_payload: input,
+        low_price: result.lowPrice,
+        median_price: result.medianPrice,
+        postal_code: input.selectedAddress?.postCode?.[0] ?? null,
+        price_per_m2: result.pricePerM2,
+        property_type: input.propertyType,
+        record_origin: "admin",
+        result_payload: result,
+        rooms: input.rooms,
+        source: result.source,
+        surface_m2: input.surfaceM2,
+      }),
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "POST",
+    });
+    if (!response.ok) {
+      return { message: `Enregistrement impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    }
+    const rows = await response.json() as Array<{ id: string }>;
+    return rows[0]
+      ? { estimation: result, id: rows[0].id, success: true as const }
+      : { message: "L’estimation n’a pas été enregistrée.", success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "L’estimation a échoué.", success: false as const };
+  }
+}
+
+export async function updateAdminEstimationRange(
+  id: string,
+  range: AdminEstimationRange,
+  session: AdminSession,
+) {
+  const config = getConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour modifier les estimations.", success: false as const };
+
+  const current = await getAdminEstimation(id, session);
+  if (current.status !== "ready" || !current.data) {
+    return { message: "Estimation inaccessible.", success: false as const };
+  }
+
+  const adjustedBy = session.role === "bootstrap" ? null : session.id;
+  const resultPayload = {
+    ...current.data.result_payload,
+    highPrice: range.highPrice,
+    lowPrice: range.lowPrice,
+    medianPrice: range.medianPrice,
+    pricePerM2: Math.round(range.medianPrice / current.data.surface_m2),
+  };
+  const query = new URLSearchParams({ id: `eq.${id}` });
+  if (session.role === "agent") {
+    query.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id},created_by_admin_user_id.eq.${session.id})`);
+  }
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/property_estimations?${query}`, {
+      body: JSON.stringify({
+        high_price: range.highPrice,
+        low_price: range.lowPrice,
+        median_price: range.medianPrice,
+        price_per_m2: resultPayload.pricePerM2,
+        range_adjusted: true,
+        range_adjusted_at: new Date().toISOString(),
+        range_adjusted_by_admin_user_id: adjustedBy,
+        result_payload: resultPayload,
+      }),
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "PATCH",
+    });
+    if (!response.ok) {
+      return { message: `Modification impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    }
+    const rows = await response.json() as Array<{ id: string }>;
+    return rows[0]
+      ? { success: true as const }
+      : { message: "Aucune estimation n’a été modifiée.", success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "Modification impossible.", success: false as const };
+  }
 }
 
 export function getAdminEstimationStats(rows: AdminEstimation[]): AdminEstimationStats {

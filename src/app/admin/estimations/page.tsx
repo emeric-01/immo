@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BarChart3, CalendarClock, Euro, Gauge, Inbox, Search, UserRound } from "lucide-react";
+import { ArrowRight, BarChart3, CalendarClock, Euro, Gauge, Inbox, Plus, Search, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -24,8 +24,8 @@ export default async function AdminEstimationsPage({ searchParams }: { searchPar
       <AdminSidebar active="/admin/estimations" session={session}/>
       <section className={styles.content}>
         <section className={styles.pageHeader}>
-          <div><p className={styles.eyebrow}>Estimations vendeurs</p><h1>Toutes les estimations</h1><p>Consultez chaque estimation réalisée, avec ou sans contact identifié.</p></div>
-          <form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form>
+          <div><p className={styles.eyebrow}>Estimations vendeurs</p><h1>Toutes les estimations</h1><p>Créez une étude complète, contrôlez les données puis ajustez la fourchette avant de la présenter.</p></div>
+          <div className={styles.headerActions}><Link className={styles.primaryButton} href="/admin/estimations/nouvelle"><Plus size={18} />Nouvelle estimation</Link><form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form></div>
         </section>
         {result.status !== "ready" ? <EmptyState title="Lecture BDD a finaliser" text={result.message} /> : <EstimationContent rows={result.data} params={params} />}
       </section>

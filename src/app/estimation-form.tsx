@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -207,7 +208,7 @@ type EstimationFormProps = {
   initialPropertyType?: RealtyType;
   initialRooms?: number;
   initialSurfaceM2?: number;
-  mode?: "client" | "crm";
+  mode?: "admin" | "client" | "crm";
 };
 
 export function EstimationForm({
@@ -218,7 +219,9 @@ export function EstimationForm({
   initialSurfaceM2,
   mode = "client",
 }: EstimationFormProps) {
+  const router = useRouter();
   const isCrm = mode === "crm";
+  const isInternal = mode === "admin" || isCrm;
   const [step, setStep] = useState<FlowStep>(initialAddress ? "essential" : "address");
   const [form, setForm] = useState<FormState>(() => ({
     ...initialForm,
@@ -394,7 +397,9 @@ export function EstimationForm({
     try {
       const endpoint = isCrm && crmContactId
         ? `/api/admin/crm/contacts/${encodeURIComponent(crmContactId)}/estimations`
-        : "/api/estimations";
+        : mode === "admin"
+          ? "/api/admin/estimations"
+          : "/api/estimations";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -414,7 +419,12 @@ export function EstimationForm({
         throw new Error(data?.error ?? "Estimation indisponible.");
       }
 
-      setEstimation(data as PropertyEstimationResponse);
+      const completedEstimation = data as PropertyEstimationResponse;
+      if (isInternal && completedEstimation.clientEstimationId) {
+        router.push(`/admin/estimations/${completedEstimation.clientEstimationId}`);
+        return;
+      }
+      setEstimation(completedEstimation);
       setStep("result");
     } catch (submitError) {
       setError(
@@ -569,9 +579,9 @@ export function EstimationForm({
         <section className="address-step estimation-shell" aria-labelledby="address-step-title">
           <div className="address-hero">
             <p className="estimation-kicker">Estimation immobilière</p>
-            <h1 id="address-step-title">{isCrm ? "Estimation interne du bien" : <>Quelle est la valeur de votre bien&nbsp;?</>}</h1>
+            <h1 id="address-step-title">{isInternal ? "Estimation professionnelle du bien" : <>Quelle est la valeur de votre bien&nbsp;?</>}</h1>
             <p>
-              {isCrm ? "Parcours CRM complet. Le résultat restera invisible dans l’espace client." : "Obtenez une première estimation en quelques minutes, affinée par notre expertise locale."}
+              {isInternal ? "Renseignez le bien, générez l’étude complète puis ajustez la fourchette dans le back-office." : "Obtenez une première estimation en quelques minutes, affinée par notre expertise locale."}
             </p>
           </div>
 

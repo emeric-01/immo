@@ -459,6 +459,165 @@
   gap: 16px;
 }
 
+.rangeEditor {
+  display: grid;
+  gap: 18px;
+  border: 1px solid #d8c5b3;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff 0%, #fbf6f0 100%);
+  padding: 22px;
+  box-shadow: 0 18px 44px rgba(70, 43, 23, 0.08);
+}
+
+.rangeEditorHeading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.rangeEditorHeading > span {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f3e4d7;
+  color: #8f5735;
+}
+
+.rangeEditorHeading h2,
+.rangeEditorHeading p {
+  margin: 0;
+}
+
+.rangeEditorHeading h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  font-weight: 500;
+}
+
+.rangeEditorHeading div > p:last-child {
+  margin-top: 6px;
+  color: #667085;
+}
+
+.rangeEditorHeading em {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: #f3e4d7;
+  padding: 8px 11px;
+  color: #70401e;
+  font-size: .78rem;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rangeEditor form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.rangeEditor form label {
+  display: grid;
+  gap: 7px;
+  color: #4b515e;
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.rangeEditor form input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #d8c5b3;
+  border-radius: 9px;
+  background: #fff;
+  padding: 0 12px;
+  color: #111;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.rangeEditor form button,
+.generatedRange button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 9px;
+  background: #111;
+  padding: 0 16px;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rangeEditor form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rangeEditor form button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.generatedRange {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid #eadfd5;
+  padding-top: 14px;
+  color: #75695f;
+  font-size: .82rem;
+}
+
+.generatedRange button {
+  min-height: auto;
+  border: 1px solid #d8c5b3;
+  background: #fff;
+  padding: 8px 11px;
+  color: #70401e;
+}
+
+.adminComparableList {
+  display: grid;
+}
+
+.adminComparableList article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  border-bottom: 1px solid #eee7df;
+  padding: 13px 0;
+}
+
+.adminComparableList article:last-child {
+  border-bottom: 0;
+}
+
+.adminComparableList article > div {
+  display: grid;
+  gap: 4px;
+}
+
+.adminComparableList article > div:last-child {
+  text-align: right;
+}
+
+.adminComparableList span {
+  color: #707789;
+  font-size: .82rem;
+}
+
 .internalScorePanel {
   display: grid;
   grid-column: 1 / -1;
@@ -1217,6 +1376,14 @@
     grid-template-columns: 1fr;
   }
 
+  .rangeEditor form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rangeEditor form button {
+    grid-column: 1 / -1;
+  }
+
   .internalScorePanel {
     grid-template-columns: minmax(0, 1fr) auto;
   }
@@ -1250,6 +1417,25 @@
   .pageHeader,
   .detailHeroGrid {
     display: grid;
+  }
+
+  .rangeEditorHeading,
+  .rangeEditor form,
+  .adminComparableList article {
+    grid-template-columns: 1fr;
+  }
+
+  .rangeEditorHeading em {
+    width: fit-content;
+  }
+
+  .generatedRange {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adminComparableList article > div:last-child {
+    text-align: left;
   }
 
   .filterBar,

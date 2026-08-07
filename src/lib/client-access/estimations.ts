@@ -16,6 +16,9 @@ export type ClientEstimationRow = {
   confidence_score: number | null;
   created_at: string;
   high_price: number;
+  generated_high_price?: number;
+  generated_low_price?: number;
+  generated_median_price?: number;
   id: string;
   input_payload: PropertyEstimationInput;
   low_price: number;
@@ -29,6 +32,9 @@ export type ClientEstimationRow = {
   status: "active" | "archived";
   surface_m2: number;
   updated_at: string;
+  range_adjusted?: boolean;
+  range_adjusted_at?: string | null;
+  range_adjusted_by_admin_user_id?: string | null;
   attributed_admin_user_id?: string | null;
   assigned_admin_user_id?: string | null;
   attribution_snapshot?: AttributionSnapshot | Record<string, never>;
@@ -53,9 +59,12 @@ export async function savePropertyEstimation(
         client_account_id: session?.id ?? null,
         confidence_score: result.confidenceScore,
         high_price: result.highPrice,
+        generated_high_price: result.highPrice,
         input_payload: input,
         low_price: result.lowPrice,
+        generated_low_price: result.lowPrice,
         median_price: result.medianPrice,
+        generated_median_price: result.medianPrice,
         postal_code: selectedAddress?.postCode?.[0] ?? null,
         price_per_m2: result.pricePerM2,
         property_type: input.propertyType,
