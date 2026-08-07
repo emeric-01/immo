@@ -133,6 +133,7 @@ export async function createStandaloneAdminEstimation(
         generated_high_price: result.highPrice,
         generated_low_price: result.lowPrice,
         generated_median_price: result.medianPrice,
+        generated_result_payload: result,
         high_price: result.highPrice,
         input_payload: input,
         low_price: result.lowPrice,

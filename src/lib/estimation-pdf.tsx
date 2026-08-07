@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { AdminEstimation } from "@/lib/admin/estimations";
+import type { InseeDistributionItem, InseeHousingProfile } from "@/lib/insee-housing";
 
 const colors = {
   accent: "#b96f41",
@@ -54,13 +55,23 @@ const styles = StyleSheet.create({
   agentName: { fontSize: 10, fontWeight: 700, marginBottom: 3 },
   footer: { bottom: 18, color: colors.muted, fontSize: 6, left: 38, position: "absolute", right: 38, textAlign: "center" },
   pageNumber: { bottom: 18, color: colors.muted, fontSize: 6, position: "absolute", right: 38 },
+  chartGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 16 },
+  chart: { borderColor: colors.border, borderRadius: 6, borderWidth: 1, padding: 12, width: "48.5%" },
+  chartTitle: { fontFamily: "Times-Roman", fontSize: 12, marginBottom: 10 },
+  barRow: { marginBottom: 7 },
+  barLabels: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
+  barLabel: { color: colors.muted, fontSize: 6.5 },
+  barValue: { fontSize: 6.5, fontWeight: 700 },
+  barTrack: { backgroundColor: "#eee7df", borderRadius: 3, height: 5, overflow: "hidden" },
+  barFill: { backgroundColor: colors.accent, borderRadius: 3, height: 5 },
+  sourceNote: { borderTopColor: colors.border, borderTopWidth: 1, color: colors.muted, fontSize: 6.5, lineHeight: 1.4, marginTop: 18, paddingTop: 8 },
 });
 
 type Agent = { email?: string | null; full_name?: string | null } | null;
 
-export async function renderEstimationPdf(estimation: AdminEstimation, agent: Agent) {
+export async function renderEstimationPdf(estimation: AdminEstimation, agent: Agent, options: { inseeProfile?: InseeHousingProfile | null; reportVersion?: number } = {}) {
   const logo = await readFile(path.join(process.cwd(), "public/brand/les-jumelles-logo-noir.png"));
-  return renderToBuffer(<EstimationPdfDocument agent={agent} estimation={estimation} logo={logo} />);
+  return renderToBuffer(<EstimationPdfDocument agent={agent} estimation={estimation} inseeProfile={options.inseeProfile} logo={logo} reportVersion={options.reportVersion} />);
 }
 
 export function estimationPdfFileName(estimation: Pick<AdminEstimation, "address_label" | "id">) {
@@ -68,7 +79,7 @@ export function estimationPdfFileName(estimation: Pick<AdminEstimation, "address
   return `estimation-${address || estimation.id.slice(0, 8)}.pdf`;
 }
 
-function EstimationPdfDocument({ agent, estimation, logo }: { agent: Agent; estimation: AdminEstimation; logo: Buffer }) {
+function EstimationPdfDocument({ agent, estimation, inseeProfile, logo, reportVersion }: { agent: Agent; estimation: AdminEstimation; inseeProfile?: InseeHousingProfile | null; logo: Buffer; reportVersion?: number }) {
   const input = estimation.input_payload;
   const result = estimation.result_payload;
   const features = featureLabels(input);
@@ -121,10 +132,30 @@ function EstimationPdfDocument({ agent, estimation, logo }: { agent: Agent; esti
 
       <View style={styles.agent}>
         <View><Text style={styles.agentName}>{agent?.full_name || "Les Jumelles Immo"}</Text><Text style={styles.small}>{agent?.email || "contact@lesjumelles.immo"}</Text></View>
-        <View><Text style={[styles.small, { textAlign: "right" }]}>Étude mise à jour le {date}</Text><Text style={[styles.small, { textAlign: "right" }]}>Réf. {estimation.id.slice(0, 8).toUpperCase()}</Text></View>
+        <View><Text style={[styles.small, { textAlign: "right" }]}>Étude mise à jour le {date}</Text><Text style={[styles.small, { textAlign: "right" }]}>Réf. {estimation.id.slice(0, 8).toUpperCase()}{reportVersion ? ` · Version ${reportVersion}` : ""}</Text></View>
       </View>
       <Footer />
     </Page>
+
+    {inseeProfile ? <Page size="A4" style={styles.page}>
+      <Text style={styles.eyebrow}>Portrait résidentiel INSEE</Text>
+      <Text style={styles.title}>Le parc immobilier à {inseeProfile.cityName}</Text>
+      <Text style={styles.subtitle}>{formatNumber(inseeProfile.totalHousing)} logements recensés · millésime {inseeProfile.vintage}</Text>
+      <View style={styles.chartGrid}>
+        <DistributionChart items={inseeProfile.housingTypes} title="Maisons et appartements" />
+        <DistributionChart items={inseeProfile.occupancy} title="Occupation du parc" />
+        <DistributionChart items={inseeProfile.tenure} title="Statut des occupants" />
+        <DistributionChart items={inseeProfile.rooms} title="Nombre de pièces" />
+        <DistributionChart items={inseeProfile.surfaces} title="Surface des résidences principales" />
+        <DistributionChart items={inseeProfile.construction} title="Période de construction" />
+      </View>
+      <View style={styles.callout} wrap={false}>
+        <Text style={styles.calloutTitle}>Comment lire ces graphiques ?</Text>
+        <Text style={styles.paragraph}>Ces données décrivent la structure du parc de logements de la commune. Elles apportent un contexte objectif à l’étude, sans remplacer les ventes comparables ni l’analyse du micro-secteur de l’adresse.</Text>
+      </View>
+      <Text style={styles.sourceNote}>Source : INSEE, Recensement de la population {inseeProfile.vintage}, base infracommunale Logement. Profil communal {inseeProfile.cityName} ({inseeProfile.inseeCode}). Données intégrées au rapport lors de sa génération.</Text>
+      <Footer />
+    </Page> : null}
 
     <Page size="A4" style={styles.page}>
       <Text style={styles.eyebrow}>Analyse du marché</Text>
@@ -190,6 +221,13 @@ function EstimationPdfDocument({ agent, estimation, logo }: { agent: Agent; esti
 
 function Fact({ label, value }: { label: string; value: string }) { return <View style={styles.fact}><Text style={styles.factLabel}>{label}</Text><Text style={styles.factValue}>{value}</Text></View>; }
 function Cell({ label, value }: { label: string; value: string }) { return <View style={styles.cell}><Text style={styles.cellLabel}>{label}</Text><Text style={styles.cellValue}>{value}</Text></View>; }
+function DistributionChart({ items, title }: { items: InseeDistributionItem[]; title: string }) {
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  return <View style={styles.chart} wrap={false}><Text style={styles.chartTitle}>{title}</Text>{items.map((item) => {
+    const percentage = total ? item.value / total * 100 : 0;
+    return <View key={item.label} style={styles.barRow}><View style={styles.barLabels}><Text style={styles.barLabel}>{item.label}</Text><Text style={styles.barValue}>{percentage.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %</Text></View><View style={styles.barTrack}><View style={[styles.barFill, { width: `${Math.max(1, percentage)}%` }]} /></View></View>;
+  })}</View>;
+}
 function Footer() { return <><Text style={styles.footer} fixed>Les Jumelles Immo - Agence Séverine Masfrand - Document d’estimation non contractuel</Text><Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} style={styles.pageNumber} fixed /></>; }
 function propertyLabel(value: string) { return value === "house" ? "Maison" : "Appartement"; }
 function conditionLabel(value?: string) { return ({ new: "Excellent état", good: "Bon état", refresh: "À rafraîchir", renovate: "À rénover" } as Record<string, string>)[value ?? ""] ?? "Non renseigné"; }

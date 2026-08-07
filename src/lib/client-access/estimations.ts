@@ -19,6 +19,7 @@ export type ClientEstimationRow = {
   generated_high_price?: number;
   generated_low_price?: number;
   generated_median_price?: number;
+  generated_result_payload?: PropertyEstimation;
   id: string;
   input_payload: PropertyEstimationInput;
   low_price: number;
@@ -65,6 +66,7 @@ export async function savePropertyEstimation(
         generated_low_price: result.lowPrice,
         median_price: result.medianPrice,
         generated_median_price: result.medianPrice,
+        generated_result_payload: result,
         postal_code: selectedAddress?.postCode?.[0] ?? null,
         price_per_m2: result.pricePerM2,
         property_type: input.propertyType,

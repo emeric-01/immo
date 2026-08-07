@@ -182,6 +182,7 @@ export async function createInternalEstimation(contact: CrmContact, session: Adm
         price_per_m2: result.pricePerM2,
         property_type: input.propertyType,
         record_origin: "admin",
+        generated_result_payload: result,
         result_payload: result,
         rooms: input.rooms,
         source: result.source,
