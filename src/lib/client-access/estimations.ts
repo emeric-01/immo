@@ -99,7 +99,7 @@ export async function getClientEstimations(session: ClientSession) {
 export async function getClientEstimation(session: ClientSession, estimationId: string) {
   try {
     const rows = await clientSupabaseRequest<ClientEstimationRow[]>(
-      `property_estimations?id=eq.${encodeURIComponent(estimationId)}&client_account_id=eq.${encodeURIComponent(session.id)}&select=*&limit=1`,
+      `property_estimations?id=eq.${encodeURIComponent(estimationId)}&client_account_id=eq.${encodeURIComponent(session.id)}&status=eq.active&select=*&limit=1`,
     );
 
     return rows[0] ?? null;

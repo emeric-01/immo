@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { updateAdminEstimationAssignment } from "@/lib/admin/estimations";
+import { updateAdminEstimationAssignment, updateAdminEstimationStatus } from "@/lib/admin/estimations";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { getAdminUserSummary } from "@/lib/admin/users";
 
@@ -26,4 +26,22 @@ export async function updateEstimationAssignmentAction(formData: FormData) {
 
   revalidatePath("/admin/estimations");
   revalidatePath(`/admin/estimations/${id}`);
+}
+
+const estimationStatusSchema = z.enum(["active", "archived"]);
+
+export async function updateEstimationStatusAction(formData: FormData) {
+  const session = await requireAdminSession();
+  await requireAdminPermission(session, "estimations:read");
+  if (session.role === "agent") throw new Error("Vous ne pouvez pas archiver ou restaurer cette estimation.");
+
+  const id = z.uuid().parse(formData.get("id"));
+  const status = estimationStatusSchema.parse(formData.get("status"));
+  const result = await updateAdminEstimationStatus(id, status, session);
+  if (!result.success) throw new Error(result.message);
+
+  revalidatePath("/admin/estimations");
+  revalidatePath(`/admin/estimations/${id}`);
+  revalidatePath("/client");
+  revalidatePath(`/client/estimations/${id}`);
 }

@@ -268,6 +268,107 @@ export async function updateAdminEstimationAssignment(
   }
 }
 
+export async function updateAdminEstimationStatus(
+  id: string,
+  status: "active" | "archived",
+  session: AdminSession,
+) {
+  const config = getConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour modifier le statut.", success: false as const };
+
+  if (session.role === "agent") {
+    return { message: "Un agent commercial ne peut pas archiver ou restaurer une estimation.", success: false as const };
+  }
+
+  const current = await getAdminEstimation(id, session);
+  if (current.status !== "ready" || !current.data) {
+    return { message: "Estimation inaccessible.", success: false as const };
+  }
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/property_estimations?id=eq.${encodeURIComponent(id)}&select=id,status`, {
+      body: JSON.stringify({ status }),
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "PATCH",
+    });
+    if (!response.ok) {
+      return { message: `Modification impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    }
+    const rows = await response.json() as Array<{ id: string; status: string }>;
+    return rows[0]
+      ? { success: true as const }
+      : { message: "Le statut n’a pas été modifié.", success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "La modification du statut a échoué.", success: false as const };
+  }
+}
+
+export async function deleteAdminEstimation(id: string, session: AdminSession) {
+  const config = getConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour supprimer une estimation.", success: false as const };
+
+  if (session.role === "agent") {
+    return { message: "Un agent commercial ne peut pas supprimer une estimation.", success: false as const };
+  }
+
+  const current = await getAdminEstimation(id, session);
+  if (current.status !== "ready" || !current.data) {
+    return { message: "Estimation inaccessible.", success: false as const };
+  }
+
+  try {
+    const storageHeaders = {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+    };
+    const [snapshotsResponse, workspacesResponse] = await Promise.all([
+      fetch(`${config.url}/rest/v1/estimation_report_snapshots?estimation_id=eq.${encodeURIComponent(id)}&select=pdf_storage_path`, { cache: "no-store", headers: storageHeaders }),
+      fetch(`${config.url}/rest/v1/estimation_agent_workspaces?source_estimation_id=eq.${encodeURIComponent(id)}&select=photos`, { cache: "no-store", headers: storageHeaders }),
+    ]);
+    if (!snapshotsResponse.ok || !workspacesResponse.ok) {
+      return { message: "Impossible de vérifier les fichiers associés à cette estimation.", success: false as const };
+    }
+
+    const snapshots = await snapshotsResponse.json() as Array<{ pdf_storage_path: string }>;
+    const workspaces = await workspacesResponse.json() as Array<{ photos: Array<{ storagePath?: string }> | null }>;
+    const photoPaths = workspaces.flatMap((workspace) => Array.isArray(workspace.photos)
+      ? workspace.photos.flatMap((photo) => typeof photo.storagePath === "string" ? [photo.storagePath] : [])
+      : []);
+
+    const response = await fetch(`${config.url}/rest/v1/property_estimations?id=eq.${encodeURIComponent(id)}&select=id`, {
+      cache: "no-store",
+      headers: { ...storageHeaders, Prefer: "return=representation" },
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      return { message: `Suppression impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    }
+    const rows = await response.json() as Array<{ id: string }>;
+    if (!rows[0]) return { message: "Aucune estimation n’a été supprimée.", success: false as const };
+
+    const storageRemovals = [
+      ...snapshots.map((snapshot) => ({ bucket: "estimation-reports", path: snapshot.pdf_storage_path })),
+      ...photoPaths.map((path) => ({ bucket: "estimation-report-assets", path })),
+    ];
+    const removalResults = await Promise.allSettled(storageRemovals.map(async ({ bucket, path }) => {
+      const removal = await fetch(`${config.url}/storage/v1/object/${bucket}/${path}`, { headers: storageHeaders, method: "DELETE" });
+      if (!removal.ok && removal.status !== 404) throw new Error(await removal.text());
+    }));
+    const storageCleanupIncomplete = removalResults.some((result) => result.status === "rejected");
+    if (storageCleanupIncomplete) console.error("Suppression Storage incomplète pour l’estimation", id);
+
+    return { storageCleanupIncomplete, success: true as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "La suppression a échoué.", success: false as const };
+  }
+}
+
 export function getAdminEstimationStats(rows: AdminEstimation[]): AdminEstimationStats {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
