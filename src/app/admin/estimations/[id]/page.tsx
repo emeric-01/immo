@@ -6,12 +6,13 @@ import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminClientName } from "@/lib/admin/clients";
 import { getAdminEstimation } from "@/lib/admin/estimations";
 import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
-import { getAdminUserSummary } from "@/lib/admin/users";
+import { listAdminUsers } from "@/lib/admin/users";
 import type { PropertyEstimationInput } from "@/lib/immo-data";
 import styles from "../../admin.module.css";
 import { listEstimationReportSnapshots } from "@/lib/admin/estimation-reports";
 import { getWorkspaceBySourceEstimation } from "@/lib/admin/estimation-workspaces";
 import { CreateAgentWorkspaceButton } from "./CreateAgentWorkspaceButton";
+import { updateEstimationAssignmentAction } from "../actions";
 
 export const metadata: Metadata = { title: "Détail estimation | Admin" };
 export const dynamic = "force-dynamic";
@@ -23,12 +24,18 @@ export default async function AdminEstimationDetailPage({ params }: { params: Pr
   const result = await getAdminEstimation(id, session);
   if (result.status !== "ready" || !result.data) return <Frame><section className={styles.emptyState}><ShieldCheck size={26} /><h1>Estimation indisponible</h1><p>{result.status === "ready" ? "Cette estimation n’existe pas." : result.message}</p></section></Frame>;
   const estimation = result.data;
-  const workspace = await getWorkspaceBySourceEstimation(estimation.id, session);
-  const assignedAgent = await getAdminUserSummary(estimation.assigned_admin_user_id);
-  const attributedAgent = await getAdminUserSummary(estimation.attributed_admin_user_id);
-  const creatorAgent = await getAdminUserSummary(estimation.created_by_admin_user_id);
+  const [workspace, usersResult, snapshots] = await Promise.all([
+    getWorkspaceBySourceEstimation(estimation.id, session),
+    listAdminUsers(),
+    listEstimationReportSnapshots(estimation.id),
+  ]);
+  const users = usersResult.status === "ready" ? usersResult.data : [];
+  const usersById = new Map(users.map((user) => [user.id, user]));
+  const agents = users.filter((user) => user.is_active && user.role === "agent");
+  const assignedAgent = estimation.assigned_admin_user_id ? usersById.get(estimation.assigned_admin_user_id) : null;
+  const attributedAgent = estimation.attributed_admin_user_id ? usersById.get(estimation.attributed_admin_user_id) : null;
+  const creatorAgent = estimation.created_by_admin_user_id ? usersById.get(estimation.created_by_admin_user_id) : null;
   const commercialAgent = assignedAgent ?? attributedAgent ?? creatorAgent;
-  const snapshots = await listEstimationReportSnapshots(estimation.id);
   const generatedLowPrice = estimation.generated_low_price ?? estimation.low_price;
   const generatedMedianPrice = estimation.generated_median_price ?? estimation.median_price;
   const generatedHighPrice = estimation.generated_high_price ?? estimation.high_price;
@@ -44,7 +51,15 @@ export default async function AdminEstimationDetailPage({ params }: { params: Pr
       <InfoPanel title="Lecture du marché"><Metric icon={TrendingUp} label="Prix moyen du secteur" value={report.market?.sectorPricePerM2 ? `${formatNumber(report.market.sectorPricePerM2)} €/m2` : "Non disponible"} /><Metric icon={TrendingUp} label="Évolution sur 12 mois" value={report.market?.priceEvolution12Months !== undefined ? `${report.market.priceEvolution12Months > 0 ? "+" : ""}${report.market.priceEvolution12Months} %` : "Non disponible"} /><Metric icon={Clock3} label="Délai de vente" value={report.market?.saleDurationDays ? `${report.market.saleDurationDays} jours` : "Non disponible"} /><Metric icon={Gauge} label="Demande" value={report.market?.demandLevel ?? "Non disponible"} /></InfoPanel>
       <InfoPanel title={`Ventes comparables (${report.comparables.length})`} wide>{report.comparables.length ? <div className={styles.adminComparableList}>{report.comparables.map((sale) => <article key={sale.id}><div><strong>{sale.label}</strong><span>{sale.surfaceM2 ? `${sale.surfaceM2} m2` : "Surface NC"} · {sale.rooms ? `${sale.rooms} pièces` : "Pièces NC"} · {sale.distanceMeters !== undefined ? formatDistance(sale.distanceMeters) : "Distance NC"}</span></div><div><strong>{formatCurrency(sale.price)}</strong><span>{sale.pricePerM2 ? `${formatNumber(sale.pricePerM2)} €/m2` : "Prix/m2 NC"} · {sale.soldAt ? formatShortDate(sale.soldAt) : "Date NC"}</span></div></article>)}</div> : <p className={styles.helpText}>Aucune transaction comparable n’a été retournée pour cette adresse.</p>}</InfoPanel>
       <InfoPanel title="Suivi"><Metric icon={CalendarDays} label="Création" value={formatDate(estimation.created_at)} /><Metric icon={CalendarDays} label="Mise à jour" value={formatDate(estimation.updated_at)} /><Metric icon={ShieldCheck} label="Statut" value={estimation.status === "active" ? "Active" : "Archivée"} /><Metric icon={Gauge} label="Source" value={estimation.source === "immo-data" ? "Immo Data" : "Mode démonstration"} /></InfoPanel>
-      <InfoPanel title="Attribution commerciale"><Metric icon={UsersRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} /><Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} /><Metric icon={ShieldCheck} label="Mode de création" value={formatRecordOrigin(estimation.record_origin)} /><Metric icon={ShieldCheck} label="Origine" value={formatAdminAttribution(estimation.attribution_snapshot)} /><Metric icon={Gauge} label="Campagne" value={formatAdminAttributionCampaign(estimation.attribution_snapshot)} /></InfoPanel>
+      <InfoPanel title="Attribution commerciale">
+        {session.role !== "agent" ? <form action={updateEstimationAssignmentAction} className={styles.statusForm}>
+          <input name="id" type="hidden" value={estimation.id} />
+          <label htmlFor="assignedAdminUserId">Modifier le commercial responsable</label>
+          <div><select defaultValue={estimation.assigned_admin_user_id ?? ""} id="assignedAdminUserId" name="assignedAdminUserId"><option value="">Non attribué</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.full_name}</option>)}</select><button type="submit">Enregistrer</button></div>
+          <p className={styles.helpText}>L’origine Internet et la campagne restent conservées.</p>
+        </form> : null}
+        <Metric icon={UsersRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} /><Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} /><Metric icon={ShieldCheck} label="Mode de création" value={formatRecordOrigin(estimation.record_origin)} /><Metric icon={ShieldCheck} label="Origine" value={formatAdminAttribution(estimation.attribution_snapshot)} /><Metric icon={Gauge} label="Campagne" value={formatAdminAttributionCampaign(estimation.attribution_snapshot)} />
+      </InfoPanel>
       <InfoPanel title="Historique des rapports PDF" wide>{snapshots.length ? <div className={styles.adminComparableList}>{snapshots.map((snapshot) => <article key={snapshot.id}><div><strong>Version {snapshot.version}</strong><span>Créée le {formatDate(snapshot.created_at)} · archive immuable</span></div><a className={styles.backLink} href={`/admin/api/estimations/${estimation.id}/pdf/${snapshot.id}`}><Download size={16} />Télécharger</a></article>)}</div> : <p className={styles.helpText}>Aucun rapport archivé. Le premier PDF généré deviendra la version 1 et conservera toutes ses données.</p>}</InfoPanel>
     </section>
   </Frame>;

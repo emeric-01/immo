@@ -7,7 +7,7 @@ import sharp from "sharp";
 import { Document, Image, Line, Link as PdfLink, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { AdminEstimation } from "@/lib/admin/estimations";
 import type { InseeDistributionItem, InseeHousingProfile } from "@/lib/insee-housing";
-import { historyDurationLabel } from "@/lib/price-history";
+import { buildPriceHistoryChartScale, historyDurationLabel } from "@/lib/price-history";
 import type { EstimationAgentWorkspace, EstimationWorkspacePhoto } from "@/lib/admin/estimation-workspaces";
 import type { EstimationReportBlockId } from "@/lib/estimation-report-config";
 
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
   mapImage: { borderRadius: 7, height: 220, marginBottom: 9, objectFit: "cover", width: "100%" },
   mapLink: { color: colors.accent, fontSize: 7, textDecoration: "none" },
   priceHistoryPanel: { backgroundColor: colors.soft, borderColor: colors.border, borderRadius: 7, borderWidth: 1, padding: 14 },
-  priceHistorySvg: { height: 155, width: "100%" },
-  priceHistoryLegend: { flexDirection: "row", justifyContent: "space-between", marginTop: 5 },
+  priceHistorySvg: { height: 170, width: "100%" },
+  priceHistoryLegend: { flexDirection: "row", justifyContent: "center", marginTop: 5, textAlign: "center" },
   historyValue: { color: colors.accent, fontSize: 12, fontWeight: 700, marginBottom: 8 },
   inseeKpis: { flexDirection: "row", gap: 7, marginBottom: 12 },
   inseeKpi: { backgroundColor: colors.pale, borderRadius: 6, flexGrow: 1, padding: 10 },
@@ -295,13 +295,12 @@ function PriceHistoryPdf({ estimation }: { estimation: AdminEstimation }) {
   const points = market?.cityPriceHistory?.length
     ? market.cityPriceHistory.map((point) => ({ label: point.period, value: propertyType === "house" ? point.house : point.apartment }))
     : (market?.priceHistory ?? []).map((point) => ({ label: point.period, value: point.value }));
-  if (points.length < 2) return <TextSection title="Évolution du prix au m²" text="L’historique du marché n’était pas disponible lors de la génération de cette version." />;
-  const values = points.map((point) => point.value);
-  const min = Math.min(...values); const max = Math.max(...values); const range = Math.max(1, max - min);
-  const path = points.map((point, index) => `${index ? "L" : "M"} ${18 + index / (points.length - 1) * 464} ${18 + (max - point.value) / range * 104}`).join(" ");
-  const delta = (values.at(-1)! - values[0]) / values[0] * 100;
-  const firstPeriod = points[0].label; const lastPeriod = points.at(-1)!.label;
-  return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Évolution du prix au m²</Text><View style={styles.priceHistoryPanel}><Text style={styles.historyValue}>{formatNumber(values.at(-1)!)} €/m² · {delta >= 0 ? "+" : ""}{delta.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % depuis {shortPeriod(firstPeriod)}</Text><Svg style={styles.priceHistorySvg} viewBox="0 0 500 150"><Line stroke="#e2d8cf" strokeDasharray="4 6" x1="18" x2="482" y1="122" y2="122" /><Path d={`${path} L 482 132 L 18 132 Z`} fill="#f2dfd2" /><Path d={path} fill="none" stroke={colors.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} /></Svg><View style={styles.priceHistoryLegend}><Text style={styles.small}>{shortPeriod(firstPeriod)}</Text><Text style={styles.small}>{historyDurationLabel(firstPeriod, lastPeriod)} · {propertyType === "house" ? "Maisons" : "Appartements"}</Text><Text style={styles.small}>{shortPeriod(lastPeriod)}</Text></View></View></View>;
+  const chart = buildPriceHistoryChartScale(points);
+  if (chart.points.length < 2) return <TextSection title="Évolution du prix au m²" text="L’historique du marché n’était pas disponible lors de la génération de cette version." />;
+  const left = 58; const right = 482; const top = 20; const bottom = 128;
+  const path = chart.points.map((point, index) => `${index ? "L" : "M"} ${left + point.xRatio * (right - left)} ${top + point.yRatio * (bottom - top)}`).join(" ");
+  const firstPeriod = chart.points[0].label; const lastPeriod = chart.points.at(-1)!.label;
+  return <View style={styles.section} wrap={false}><Text style={styles.sectionTitle}>Évolution du prix au m²</Text><View style={styles.priceHistoryPanel}><Text style={styles.historyValue}>{formatNumber(chart.points.at(-1)!.value)} €/m² · {chart.delta >= 0 ? "+" : ""}{chart.delta.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % depuis {shortPeriod(firstPeriod)}</Text><Svg style={styles.priceHistorySvg} viewBox="0 0 500 165"><Path d={`${path} L ${right} ${bottom} L ${left} ${bottom} Z`} fill="#f2dfd2" />{chart.yTicks.map((tick) => { const y = top + (chart.yMax - tick) / (chart.yMax - chart.yMin) * (bottom - top); return <Line key={`y-${tick}`} stroke="#d9cfc5" strokeDasharray="3 5" strokeWidth={0.7} x1={left} x2={right} y1={y} y2={y} />; })}{chart.xTicks.map((tick) => { const x = left + tick.xRatio * (right - left); return <Line key={`x-${tick.label}`} stroke="#e4dbd2" strokeDasharray="3 5" strokeWidth={0.6} x1={x} x2={x} y1={top} y2={bottom} />; })}<Path d={path} fill="none" stroke={colors.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} /><Text style={{ fill: colors.muted, fontSize: 6, fontWeight: 700 }} x={8} y={12}>€/m²</Text>{chart.yTicks.map((tick) => { const y = top + (chart.yMax - tick) / (chart.yMax - chart.yMin) * (bottom - top); return <Text key={`ylabel-${tick}`} style={{ fill: colors.muted, fontSize: 6 }} textAnchor="end" x={left - 7} y={y + 2}>{formatNumber(tick)}</Text>; })}{chart.xTicks.map((tick, index) => { const x = left + tick.xRatio * (right - left); return <Text key={`xlabel-${tick.label}`} style={{ fill: colors.muted, fontSize: 6 }} textAnchor={index === 0 ? "start" : index === chart.xTicks.length - 1 ? "end" : "middle"} x={x} y={148}>{shortPeriod(tick.label)}</Text>; })}</Svg><View style={styles.priceHistoryLegend}><Text style={styles.small}>{historyDurationLabel(firstPeriod, lastPeriod)} · prix moyen observé · {propertyType === "house" ? "maisons" : "appartements"}</Text></View></View></View>;
 }
 
 function InseeKpi({ label, value }: { label: string; value: string }) { return <View style={styles.inseeKpi}><Text style={styles.inseeKpiValue}>{value}</Text><Text style={styles.small}>{label}</Text></View>; }

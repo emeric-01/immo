@@ -227,6 +227,47 @@ export async function updateAdminEstimationRange(
   }
 }
 
+export async function updateAdminEstimationAssignment(
+  id: string,
+  assignedAdminUserId: string | null,
+  session: AdminSession,
+) {
+  const config = getConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour modifier l’attribution.", success: false as const };
+
+  if (session.role === "agent") {
+    return { message: "Un agent commercial ne peut pas réattribuer une estimation.", success: false as const };
+  }
+
+  const current = await getAdminEstimation(id, session);
+  if (current.status !== "ready" || !current.data) {
+    return { message: "Estimation inaccessible.", success: false as const };
+  }
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/property_estimations?id=eq.${encodeURIComponent(id)}`, {
+      body: JSON.stringify({ assigned_admin_user_id: assignedAdminUserId }),
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "PATCH",
+    });
+    if (!response.ok) {
+      return { message: `Attribution impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    }
+    const rows = await response.json() as Array<{ id: string }>;
+    return rows[0]
+      ? { success: true as const }
+      : { message: "L’attribution n’a pas été enregistrée.", success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "L’attribution a échoué.", success: false as const };
+  }
+}
+
 export function getAdminEstimationStats(rows: AdminEstimation[]): AdminEstimationStats {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);

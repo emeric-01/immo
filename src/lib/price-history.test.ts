@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { historyDurationLabel, selectWidestCityPriceHistory } from "./price-history";
+import { buildPriceHistoryChartScale, historyDurationLabel, selectWidestCityPriceHistory } from "./price-history";
 
 describe("selectWidestCityPriceHistory", () => {
   it("préfère la série qui remonte le plus loin même si elle a moins de points", () => {
@@ -23,5 +23,31 @@ describe("selectWidestCityPriceHistory", () => {
 describe("historyDurationLabel", () => {
   it("présente clairement le recul disponible", () => {
     expect(historyDurationLabel("2014-01", "2026-07")).toBe("12,5 ans d’historique");
+  });
+});
+
+describe("buildPriceHistoryChartScale", () => {
+  it("crée des repères lisibles pour les deux axes", () => {
+    const points = Array.from({ length: 13 }, (_, index) => ({ label: String(2014 + index), value: 2520 + index * 18 }));
+    const scale = buildPriceHistoryChartScale(points);
+
+    expect(scale.xTicks).toHaveLength(5);
+    expect(scale.xTicks[0]).toMatchObject({ label: "2014", xRatio: 0 });
+    expect(scale.xTicks.at(-1)).toMatchObject({ label: "2026", xRatio: 1 });
+    expect(scale.yTicks.length).toBeGreaterThanOrEqual(3);
+    expect(scale.yMax).toBeGreaterThanOrEqual(2736);
+    expect(scale.yMin).toBeLessThanOrEqual(2520);
+    expect(scale.points.every((point) => point.yRatio >= 0 && point.yRatio <= 1)).toBe(true);
+  });
+
+  it("ignore les valeurs nulles qui fausseraient l’échelle", () => {
+    const scale = buildPriceHistoryChartScale([
+      { label: "2024", value: 0 },
+      { label: "2025", value: 2600 },
+      { label: "2026", value: 2800 },
+    ]);
+
+    expect(scale.points.map((point) => point.label)).toEqual(["2025", "2026"]);
+    expect(scale.yMin).toBeGreaterThan(0);
   });
 });

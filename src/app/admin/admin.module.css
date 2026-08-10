@@ -704,11 +704,13 @@
 .reportMapLink { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; color: #8c4d29; font-size: .76rem; font-weight: 800; text-decoration: none; }
 .livePriceChart { position: relative; overflow: hidden; border: 1px solid #e4d8cd; border-radius: 12px; background: linear-gradient(#fff, #fcf8f4); padding: 22px 18px 13px; }
 .livePriceChart svg { width: 100%; height: auto; overflow: visible; }
-.livePriceChart svg line { stroke: #dfd5cb; stroke-dasharray: 5 7; }
+.livePriceChart svg line { stroke: #dfd5cb; stroke-dasharray: 4 7; stroke-width: 1; }
 .priceChartArea { fill: url(#price-fill); stroke: none; }
 .priceChartLine { fill: none; stroke: #b66d40; stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
+.priceChartTick { fill: #837a71; font-size: 11px; font-weight: 650; }
+.priceChartUnit { fill: #6f665e; font-size: 11px; font-weight: 800; }
 .chartTopValue { position: absolute; top: 18px; right: 20px; color: #1e1a17; font-size: .9rem; font-weight: 850; }
-.chartAxis { display: flex; justify-content: space-between; color: #837a71; font-size: .68rem; }
+.chartAxis { display: flex; justify-content: center; color: #837a71; font-size: .68rem; text-align: center; }
 .trendPositive,
 .trendNegative { border-radius: 999px; padding: 7px 10px; font-size: .8rem; }
 .trendPositive { background: #edf2e8; color: #596943; }
