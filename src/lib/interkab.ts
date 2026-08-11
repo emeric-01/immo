@@ -137,6 +137,8 @@ export function parseInterkabDetailPage(html: string) {
         !/^(surface|\d+\s*(chambre|wc|salle))/i.test(value),
       );
       const locationTitle = plainText(capture(html, /LOCALISATION DU BIEN[\s\S]*?property__subtitle[^>]*>([\s\S]*?)<\/h2>/i));
+      const parsedNeighborhood = locationTitle.replace(/^Quartier\s+/i, "").replace(/\s+à\s+[^,]+$/i, "");
+      const neighborhood = /^(description|caract[ée]ristiques|diagnostics?|localisation)/i.test(parsedNeighborhood) ? null : parsedNeighborhood || null;
       return {
         agencyName: typeof agency?.name === "string" ? agency.name : null,
         agencyPhone: typeof agency?.telephone === "string" ? agency.telephone : null,
@@ -144,7 +146,7 @@ export function parseInterkabDetailPage(html: string) {
         bathrooms: numberFrom(characteristics.find((value) => /salle de bain|salle d'eau|salle de bain\/eau/i.test(value))),
         features: [...new Set(featureLabels)],
         landAreaM2: numberFrom(characteristics.find((value) => /jardin|terrain/i.test(value))),
-        neighborhood: locationTitle.replace(/^Quartier\s+/i, "").replace(/\s+à\s+[^,]+$/i, "") || null,
+        neighborhood,
         publishedAt: typeof offer?.validFrom === "string" ? offer.validFrom : null,
         toilets: numberFrom(characteristics.find((value) => /\bWC\b/i.test(value))),
       };
@@ -230,23 +232,11 @@ export type InterkabListingFilters = {
   minSurface?: number;
   page?: number;
   pageSize?: number;
+  sort?: "recent" | "price_asc" | "price_desc" | "surface_asc" | "surface_desc" | "ppm_asc" | "ppm_desc";
 };
 
-export async function getStoredInterkabListings(filters: InterkabListingFilters = {}) {
-  const pageSize = Math.min(Math.max(filters.pageSize ?? 24, 1), 60);
-  const page = Math.max(filters.page ?? 1, 1);
-  const params = new URLSearchParams({ status: "eq.active", select: "*", order: "last_seen_at.desc" });
-  if (filters.inseeCode) params.set("city_insee_code", `eq.${filters.inseeCode}`);
-  if (filters.minPrice !== undefined) params.set("price", `gte.${filters.minPrice}`);
-  if (filters.maxPrice !== undefined) params.append("price", `lte.${filters.maxPrice}`);
-  if (filters.minSurface !== undefined) params.set("surface_m2", `gte.${filters.minSurface}`);
-  if (filters.maxSurface !== undefined) params.append("surface_m2", `lte.${filters.maxSurface}`);
-  const start = (page - 1) * pageSize;
-  const response = await supabaseRequest(`interkab_listings?${params}`, {
-    headers: { Prefer: "count=exact", Range: `${start}-${start + pageSize - 1}` },
-  });
-  const rows = await response.json() as Array<Record<string, unknown>>;
-  const listings = rows.map((row): InterkabListing => ({
+function storedListing(row: Record<string, unknown>): InterkabListing {
+  return {
     externalId: String(row.external_id), listingUrl: String(row.listing_url), imageUrl: row.image_url as string | null,
     propertyType: String(row.property_type), city: String(row.city_label), neighborhood: row.neighborhood as string | null,
     price: row.price === null ? null : Number(row.price), surfaceM2: row.surface_m2 === null ? null : Number(row.surface_m2),
@@ -255,9 +245,44 @@ export async function getStoredInterkabListings(filters: InterkabListingFilters 
     features: (row.features as string[]) ?? [], agencyName: row.agency_name as string | null,
     agencyPhone: row.agency_phone as string | null, agencySiteUrl: row.agency_site_url as string | null,
     agentLabel: row.agent_label as string | null, publishedAt: row.published_at as string | null,
-  }));
+  };
+}
+
+function listingFilterParams(filters: InterkabListingFilters) {
+  const params = new URLSearchParams({ status: "eq.active", select: "*" });
+  if (filters.inseeCode) params.set("city_insee_code", `eq.${filters.inseeCode}`);
+  if (filters.minPrice !== undefined) params.set("price", `gte.${filters.minPrice}`);
+  if (filters.maxPrice !== undefined) params.append("price", `lte.${filters.maxPrice}`);
+  if (filters.minSurface !== undefined) params.set("surface_m2", `gte.${filters.minSurface}`);
+  if (filters.maxSurface !== undefined) params.append("surface_m2", `lte.${filters.maxSurface}`);
+  return params;
+}
+
+export async function getStoredInterkabListings(filters: InterkabListingFilters = {}) {
+  const pageSize = Math.min(Math.max(filters.pageSize ?? 24, 1), 60);
+  const page = Math.max(filters.page ?? 1, 1);
+  const params = listingFilterParams(filters);
+  const orders = { recent: "last_seen_at.desc", price_asc: "price.asc.nullslast", price_desc: "price.desc.nullslast", surface_asc: "surface_m2.asc.nullslast", surface_desc: "surface_m2.desc.nullslast", ppm_asc: "price_per_m2.asc.nullslast", ppm_desc: "price_per_m2.desc.nullslast" } as const;
+  params.set("order", orders[filters.sort ?? "recent"]);
+  const start = (page - 1) * pageSize;
+  const response = await supabaseRequest(`interkab_listings?${params}`, {
+    headers: { Prefer: "count=exact", Range: `${start}-${start + pageSize - 1}` },
+  });
+  const rows = await response.json() as Array<Record<string, unknown>>;
+  const listings = rows.map(storedListing);
   const total = Number(response.headers.get("content-range")?.split("/")[1] ?? listings.length);
   return { listings, page, pageSize, total, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
+}
+
+export async function getAllStoredInterkabListings(filters: InterkabListingFilters) {
+  const params = listingFilterParams(filters);
+  const listings: InterkabListing[] = [];
+  for (let start = 0; ; start += 1000) {
+    const response = await supabaseRequest(`interkab_listings?${params}`, { headers: { Range: `${start}-${start + 999}` } });
+    const rows = await response.json() as Array<Record<string, unknown>>;
+    listings.push(...rows.map(storedListing));
+    if (rows.length < 1000) return listings;
+  }
 }
 
 async function getInterkabListingRows(inseeCode: string) {

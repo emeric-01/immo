@@ -48,4 +48,9 @@ describe("Interkab pilot parser", () => {
       toilets: 3,
     });
   });
+
+  it("does not confuse a section heading with a neighborhood", () => {
+    const detail = parseInterkabDetailPage(`<script type="application/ld+json">{"@type":"House"}</script><p>LOCALISATION DU BIEN</p><h2 class="property__subtitle">Description du bien</h2>`);
+    expect(detail.neighborhood).toBeNull();
+  });
 });
