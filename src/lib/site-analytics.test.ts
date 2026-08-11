@@ -30,7 +30,7 @@ describe("site analytics", () => {
     adminRestMock.mockImplementation(async (path) => {
       if (path.startsWith("attribution_touches?")) return [];
       if (path.includes("offset=0")) return Array.from({ length: 1_000 }, () => event("bot"));
-      if (path.includes("offset=1000")) return [event("human", "visitor-1")];
+      if (path.includes("offset=1000")) return [event("human", "visitor-1"), event("human", "visitor-1")];
       return [];
     });
 
@@ -38,9 +38,10 @@ describe("site analytics", () => {
 
     expect(summary.totals).toMatchObject({
       botViews: 1_000,
-      humanViews: 1,
+      humanViews: 2,
       uniqueVisitors: 1,
     });
+    expect(summary.daily.at(-1)).toMatchObject({ humains: 2, visiteurs: 1 });
     expect(adminRestMock.mock.calls.map(([path]) => path)).toEqual(expect.arrayContaining([
       expect.stringContaining("limit=1000&offset=0"),
       expect.stringContaining("limit=1000&offset=1000"),

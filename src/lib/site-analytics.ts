@@ -15,7 +15,7 @@ type SiteAnalyticsEvent = {
 
 export type SiteAnalyticsSummary = {
   totals: { humanViews: number; botViews: number; suspectedViews: number; uniqueVisitors: number; conversions: number; conversionRate: number };
-  daily: Array<{ date: string; humains: number; robots: number; incertains: number }>;
+  daily: Array<{ date: string; humains: number; visiteurs: number; robots: number; incertains: number }>;
   audience: Array<{ name: string; value: number; color: string }>;
   devices: Array<{ name: string; value: number }>;
   pages: Array<{ name: string; value: number }>;
@@ -59,18 +59,27 @@ export async function getSiteAnalytics(days = 30): Promise<SiteAnalyticsSummary>
   const suspected = views.filter((event) => event.audience_type === "suspected");
   const conversions = events.filter((event) => event.event_type === "conversion" && event.audience_type === "human");
   const dailyMap = new Map<string, { humains: number; robots: number; incertains: number }>();
-  for (let index = safeDays - 1; index >= 0; index--) dailyMap.set(new Date(Date.now() - index * 86_400_000).toISOString().slice(0, 10), { humains: 0, robots: 0, incertains: 0 });
+  const dailyVisitors = new Map<string, Set<string>>();
+  for (let index = safeDays - 1; index >= 0; index--) {
+    const date = new Date(Date.now() - index * 86_400_000).toISOString().slice(0, 10);
+    dailyMap.set(date, { humains: 0, robots: 0, incertains: 0 });
+    dailyVisitors.set(date, new Set());
+  }
   for (const event of views) {
-    const day = dailyMap.get(event.created_at.slice(0, 10));
+    const date = event.created_at.slice(0, 10);
+    const day = dailyMap.get(date);
     if (!day) continue;
-    if (event.audience_type === "human") day.humains++;
+    if (event.audience_type === "human") {
+      day.humains++;
+      if (event.visitor_hash) dailyVisitors.get(date)?.add(event.visitor_hash);
+    }
     else if (event.audience_type === "bot") day.robots++;
     else day.incertains++;
   }
   const uniqueVisitors = new Set(humans.map((event) => event.visitor_hash).filter(Boolean)).size;
   return {
     totals: { humanViews: humans.length, botViews: bots.length, suspectedViews: suspected.length, uniqueVisitors, conversions: conversions.length, conversionRate: humans.length ? Number((conversions.length / humans.length * 100).toFixed(1)) : 0 },
-    daily: [...dailyMap].map(([date, values]) => ({ date: date.slice(5), ...values })),
+    daily: [...dailyMap].map(([date, values]) => ({ date: date.slice(5), ...values, visiteurs: dailyVisitors.get(date)?.size ?? 0 })),
     audience: [{ name: "Humains", value: humans.length, color: "#b77547" }, { name: "Robots identifiés", value: bots.length, color: "#171512" }, { name: "Trafic incertain", value: suspected.length, color: "#c9bfb4" }],
     devices: count(humans.map((event) => event.device_type)),
     pages: count(humans.map((event) => event.path), 10),
