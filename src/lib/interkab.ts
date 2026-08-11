@@ -69,7 +69,9 @@ function capture(block: string, pattern: RegExp) {
 }
 
 export function parseInterkabSearchPage(html: string): Omit<InterkabPilot, "fetchedAt" | "sourceUrl"> {
-  const resultCount = numberFrom(capture(html, /<h2[^>]*class="[^"]*section__results[^"]*"[^>]*>\s*([\d\s]+)\s+annonces/i)) ?? 0;
+  const resultCount = numberFrom(capture(html, /<[^>]+class="[^"]*section__results[^"]*"[^>]*>\s*([\d\s]+)\s+(?:annonces|r[ée]sultats)/i))
+    ?? numberFrom(capture(html, /<title>\s*([\d\s]+)\s+annonces/i))
+    ?? 0;
   const pageCount = numberFrom(capture(html, /class="[^"]*load_more[^"]*"[^>]*data-max="(\d+)"/i)) ?? 1;
   const listings: InterkabListing[] = [];
   const cardPattern = /<a href="([^"]*\/annonces\/(\d+)-[^"]*)"[^>]*class="[^"]*card-property[^"]*"[^>]*>([\s\S]*?)<\/a><!-- \/\.card-property -->/gi;
@@ -220,10 +222,31 @@ export async function getInterkabCities() {
   }>>;
 }
 
-export async function getStoredInterkabListings(inseeCode: string) {
-  const response = await supabaseRequest(`interkab_listings?city_insee_code=eq.${encodeURIComponent(inseeCode)}&status=eq.active&select=*&order=last_seen_at.desc&limit=100`);
+export type InterkabListingFilters = {
+  inseeCode?: string;
+  maxPrice?: number;
+  maxSurface?: number;
+  minPrice?: number;
+  minSurface?: number;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function getStoredInterkabListings(filters: InterkabListingFilters = {}) {
+  const pageSize = Math.min(Math.max(filters.pageSize ?? 24, 1), 60);
+  const page = Math.max(filters.page ?? 1, 1);
+  const params = new URLSearchParams({ status: "eq.active", select: "*", order: "last_seen_at.desc" });
+  if (filters.inseeCode) params.set("city_insee_code", `eq.${filters.inseeCode}`);
+  if (filters.minPrice !== undefined) params.set("price", `gte.${filters.minPrice}`);
+  if (filters.maxPrice !== undefined) params.append("price", `lte.${filters.maxPrice}`);
+  if (filters.minSurface !== undefined) params.set("surface_m2", `gte.${filters.minSurface}`);
+  if (filters.maxSurface !== undefined) params.append("surface_m2", `lte.${filters.maxSurface}`);
+  const start = (page - 1) * pageSize;
+  const response = await supabaseRequest(`interkab_listings?${params}`, {
+    headers: { Prefer: "count=exact", Range: `${start}-${start + pageSize - 1}` },
+  });
   const rows = await response.json() as Array<Record<string, unknown>>;
-  return rows.map((row): InterkabListing => ({
+  const listings = rows.map((row): InterkabListing => ({
     externalId: String(row.external_id), listingUrl: String(row.listing_url), imageUrl: row.image_url as string | null,
     propertyType: String(row.property_type), city: String(row.city_label), neighborhood: row.neighborhood as string | null,
     price: row.price === null ? null : Number(row.price), surfaceM2: row.surface_m2 === null ? null : Number(row.surface_m2),
@@ -233,6 +256,8 @@ export async function getStoredInterkabListings(inseeCode: string) {
     agencyPhone: row.agency_phone as string | null, agencySiteUrl: row.agency_site_url as string | null,
     agentLabel: row.agent_label as string | null, publishedAt: row.published_at as string | null,
   }));
+  const total = Number(response.headers.get("content-range")?.split("/")[1] ?? listings.length);
+  return { listings, page, pageSize, total, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
 async function getInterkabListingRows(inseeCode: string) {

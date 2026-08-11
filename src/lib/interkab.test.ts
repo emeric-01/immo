@@ -5,6 +5,11 @@ describe("Interkab pilot parser", () => {
   it("reads the internal city identifier selected by Interkab", () => {
     expect(parseInterkabLocationId('<select id="search_uniqueGeolocalite"><option value="4497_689" selected="selected">Gémenos</option></select>')).toBe("4497_689");
   });
+
+  it("reads the result count from a city SEO page", () => {
+    const parsed = parseInterkabSearchPage('<title>112 annonces de ventes immobilières sur Aubagne | Interkab</title><div class="mb-0 level-6 section__results">112 résultats</div>');
+    expect(parsed.resultCount).toBe(112);
+  });
   it("reads a property card and the Aubagne result count", () => {
     const parsed = parseInterkabSearchPage(`
       <h2 class="level-6 section__results">110 annonces immobilières</h2>
