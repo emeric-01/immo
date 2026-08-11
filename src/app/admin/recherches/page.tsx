@@ -30,6 +30,7 @@ const statusOptions = [
   { label: "Qualifie", value: "qualified" },
   { label: "En pause", value: "paused" },
   { label: "Clos", value: "closed" },
+  { label: "Archivée", value: "archived" },
   { label: "Supprimee par l'utilisateur", value: "deleted_by_client" },
 ];
 
@@ -230,6 +231,7 @@ function formatStatus(status: string) {
   return (
     {
       closed: "Clos",
+      archived: "Archivée",
       contacted: "Contacte",
       matched: "Matching",
       new: "Nouveau",

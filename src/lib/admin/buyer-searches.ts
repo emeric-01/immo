@@ -20,7 +20,11 @@ export type AdminBuyerSearchRow = {
   created_by_admin_user_id: string | null;
   crm_contact_id: string | null;
   attribution_snapshot: import("@/lib/attribution").AttributionSnapshot | Record<string, never>;
+  archived_at: string | null;
+  archived_by_admin_user_id: string | null;
+  archived_from_status: BuyerSearchBusinessStatus | null;
   city_names: string[];
+  client_account_id: string | null;
   consent: boolean;
   consent_at: string | null;
   contact_email: string;
@@ -55,9 +59,21 @@ export type AdminBuyerSearchRow = {
   raw_payload: BuyerSearchFormData;
   record_origin: "admin" | "client" | "public";
   source: string;
-  status: "new" | "qualified" | "contacted" | "matched" | "paused" | "closed" | "deleted_by_client";
+  status: BuyerSearchStatus;
   updated_at: string;
 };
+
+export type BuyerSearchBusinessStatus = "new" | "qualified" | "contacted" | "matched" | "paused" | "closed";
+export type BuyerSearchStatus = BuyerSearchBusinessStatus | "archived" | "deleted_by_client";
+
+const buyerSearchBusinessStatuses = new Set<BuyerSearchBusinessStatus>([
+  "new",
+  "qualified",
+  "contacted",
+  "matched",
+  "paused",
+  "closed",
+]);
 
 export type AdminBuyerSearchLocation = {
   id: number;
@@ -138,7 +154,7 @@ export async function getAdminBuyerSearches(
     limit: "200",
     order: "created_at.desc",
     select:
-      "id,created_at,updated_at,deleted_at,status,source,record_origin,crm_contact_id,created_by_admin_user_id,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,assigned_admin_user_id,attributed_admin_user_id,attribution_snapshot,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
+      "id,created_at,updated_at,deleted_at,status,archived_at,archived_by_admin_user_id,archived_from_status,source,record_origin,client_account_id,crm_contact_id,created_by_admin_user_id,contact_first_name,contact_last_name,contact_email,contact_phone,preferred_channel,preferred_channels,consent,consent_at,location_summary,city_names,property_types,ideal_budget,maximum_budget,minimum_living_area,minimum_land_area,minimum_rooms,minimum_bedrooms,minimum_bathrooms,purchase_timeline,financing_status,current_situation,preferences,priorities,raw_payload,metadata,notes,assigned_to,assigned_admin_user_id,attributed_admin_user_id,attribution_snapshot,market_score,market_score_label,market_score_payload,market_score_status,market_scored_at",
   });
   applyAgentScope(params, session);
 
@@ -260,8 +276,111 @@ export async function getAdminBuyerSearch(id: string, session?: AdminSession): P
   };
 }
 
+export async function updateAdminBuyerSearchAssignment(id: string, assignedAdminUserId: string | null, session: AdminSession) {
+  if (session.role === "agent") return { message: "Un agent commercial ne peut pas réattribuer une recherche.", success: false as const };
+  return patchAdminBuyerSearch(id, { assigned_admin_user_id: assignedAdminUserId }, "L’attribution n’a pas été enregistrée.");
+}
+
+export async function archiveAdminBuyerSearch(id: string, session: AdminSession) {
+  if (session.role === "agent") return { message: "Un agent commercial ne peut pas archiver une recherche.", success: false as const };
+  const current = await getAdminBuyerSearchMutationTarget(id, session);
+  if (!current) return { message: "Recherche inaccessible.", success: false as const };
+  if (current.status === "deleted_by_client") return { message: "Une recherche supprimée par le client ne peut pas être archivée.", success: false as const };
+  if (current.status === "archived") return { success: true as const };
+  if (!buyerSearchBusinessStatuses.has(current.status)) return { message: "Le statut actuel ne permet pas l’archivage.", success: false as const };
+
+  return patchAdminBuyerSearch(id, {
+    archived_at: new Date().toISOString(),
+    archived_by_admin_user_id: session.role === "bootstrap" ? null : session.id,
+    archived_from_status: current.status,
+    status: "archived",
+  }, "La recherche n’a pas été archivée.");
+}
+
+export async function restoreAdminBuyerSearch(id: string, session: AdminSession) {
+  if (session.role === "agent") return { message: "Un agent commercial ne peut pas restaurer une recherche.", success: false as const };
+  const current = await getAdminBuyerSearchMutationTarget(id, session);
+  if (!current) return { message: "Recherche inaccessible.", success: false as const };
+  if (current.status !== "archived") return { message: "Cette recherche n’est pas archivée.", success: false as const };
+  const restoredStatus = current.archived_from_status && buyerSearchBusinessStatuses.has(current.archived_from_status)
+    ? current.archived_from_status
+    : "new";
+
+  return patchAdminBuyerSearch(id, { status: restoredStatus }, "La recherche n’a pas été restaurée.");
+}
+
+export async function deleteAdminBuyerSearch(id: string, session: AdminSession) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour supprimer une recherche.", success: false as const };
+  if (session.role === "agent") return { message: "Un agent commercial ne peut pas supprimer une recherche.", success: false as const };
+  if (!(await getAdminBuyerSearchMutationTarget(id, session))) return { message: "Recherche inaccessible.", success: false as const };
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/buyer_searches?id=eq.${encodeURIComponent(id)}&select=id`, {
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        Prefer: "return=representation",
+      },
+      method: "DELETE",
+    });
+    if (!response.ok) return { message: `Suppression impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    const rows = await response.json() as Array<{ id: string }>;
+    return rows[0] ? { success: true as const } : { message: "Aucune recherche n’a été supprimée.", success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "La suppression a échoué.", success: false as const };
+  }
+}
+
+async function patchAdminBuyerSearch(
+  id: string,
+  payload: Record<string, unknown>,
+  emptyMessage: string,
+) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour modifier une recherche.", success: false as const };
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/buyer_searches?id=eq.${encodeURIComponent(id)}&select=id,status`, {
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "PATCH",
+    });
+    if (!response.ok) return { message: `Modification impossible (${response.status}) : ${await response.text()}`, success: false as const };
+    const rows = await response.json() as Array<{ id: string }>;
+    return rows[0] ? { success: true as const } : { message: emptyMessage, success: false as const };
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "La modification a échoué.", success: false as const };
+  }
+}
+
+async function getAdminBuyerSearchMutationTarget(id: string, session: AdminSession) {
+  const config = getAdminSupabaseConfig();
+  if (!config) return null;
+  const params = new URLSearchParams({
+    id: `eq.${id}`,
+    limit: "1",
+    select: "id,status,archived_from_status",
+  });
+  applyAgentScope(params, session);
+  const result = await supabaseAdminFetch<Array<Pick<AdminBuyerSearchRow, "archived_from_status" | "id" | "status">>>(
+    config,
+    `buyer_searches?${params}`,
+  );
+  return result.status === "ready" ? result.data[0] ?? null : null;
+}
+
 function applyAgentScope(params: URLSearchParams, session?: AdminSession) {
-  if (session?.role === "agent") params.set("or", `(attributed_admin_user_id.eq.${session.id},assigned_admin_user_id.eq.${session.id})`);
+  if (session?.role === "agent") {
+    params.set("or", `(assigned_admin_user_id.eq.${session.id},and(assigned_admin_user_id.is.null,attributed_admin_user_id.eq.${session.id}))`);
+  }
 }
 
 async function patchAdminBuyerSearchScore(

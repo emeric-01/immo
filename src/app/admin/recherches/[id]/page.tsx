@@ -12,8 +12,11 @@ import { optionLabel, financingOptions, purchaseTimelineOptions, situationOption
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
-import { getAdminUserSummary } from "@/lib/admin/users";
+import { listAdminUsers } from "@/lib/admin/users";
 import styles from "../../admin.module.css";
+import { updateBuyerSearchAssignmentAction } from "../actions";
+import { ArchiveBuyerSearchButton } from "./ArchiveBuyerSearchButton";
+import { DeleteBuyerSearchButton } from "./DeleteBuyerSearchButton";
 
 export const metadata: Metadata = {
   title: "Detail recherche | Admin",
@@ -56,18 +59,29 @@ export default async function AdminBuyerSearchDetailPage({
 
   const { consents, locations, priorities, search } = result.data;
   const preferences = formatAdminPreferences(search);
-  const assignedAgent = await getAdminUserSummary(search.assigned_admin_user_id);
-  const attributedAgent = await getAdminUserSummary(search.attributed_admin_user_id);
-  const creatorAgent = await getAdminUserSummary(search.created_by_admin_user_id);
+  const usersResult = await listAdminUsers();
+  const users = usersResult.status === "ready" ? usersResult.data : [];
+  const usersById = new Map(users.map((user) => [user.id, user]));
+  const agents = users.filter((user) => user.is_active && user.role === "agent");
+  const assignedAgent = search.assigned_admin_user_id ? usersById.get(search.assigned_admin_user_id) : null;
+  const attributedAgent = search.attributed_admin_user_id ? usersById.get(search.attributed_admin_user_id) : null;
+  const creatorAgent = search.created_by_admin_user_id ? usersById.get(search.created_by_admin_user_id) : null;
   const commercialAgent = assignedAgent ?? attributedAgent ?? creatorAgent;
+  const contactName = `${search.contact_first_name} ${search.contact_last_name}`.trim();
 
   return (
     <DetailFrame>
       <section className={styles.detailHero}>
-        <Link className={styles.backLink} href="/admin/recherches">
-          <ArrowLeft size={18} aria-hidden="true" />
-          Retour aux recherches
-        </Link>
+        <div className={styles.detailTopActions}>
+          <Link className={styles.backLink} href="/admin/recherches">
+            <ArrowLeft size={18} aria-hidden="true" />
+            Retour aux recherches
+          </Link>
+          {session.role !== "agent" ? <div className={styles.workspaceActions}>
+            {search.status !== "deleted_by_client" ? <ArchiveBuyerSearchButton hasClient={Boolean(search.client_account_id)} isArchived={search.status === "archived"} searchId={search.id} /> : null}
+            <DeleteBuyerSearchButton contactName={contactName || "ce contact"} searchId={search.id} />
+          </div> : null}
+        </div>
         <div className={styles.detailHeroGrid}>
           <div>
             <p className={styles.eyebrow}>Formulaire acheteur</p>
@@ -118,6 +132,12 @@ export default async function AdminBuyerSearchDetailPage({
         </InfoPanel>
 
         <InfoPanel title="Attribution commerciale">
+          {session.role !== "agent" ? <form action={updateBuyerSearchAssignmentAction} className={styles.statusForm}>
+            <input name="id" type="hidden" value={search.id} />
+            <label htmlFor="assignedAdminUserId">Modifier le commercial responsable</label>
+            <div><select defaultValue={search.assigned_admin_user_id ?? ""} id="assignedAdminUserId" name="assignedAdminUserId"><option value="">Non attribué</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.full_name}</option>)}</select><button type="submit">Enregistrer</button></div>
+            <p className={styles.helpText}>L’origine Internet et la campagne restent conservées.</p>
+          </form> : null}
           <Metric icon={UserRound} label="Agent commercial" value={commercialAgent?.full_name ?? "Aucun agent attribué"} />
           <Metric icon={Mail} label="E-mail de l’agent" value={commercialAgent?.email ?? "Non renseigné"} />
           <Metric icon={ShieldCheck} label="Mode de création" value={formatRecordOrigin(search.record_origin)} />
