@@ -27,6 +27,19 @@ export type SiteAnalyticsSummary = {
 };
 
 type AttributionTouch = { source: string; medium: string; campaign: string | null; created_at: string; is_entry: boolean };
+type AnalyticsEvent = SiteAnalyticsEvent & { conversion_kind?: string | null };
+
+const ANALYTICS_PAGE_SIZE = 1_000;
+
+async function getAllAnalyticsRows<T>(query: string) {
+  const rows: T[] = [];
+
+  for (let offset = 0; ; offset += ANALYTICS_PAGE_SIZE) {
+    const page = await adminRest<T[]>(`${query}&limit=${ANALYTICS_PAGE_SIZE}&offset=${offset}`);
+    rows.push(...page);
+    if (page.length < ANALYTICS_PAGE_SIZE) return rows;
+  }
+}
 
 function count(values: string[], limit = 8) {
   return [...values.reduce((map, value) => map.set(value, (map.get(value) ?? 0) + 1), new Map<string, number>())]
@@ -37,8 +50,8 @@ export async function getSiteAnalytics(days = 30): Promise<SiteAnalyticsSummary>
   const safeDays = [7, 30, 90].includes(days) ? days : 30;
   const since = new Date(Date.now() - safeDays * 86_400_000).toISOString();
   const [events, touches] = await Promise.all([
-    adminRest<(SiteAnalyticsEvent & { conversion_kind?: string | null })[]>(`site_analytics_events?created_at=gte.${encodeURIComponent(since)}&select=audience_type,bot_name,created_at,device_type,event_type,path,referrer_host,session_hash,visitor_hash,conversion_kind&order=created_at.asc`),
-    adminRest<AttributionTouch[]>(`attribution_touches?created_at=gte.${encodeURIComponent(since)}&is_entry=eq.true&select=source,medium,campaign,created_at,is_entry&order=created_at.asc`).catch(() => []),
+    getAllAnalyticsRows<AnalyticsEvent>(`site_analytics_events?created_at=gte.${encodeURIComponent(since)}&select=audience_type,bot_name,created_at,device_type,event_type,path,referrer_host,session_hash,visitor_hash,conversion_kind&order=id.asc`),
+    getAllAnalyticsRows<AttributionTouch>(`attribution_touches?created_at=gte.${encodeURIComponent(since)}&is_entry=eq.true&select=source,medium,campaign,created_at,is_entry&order=id.asc`).catch(() => []),
   ]);
   const views = events.filter((event) => event.event_type === "page_view");
   const humans = views.filter((event) => event.audience_type === "human");
