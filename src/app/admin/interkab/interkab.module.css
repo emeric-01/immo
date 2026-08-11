@@ -16,15 +16,27 @@
 .cardTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .cardTop span { border-radius:999px; background:#f6eee6; padding:6px 9px; color:#70401e; font-size:.78rem; font-weight:700; text-transform:uppercase; }
 .cardTop small { color:#707789; }
+.score { border-radius:999px; background:#f3f5f7; padding:6px 9px; color:#667085; font-size:.78rem; }
+.score[data-level="Prioritaire"] { background:#eaf6ed; color:#246034; }
+.score[data-level="Intéressant"] { background:#fff4df; color:#82501c; }
 .cardBody h2 { margin:0; font-family:Georgia,"Times New Roman",serif; font-size:1.65rem; font-weight:500; }
 .location { display:flex; align-items:center; gap:6px; margin:0; color:#555d6d; }
 .facts { display:flex; flex-wrap:wrap; gap:7px; }
 .facts span { border:1px solid #e3dcd4; border-radius:6px; padding:6px 8px; color:#555d6d; font-size:.88rem; }
+.analysis { display:grid; grid-template-columns:1fr 1fr; gap:8px; border:1px solid #e3dcd4; border-radius:8px; background:#faf8f5; padding:11px; }
+.analysis div { display:grid; gap:3px; }
+.analysis small { color:#707789; }
+.analysis p { grid-column:1/-1; margin:2px 0 0; color:#246034; font-weight:700; }
+.analysis p[data-market="high"] { color:#8b2e21; }
+.match { display:grid; gap:5px; border-left:3px solid #d2a476; padding-left:11px; }
+.match a { color:#70401e; font-weight:700; text-decoration:none; }
+.match span { color:#707789; }
 .agency { display:grid; gap:4px; border-top:1px solid #ebe5df; padding-top:13px; }
 .agency small,.agency span { color:#707789; }
 .agency a { display:inline-flex; align-items:center; gap:6px; color:#111; font-weight:700; text-decoration:none; }
 .actions { display:flex; flex-wrap:wrap; gap:9px; }
 .actions a { display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:6px; border:1px solid #ded6ce; border-radius:7px; padding:0 11px; color:#111; font-weight:700; text-decoration:none; }
 .actions a:first-child { border-color:#111; background:#111; color:#fff; }
+.actions small { align-self:center; margin-left:auto; color:#707789; }
 @media (max-width:1100px) { .stats,.grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:700px) { .stats,.grid { grid-template-columns:1fr; } .cover { min-height:230px; } }

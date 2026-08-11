@@ -24,12 +24,20 @@ describe("Interkab pilot parser", () => {
     const detail = parseInterkabDetailPage(`<script type="application/ld+json">{
       "@graph":[{"@type":"SingleFamilyResidence","offers":{"validFrom":"2026-08-10 21:15:20"},
       "realEstateAgent":{"name":"Andros immobilier","telephone":"0651618041","url":"https://andros-immobilier.com"}}]
-    }</script>`);
+    }</script><h2>Caractéristiques du bien</h2><div class="list-characteristics"><ul>
+      <li class="col col-12 col-md-6">3 WC</li><li class="col col-12 col-md-6">1 Salle de bain/eau</li>
+      <li class="col col-12 col-md-6">Jardin de 2920 m<sup>2</sup></li><li class="col col-12 col-md-6">Terrasse</li>
+    </ul></div><h2>Diagnostics énergétiques</h2><p>LOCALISATION DU BIEN</p><h2 class="property__subtitle">Quartier Arnaud Solans à Aubagne</h2>`);
     expect(detail).toEqual({
       agencyName: "Andros immobilier",
       agencyPhone: "0651618041",
       agencySiteUrl: "https://andros-immobilier.com",
+      bathrooms: 1,
+      features: ["Jardin de 2920 m²", "Terrasse"],
+      landAreaM2: 2920,
+      neighborhood: "Arnaud Solans",
       publishedAt: "2026-08-10 21:15:20",
+      toilets: 3,
     });
   });
 });

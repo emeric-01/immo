@@ -12,15 +12,20 @@ export type InterkabListing = {
   agencySiteUrl: string | null;
   agentLabel: string | null;
   bedrooms: number | null;
+  bathrooms: number | null;
   city: string;
   externalId: string;
   imageUrl: string | null;
+  landAreaM2: number | null;
   listingUrl: string;
+  neighborhood: string | null;
   price: number | null;
   propertyType: string;
   publishedAt: string | null;
   rooms: number | null;
   surfaceM2: number | null;
+  toilets: number | null;
+  features: string[];
 };
 
 export type InterkabPilot = {
@@ -80,15 +85,20 @@ export function parseInterkabSearchPage(html: string): Omit<InterkabPilot, "fetc
       agencySiteUrl: null,
       agentLabel,
       bedrooms,
+      bathrooms: null,
       city,
       externalId,
       imageUrl: capture(card, /<img[^>]+src="([^"]+)"/i) || null,
+      landAreaM2: null,
       listingUrl,
+      neighborhood: null,
       price: numberFrom(capture(card, /card__price[\s\S]*?level-5[^>]*>([\s\S]*?)<\/div>/i)),
       propertyType: plainText(capture(card, /card__type[\s\S]*?level-6[^>]*>([\s\S]*?)<\/div>/i)),
       publishedAt: null,
       rooms,
       surfaceM2,
+      toilets: null,
+      features: [],
     });
   }
 
@@ -109,18 +119,35 @@ export function parseInterkabDetailPage(html: string) {
       if (!listing) continue;
       const agency = listing.realEstateAgent as Record<string, unknown> | undefined;
       const offer = listing.offers as Record<string, unknown> | undefined;
+      const characteristicStart = html.indexOf("Caractéristiques du bien");
+      const characteristicEnd = characteristicStart >= 0 ? html.indexOf("Diagnostics énergétiques", characteristicStart) : -1;
+      const characteristicHtml = characteristicStart >= 0
+        ? html.slice(characteristicStart, characteristicEnd >= 0 ? characteristicEnd : characteristicStart + 30_000)
+        : "";
+      const characteristics = [...characteristicHtml.matchAll(/<li[^>]*class="[^"]*col-md-6[^"]*"[^>]*>([\s\S]*?)<\/li>/gi)]
+        .map((item) => plainText(item[1]))
+        .filter(Boolean);
+      const featureLabels = characteristics.filter((value) =>
+        !/^(surface|\d+\s*(chambre|wc|salle))/i.test(value),
+      );
+      const locationTitle = plainText(capture(html, /LOCALISATION DU BIEN[\s\S]*?property__subtitle[^>]*>([\s\S]*?)<\/h2>/i));
       return {
         agencyName: typeof agency?.name === "string" ? agency.name : null,
         agencyPhone: typeof agency?.telephone === "string" ? agency.telephone : null,
         agencySiteUrl: typeof agency?.url === "string" ? agency.url : null,
+        bathrooms: numberFrom(characteristics.find((value) => /salle de bain|salle d'eau|salle de bain\/eau/i.test(value))),
+        features: [...new Set(featureLabels)],
+        landAreaM2: numberFrom(characteristics.find((value) => /jardin|terrain/i.test(value))),
+        neighborhood: locationTitle.replace(/^Quartier\s+/i, "").replace(/\s+à\s+Aubagne$/i, "") || null,
         publishedAt: typeof offer?.validFrom === "string" ? offer.validFrom : null,
+        toilets: numberFrom(characteristics.find((value) => /\bWC\b/i.test(value))),
       };
     } catch {
       continue;
     }
   }
 
-  return { agencyName: null, agencyPhone: null, agencySiteUrl: null, publishedAt: null };
+  return { agencyName: null, agencyPhone: null, agencySiteUrl: null, bathrooms: null, features: [], landAreaM2: null, neighborhood: null, publishedAt: null, toilets: null };
 }
 
 async function fetchHtml(url: string) {

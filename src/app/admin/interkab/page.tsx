@@ -4,7 +4,11 @@ import { Building2, ExternalLink, House, MapPin, Phone, RefreshCw } from "lucide
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
+import { getAdminBuyerSearches } from "@/lib/admin/buyer-searches";
+import { getCityBySlug } from "@/lib/cities";
+import { getCityMarketData } from "@/lib/city-market-data";
 import { AUBAGNE_INTERKAB_URL, formatFrenchPhone, getAubagneInterkabPilot } from "@/lib/interkab";
+import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import admin from "../admin.module.css";
 import styles from "./interkab.module.css";
 
@@ -16,9 +20,16 @@ export default async function InterkabPilotPage() {
   await requireAdminPermission(session, "properties:read");
 
   let pilot: Awaited<ReturnType<typeof getAubagneInterkabPilot>> | null = null;
+  let searches: Awaited<ReturnType<typeof getAdminBuyerSearches>> | null = null;
+  let market: Awaited<ReturnType<typeof getCityMarketData>> | null = null;
   let error = "";
   try {
-    pilot = await getAubagneInterkabPilot();
+    const aubagne = getCityBySlug("aubagne");
+    [pilot, searches, market] = await Promise.all([
+      getAubagneInterkabPilot(),
+      getAdminBuyerSearches({}, session),
+      aubagne ? getCityMarketData(aubagne) : Promise.resolve(null),
+    ]);
   } catch (cause) {
     error = cause instanceof Error ? cause.message : "Lecture Interkab impossible.";
   }
@@ -43,18 +54,26 @@ export default async function InterkabPilotPage() {
 
         <div className={styles.grid}>{pilot.listings.map((listing) => {
           const phone = formatFrenchPhone(listing.agencyPhone);
+          const score = scoreInterkabListing(listing, searches?.status === "ready" ? searches.data : [], market);
           return <article className={styles.card} key={listing.externalId}>
             <div className={styles.cover}>{listing.imageUrl ? <Image alt={`${listing.propertyType} à Aubagne`} fill sizes="(max-width: 760px) 100vw, 33vw" src={listing.imageUrl}/> : <House/>}</div>
             <div className={styles.cardBody}>
-              <div className={styles.cardTop}><span>{listing.propertyType}</span><small>Réf. {listing.externalId}</small></div>
+              <div className={styles.cardTop}><span>{listing.propertyType}</span><strong className={styles.score} data-level={score.interestLabel}>{score.interestScore}/100 · {score.interestLabel}</strong></div>
               <h2>{formatCurrency(listing.price)}</h2>
-              <p className={styles.location}><MapPin size={15}/> {listing.city || "Aubagne"}</p>
+              <p className={styles.location}><MapPin size={15}/> {listing.city || "Aubagne"}{listing.neighborhood ? ` · ${listing.neighborhood}` : ""}</p>
               <div className={styles.facts}>{listing.surfaceM2 ? <span>{listing.surfaceM2} m²</span> : null}{listing.rooms ? <span>{listing.rooms} pièces</span> : null}{listing.bedrooms ? <span>{listing.bedrooms} chambres</span> : null}</div>
+              <div className={styles.facts}>{listing.bathrooms ? <span>{listing.bathrooms} salle de bain/eau</span> : null}{listing.toilets ? <span>{listing.toilets} WC</span> : null}{listing.landAreaM2 ? <span>{listing.landAreaM2} m² de terrain</span> : null}{listing.features.map((feature) => <span key={feature}>{feature}</span>)}</div>
+              <div className={styles.analysis}>
+                <div><small>Prix du bien</small><strong>{formatPricePerM2(score.pricePerM2)}</strong></div>
+                <div><small>Marché Aubagne</small><strong>{formatPricePerM2(score.marketPricePerM2)}</strong></div>
+                <p data-market={score.marketGapPercent !== null && score.marketGapPercent > 8 ? "high" : "ok"}>{score.marketLabel}{score.marketGapPercent !== null ? ` · ${score.marketGapPercent > 0 ? "+" : ""}${score.marketGapPercent} %` : ""}</p>
+              </div>
+              <div className={styles.match}><strong>{score.compatibleSearchCount} recherche{score.compatibleSearchCount > 1 ? "s" : ""} compatible{score.compatibleSearchCount > 1 ? "s" : ""}</strong>{score.bestBuyerMatch ? <a href={`/admin/recherches/${score.bestBuyerMatch.id}`}>Meilleur rapprochement : {score.bestBuyerMatch.label} ({score.bestBuyerMatch.score}/100)</a> : <span>Aucune recherche active disponible</span>}</div>
               <div className={styles.agency}>
                 <small>Agence référente</small><strong>{listing.agencyName ?? listing.agentLabel ?? "À enrichir"}</strong>
                 {phone ? <a href={`tel:${listing.agencyPhone}`}><Phone size={15}/> {phone}</a> : <span>Téléphone non chargé dans ce test</span>}
               </div>
-              <div className={styles.actions}><a href={listing.listingUrl} rel="noreferrer" target="_blank"><ExternalLink size={16}/> Ouvrir sur Interkab</a>{listing.agencySiteUrl ? <a href={listing.agencySiteUrl} rel="noreferrer" target="_blank">Site agence</a> : null}</div>
+              <div className={styles.actions}><a href={listing.listingUrl} rel="noreferrer" target="_blank"><ExternalLink size={16}/> Ouvrir sur Interkab</a>{listing.agencySiteUrl ? <a href={listing.agencySiteUrl} rel="noreferrer" target="_blank">Site agence</a> : null}<small>Réf. {listing.externalId}</small></div>
             </div>
           </article>;
         })}</div>
@@ -65,4 +84,8 @@ export default async function InterkabPilotPage() {
 
 function formatCurrency(value: number | null) {
   return value === null ? "Prix non renseigné" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+}
+
+function formatPricePerM2(value: number | null) {
+  return value === null ? "Non disponible" : `${new Intl.NumberFormat("fr-FR").format(value)} €/m²`;
 }
