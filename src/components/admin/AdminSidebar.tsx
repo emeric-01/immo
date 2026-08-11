@@ -5,6 +5,7 @@ import styles from "@/app/admin/admin.module.css";
 
 const menuItems: Array<{ href: string; label: string; permission?: AdminPermission }> = [
   { href: "/admin/biens", label: "Biens", permission: "properties:read" },
+  { href: "/admin/interkab", label: "Interkab", permission: "properties:read" },
   { href: "/admin/recherches", label: "Recherches", permission: "buyer_searches:read" },
   { href: "/admin/estimations", label: "Estimations", permission: "estimations:read" },
   { href: "/admin/dossiers-estimation", label: "Dossiers d’estimation", permission: "estimations:read" },
