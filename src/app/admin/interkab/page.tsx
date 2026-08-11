@@ -1,100 +1,81 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { Building2, ExternalLink, House, MapPin, Phone, RefreshCw } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
-import { getAdminBuyerSearches } from "@/lib/admin/buyer-searches";
 import { getCityBySlug } from "@/lib/cities";
 import { getCityMarketData } from "@/lib/city-market-data";
-import { AUBAGNE_INTERKAB_URL, formatFrenchPhone, getAubagneInterkabPilot } from "@/lib/interkab";
+import { formatFrenchPhone, getInterkabCities, getStoredInterkabListings, INTERKAB_CITIES, seedInterkabCities } from "@/lib/interkab";
 import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import admin from "../admin.module.css";
 import styles from "./interkab.module.css";
+import { syncInterkabCityAction } from "./actions";
 
-export const metadata: Metadata = { title: "Interkab Aubagne | Admin" };
+export const metadata: Metadata = { title: "Interkab | Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function InterkabPilotPage() {
+export default async function InterkabPage({ searchParams }: { searchParams: Promise<{ ville?: string }> }) {
   const session = await requireAdminSession();
   await requireAdminPermission(session, "properties:read");
-
-  let pilot: Awaited<ReturnType<typeof getAubagneInterkabPilot>> | null = null;
-  let searches: Awaited<ReturnType<typeof getAdminBuyerSearches>> | null = null;
-  let market: Awaited<ReturnType<typeof getCityMarketData>> | null = null;
+  const requestedSlug = (await searchParams).ville ?? "aubagne";
+  const selected = INTERKAB_CITIES.find((city) => city.slug === requestedSlug) ?? INTERKAB_CITIES[0];
+  let cities: Awaited<ReturnType<typeof getInterkabCities>> = [];
+  let listings: Awaited<ReturnType<typeof getStoredInterkabListings>> = [];
   let error = "";
   try {
-    const aubagne = getCityBySlug("aubagne");
-    [pilot, searches, market] = await Promise.all([
-      getAubagneInterkabPilot(),
-      getAdminBuyerSearches({}, session),
-      aubagne ? getCityMarketData(aubagne) : Promise.resolve(null),
-    ]);
-  } catch (cause) {
-    error = cause instanceof Error ? cause.message : "Lecture Interkab impossible.";
-  }
+    await seedInterkabCities();
+    [cities, listings] = await Promise.all([getInterkabCities(), getStoredInterkabListings(selected.inseeCode)]);
+  } catch (cause) { error = cause instanceof Error ? cause.message : "Lecture Interkab impossible."; }
+  const cityState = cities.find((city) => city.insee_code === selected.inseeCode);
+  const marketCity = getCityBySlug(selected.slug);
+  const market = marketCity ? await getCityMarketData(marketCity).catch(() => null) : null;
+  const readyCount = cities.filter((city) => city.status === "ready").length;
+  const volume = cities.reduce((sum, city) => sum + city.last_listing_count, 0);
 
   return <main className={admin.adminPage}>
     <AdminSidebar active="/admin/interkab" session={session}/>
     <section className={`${admin.content} ${styles.content}`}>
       <header className={admin.pageHeader}>
-        <div><p className={admin.eyebrow}>Pilote réseau Interkab</p><h1>Aubagne</h1><p>Première lecture interne des biens du réseau, sans publication sur votre site.</p></div>
-        <a className={admin.secondaryButton} href={AUBAGNE_INTERKAB_URL} rel="noreferrer" target="_blank"><ExternalLink size={17}/> Voir la recherche Interkab</a>
+        <div><p className={admin.eyebrow}>Réseau Interkab · usage interne</p><h1>Veille des biens</h1><p>Synchronisation privée des villes couvertes dans le 13 et le 83. Aucun bien n’est publié côté client.</p></div>
+        <form action={syncInterkabCityAction}><input name="inseeCode" type="hidden" value={selected.inseeCode}/><button className={admin.secondaryButton} type="submit"><RefreshCw size={17}/> Actualiser {selected.name}</button></form>
       </header>
 
-      {error || !pilot ? <section className={styles.notice}><strong>Synchronisation indisponible</strong><p>{error}</p></section> : <>
+      {error ? <section className={styles.notice}><strong>Base Interkab indisponible</strong><p>{error}</p></section> : <>
         <section className={styles.stats}>
-          <article><House/><span>Volume Aubagne</span><strong>{pilot.resultCount}</strong><small>{pilot.pageCount} pages détectées</small></article>
-          <article><RefreshCw/><span>Échantillon pilote</span><strong>{pilot.listings.length}</strong><small>Première page uniquement</small></article>
-          <article><Building2/><span>Fiches enrichies</span><strong>{pilot.listings.filter((item) => item.agencyName).length}</strong><small>Agence et téléphone</small></article>
-          <article><MapPin/><span>Identifiant ville</span><strong>4462_662</strong><small>Aubagne · 13400</small></article>
+          <article><MapPin/><span>Villes suivies</span><strong>{cities.length}</strong><small>Départements 13 et 83</small></article>
+          <article><RefreshCw/><span>Villes initialisées</span><strong>{readyCount}</strong><small>Cycle automatique de 4 jours</small></article>
+          <article><House/><span>Volume réseau connu</span><strong>{volume}</strong><small>Dernier volume remonté par ville</small></article>
+          <article><Building2/><span>Ville consultée</span><strong>{selected.name}</strong><small>{cityState?.interkab_location_id ?? "À initialiser"}</small></article>
         </section>
 
-        <section className={styles.pilotNote}><strong>Mode test</strong><p>La lecture est mise en cache pendant quatre jours. Seules les six premières fiches sont ouvertes pour enrichir l’agence et le téléphone ; aucune donnée n’est publiée.</p></section>
+        <section className={styles.pilotNote}><strong>Déploiement progressif</strong><p>Aubagne démarre en premier. Le traitement quotidien prend ensuite les villes arrivées à échéance, par lots de 11, afin de couvrir les 43 villes en quatre jours sans recopier les photos dans Supabase.</p></section>
 
-        <div className={styles.grid}>{pilot.listings.map((listing) => {
+        <nav className={styles.cityNav} aria-label="Villes Interkab">{cities.map((city) => <Link className={city.slug === selected.slug ? styles.cityActive : ""} href={`/admin/interkab?ville=${city.slug}`} key={city.insee_code}><span>{city.city_name}</span><small>{city.last_listing_count} biens · {statusLabel(city.status)}</small></Link>)}</nav>
+
+        <div className={styles.sectionTitle}><div><p className={admin.eyebrow}>Dernière collecte</p><h2>{selected.name}</h2></div>{cityState?.last_synced_at ? <small>Actualisé le {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(cityState.last_synced_at))}</small> : <small>Pas encore synchronisé</small>}</div>
+        {!listings.length ? <section className={styles.notice}><strong>Aucun échantillon enregistré</strong><p>Lancez l’actualisation de {selected.name}, ou laissez la synchronisation automatique traiter cette ville.</p></section> : <div className={styles.grid}>{listings.map((listing) => {
           const phone = formatFrenchPhone(listing.agencyPhone);
-          const score = scoreInterkabListing(listing, searches?.status === "ready" ? searches.data : [], market);
+          const score = scoreInterkabListing(listing, [], market);
           return <article className={styles.card} key={listing.externalId}>
-            <div className={styles.cover}>{listing.imageUrl ? <Image alt={`${listing.propertyType} à Aubagne`} fill sizes="(max-width: 760px) 100vw, 33vw" src={listing.imageUrl}/> : <House/>}</div>
+            <div className={styles.cover}>{listing.imageUrl ? <Image alt={`${listing.propertyType} à ${selected.name}`} fill sizes="(max-width: 760px) 100vw, 33vw" src={listing.imageUrl}/> : <House/>}</div>
             <div className={styles.cardBody}>
               <div className={styles.cardTop}><span>{listing.propertyType}</span><strong className={styles.score} data-level={score.interestLabel}>{score.interestScore}/100 · {score.interestLabel}</strong></div>
               <h2>{formatCurrency(listing.price)}</h2>
-              <p className={styles.location}><MapPin size={15}/> {listing.city || "Aubagne"}{listing.neighborhood ? ` · ${listing.neighborhood}` : ""}</p>
-              <div className={styles.facts}>{listing.surfaceM2 ? <span>{listing.surfaceM2} m²</span> : null}{listing.rooms ? <span>{listing.rooms} pièces</span> : null}{listing.bedrooms ? <span>{listing.bedrooms} chambres</span> : null}</div>
-              <div className={styles.facts}>{listing.bathrooms ? <span>{listing.bathrooms} salle de bain/eau</span> : null}{listing.toilets ? <span>{listing.toilets} WC</span> : null}{listing.landAreaM2 ? <span>{listing.landAreaM2} m² de terrain</span> : null}{listing.features.map((feature) => <span key={feature}>{feature}</span>)}</div>
-              <div className={styles.analysis}>
-                <header><strong>Comparatif prix · {score.marketPropertyTypeLabel ?? listing.propertyType}</strong><small>Moyenne observée à Aubagne pour cette typologie</small></header>
-                <div><small>Prix affiché au m²</small><strong>{formatPricePerM2(score.pricePerM2)}</strong></div>
-                <div><small>Moyenne ville au m²</small><strong>{formatPricePerM2(score.marketPricePerM2)}</strong></div>
-                <div><small>Prix affiché</small><strong>{formatCurrency(listing.price)}</strong></div>
-                <div><small>Valeur à la moyenne ville</small><strong>{formatCurrency(score.estimatedMarketValue)}</strong></div>
-                {score.marketRangeLowValue !== null && score.marketRangeHighValue !== null ? <small className={styles.marketRange}>Fourchette ville indicative pour {listing.surfaceM2} m² : {formatCurrency(score.marketRangeLowValue)} – {formatCurrency(score.marketRangeHighValue)}</small> : null}
-                <p data-market={score.marketGapPercent !== null && score.marketGapPercent > 8 ? "high" : "ok"}>{score.marketLabel}{score.marketGapPercent !== null ? ` · ${score.marketGapPercent > 0 ? "+" : ""}${score.marketGapPercent} %` : ""}{score.priceGapEuro !== null ? ` · ${formatSignedCurrency(score.priceGapEuro)}` : ""}</p>
-              </div>
-              <div className={styles.match}><strong>{score.compatibleSearchCount} recherche{score.compatibleSearchCount > 1 ? "s" : ""} compatible{score.compatibleSearchCount > 1 ? "s" : ""}</strong>{score.bestBuyerMatch ? <a href={`/admin/recherches/${score.bestBuyerMatch.id}`}>Meilleur rapprochement : {score.bestBuyerMatch.label} ({score.bestBuyerMatch.score}/100)</a> : <span>Aucune recherche active disponible</span>}</div>
-              <div className={styles.agency}>
-                <small>Agence référente</small><strong>{listing.agencyName ?? listing.agentLabel ?? "À enrichir"}</strong>
-                {phone ? <a href={`tel:${listing.agencyPhone}`}><Phone size={15}/> {phone}</a> : <span>Téléphone non chargé dans ce test</span>}
-              </div>
+              <p className={styles.location}><MapPin size={15}/> {listing.city || selected.name}{listing.neighborhood ? ` · ${listing.neighborhood}` : ""}</p>
+              <div className={styles.facts}>{listing.surfaceM2 ? <span>{listing.surfaceM2} m²</span> : null}{listing.rooms ? <span>{listing.rooms} pièces</span> : null}{listing.bedrooms ? <span>{listing.bedrooms} chambres</span> : null}{listing.landAreaM2 ? <span>{listing.landAreaM2} m² terrain</span> : null}</div>
+              <div className={styles.analysis}><header><strong>Comparatif prix · {score.marketPropertyTypeLabel ?? listing.propertyType}</strong><small>Moyenne observée à {selected.name}</small></header><div><small>Prix affiché au m²</small><strong>{formatPricePerM2(score.pricePerM2)}</strong></div><div><small>Moyenne ville au m²</small><strong>{formatPricePerM2(score.marketPricePerM2)}</strong></div><p>{score.marketLabel}{score.marketGapPercent !== null ? ` · ${score.marketGapPercent > 0 ? "+" : ""}${score.marketGapPercent} %` : ""}</p></div>
+              <div className={styles.agency}><small>Agence référente</small><strong>{listing.agencyName ?? listing.agentLabel ?? "À enrichir"}</strong>{phone ? <a href={`tel:${listing.agencyPhone}`}><Phone size={15}/> {phone}</a> : <span>Téléphone non chargé</span>}</div>
               <div className={styles.actions}><a href={listing.listingUrl} rel="noreferrer" target="_blank"><ExternalLink size={16}/> Ouvrir sur Interkab</a>{listing.agencySiteUrl ? <a href={listing.agencySiteUrl} rel="noreferrer" target="_blank">Site agence</a> : null}<small>Réf. {listing.externalId}</small></div>
             </div>
           </article>;
-        })}</div>
+        })}</div>}
       </>}
     </section>
   </main>;
 }
 
-function formatCurrency(value: number | null) {
-  return value === null ? "Prix non renseigné" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
-
-function formatPricePerM2(value: number | null) {
-  return value === null ? "Non disponible" : `${new Intl.NumberFormat("fr-FR").format(value)} €/m²`;
-}
-
-function formatSignedCurrency(value: number) {
-  const amount = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Math.abs(value));
-  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${amount}`;
-}
+function statusLabel(status: string) { return status === "ready" ? "à jour" : status === "error" ? "erreur" : "en attente"; }
+function formatCurrency(value: number | null) { return value === null ? "Prix non renseigné" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value); }
+function formatPricePerM2(value: number | null) { return value === null ? "Non disponible" : `${new Intl.NumberFormat("fr-FR").format(value)} €/m²`; }

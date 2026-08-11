@@ -1,10 +1,14 @@
 import "server-only";
+import { southCities, type City } from "@/lib/cities";
 
 export const AUBAGNE_INTERKAB_URL =
   "https://interkab.com/annonces?search%5BuniqueGeolocalite%5D%5B0%5D=4462_662&search%5BorderBy%5D=date_desc";
 
 const FOUR_DAYS = 60 * 60 * 24 * 4;
 const PILOT_DETAIL_LIMIT = 6;
+
+export const INTERKAB_CITIES = southCities.filter((city) => ["13", "83"].includes(city.inseeCode.slice(0, 2)));
+export const INTERKAB_SYNC_BATCH_SIZE = 11;
 
 export type InterkabListing = {
   agencyName: string | null;
@@ -138,7 +142,7 @@ export function parseInterkabDetailPage(html: string) {
         bathrooms: numberFrom(characteristics.find((value) => /salle de bain|salle d'eau|salle de bain\/eau/i.test(value))),
         features: [...new Set(featureLabels)],
         landAreaM2: numberFrom(characteristics.find((value) => /jardin|terrain/i.test(value))),
-        neighborhood: locationTitle.replace(/^Quartier\s+/i, "").replace(/\s+à\s+Aubagne$/i, "") || null,
+        neighborhood: locationTitle.replace(/^Quartier\s+/i, "").replace(/\s+à\s+[^,]+$/i, "") || null,
         publishedAt: typeof offer?.validFrom === "string" ? offer.validFrom : null,
         toilets: numberFrom(characteristics.find((value) => /\bWC\b/i.test(value))),
       };
@@ -157,6 +161,139 @@ async function fetchHtml(url: string) {
   });
   if (!response.ok) throw new Error(`Interkab a répondu avec le statut ${response.status}.`);
   return response.text();
+}
+
+function getSupabaseConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  return url && key ? { url: url.replace(/\/$/, ""), key } : null;
+}
+
+async function supabaseRequest(path: string, init?: RequestInit) {
+  const config = getSupabaseConfig();
+  if (!config) throw new Error("Configuration Supabase absente.");
+  const response = await fetch(`${config.url}/rest/v1/${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  if (!response.ok) throw new Error(`Supabase Interkab: ${response.status} ${await response.text()}`);
+  return response;
+}
+
+export function getInterkabCitySourceUrl(city: City) {
+  return `https://interkab.com/immobilier-${city.postalCode}-${city.slug}/annonces`;
+}
+
+export function parseInterkabLocationId(html: string) {
+  return html.match(/id="search_uniqueGeolocalite"[\s\S]*?<option value="([^"]+)" selected="selected"/i)?.[1] ?? null;
+}
+
+export async function seedInterkabCities() {
+  const rows = INTERKAB_CITIES.map((city) => ({
+    insee_code: city.inseeCode,
+    slug: city.slug,
+    city_name: city.name,
+    postal_code: city.postalCode,
+    department_code: city.inseeCode.slice(0, 2),
+    source_url: getInterkabCitySourceUrl(city),
+    updated_at: new Date().toISOString(),
+  }));
+  await supabaseRequest("interkab_cities?on_conflict=insee_code", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify(rows),
+  });
+}
+
+export async function getInterkabCities() {
+  const response = await supabaseRequest("interkab_cities?select=*&order=department_code.asc,city_name.asc");
+  return response.json() as Promise<Array<{
+    insee_code: string; slug: string; city_name: string; postal_code: string; department_code: string;
+    interkab_location_id: string | null; source_url: string; status: string; last_listing_count: number;
+    last_synced_at: string | null; next_sync_at: string; last_error: string | null;
+  }>>;
+}
+
+export async function getStoredInterkabListings(inseeCode: string) {
+  const response = await supabaseRequest(`interkab_listings?city_insee_code=eq.${encodeURIComponent(inseeCode)}&status=eq.active&select=*&order=last_seen_at.desc&limit=100`);
+  const rows = await response.json() as Array<Record<string, unknown>>;
+  return rows.map((row): InterkabListing => ({
+    externalId: String(row.external_id), listingUrl: String(row.listing_url), imageUrl: row.image_url as string | null,
+    propertyType: String(row.property_type), city: String(row.city_label), neighborhood: row.neighborhood as string | null,
+    price: row.price === null ? null : Number(row.price), surfaceM2: row.surface_m2 === null ? null : Number(row.surface_m2),
+    rooms: row.rooms as number | null, bedrooms: row.bedrooms as number | null, bathrooms: row.bathrooms as number | null,
+    toilets: row.toilets as number | null, landAreaM2: row.land_area_m2 === null ? null : Number(row.land_area_m2),
+    features: (row.features as string[]) ?? [], agencyName: row.agency_name as string | null,
+    agencyPhone: row.agency_phone as string | null, agencySiteUrl: row.agency_site_url as string | null,
+    agentLabel: row.agent_label as string | null, publishedAt: row.published_at as string | null,
+  }));
+}
+
+export async function syncInterkabCity(city: City, detailLimit = 3) {
+  const startedAt = new Date().toISOString();
+  const runResponse = await supabaseRequest("interkab_sync_runs?select=id", {
+    method: "POST", headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ city_insee_code: city.inseeCode, started_at: startedAt }),
+  });
+  const [{ id: runId }] = await runResponse.json() as Array<{ id: string }>;
+  try {
+    const sourceUrl = getInterkabCitySourceUrl(city);
+    const html = await fetchHtml(sourceUrl);
+    const locationId = parseInterkabLocationId(html);
+    const parsed = parseInterkabSearchPage(html);
+    const listings = [...parsed.listings];
+    for (let index = 0; index < Math.min(detailLimit, listings.length); index += 2) {
+      const details = await Promise.all(listings.slice(index, index + 2).map(async (listing) => {
+        try { return parseInterkabDetailPage(await fetchHtml(listing.listingUrl)); } catch { return null; }
+      }));
+      details.forEach((detail, offset) => { if (detail) listings[index + offset] = { ...listings[index + offset], ...detail }; });
+    }
+    const seenAt = new Date().toISOString();
+    if (listings.length) await supabaseRequest("interkab_listings?on_conflict=external_id", {
+      method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(listings.map((listing) => ({
+        external_id: listing.externalId, city_insee_code: city.inseeCode, listing_url: listing.listingUrl,
+        image_url: listing.imageUrl, property_type: listing.propertyType, city_label: listing.city,
+        neighborhood: listing.neighborhood, price: listing.price, surface_m2: listing.surfaceM2, rooms: listing.rooms,
+        bedrooms: listing.bedrooms, bathrooms: listing.bathrooms, toilets: listing.toilets,
+        land_area_m2: listing.landAreaM2, features: listing.features, agency_name: listing.agencyName,
+        agency_phone: listing.agencyPhone, agency_site_url: listing.agencySiteUrl, agent_label: listing.agentLabel,
+        published_at: listing.publishedAt, last_seen_at: seenAt, status: "active", updated_at: seenAt,
+      }))),
+    });
+    const nextSync = new Date(Date.now() + FOUR_DAYS * 1000).toISOString();
+    await Promise.all([
+      supabaseRequest(`interkab_cities?insee_code=eq.${city.inseeCode}`, { method: "PATCH", body: JSON.stringify({ interkab_location_id: locationId, status: "ready", last_listing_count: parsed.resultCount, last_synced_at: seenAt, next_sync_at: nextSync, last_error: null, updated_at: seenAt }) }),
+      supabaseRequest(`interkab_sync_runs?id=eq.${runId}`, { method: "PATCH", body: JSON.stringify({ status: "success", result_count: parsed.resultCount, listing_count: listings.length, completed_at: seenAt }) }),
+    ]);
+    return { city: city.name, resultCount: parsed.resultCount, listingCount: listings.length };
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Erreur inconnue";
+    await Promise.allSettled([
+      supabaseRequest(`interkab_cities?insee_code=eq.${city.inseeCode}`, { method: "PATCH", body: JSON.stringify({ status: "error", last_error: message, next_sync_at: new Date(Date.now() + 6 * 3600_000).toISOString(), updated_at: new Date().toISOString() }) }),
+      supabaseRequest(`interkab_sync_runs?id=eq.${runId}`, { method: "PATCH", body: JSON.stringify({ status: "error", error_message: message, completed_at: new Date().toISOString() }) }),
+    ]);
+    throw cause;
+  }
+}
+
+export async function syncDueInterkabCities(limit = INTERKAB_SYNC_BATCH_SIZE) {
+  await seedInterkabCities();
+  const response = await supabaseRequest(`interkab_cities?sync_enabled=is.true&next_sync_at=lte.${encodeURIComponent(new Date().toISOString())}&select=insee_code&order=next_sync_at.asc&limit=${limit}`);
+  const due = await response.json() as Array<{ insee_code: string }>;
+  const results = [];
+  for (const row of due) {
+    const city = INTERKAB_CITIES.find((candidate) => candidate.inseeCode === row.insee_code);
+    if (!city) continue;
+    try { results.push(await syncInterkabCity(city)); } catch (cause) { results.push({ city: city.name, error: cause instanceof Error ? cause.message : "Erreur" }); }
+  }
+  return results;
 }
 
 export async function getAubagneInterkabPilot(): Promise<InterkabPilot> {

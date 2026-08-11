@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseInterkabDetailPage, parseInterkabSearchPage } from "./interkab";
+import { parseInterkabDetailPage, parseInterkabLocationId, parseInterkabSearchPage } from "./interkab";
 
 describe("Interkab pilot parser", () => {
+  it("reads the internal city identifier selected by Interkab", () => {
+    expect(parseInterkabLocationId('<select id="search_uniqueGeolocalite"><option value="4497_689" selected="selected">Gémenos</option></select>')).toBe("4497_689");
+  });
   it("reads a property card and the Aubagne result count", () => {
     const parsed = parseInterkabSearchPage(`
       <h2 class="level-6 section__results">110 annonces immobilières</h2>

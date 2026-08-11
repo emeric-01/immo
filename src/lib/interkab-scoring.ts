@@ -65,7 +65,7 @@ export function scoreInterkabListing(
     .sort((left, right) => right.score - left.score);
   const compatible = matches.filter((match) => match.score >= 75);
   const best = matches[0];
-  const interestScore = Math.round((best?.score ?? 50) * 0.65 + marketScore * 0.35);
+  const interestScore = best ? Math.round(best.score * 0.65 + marketScore * 0.35) : marketScore;
   return {
     bestBuyerMatch: best ? { id: best.search.id, label: `${best.search.contact_first_name} ${best.search.contact_last_name}`.trim(), score: best.score } : null,
     compatibleSearchCount: compatible.length,

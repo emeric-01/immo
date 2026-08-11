@@ -8,6 +8,14 @@
 .notice,.pilotNote { padding:18px 20px; }
 .notice p,.pilotNote p { margin:5px 0 0; color:#667085; }
 .pilotNote { border-color:#d9c7b6; background:#fbf7f2; }
+.cityNav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-height:310px; overflow:auto; padding:2px; }
+.cityNav a { display:grid; gap:3px; border:1px solid #e3dcd4; border-radius:8px; background:#fff; padding:10px 12px; color:#252525; text-decoration:none; }
+.cityNav a:hover,.cityNav .cityActive { border-color:#a66d42; background:#fbf7f2; }
+.cityNav span { font-weight:700; }
+.cityNav small { color:#707789; }
+.sectionTitle { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; border-bottom:1px solid #e3dcd4; padding-bottom:12px; }
+.sectionTitle h2 { margin:0; font-family:Georgia,"Times New Roman",serif; font-size:1.8rem; font-weight:500; }
+.sectionTitle small { color:#707789; }
 .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
 .card { overflow:hidden; }
 .cover { position:relative; display:grid; min-height:210px; place-items:center; overflow:hidden; background:#eee9e3; color:#a99e94; }
@@ -30,9 +38,6 @@
 .marketRange { grid-column:1/-1; padding-top:3px; }
 .analysis p { grid-column:1/-1; margin:2px 0 0; color:#246034; font-weight:700; }
 .analysis p[data-market="high"] { color:#8b2e21; }
-.match { display:grid; gap:5px; border-left:3px solid #d2a476; padding-left:11px; }
-.match a { color:#70401e; font-weight:700; text-decoration:none; }
-.match span { color:#707789; }
 .agency { display:grid; gap:4px; border-top:1px solid #ebe5df; padding-top:13px; }
 .agency small,.agency span { color:#707789; }
 .agency a { display:inline-flex; align-items:center; gap:6px; color:#111; font-weight:700; text-decoration:none; }
@@ -40,5 +45,5 @@
 .actions a { display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:6px; border:1px solid #ded6ce; border-radius:7px; padding:0 11px; color:#111; font-weight:700; text-decoration:none; }
 .actions a:first-child { border-color:#111; background:#111; color:#fff; }
 .actions small { align-self:center; margin-left:auto; color:#707789; }
-@media (max-width:1100px) { .stats,.grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media (max-width:700px) { .stats,.grid { grid-template-columns:1fr; } .cover { min-height:230px; } }
+@media (max-width:1100px) { .stats,.grid,.cityNav { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:700px) { .stats,.grid,.cityNav { grid-template-columns:1fr; } .cover { min-height:230px; } .sectionTitle { align-items:start; flex-direction:column; } }

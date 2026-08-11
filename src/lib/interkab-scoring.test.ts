@@ -15,4 +15,13 @@ describe("Interkab listing scoring", () => {
     expect(score.marketRangeLowValue).toBeNull();
     expect(score.interestScore).toBeGreaterThanOrEqual(90);
   });
+
+  it("uses only the market score when client matching is not requested", () => {
+    const listing = { city: "Aubagne", propertyType: "Appartement", price: 240000, surfaceM2: 70, rooms: 3, bedrooms: 2, landAreaM2: null } as never;
+    const market = { apartment: { averagePricePerM2: 3750 }, house: { averagePricePerM2: 3900 } } as never;
+    const score = scoreInterkabListing(listing, [], market);
+    expect(score.bestBuyerMatch).toBeNull();
+    expect(score.compatibleSearchCount).toBe(0);
+    expect(score.interestScore).toBe(100);
+  });
 });
