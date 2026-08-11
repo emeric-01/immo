@@ -280,7 +280,7 @@ function comparableListing(row: Record<string, unknown>) {
   ]);
 }
 
-function listingRow(listing: InterkabListing, city: City, seenAt: string, existing?: Record<string, unknown>) {
+function listingRow(listing: InterkabListing, city: City, seenAt: string, existing?: Record<string, unknown>, detailLoaded = false) {
   return {
     external_id: listing.externalId, city_insee_code: city.inseeCode, listing_url: listing.listingUrl,
     image_url: listing.imageUrl, property_type: listing.propertyType, city_label: listing.city,
@@ -294,6 +294,11 @@ function listingRow(listing: InterkabListing, city: City, seenAt: string, existi
     agency_site_url: listing.agencySiteUrl ?? existing?.agency_site_url ?? null,
     agent_label: listing.agentLabel, published_at: listing.publishedAt ?? existing?.published_at ?? null,
     last_seen_at: seenAt, status: "active", updated_at: seenAt,
+    details_status: detailLoaded ? "complete" : (existing?.details_status ?? "pending"),
+    details_attempts: detailLoaded ? Number(existing?.details_attempts ?? 0) + 1 : Number(existing?.details_attempts ?? 0),
+    details_synced_at: detailLoaded ? seenAt : (existing?.details_synced_at ?? null),
+    details_next_attempt_at: existing?.details_next_attempt_at ?? seenAt,
+    details_error: detailLoaded ? null : (existing?.details_error ?? null),
   };
 }
 
@@ -332,6 +337,7 @@ export async function syncInterkabCity(city: City, detailLimit = 3) {
     const changedIds = new Set([...newListings, ...changedListings].map((listing) => listing.externalId));
     const listingsToWrite = listings.filter((listing) => changedIds.has(listing.externalId));
     const listingsToEnrich = listingsToWrite.slice(0, detailLimit);
+    const enrichedIds = new Set<string>();
     for (let index = 0; index < listingsToEnrich.length; index += 2) {
       const details = await Promise.all(listingsToEnrich.slice(index, index + 2).map(async (listing) => {
         try { return parseInterkabDetailPage(await fetchHtml(listing.listingUrl)); } catch { return null; }
@@ -339,6 +345,7 @@ export async function syncInterkabCity(city: City, detailLimit = 3) {
       details.forEach((detail, offset) => {
         if (!detail) return;
         const externalId = listingsToEnrich[index + offset].externalId;
+        enrichedIds.add(externalId);
         const listingIndex = listings.findIndex((listing) => listing.externalId === externalId);
         listings[listingIndex] = { ...listings[listingIndex], ...detail };
       });
@@ -349,7 +356,7 @@ export async function syncInterkabCity(city: City, detailLimit = 3) {
     const enrichedListingsToWrite = listings.filter((listing) => changedIds.has(listing.externalId));
     if (enrichedListingsToWrite.length) await supabaseRequest("interkab_listings?on_conflict=external_id", {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify(enrichedListingsToWrite.map((listing) => listingRow(listing, city, seenAt, existingById.get(listing.externalId)))),
+      body: JSON.stringify(enrichedListingsToWrite.map((listing) => listingRow(listing, city, seenAt, existingById.get(listing.externalId), enrichedIds.has(listing.externalId)))),
     });
     for (let index = 0; index < missingIds.length; index += 100) {
       const ids = missingIds.slice(index, index + 100).map((id) => `"${id.replaceAll('"', '')}"`).join(",");
@@ -386,6 +393,44 @@ export async function syncDueInterkabCities(limit = INTERKAB_SYNC_BATCH_SIZE) {
     const city = INTERKAB_CITIES.find((candidate) => candidate.inseeCode === row.insee_code);
     if (!city) continue;
     try { results.push(await syncInterkabCity(city)); } catch (cause) { results.push({ city: city.name, error: cause instanceof Error ? cause.message : "Erreur" }); }
+  }
+  return results;
+}
+
+export async function enrichInterkabListingDetails(limit = 20) {
+  const response = await supabaseRequest(`interkab_listings?status=eq.active&details_status=in.(pending,retry)&details_next_attempt_at=lte.${encodeURIComponent(new Date().toISOString())}&select=external_id,listing_url,details_attempts&order=details_next_attempt_at.asc,first_seen_at.asc&limit=${Math.min(limit, 30)}`);
+  const pending = await response.json() as Array<{ external_id: string; listing_url: string; details_attempts: number }>;
+  const results = [];
+  for (const row of pending) {
+    await supabaseRequest(`interkab_listings?external_id=eq.${encodeURIComponent(row.external_id)}`, {
+      method: "PATCH", body: JSON.stringify({ details_status: "processing", updated_at: new Date().toISOString() }),
+    });
+    try {
+      await wait(350);
+      const detail = parseInterkabDetailPage(await fetchHtml(row.listing_url));
+      const completedAt = new Date().toISOString();
+      await supabaseRequest(`interkab_listings?external_id=eq.${encodeURIComponent(row.external_id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          agency_name: detail.agencyName, agency_phone: detail.agencyPhone, agency_site_url: detail.agencySiteUrl,
+          bathrooms: detail.bathrooms, toilets: detail.toilets, land_area_m2: detail.landAreaM2,
+          neighborhood: detail.neighborhood, published_at: detail.publishedAt, features: detail.features,
+          details_status: "complete", details_attempts: row.details_attempts + 1,
+          details_synced_at: completedAt, details_error: null, updated_at: completedAt,
+        }),
+      });
+      results.push({ externalId: row.external_id, phone: Boolean(detail.agencyPhone), status: "complete" });
+    } catch (cause) {
+      const attempts = row.details_attempts + 1;
+      const failed = attempts >= 3;
+      await supabaseRequest(`interkab_listings?external_id=eq.${encodeURIComponent(row.external_id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ details_status: failed ? "failed" : "retry", details_attempts: attempts,
+          details_next_attempt_at: new Date(Date.now() + (failed ? 7 * 24 : 6) * 3600_000).toISOString(),
+          details_error: cause instanceof Error ? cause.message.slice(0, 500) : "Erreur inconnue", updated_at: new Date().toISOString() }),
+      });
+      results.push({ externalId: row.external_id, status: failed ? "failed" : "retry" });
+    }
   }
   return results;
 }

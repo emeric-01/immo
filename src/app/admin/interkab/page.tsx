@@ -22,8 +22,8 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
   const session = await requireAdminSession();
   await requireAdminPermission(session, "properties:read");
   const query = await searchParams;
-  const requestedSlug = query.ville ?? "toutes";
-  const selected = INTERKAB_CITIES.find((city) => city.slug === requestedSlug) ?? null;
+  const requestedCity = query.ville?.trim() ?? "";
+  const selected = INTERKAB_CITIES.find((city) => city.slug === requestedCity || normalize(city.name) === normalize(requestedCity)) ?? null;
   const filters = {
     inseeCode: selected?.inseeCode,
     minPrice: positiveNumber(query.prixMin), maxPrice: positiveNumber(query.prixMax),
@@ -63,7 +63,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
         <section className={styles.pilotNote}><strong>Catalogue complet</strong><p>Aubagne démarre en premier. Onze lots nocturnes traitent ensuite quatre villes à la fois et parcourent toutes leurs pages, afin de couvrir les 43 villes sans recopier les photos dans Supabase.</p></section>
 
         <form className={styles.filters} method="get">
-          <label><span>Ville</span><select defaultValue={selected?.slug ?? "toutes"} name="ville"><option value="toutes">Toutes les villes</option>{cities.map((city) => <option key={city.insee_code} value={city.slug}>{city.city_name} ({city.last_listing_count})</option>)}</select></label>
+          <label><span>Ville</span><input autoComplete="off" defaultValue={selected?.name ?? ""} list="interkab-cities" name="ville" placeholder="Toutes les villes" type="search"/><datalist id="interkab-cities">{cities.map((city) => <option key={city.insee_code} value={city.city_name}>{city.last_listing_count} biens</option>)}</datalist></label>
           <label><span>Prix minimum</span><input defaultValue={query.prixMin} inputMode="numeric" min="0" name="prixMin" placeholder="150 000 €" type="number"/></label>
           <label><span>Prix maximum</span><input defaultValue={query.prixMax} inputMode="numeric" min="0" name="prixMax" placeholder="600 000 €" type="number"/></label>
           <label><span>Surface minimum</span><input defaultValue={query.surfaceMin} inputMode="numeric" min="0" name="surfaceMin" placeholder="50 m²" type="number"/></label>
@@ -100,6 +100,7 @@ function formatCurrency(value: number | null) { return value === null ? "Prix no
 function formatPricePerM2(value: number | null) { return value === null ? "Non disponible" : `${new Intl.NumberFormat("fr-FR").format(value)} €/m²`; }
 
 function positiveNumber(value?: string) { const parsed = Number(value); return value && Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined; }
+function normalize(value: string) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr-FR"); }
 
 function Pagination({ page, pageCount, query }: { page: number; pageCount: number; query: InterkabSearchParams }) {
   if (pageCount <= 1) return null;
