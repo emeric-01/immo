@@ -6,7 +6,8 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import type { City } from "@/lib/cities";
-import { getCityMarketData } from "@/lib/city-market-data";
+import type { CityMarketData } from "@/lib/city-market-data";
+import { readCityMarketCache } from "@/lib/city-market-cache";
 import { formatFrenchPhone, getAllStoredInterkabListings, getInterkabCities, getStoredInterkabListings, INTERKAB_CITIES, type InterkabListingFilters } from "@/lib/interkab";
 import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import admin from "../admin.module.css";
@@ -40,13 +41,13 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
   };
   let cities: Awaited<ReturnType<typeof getInterkabCities>> = [];
   let listingResult: Awaited<ReturnType<typeof getStoredInterkabListings>> = { listings: [], page: 1, pageSize: 24, total: 0, pageCount: 1 };
-  let selectedMarket: Awaited<ReturnType<typeof getCityMarketData>> | null = null;
+  let selectedMarket: CityMarketData | null = null;
   let error = "";
   try {
     [cities, listingResult, selectedMarket] = await Promise.all([
       getInterkabCities(),
       getStoredInterkabListings(filters),
-      selected ? getCityMarketData(selected).catch(() => null) : Promise.resolve(null),
+      selected ? getCachedMarketData(selected) : Promise.resolve(null),
     ]);
   } catch (cause) { error = cause instanceof Error ? cause.message : "Lecture Interkab impossible."; }
   const cityState = selected ? cities.find((city) => city.insee_code === selected.inseeCode) : null;
@@ -76,7 +77,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
     city.inseeCode,
     selected?.inseeCode === city.inseeCode && selectedMarket
       ? selectedMarket
-      : await getCityMarketData(city).catch(() => null),
+      : await getCachedMarketData(city),
   ] as const));
   const marketsByInseeCode = new Map(marketEntries);
   const readyCount = cities.filter((city) => city.status === "ready").length;
@@ -157,6 +158,10 @@ function normalize(value: string) { return value.normalize("NFD").replace(/[\u03
 function resolveListingCity(value: string) {
   const normalized = normalize(value).replace(/\s*\(?(?:13|83)\d{3}\)?\s*$/, "").trim();
   return INTERKAB_CITIES.find((city) => normalize(city.name) === normalized) ?? null;
+}
+async function getCachedMarketData(city: City) {
+  const cached = await readCityMarketCache(city);
+  return cached?.data ?? null;
 }
 
 function Pagination({ page, pageCount, query }: { page: number; pageCount: number; query: InterkabSearchParams }) {
