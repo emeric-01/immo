@@ -10,6 +10,9 @@ describe("Interkab listing scoring", () => {
     expect(score.compatibleSearchCount).toBe(1);
     expect(score.bestBuyerMatch?.score).toBe(100);
     expect(score.pricePerM2).toBe(3429);
+    expect(score.estimatedMarketValue).toBe(262500);
+    expect(score.priceGapEuro).toBe(-22500);
+    expect(score.marketRangeLowValue).toBeNull();
     expect(score.interestScore).toBeGreaterThanOrEqual(90);
   });
 });

@@ -64,9 +64,13 @@ export default async function InterkabPilotPage() {
               <div className={styles.facts}>{listing.surfaceM2 ? <span>{listing.surfaceM2} m²</span> : null}{listing.rooms ? <span>{listing.rooms} pièces</span> : null}{listing.bedrooms ? <span>{listing.bedrooms} chambres</span> : null}</div>
               <div className={styles.facts}>{listing.bathrooms ? <span>{listing.bathrooms} salle de bain/eau</span> : null}{listing.toilets ? <span>{listing.toilets} WC</span> : null}{listing.landAreaM2 ? <span>{listing.landAreaM2} m² de terrain</span> : null}{listing.features.map((feature) => <span key={feature}>{feature}</span>)}</div>
               <div className={styles.analysis}>
-                <div><small>Prix du bien</small><strong>{formatPricePerM2(score.pricePerM2)}</strong></div>
-                <div><small>Marché Aubagne</small><strong>{formatPricePerM2(score.marketPricePerM2)}</strong></div>
-                <p data-market={score.marketGapPercent !== null && score.marketGapPercent > 8 ? "high" : "ok"}>{score.marketLabel}{score.marketGapPercent !== null ? ` · ${score.marketGapPercent > 0 ? "+" : ""}${score.marketGapPercent} %` : ""}</p>
+                <header><strong>Comparatif prix · {score.marketPropertyTypeLabel ?? listing.propertyType}</strong><small>Moyenne observée à Aubagne pour cette typologie</small></header>
+                <div><small>Prix affiché au m²</small><strong>{formatPricePerM2(score.pricePerM2)}</strong></div>
+                <div><small>Moyenne ville au m²</small><strong>{formatPricePerM2(score.marketPricePerM2)}</strong></div>
+                <div><small>Prix affiché</small><strong>{formatCurrency(listing.price)}</strong></div>
+                <div><small>Valeur à la moyenne ville</small><strong>{formatCurrency(score.estimatedMarketValue)}</strong></div>
+                {score.marketRangeLowValue !== null && score.marketRangeHighValue !== null ? <small className={styles.marketRange}>Fourchette ville indicative pour {listing.surfaceM2} m² : {formatCurrency(score.marketRangeLowValue)} – {formatCurrency(score.marketRangeHighValue)}</small> : null}
+                <p data-market={score.marketGapPercent !== null && score.marketGapPercent > 8 ? "high" : "ok"}>{score.marketLabel}{score.marketGapPercent !== null ? ` · ${score.marketGapPercent > 0 ? "+" : ""}${score.marketGapPercent} %` : ""}{score.priceGapEuro !== null ? ` · ${formatSignedCurrency(score.priceGapEuro)}` : ""}</p>
               </div>
               <div className={styles.match}><strong>{score.compatibleSearchCount} recherche{score.compatibleSearchCount > 1 ? "s" : ""} compatible{score.compatibleSearchCount > 1 ? "s" : ""}</strong>{score.bestBuyerMatch ? <a href={`/admin/recherches/${score.bestBuyerMatch.id}`}>Meilleur rapprochement : {score.bestBuyerMatch.label} ({score.bestBuyerMatch.score}/100)</a> : <span>Aucune recherche active disponible</span>}</div>
               <div className={styles.agency}>
@@ -88,4 +92,9 @@ function formatCurrency(value: number | null) {
 
 function formatPricePerM2(value: number | null) {
   return value === null ? "Non disponible" : `${new Intl.NumberFormat("fr-FR").format(value)} €/m²`;
+}
+
+function formatSignedCurrency(value: number) {
+  const amount = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Math.abs(value));
+  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${amount}`;
 }

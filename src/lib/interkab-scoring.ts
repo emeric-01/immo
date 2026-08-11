@@ -5,11 +5,16 @@ import type { InterkabListing } from "@/lib/interkab";
 export type InterkabListingScore = {
   bestBuyerMatch: { id: string; label: string; score: number } | null;
   compatibleSearchCount: number;
+  estimatedMarketValue: number | null;
   interestLabel: "À étudier" | "Intéressant" | "Prioritaire";
   interestScore: number;
   marketGapPercent: number | null;
   marketLabel: string;
+  marketRangeHighValue: number | null;
+  marketRangeLowValue: number | null;
   marketPricePerM2: number | null;
+  marketPropertyTypeLabel: "Appartement" | "Maison" | null;
+  priceGapEuro: number | null;
   pricePerM2: number | null;
   reasons: string[];
 };
@@ -46,6 +51,10 @@ export function scoreInterkabListing(
   const pricePerM2 = listing.price && listing.surfaceM2 ? Math.round(listing.price / listing.surfaceM2) : null;
   const stat = type === "house" ? market?.house : type === "apartment" ? market?.apartment : null;
   const marketPricePerM2 = stat?.averagePricePerM2 ? Math.round(stat.averagePricePerM2) : null;
+  const estimatedMarketValue = marketPricePerM2 && listing.surfaceM2 ? Math.round(marketPricePerM2 * listing.surfaceM2) : null;
+  const marketRangeLowValue = stat?.lowPricePerM2 && listing.surfaceM2 ? Math.round(stat.lowPricePerM2 * listing.surfaceM2) : null;
+  const marketRangeHighValue = stat?.highPricePerM2 && listing.surfaceM2 ? Math.round(stat.highPricePerM2 * listing.surfaceM2) : null;
+  const priceGapEuro = listing.price !== null && estimatedMarketValue !== null ? listing.price - estimatedMarketValue : null;
   const marketGapPercent = pricePerM2 && marketPricePerM2
     ? Number((((pricePerM2 - marketPricePerM2) / marketPricePerM2) * 100).toFixed(1))
     : null;
@@ -60,11 +69,16 @@ export function scoreInterkabListing(
   return {
     bestBuyerMatch: best ? { id: best.search.id, label: `${best.search.contact_first_name} ${best.search.contact_last_name}`.trim(), score: best.score } : null,
     compatibleSearchCount: compatible.length,
+    estimatedMarketValue,
     interestLabel: interestScore >= 85 ? "Prioritaire" : interestScore >= 70 ? "Intéressant" : "À étudier",
     interestScore,
     marketGapPercent,
     marketLabel: marketGapPercent === null ? "Marché indisponible" : marketGapPercent <= -5 ? "Sous le marché" : marketGapPercent <= 8 ? "Prix cohérent" : "Au-dessus du marché",
+    marketRangeHighValue,
+    marketRangeLowValue,
     marketPricePerM2,
+    marketPropertyTypeLabel: type === "house" ? "Maison" : type === "apartment" ? "Appartement" : null,
+    priceGapEuro,
     pricePerM2,
     reasons: best?.reasons ?? [],
   };

@@ -24,8 +24,10 @@
 .facts { display:flex; flex-wrap:wrap; gap:7px; }
 .facts span { border:1px solid #e3dcd4; border-radius:6px; padding:6px 8px; color:#555d6d; font-size:.88rem; }
 .analysis { display:grid; grid-template-columns:1fr 1fr; gap:8px; border:1px solid #e3dcd4; border-radius:8px; background:#faf8f5; padding:11px; }
+.analysis header { display:grid; grid-column:1/-1; gap:3px; border-bottom:1px solid #e3dcd4; padding-bottom:9px; }
 .analysis div { display:grid; gap:3px; }
 .analysis small { color:#707789; }
+.marketRange { grid-column:1/-1; padding-top:3px; }
 .analysis p { grid-column:1/-1; margin:2px 0 0; color:#246034; font-weight:700; }
 .analysis p[data-market="high"] { color:#8b2e21; }
 .match { display:grid; gap:5px; border-left:3px solid #d2a476; padding-left:11px; }
