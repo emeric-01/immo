@@ -8,7 +8,7 @@ const FOUR_DAYS = 60 * 60 * 24 * 4;
 const PILOT_DETAIL_LIMIT = 6;
 
 export const INTERKAB_CITIES = southCities.filter((city) => ["13", "83"].includes(city.inseeCode.slice(0, 2)));
-export const INTERKAB_SYNC_BATCH_SIZE = 11;
+export const INTERKAB_SYNC_BATCH_SIZE = 4;
 
 export type InterkabListing = {
   agencyName: string | null;
@@ -235,6 +235,43 @@ export async function getStoredInterkabListings(inseeCode: string) {
   }));
 }
 
+async function getInterkabListingRows(inseeCode: string) {
+  const rows: Array<Record<string, unknown>> = [];
+  for (let start = 0; ; start += 1000) {
+    const response = await supabaseRequest(`interkab_listings?city_insee_code=eq.${encodeURIComponent(inseeCode)}&select=*`, {
+      headers: { Range: `${start}-${start + 999}` },
+    });
+    const page = await response.json() as Array<Record<string, unknown>>;
+    rows.push(...page);
+    if (page.length < 1000) return rows;
+  }
+}
+
+function comparableListing(row: Record<string, unknown>) {
+  return JSON.stringify([
+    row.listing_url ?? null, row.image_url ?? null, row.property_type ?? "", row.city_label ?? "",
+    row.price === null ? null : Number(row.price), row.surface_m2 === null ? null : Number(row.surface_m2),
+    row.rooms ?? null, row.bedrooms ?? null, row.agent_label ?? null,
+  ]);
+}
+
+function listingRow(listing: InterkabListing, city: City, seenAt: string, existing?: Record<string, unknown>) {
+  return {
+    external_id: listing.externalId, city_insee_code: city.inseeCode, listing_url: listing.listingUrl,
+    image_url: listing.imageUrl, property_type: listing.propertyType, city_label: listing.city,
+    neighborhood: listing.neighborhood ?? existing?.neighborhood ?? null, price: listing.price,
+    surface_m2: listing.surfaceM2, rooms: listing.rooms, bedrooms: listing.bedrooms,
+    bathrooms: listing.bathrooms ?? existing?.bathrooms ?? null, toilets: listing.toilets ?? existing?.toilets ?? null,
+    land_area_m2: listing.landAreaM2 ?? existing?.land_area_m2 ?? null,
+    features: listing.features.length ? listing.features : (existing?.features ?? []),
+    agency_name: listing.agencyName ?? existing?.agency_name ?? null,
+    agency_phone: listing.agencyPhone ?? existing?.agency_phone ?? null,
+    agency_site_url: listing.agencySiteUrl ?? existing?.agency_site_url ?? null,
+    agent_label: listing.agentLabel, published_at: listing.publishedAt ?? existing?.published_at ?? null,
+    last_seen_at: seenAt, status: "active", updated_at: seenAt,
+  };
+}
+
 export async function syncInterkabCity(city: City, detailLimit = 3) {
   const startedAt = new Date().toISOString();
   const runResponse = await supabaseRequest("interkab_sync_runs?select=id", {
@@ -246,33 +283,61 @@ export async function syncInterkabCity(city: City, detailLimit = 3) {
     const sourceUrl = getInterkabCitySourceUrl(city);
     const html = await fetchHtml(sourceUrl);
     const locationId = parseInterkabLocationId(html);
-    const parsed = parseInterkabSearchPage(html);
-    const listings = [...parsed.listings];
-    for (let index = 0; index < Math.min(detailLimit, listings.length); index += 2) {
-      const details = await Promise.all(listings.slice(index, index + 2).map(async (listing) => {
+    const firstPage = parseInterkabSearchPage(html);
+    const byId = new Map(firstPage.listings.map((listing) => [listing.externalId, listing]));
+    for (let page = 2; page <= firstPage.pageCount; page += 1) {
+      await wait(300);
+      const pageHtml = await fetchHtml(`${sourceUrl}?page=${page}`);
+      for (const listing of parseInterkabSearchPage(pageHtml).listings) byId.set(listing.externalId, listing);
+    }
+    const listings = [...byId.values()];
+    const existingRows = await getInterkabListingRows(city.inseeCode);
+    const scanLooksComplete = firstPage.resultCount > 0
+      ? listings.length >= Math.floor(firstPage.resultCount * 0.8)
+      : existingRows.length === 0 && firstPage.pageCount === 1;
+    if (!scanLooksComplete) {
+      throw new Error(`Collecte incomplète pour ${city.name}: ${listings.length}/${firstPage.resultCount} références. Aucun archivage appliqué.`);
+    }
+    const existingById = new Map(existingRows.map((row) => [String(row.external_id), row]));
+    const newListings = listings.filter((listing) => !existingById.has(listing.externalId));
+    const changedListings = listings.filter((listing) => {
+      const existing = existingById.get(listing.externalId);
+      return existing && (String(existing.status) !== "active" || comparableListing(listingRow(listing, city, "", existing)) !== comparableListing(existing));
+    });
+    const changedIds = new Set([...newListings, ...changedListings].map((listing) => listing.externalId));
+    const listingsToWrite = listings.filter((listing) => changedIds.has(listing.externalId));
+    const listingsToEnrich = listingsToWrite.slice(0, detailLimit);
+    for (let index = 0; index < listingsToEnrich.length; index += 2) {
+      const details = await Promise.all(listingsToEnrich.slice(index, index + 2).map(async (listing) => {
         try { return parseInterkabDetailPage(await fetchHtml(listing.listingUrl)); } catch { return null; }
       }));
-      details.forEach((detail, offset) => { if (detail) listings[index + offset] = { ...listings[index + offset], ...detail }; });
+      details.forEach((detail, offset) => {
+        if (!detail) return;
+        const externalId = listingsToEnrich[index + offset].externalId;
+        const listingIndex = listings.findIndex((listing) => listing.externalId === externalId);
+        listings[listingIndex] = { ...listings[listingIndex], ...detail };
+      });
     }
     const seenAt = new Date().toISOString();
-    if (listings.length) await supabaseRequest("interkab_listings?on_conflict=external_id", {
+    const currentIds = new Set(listings.map((listing) => listing.externalId));
+    const missingIds = existingRows.filter((row) => row.status === "active" && !currentIds.has(String(row.external_id))).map((row) => String(row.external_id));
+    const enrichedListingsToWrite = listings.filter((listing) => changedIds.has(listing.externalId));
+    if (enrichedListingsToWrite.length) await supabaseRequest("interkab_listings?on_conflict=external_id", {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify(listings.map((listing) => ({
-        external_id: listing.externalId, city_insee_code: city.inseeCode, listing_url: listing.listingUrl,
-        image_url: listing.imageUrl, property_type: listing.propertyType, city_label: listing.city,
-        neighborhood: listing.neighborhood, price: listing.price, surface_m2: listing.surfaceM2, rooms: listing.rooms,
-        bedrooms: listing.bedrooms, bathrooms: listing.bathrooms, toilets: listing.toilets,
-        land_area_m2: listing.landAreaM2, features: listing.features, agency_name: listing.agencyName,
-        agency_phone: listing.agencyPhone, agency_site_url: listing.agencySiteUrl, agent_label: listing.agentLabel,
-        published_at: listing.publishedAt, last_seen_at: seenAt, status: "active", updated_at: seenAt,
-      }))),
+      body: JSON.stringify(enrichedListingsToWrite.map((listing) => listingRow(listing, city, seenAt, existingById.get(listing.externalId)))),
     });
+    for (let index = 0; index < missingIds.length; index += 100) {
+      const ids = missingIds.slice(index, index + 100).map((id) => `"${id.replaceAll('"', '')}"`).join(",");
+      await supabaseRequest(`interkab_listings?city_insee_code=eq.${city.inseeCode}&external_id=in.(${encodeURIComponent(ids)})`, {
+        method: "PATCH", body: JSON.stringify({ status: "missing", updated_at: seenAt }),
+      });
+    }
     const nextSync = new Date(Date.now() + FOUR_DAYS * 1000).toISOString();
     await Promise.all([
-      supabaseRequest(`interkab_cities?insee_code=eq.${city.inseeCode}`, { method: "PATCH", body: JSON.stringify({ interkab_location_id: locationId, status: "ready", last_listing_count: parsed.resultCount, last_synced_at: seenAt, next_sync_at: nextSync, last_error: null, updated_at: seenAt }) }),
-      supabaseRequest(`interkab_sync_runs?id=eq.${runId}`, { method: "PATCH", body: JSON.stringify({ status: "success", result_count: parsed.resultCount, listing_count: listings.length, completed_at: seenAt }) }),
+      supabaseRequest(`interkab_cities?insee_code=eq.${city.inseeCode}`, { method: "PATCH", body: JSON.stringify({ interkab_location_id: locationId, status: "ready", last_listing_count: firstPage.resultCount, last_synced_at: seenAt, next_sync_at: nextSync, last_error: null, updated_at: seenAt }) }),
+      supabaseRequest(`interkab_sync_runs?id=eq.${runId}`, { method: "PATCH", body: JSON.stringify({ status: "success", result_count: firstPage.resultCount, listing_count: listings.length, inserted_count: newListings.length, updated_count: changedListings.length, archived_count: missingIds.length, unchanged_count: listings.length - listingsToWrite.length, completed_at: seenAt }) }),
     ]);
-    return { city: city.name, resultCount: parsed.resultCount, listingCount: listings.length };
+    return { city: city.name, resultCount: firstPage.resultCount, listingCount: listings.length, pageCount: firstPage.pageCount, inserted: newListings.length, updated: changedListings.length, archived: missingIds.length };
   } catch (cause) {
     const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Erreur inconnue";
     await Promise.allSettled([
@@ -281,6 +346,10 @@ export async function syncInterkabCity(city: City, detailLimit = 3) {
     ]);
     throw cause;
   }
+}
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export async function syncDueInterkabCities(limit = INTERKAB_SYNC_BATCH_SIZE) {

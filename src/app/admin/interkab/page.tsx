@@ -50,7 +50,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
           <article><Building2/><span>Ville consultée</span><strong>{selected.name}</strong><small>{cityState?.interkab_location_id ?? "À initialiser"}</small></article>
         </section>
 
-        <section className={styles.pilotNote}><strong>Déploiement progressif</strong><p>Aubagne démarre en premier. Le traitement quotidien prend ensuite les villes arrivées à échéance, par lots de 11, afin de couvrir les 43 villes en quatre jours sans recopier les photos dans Supabase.</p></section>
+        <section className={styles.pilotNote}><strong>Catalogue complet</strong><p>Aubagne démarre en premier. Onze lots nocturnes traitent ensuite quatre villes à la fois et parcourent toutes leurs pages, afin de couvrir les 43 villes sans recopier les photos dans Supabase.</p></section>
 
         <nav className={styles.cityNav} aria-label="Villes Interkab">{cities.map((city) => <Link className={city.slug === selected.slug ? styles.cityActive : ""} href={`/admin/interkab?ville=${city.slug}`} key={city.insee_code}><span>{city.city_name}</span><small>{city.last_listing_count} biens · {statusLabel(city.status)}</small></Link>)}</nav>
 
