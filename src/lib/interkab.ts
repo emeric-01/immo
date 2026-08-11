@@ -235,6 +235,12 @@ export type InterkabListingFilters = {
   sort?: "recent" | "price_asc" | "price_desc" | "surface_asc" | "surface_desc" | "ppm_asc" | "ppm_desc";
 };
 
+const INTERKAB_LISTING_CARD_COLUMNS = [
+  "external_id", "listing_url", "image_url", "property_type", "city_label", "neighborhood",
+  "price", "surface_m2", "rooms", "bedrooms", "bathrooms", "toilets", "land_area_m2",
+  "features", "agency_name", "agency_phone", "agency_site_url", "agent_label", "published_at",
+].join(",");
+
 function storedListing(row: Record<string, unknown>): InterkabListing {
   return {
     externalId: String(row.external_id), listingUrl: String(row.listing_url), imageUrl: row.image_url as string | null,
@@ -249,7 +255,7 @@ function storedListing(row: Record<string, unknown>): InterkabListing {
 }
 
 function listingFilterParams(filters: InterkabListingFilters) {
-  const params = new URLSearchParams({ status: "eq.active", select: "*" });
+  const params = new URLSearchParams({ status: "eq.active", select: INTERKAB_LISTING_CARD_COLUMNS });
   if (filters.inseeCode) params.set("city_insee_code", `eq.${filters.inseeCode}`);
   if (filters.minPrice !== undefined) params.set("price", `gte.${filters.minPrice}`);
   if (filters.maxPrice !== undefined) params.append("price", `lte.${filters.maxPrice}`);
