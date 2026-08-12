@@ -1878,6 +1878,14 @@
 .internalMatchLegend span { border-radius:999px; background:#eaf6ed; padding:6px 10px; color:#246034; font-size:.76rem; font-weight:700; }
 .internalMatchLegend span[data-tier="negotiation"] { background:#fff4df; color:#82501c; }
 .internalMatchLegend span[data-tier="expanded"] { background:#f6eee6; color:#8b4a22; }
+.internalMatchAreas { display:grid; gap:28px; }
+.internalMatchArea { display:grid; gap:12px; }
+.internalMatchArea > header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 2px; }
+.internalMatchArea > header > div { display:flex; align-items:center; gap:10px; }
+.internalMatchArea > header svg { flex:0 0 auto; color:#a15d36; }
+.internalMatchArea h3 { margin:0; font-family:Georgia,"Times New Roman",serif; font-size:1.35rem; font-weight:500; }
+.internalMatchArea p { margin:3px 0 0; color:#707789; font-size:.82rem; }
+.internalMatchArea > header > span { border-radius:999px; background:#eee7df; padding:6px 10px; color:#70401e; font-size:.76rem; font-weight:800; white-space:nowrap; }
 .internalMatchColumns { display:grid; grid-template-columns:1fr; align-items:start; gap:18px; }
 .internalMatchColumn { display:grid; align-content:start; gap:0; overflow:hidden; border:1px solid #e3dcd4; border-radius:14px; background:rgba(255,255,255,.82); box-shadow:0 14px 34px rgba(17,17,17,.04); }
 .internalMatchColumn > header { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e9e2db; padding:15px 17px; background:#faf8f5; }
@@ -1899,4 +1907,4 @@
 .internalMatchScore[data-tier="expanded"] { background:#f6eee6; color:#8b4a22; }
 .internalMatchEmpty { margin:0; padding:28px 18px; color:#707789; text-align:center; }
 @media (max-width:900px) { .internalMatchColumns { grid-template-columns:1fr; } .internalMatchesHeading { align-items:flex-start; flex-direction:column; } .internalMatchesTotal { justify-items:start; } }
-@media (max-width:600px) { .internalMatchCard { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } }
+@media (max-width:600px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } }

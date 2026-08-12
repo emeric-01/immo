@@ -14,6 +14,7 @@ import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
 import { listAdminUsers } from "@/lib/admin/users";
 import { getInternalPropertyMatches } from "@/lib/admin/internal-property-matches";
+import type { InternalPropertyMatchGroup } from "@/lib/admin/internal-property-matches";
 import type { InternalPropertyMatch } from "@/lib/admin/search-property-matching";
 import styles from "../../admin.module.css";
 import { updateBuyerSearchAssignmentAction } from "../actions";
@@ -63,7 +64,7 @@ export default async function AdminBuyerSearchDetailPage({
   const preferences = formatAdminPreferences(search);
   const [usersResult, internalMatches] = await Promise.all([
     listAdminUsers(),
-    getInternalPropertyMatches(search).catch(() => ({ agency: [], interkab: [] })),
+    getInternalPropertyMatches(search, locations).catch(() => ({ agency: [], groups: [], interkab: [] })),
   ]);
   const users = usersResult.status === "ready" ? usersResult.data : [];
   const usersById = new Map(users.map((user) => [user.id, user]));
@@ -216,19 +217,27 @@ export default async function AdminBuyerSearchDetailPage({
         </InfoPanel>
       </section>
 
-      <InternalMatchesPanel agency={internalMatches.agency} interkab={internalMatches.interkab} />
+      <InternalMatchesPanel groups={internalMatches.groups} />
     </DetailFrame>
   );
 }
 
-function InternalMatchesPanel({ agency, interkab }: { agency: InternalPropertyMatch[]; interkab: InternalPropertyMatch[] }) {
-  const total = agency.length + interkab.length;
+function InternalMatchesPanel({ groups }: { groups: InternalPropertyMatchGroup[] }) {
+  const total = groups.reduce((sum, group) => sum + group.agency.length + group.interkab.length, 0);
   return <section className={styles.internalMatchesSection} aria-labelledby="internal-matches-title">
-    <header className={styles.internalMatchesHeading}><div><p className={styles.eyebrow}>Sélection interne · après analyse du dossier</p><h2 id="internal-matches-title">Biens pouvant correspondre à cette recherche</h2><p>Résultats réservés aux administrateurs et agents. Rien n’est affiché ni envoyé au client.</p></div><div className={styles.internalMatchesTotal}><strong>{total}</strong><span>bien{total > 1 ? "s" : ""} à examiner</span></div></header>
+    <header className={styles.internalMatchesHeading}><div><p className={styles.eyebrow}>Sélection interne · après analyse du dossier</p><h2 id="internal-matches-title">Biens pouvant correspondre à cette recherche</h2><p>Classement par ville sélectionnée, rayon inclus. Résultats réservés aux administrateurs et agents : rien n’est affiché ni envoyé au client.</p></div><div className={styles.internalMatchesTotal}><strong>{total}</strong><span>bien{total > 1 ? "s" : ""} à examiner</span></div></header>
     <div className={styles.internalMatchLegend}><span data-tier="strict">Correspondance stricte</span><span data-tier="negotiation">Négociation ≤ 5 %</span><span data-tier="expanded">Opportunité ≤ 8 %</span></div>
+    <div className={styles.internalMatchAreas}>{groups.map((group) => <MatchArea group={group} key={group.area.id} />)}</div>
+  </section>;
+}
+
+function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
+  const total = group.agency.length + group.interkab.length;
+  return <section className={styles.internalMatchArea}>
+    <header><div><MapPin size={19} aria-hidden="true" /><div><h3>{group.area.name}</h3><p>Ville et communes situées dans un rayon de {formatRadius(group.area.radiusKm)}</p></div></div><span>{total} bien{total > 1 ? "s" : ""}</span></header>
     <div className={styles.internalMatchColumns}>
-      <MatchColumn matches={agency} title="Biens de l’agence" />
-      <MatchColumn matches={interkab} title="Réseau Interkab" />
+      <MatchColumn matches={group.agency} title="Biens de l’agence" />
+      <MatchColumn matches={group.interkab} title="Réseau Interkab" />
     </div>
   </section>;
 }
@@ -244,6 +253,10 @@ function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; tit
 
 function matchTierLabel(tier: InternalPropertyMatch["tier"]) {
   return tier === "strict" ? "Correspondance stricte" : tier === "negotiation" ? "Négociation ≤ 5 %" : "Opportunité ≤ 8 %";
+}
+
+function formatRadius(radiusKm: number) {
+  return `${Number.isInteger(radiusKm) ? radiusKm : radiusKm.toLocaleString("fr-FR")} km`;
 }
 
 function InternalPotentialScore({

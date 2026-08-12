@@ -8,14 +8,29 @@ export type InternalMatchCandidate = {
   bathrooms: number | null;
   city: string;
   id: string;
+  latitude?: number | null;
   landAreaM2: number | null;
+  longitude?: number | null;
   price: number | null;
   propertyType: string;
   rooms: number | null;
+  searchArea?: InternalSearchAreaMatch;
   source: InternalMatchSource;
   surfaceM2: number | null;
   title: string;
   url: string;
+};
+
+export type InternalSearchArea = {
+  id: number | string;
+  latitude: number | null;
+  longitude: number | null;
+  name: string;
+  radiusKm: number;
+};
+
+export type InternalSearchAreaMatch = InternalSearchArea & {
+  distanceKm: number | null;
 };
 
 export type InternalPropertyMatch = InternalMatchCandidate & {
@@ -28,6 +43,43 @@ export type InternalPropertyMatch = InternalMatchCandidate & {
 
 function normalize(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function toRadians(value: number) {
+  return value * Math.PI / 180;
+}
+
+export function distanceInKm(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number },
+) {
+  const earthRadiusKm = 6371;
+  const latitudeDelta = toRadians(to.latitude - from.latitude);
+  const longitudeDelta = toRadians(to.longitude - from.longitude);
+  const firstLatitude = toRadians(from.latitude);
+  const secondLatitude = toRadians(to.latitude);
+  const haversine = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+export function findCandidateSearchArea(candidate: InternalMatchCandidate, areas: InternalSearchArea[]) {
+  const exactAreas = areas.filter((area) => normalize(area.name) === normalize(candidate.city));
+  if (exactAreas.length) return { ...exactAreas[0], distanceKm: 0 } satisfies InternalSearchAreaMatch;
+  if (!Number.isFinite(candidate.latitude) || !Number.isFinite(candidate.longitude)) return null;
+
+  const matchingAreas = areas
+    .filter((area) => Number.isFinite(area.latitude) && Number.isFinite(area.longitude))
+    .map((area) => ({
+      ...area,
+      distanceKm: distanceInKm(
+        { latitude: area.latitude as number, longitude: area.longitude as number },
+        { latitude: candidate.latitude as number, longitude: candidate.longitude as number },
+      ),
+    }))
+    .filter((area) => area.distanceKm <= area.radiusKm)
+    .sort((left, right) => left.distanceKm - right.distanceKm);
+  return matchingAreas[0] ?? null;
 }
 
 function propertyCategory(value: string) {
@@ -46,7 +98,7 @@ function minimumScore(value: number | null, minimum: number | null, points: numb
 
 export function matchPropertyToSearch(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow): InternalPropertyMatch | null {
   const cities = search.city_names.map(normalize);
-  const cityMatches = cities.length === 0 || cities.some((city) => city === normalize(candidate.city));
+  const cityMatches = Boolean(candidate.searchArea) || cities.length === 0 || cities.some((city) => city === normalize(candidate.city));
   if (!cityMatches) return null;
 
   const category = propertyCategory(candidate.propertyType);
@@ -59,7 +111,12 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
   const budgetGapPercent = rawBudgetGapPercent === null ? null : Number(rawBudgetGapPercent.toFixed(1));
   if (rawBudgetGapPercent !== null && rawBudgetGapPercent > 8) return null;
 
-  const reasons: string[] = ["ville conforme"];
+  const locationReason = candidate.searchArea
+    ? candidate.searchArea.distanceKm && candidate.searchArea.distanceKm >= 0.1
+      ? `${candidate.city} à ${candidate.searchArea.distanceKm.toFixed(1)} km de ${candidate.searchArea.name}`
+      : `${candidate.searchArea.name} sélectionnée`
+    : "ville conforme";
+  const reasons: string[] = [locationReason];
   const checks: string[] = [];
   let score = 25;
 
