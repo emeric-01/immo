@@ -83,6 +83,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
   ] as const));
   const marketsByInseeCode = new Map(marketEntries);
   const readyCount = cities.filter((city) => city.status === "ready").length;
+  const pendingCount = cities.length - readyCount;
   const volume = cities.reduce((sum, city) => sum + city.last_listing_count, 0);
 
   return <main className={admin.adminPage}>
@@ -101,7 +102,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
           <article><Building2/><span>Résultats filtrés</span><strong>{listingResult.total}</strong><small>{selected?.name ?? "Toutes les villes"}</small></article>
         </section>
 
-        <section className={styles.pilotNote}><strong>Catalogue complet</strong><p>Aubagne démarre en premier. Onze lots nocturnes traitent ensuite quatre villes à la fois et parcourent toutes leurs pages, afin de couvrir les 43 villes sans recopier les photos dans Supabase.</p></section>
+        <section className={styles.pilotNote}><strong>Catalogue en cours de constitution</strong><p>{readyCount} ville{readyCount > 1 ? "s" : ""} sur {cities.length} entièrement parcourue{readyCount > 1 ? "s" : ""}{pendingCount ? ` · ${pendingCount} encore en attente` : " · catalogue complet"}. Les lots nocturnes parcourent toutes les pages sans recopier les photos dans Supabase.</p></section>
 
         <form className={styles.filters} method="get">
           <label><span>Ville</span><input autoComplete="off" defaultValue={selected?.name ?? ""} list="interkab-cities" name="ville" placeholder="Toutes les villes" type="search"/><datalist id="interkab-cities">{cities.map((city) => <option key={city.insee_code} value={city.city_name}>{city.last_listing_count} biens</option>)}</datalist></label>

@@ -13,6 +13,8 @@ import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
 import { listAdminUsers } from "@/lib/admin/users";
+import { getInternalPropertyMatches } from "@/lib/admin/internal-property-matches";
+import type { InternalPropertyMatch } from "@/lib/admin/search-property-matching";
 import styles from "../../admin.module.css";
 import { updateBuyerSearchAssignmentAction } from "../actions";
 import { ArchiveBuyerSearchButton } from "./ArchiveBuyerSearchButton";
@@ -59,7 +61,10 @@ export default async function AdminBuyerSearchDetailPage({
 
   const { consents, locations, priorities, search } = result.data;
   const preferences = formatAdminPreferences(search);
-  const usersResult = await listAdminUsers();
+  const [usersResult, internalMatches] = await Promise.all([
+    listAdminUsers(),
+    getInternalPropertyMatches(search).catch(() => ({ agency: [], interkab: [] })),
+  ]);
   const users = usersResult.status === "ready" ? usersResult.data : [];
   const usersById = new Map(users.map((user) => [user.id, user]));
   const agents = users.filter((user) => user.is_active && user.role === "agent");
@@ -114,6 +119,7 @@ export default async function AdminBuyerSearchDetailPage({
       ) : null}
 
       <section className={styles.detailGrid}>
+        <InternalMatchesPanel agency={internalMatches.agency} interkab={internalMatches.interkab} />
         {search.market_score !== null ? (
           <InternalPotentialScore
             computedAt={search.market_scored_at}
@@ -212,6 +218,32 @@ export default async function AdminBuyerSearchDetailPage({
       </section>
     </DetailFrame>
   );
+}
+
+function InternalMatchesPanel({ agency, interkab }: { agency: InternalPropertyMatch[]; interkab: InternalPropertyMatch[] }) {
+  const total = agency.length + interkab.length;
+  return <article className={styles.internalMatchesPanel}>
+    <header><div><p className={styles.eyebrow}>Visible uniquement par l’équipe</p><h2>Rapprochements internes</h2></div><strong>{total} bien{total > 1 ? "s" : ""} à examiner</strong></header>
+    <p className={styles.helpText}>Correspondances calculées sur les recherches internes. Aucun résultat n’est affiché ni envoyé au client.</p>
+    <div className={styles.internalMatchColumns}>
+      <MatchColumn matches={agency} title="Biens de l’agence" />
+      <MatchColumn matches={interkab} title="Réseau Interkab" />
+    </div>
+  </article>;
+}
+
+function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; title: string }) {
+  return <section className={styles.internalMatchColumn}><h3>{title} <small>{matches.length}</small></h3>{matches.length ? matches.map((match) => <article className={styles.internalMatchCard} key={`${match.source}-${match.id}`}>
+    <div><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2} m²` : "Surface NC"}</span></div>
+    <span className={styles.internalMatchScore} data-tier={match.tier}>{match.score}/100 · {matchTierLabel(match.tier)}</span>
+    <p>{match.reasons.slice(0, 4).join(" · ")}</p>
+    {match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : null}
+    <Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien</Link>
+  </article>) : <p className={styles.mutedText}>Aucun rapprochement suffisant pour le moment.</p>}</section>;
+}
+
+function matchTierLabel(tier: InternalPropertyMatch["tier"]) {
+  return tier === "strict" ? "Correspondance stricte" : tier === "negotiation" ? "Négociation ≤ 5 %" : "Opportunité ≤ 8 %";
 }
 
 function InternalPotentialScore({
