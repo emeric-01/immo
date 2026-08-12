@@ -17,7 +17,7 @@ import { syncInterkabCityAction } from "./actions";
 export const metadata: Metadata = { title: "Interkab | Admin" };
 export const dynamic = "force-dynamic";
 
-type InterkabSearchParams = { ville?: string; prixMin?: string; prixMax?: string; surfaceMin?: string; surfaceMax?: string; page?: string; tri?: string };
+type InterkabSearchParams = { ville?: string; type?: string; prixMin?: string; prixMax?: string; surfaceMin?: string; surfaceMax?: string; page?: string; tri?: string };
 
 export default async function InterkabPage({ searchParams }: { searchParams: Promise<InterkabSearchParams> }) {
   const session = await requireAdminSession();
@@ -29,6 +29,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
   const allowedSorts = new Set(["recent", "price_asc", "price_desc", "surface_asc", "surface_desc", "ppm_asc", "ppm_desc"]);
   const priceRange = normalizeRange(query.prixMin, query.prixMax);
   const surfaceRange = normalizeRange(query.surfaceMin, query.surfaceMax);
+  const propertyCategory = query.type === "house" || query.type === "apartment" ? query.type : undefined;
   const activeSort = marketSort && selected
     ? query.tri
     : allowedSorts.has(query.tri ?? "") ? query.tri : "recent";
@@ -36,6 +37,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
     inseeCode: selected?.inseeCode,
     minPrice: priceRange.min, maxPrice: priceRange.max,
     minSurface: surfaceRange.min, maxSurface: surfaceRange.max,
+    propertyCategory,
     page: boundedPage(query.page), pageSize: 24,
     sort: allowedSorts.has(activeSort ?? "") ? activeSort as InterkabListingFilters["sort"] : "recent",
   };
@@ -103,6 +105,7 @@ export default async function InterkabPage({ searchParams }: { searchParams: Pro
 
         <form className={styles.filters} method="get">
           <label><span>Ville</span><input autoComplete="off" defaultValue={selected?.name ?? ""} list="interkab-cities" name="ville" placeholder="Toutes les villes" type="search"/><datalist id="interkab-cities">{cities.map((city) => <option key={city.insee_code} value={city.city_name}>{city.last_listing_count} biens</option>)}</datalist></label>
+          <label><span>Type de bien</span><select defaultValue={propertyCategory ?? ""} name="type"><option value="">Maisons et appartements</option><option value="house">Maisons</option><option value="apartment">Appartements</option></select></label>
           <label><span>Prix minimum</span><input defaultValue={query.prixMin} inputMode="numeric" min="0" name="prixMin" placeholder="150 000 €" type="number"/></label>
           <label><span>Prix maximum</span><input defaultValue={query.prixMax} inputMode="numeric" min="0" name="prixMax" placeholder="600 000 €" type="number"/></label>
           <label><span>Surface minimum</span><input defaultValue={query.surfaceMin} inputMode="numeric" min="0" name="surfaceMin" placeholder="50 m²" type="number"/></label>

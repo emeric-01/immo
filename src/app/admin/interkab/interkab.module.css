@@ -8,7 +8,7 @@
 .notice,.pilotNote { padding:18px 20px; }
 .notice p,.pilotNote p { margin:5px 0 0; color:#667085; }
 .pilotNote { border-color:#d9c7b6; background:#fbf7f2; }
-.filters { display:grid; grid-template-columns:1.35fr repeat(4,1fr) auto auto; align-items:end; gap:10px; border:1px solid #d9c7b6; border-radius:10px; background:#fbf7f2; padding:16px; }
+.filters { display:grid; grid-template-columns:1.3fr 1.15fr repeat(4,1fr) auto auto; align-items:end; gap:10px; border:1px solid #d9c7b6; border-radius:10px; background:#fbf7f2; padding:16px; }
 .filters label { display:grid; gap:6px; }
 .filters label span { color:#555d6d; font-size:.8rem; font-weight:700; }
 .filters input,.filters select { width:100%; min-height:42px; border:1px solid #d8d0c8; border-radius:7px; background:#fff; padding:0 10px; color:#171717; font:inherit; }

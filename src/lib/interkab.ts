@@ -7,7 +7,11 @@ export const AUBAGNE_INTERKAB_URL =
 const FOUR_DAYS = 60 * 60 * 24 * 4;
 const PILOT_DETAIL_LIMIT = 6;
 
-export const INTERKAB_CITIES = southCities.filter((city) => ["13", "83"].includes(city.inseeCode.slice(0, 2)));
+const INTERKAB_EXCLUDED_CITY_SLUGS = new Set(["marseille-11e", "marseille-12e"]);
+
+export const INTERKAB_CITIES = southCities.filter((city) =>
+  ["13", "83"].includes(city.inseeCode.slice(0, 2)) && !INTERKAB_EXCLUDED_CITY_SLUGS.has(city.slug)
+);
 export const INTERKAB_SYNC_BATCH_SIZE = 4;
 
 export type InterkabListing = {
@@ -216,7 +220,7 @@ export async function seedInterkabCities() {
 }
 
 export async function getInterkabCities() {
-  const response = await supabaseRequest("interkab_cities?select=*&order=department_code.asc,city_name.asc");
+  const response = await supabaseRequest("interkab_cities?sync_enabled=is.true&select=*&order=department_code.asc,city_name.asc");
   return response.json() as Promise<Array<{
     insee_code: string; slug: string; city_name: string; postal_code: string; department_code: string;
     interkab_location_id: string | null; source_url: string; status: string; last_listing_count: number;
@@ -232,6 +236,7 @@ export type InterkabListingFilters = {
   minSurface?: number;
   page?: number;
   pageSize?: number;
+  propertyCategory?: "house" | "apartment";
   sort?: "recent" | "price_asc" | "price_desc" | "surface_asc" | "surface_desc" | "ppm_asc" | "ppm_desc";
 };
 
@@ -257,6 +262,12 @@ function storedListing(row: Record<string, unknown>): InterkabListing {
 function listingFilterParams(filters: InterkabListingFilters) {
   const params = new URLSearchParams({ status: "eq.active", select: INTERKAB_LISTING_CARD_COLUMNS });
   if (filters.inseeCode) params.set("city_insee_code", `eq.${filters.inseeCode}`);
+  if (filters.propertyCategory === "house") {
+    params.set("or", "(property_type.ilike.*maison*,property_type.ilike.*villa*,property_type.ilike.*mas*,property_type.ilike.*propriété*,property_type.ilike.*pavillon*)");
+  }
+  if (filters.propertyCategory === "apartment") {
+    params.set("or", "(property_type.ilike.*appartement*,property_type.ilike.*studio*,property_type.ilike.*duplex*,property_type.ilike.*loft*,property_type.ilike.*attique*)");
+  }
   if (filters.minPrice !== undefined) params.set("price", `gte.${filters.minPrice}`);
   if (filters.maxPrice !== undefined) params.append("price", `lte.${filters.maxPrice}`);
   if (filters.minSurface !== undefined) params.set("surface_m2", `gte.${filters.minSurface}`);
