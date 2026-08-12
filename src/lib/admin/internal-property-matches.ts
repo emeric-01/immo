@@ -64,12 +64,16 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
     Promise.all(selectedCities.map((city) => getAllStoredInterkabListings({ inseeCode: city.inseeCode }))),
   ]);
 
-  const agencyCandidates: InternalMatchCandidate[] = agencyRows.map((property): InternalMatchCandidate => ({
-    bathrooms: property.bathrooms, bedrooms: property.bedrooms, city: property.city_name,
-    id: property.id, landAreaM2: property.land_area_m2, latitude: property.latitude, longitude: property.longitude,
-    price: property.price, propertyType: property.property_type, rooms: property.rooms, source: "agency",
-    surfaceM2: property.surface_m2, title: property.title, url: `/admin/biens/${property.id}`,
-  })).map((candidate) => ({ ...candidate, searchArea: findCandidateSearchArea(candidate, areas) ?? undefined }));
+  const agencyCandidates: InternalMatchCandidate[] = agencyRows.map((property): InternalMatchCandidate => {
+    const city = southCities.find((candidate) => normalize(candidate.name) === normalize(property.city_name));
+    return {
+      bathrooms: property.bathrooms, bedrooms: property.bedrooms, city: property.city_name,
+      id: property.id, landAreaM2: property.land_area_m2, latitude: property.latitude ?? city?.latitude ?? null,
+      longitude: property.longitude ?? city?.longitude ?? null, price: property.price,
+      propertyType: property.property_type, rooms: property.rooms, source: "agency",
+      surfaceM2: property.surface_m2, title: property.title, url: `/admin/biens/${property.id}`,
+    };
+  }).map((candidate) => ({ ...candidate, searchArea: findCandidateSearchArea(candidate, areas) ?? undefined }));
   const interkabCandidates: InternalMatchCandidate[] = interkabGroups.flatMap((listings, index) => {
     const city = selectedCities[index];
     return listings.map((listing): InternalMatchCandidate => ({
