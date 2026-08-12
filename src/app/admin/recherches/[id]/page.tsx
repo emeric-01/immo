@@ -119,7 +119,6 @@ export default async function AdminBuyerSearchDetailPage({
       ) : null}
 
       <section className={styles.detailGrid}>
-        <InternalMatchesPanel agency={internalMatches.agency} interkab={internalMatches.interkab} />
         {search.market_score !== null ? (
           <InternalPotentialScore
             computedAt={search.market_scored_at}
@@ -216,30 +215,31 @@ export default async function AdminBuyerSearchDetailPage({
           {consents[0] ? <p className={styles.consentText}>{consents[0].consent_text}</p> : null}
         </InfoPanel>
       </section>
+
+      <InternalMatchesPanel agency={internalMatches.agency} interkab={internalMatches.interkab} />
     </DetailFrame>
   );
 }
 
 function InternalMatchesPanel({ agency, interkab }: { agency: InternalPropertyMatch[]; interkab: InternalPropertyMatch[] }) {
   const total = agency.length + interkab.length;
-  return <article className={styles.internalMatchesPanel}>
-    <header><div><p className={styles.eyebrow}>Visible uniquement par l’équipe</p><h2>Rapprochements internes</h2></div><strong>{total} bien{total > 1 ? "s" : ""} à examiner</strong></header>
-    <p className={styles.helpText}>Correspondances calculées sur les recherches internes. Aucun résultat n’est affiché ni envoyé au client.</p>
+  return <section className={styles.internalMatchesSection} aria-labelledby="internal-matches-title">
+    <header className={styles.internalMatchesHeading}><div><p className={styles.eyebrow}>Sélection interne · après analyse du dossier</p><h2 id="internal-matches-title">Biens pouvant correspondre à cette recherche</h2><p>Résultats réservés aux administrateurs et agents. Rien n’est affiché ni envoyé au client.</p></div><div className={styles.internalMatchesTotal}><strong>{total}</strong><span>bien{total > 1 ? "s" : ""} à examiner</span></div></header>
+    <div className={styles.internalMatchLegend}><span data-tier="strict">Correspondance stricte</span><span data-tier="negotiation">Négociation ≤ 5 %</span><span data-tier="expanded">Opportunité ≤ 8 %</span></div>
     <div className={styles.internalMatchColumns}>
       <MatchColumn matches={agency} title="Biens de l’agence" />
       <MatchColumn matches={interkab} title="Réseau Interkab" />
     </div>
-  </article>;
+  </section>;
 }
 
 function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; title: string }) {
-  return <section className={styles.internalMatchColumn}><h3>{title} <small>{matches.length}</small></h3>{matches.length ? matches.map((match) => <article className={styles.internalMatchCard} key={`${match.source}-${match.id}`}>
-    <div><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2} m²` : "Surface NC"}</span></div>
-    <span className={styles.internalMatchScore} data-tier={match.tier}>{match.score}/100 · {matchTierLabel(match.tier)}</span>
+  return <section className={styles.internalMatchColumn}><header><h3>{title}</h3><span>{matches.length}</span></header>{matches.length ? <div className={styles.internalMatchList}>{matches.map((match) => <article className={styles.internalMatchCard} key={`${match.source}-${match.id}`}>
+    <div className={styles.internalMatchIdentity}><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2} m²` : "Surface NC"}</span></div>
+    <span className={styles.internalMatchScore} data-tier={match.tier}><strong>{match.score}/100</strong><small>{matchTierLabel(match.tier)}</small></span>
     <p>{match.reasons.slice(0, 4).join(" · ")}</p>
-    {match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : null}
-    <Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien</Link>
-  </article>) : <p className={styles.mutedText}>Aucun rapprochement suffisant pour le moment.</p>}</section>;
+    <footer>{match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : <small>Critères principaux renseignés</small>}<Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien →</Link></footer>
+  </article>)}</div> : <p className={styles.internalMatchEmpty}>Aucun rapprochement suffisant pour le moment.</p>}</section>;
 }
 
 function matchTierLabel(tier: InternalPropertyMatch["tier"]) {
