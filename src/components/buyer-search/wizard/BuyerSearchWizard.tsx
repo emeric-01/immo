@@ -426,7 +426,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
   return (
     <main className={styles.page}>
       <form className={styles.shell} onSubmit={(event) => event.preventDefault()}>
-        {isCrm ? <InfoCallout icon={ShieldCheck} text="Mode CRM interne : aucune notification et aucune visibilité dans l’espace client." /> : null}
+        {isCrm ? <InfoCallout icon={ShieldCheck} text="Mode CRM interne : notification envoyée uniquement à l’équipe, sans e-mail au contact ni visibilité dans son espace client." /> : null}
         <ProgressStepper activeIndex={stepIndex} steps={visibleSteps} />
         <header className={styles.stepHeader}>
           <div>

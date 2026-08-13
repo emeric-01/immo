@@ -3,6 +3,7 @@ import { getAdminSession } from "@/lib/admin/auth";
 import { hasAdminPermission } from "@/lib/admin/permissions";
 import { buyerSearchSchema, stepSchemas } from "@/lib/buyer-search/schema";
 import { createInternalBuyerSearch, getCrmContact } from "@/lib/admin/crm-contacts";
+import { sendBuyerSearchCreatedEmails } from "@/lib/email/buyer-search-emails";
 
 const internalSteps = ["location", "property", "characteristics", "preferences", "project", "priorities"] as const;
 
@@ -20,5 +21,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
   const result = await createInternalBuyerSearch(contactResult.data.contact, session, parsed.data);
   if (!result.success) return NextResponse.json({ error: result.message }, { status: 500 });
-  return NextResponse.json({ id: result.id, internal: true, marketScore: result.marketScore }, { status: 201 });
+  const contact = contactResult.data.contact;
+  const notification = await sendBuyerSearchCreatedEmails({
+    data: {
+      ...parsed.data,
+      contact: {
+        ...parsed.data.contact,
+        consent: false,
+        email: contact.email,
+        firstName: contact.first_name,
+        lastName: contact.last_name,
+        phone: contact.phone,
+      },
+    },
+    result: { id: result.id, persisted: true, storage: "database" },
+  });
+  return NextResponse.json({ id: result.id, internal: true, marketScore: result.marketScore, warnings: notification.warnings }, { status: 201 });
 }
