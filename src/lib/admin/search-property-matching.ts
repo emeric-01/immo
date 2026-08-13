@@ -115,7 +115,7 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
 
   const category = propertyCategory(candidate.propertyType);
   if (candidate.source === "interkab" && isExcludedInterkabPropertyType(candidate.propertyType)) return null;
-  if (candidate.source === "interkab" && search.property_types.length > 0 && category === null) return null;
+  if (candidate.source === "interkab" && category === null) return null;
   if (search.property_types.length > 0 && category && !search.property_types.includes(category)) return null;
 
   const maximumBudget = search.maximum_budget;

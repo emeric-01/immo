@@ -10,7 +10,7 @@ describe("internal property matching", () => {
   it("allows an eight percent expanded opportunity", () => expect(matchPropertyToSearch({ ...candidate, price: 324000 }, search)?.tier).toBe("expanded"));
   it("rejects a property above eight percent", () => expect(matchPropertyToSearch({ ...candidate, price: 324001 }, search)).toBeNull());
   it("rejects a different city", () => expect(matchPropertyToSearch({ ...candidate, city: "Toulon" }, search)).toBeNull());
-  it.each(["Terrain à bâtir", "Viager appartement", "Garage", "Parking", "Cave", "Immeuble"])(
+  it.each(["Terrain à bâtir", "Viager appartement", "Garage", "Parking", "Cave", "Immeuble", "Autre", "Marina"])(
     "excludes non-residential Interkab category %s",
     (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, search)).toBeNull(),
   );
