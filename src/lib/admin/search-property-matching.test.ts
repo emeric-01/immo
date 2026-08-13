@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distanceInKm, essentialMismatchReasons, findCandidateSearchArea, interkabAsideReason, matchPropertyToSearch, propertyMatchAnalysis } from "./search-property-matching";
+import { alternativeCompromiseScore, distanceInKm, essentialMismatchReasons, findCandidateSearchArea, interkabAsideReason, matchPropertyToSearch, propertyAlternativeReason, propertyMatchAnalysis } from "./search-property-matching";
 
 const search = { city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 300000, minimum_living_area: 60, minimum_rooms: 3, minimum_bedrooms: 2, minimum_bathrooms: null, minimum_land_area: null } as never;
 const candidate = { id: "1", source: "interkab", title: "Appartement", url: "#", city: "Aubagne", propertyType: "Appartement", price: 300000, surfaceM2: 65, rooms: 3, bedrooms: 2, bathrooms: null, landAreaM2: null } as const;
@@ -42,6 +42,17 @@ describe("internal property matching", () => {
       { ...candidate, city: "Gémenos", latitude: 43.2989, longitude: 5.6284 },
       [{ id: 1, name: "Aubagne", latitude: 43.2928, longitude: 5.5707, radiusKm: 2 }],
     )).toBeNull();
+  });
+  it("includes a limitrophe Interkab city within the approximation margin", () => {
+    const area = findCandidateSearchArea(
+      { ...candidate, city: "La Bouilladisse", latitude: 43.3942, longitude: 5.626 },
+      [{ id: 1, name: "Roquevaire", latitude: 43.3452, longitude: 5.598, radiusKm: 5 }],
+      1,
+    );
+    expect(area?.name).toBe("Roquevaire");
+    expect(area?.isApproximate).toBe(true);
+    expect(area?.distanceKm).toBeGreaterThan(5);
+    expect(area?.distanceKm).toBeLessThanOrEqual(6);
   });
   it("assigns an overlapping property to its closest selected city", () => {
     const area = findCandidateSearchArea(
@@ -86,5 +97,24 @@ describe("internal property matching", () => {
     } as never;
     expect(propertyMatchAnalysis({ ...candidate, price: 259000, surfaceM2: 49.46 }, analyzedSearch))
       .toBe("Le prix entre dans le budget, avec 61 000 € de marge, mais la surface est inférieure de 35,54 m² au minimum demandé.");
+  });
+  it("explains a budget compromise without discarding the alternative", () => {
+    const analyzedSearch = {
+      city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 320000,
+      minimum_living_area: 85, minimum_rooms: 0, minimum_bedrooms: 0,
+      minimum_bathrooms: null, minimum_land_area: null, priorities: [],
+    } as never;
+    expect(propertyAlternativeReason({ ...candidate, price: 360000, surfaceM2: 90 }, analyzedSearch))
+      .toBe("Budget dépassé de 40 000 € (+12,5 %).");
+  });
+  it("sorts smaller compromises before larger ones", () => {
+    const analyzedSearch = {
+      city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 320000,
+      minimum_living_area: 85, minimum_rooms: 0, minimum_bedrooms: 0,
+      minimum_bathrooms: null, minimum_land_area: null, priorities: [],
+    } as never;
+    const smallGap = alternativeCompromiseScore({ ...candidate, price: 330000, surfaceM2: 82 }, analyzedSearch);
+    const largeGap = alternativeCompromiseScore({ ...candidate, price: 400000, surfaceM2: 60 }, analyzedSearch);
+    expect(smallGap).toBeLessThan(largeGap);
   });
 });

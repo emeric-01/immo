@@ -1923,6 +1923,22 @@
 .internalMatchScore[data-tier="negotiation"] { background:#fff4df; color:#82501c; }
 .internalMatchScore[data-tier="expanded"] { background:#f6eee6; color:#8b4a22; }
 .internalMatchEmpty { margin:0; padding:28px 18px; color:#707789; text-align:center; }
+.internalMatchAlternatives { overflow:hidden; border:1px solid #dfc7ad; border-radius:12px; background:#fffaf3; }
+.internalMatchAlternatives > header { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; }
+.internalMatchAlternatives > header > div { display:flex; align-items:center; gap:9px; }
+.internalMatchAlternatives > header svg { flex:0 0 auto; color:#a15d36; }
+.internalMatchAlternatives h4 { margin:0; font-size:.92rem; }
+.internalMatchAlternatives header p { margin:2px 0 0; color:#707789; font-size:.76rem; }
+.internalMatchAlternatives > header > strong { min-width:28px; border-radius:999px; background:#f0dfcc; padding:4px 8px; color:#70401e; font-size:.76rem; text-align:center; }
+.internalMatchAlternatives > div { display:grid; border-top:1px solid #e8d7c5; }
+.internalMatchAlternatives article { display:grid; grid-template-columns:72px minmax(0,1fr) auto; align-items:center; gap:12px; border-bottom:1px solid #eadccd; padding:10px 12px; }
+.internalMatchAlternatives article:last-child { border-bottom:0; }
+.internalMatchAlternatives article > div:nth-child(2) { display:grid; gap:2px; min-width:0; }
+.internalMatchAlternatives article > div:nth-child(2) > strong { overflow:hidden; font-size:.86rem; text-overflow:ellipsis; white-space:nowrap; }
+.internalMatchAlternatives article span { color:#707789; font-size:.74rem; }
+.internalMatchAlternatives article small { color:#915735; font-size:.74rem; font-weight:800; }
+.internalMatchAlternatives article p { margin:3px 0 0; color:#555d6d; font-size:.76rem; line-height:1.4; }
+.internalMatchAlternatives article a { color:#70401e; font-size:.76rem; font-weight:800; text-decoration:none; }
 .internalMatchAside { overflow:hidden; border:1px solid #e4ddd5; border-radius:12px; background:#faf8f5; }
 .internalMatchAside summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 16px; color:#665f58; cursor:pointer; font-size:.84rem; font-weight:800; list-style:none; }
 .internalMatchAside summary::-webkit-details-marker { display:none; }
@@ -1941,4 +1957,4 @@
 .internalMatchAside article p { margin:3px 0 0; color:#555d6d; font-size:.74rem; line-height:1.4; }
 .internalMatchAside article a { color:#70401e; font-size:.76rem; font-weight:800; text-decoration:none; }
 @media (max-width:900px) { .internalMatchColumns { grid-template-columns:1fr; } .internalMatchesHeading { align-items:flex-start; flex-direction:column; } .internalMatchesTotal { justify-items:start; } }
-@media (max-width:700px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchSummary,.internalMatchAnalysis { grid-template-columns:1fr; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } .internalMatchAside article { grid-template-columns:58px minmax(0,1fr); } .internalMatchAsideMedia { width:58px; height:52px; } .internalMatchAside article a { grid-column:2; } }
+@media (max-width:700px) { .internalMatchArea > header,.internalMatchAlternatives > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchSummary,.internalMatchAnalysis { grid-template-columns:1fr; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } .internalMatchAside article,.internalMatchAlternatives article { grid-template-columns:58px minmax(0,1fr); } .internalMatchAsideMedia { width:58px; height:52px; } .internalMatchAside article a,.internalMatchAlternatives article a { grid-column:2; } }

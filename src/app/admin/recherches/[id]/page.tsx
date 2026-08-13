@@ -237,7 +237,7 @@ function InternalMatchesPanel({ groups }: { groups: InternalPropertyMatchGroup[]
 function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
   const total = group.agency.length + group.interkab.length;
   return <section className={styles.internalMatchArea}>
-    <header><div><MapPin size={19} aria-hidden="true" /><div><h3>{group.area.name}</h3><p>Ville et communes situées dans un rayon de {formatRadius(group.area.radiusKm)}</p></div></div><span>{total} bien{total > 1 ? "s" : ""}</span></header>
+    <header><div><MapPin size={19} aria-hidden="true" /><div><h3>{group.area.name}</h3><p>Rayon de {formatRadius(group.area.radiusKm)} · communes limitrophes incluses lorsque la position exacte du bien est inconnue</p></div></div><span>{total} bien{total > 1 ? "s" : ""}</span></header>
     <div className={styles.internalMatchColumns}>
       <MatchColumn matches={group.agency} title="Biens de l’agence" />
       <MatchColumn matches={group.interkab} title="Réseau Interkab" />

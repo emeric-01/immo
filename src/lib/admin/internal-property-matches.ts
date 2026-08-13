@@ -30,6 +30,8 @@ type AgencyPropertyRow = {
   slug: string; surface_m2: number | null; title: string;
 };
 
+const INTERKAB_CITY_CENTER_MARGIN_KM = 1;
+
 export type InternalPropertyMatchGroup = {
   agency: InternalPropertyMatch[];
   alternatives: InternalPropertyAside[];
@@ -126,7 +128,7 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
       landAreaM2: null, longitude: city.longitude, price: null, propertyType: "", rooms: null,
       source: "interkab", surfaceM2: null, title: city.name, url: "",
     };
-    return Boolean(findCandidateSearchArea(candidate, areas));
+    return Boolean(findCandidateSearchArea(candidate, areas, INTERKAB_CITY_CENTER_MARGIN_KM));
   });
   const [agencyRows, interkabGroups] = await Promise.all([
     adminRest<AgencyPropertyRow[]>("properties?status=eq.published&select=id,slug,title,city_name,property_type,price,surface_m2,rooms,bedrooms,bathrooms,land_area_m2,latitude,longitude,property_images(public_url,is_cover,position)&order=updated_at.desc"),
@@ -164,7 +166,10 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
         surfaceM2: listing.surfaceM2, title: `${listing.propertyType} à ${listing.city}`, url: listing.listingUrl,
       };
     });
-  }).map((candidate) => ({ ...candidate, searchArea: findCandidateSearchArea(candidate, areas) ?? undefined }));
+  }).map((candidate) => ({
+    ...candidate,
+    searchArea: findCandidateSearchArea(candidate, areas, INTERKAB_CITY_CENTER_MARGIN_KM) ?? undefined,
+  }));
 
   const rankedAgency = rankPropertyMatches(agencyCandidates, search);
   const rankedInterkab = rankPropertyMatches(interkabCandidates, search);

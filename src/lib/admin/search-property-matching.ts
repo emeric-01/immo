@@ -35,6 +35,7 @@ export type InternalSearchArea = {
 
 export type InternalSearchAreaMatch = InternalSearchArea & {
   distanceKm: number | null;
+  isApproximate?: boolean;
 };
 
 export type InternalPropertyMatch = InternalMatchCandidate & {
@@ -155,9 +156,13 @@ export function distanceInKm(
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
-export function findCandidateSearchArea(candidate: InternalMatchCandidate, areas: InternalSearchArea[]) {
+export function findCandidateSearchArea(
+  candidate: InternalMatchCandidate,
+  areas: InternalSearchArea[],
+  approximationMarginKm = 0,
+) {
   const exactAreas = areas.filter((area) => normalize(area.name) === normalize(candidate.city));
-  if (exactAreas.length) return { ...exactAreas[0], distanceKm: 0 } satisfies InternalSearchAreaMatch;
+  if (exactAreas.length) return { ...exactAreas[0], distanceKm: 0, isApproximate: false } satisfies InternalSearchAreaMatch;
   if (!Number.isFinite(candidate.latitude) || !Number.isFinite(candidate.longitude)) return null;
 
   const matchingAreas = areas
@@ -169,9 +174,10 @@ export function findCandidateSearchArea(candidate: InternalMatchCandidate, areas
         { latitude: candidate.latitude as number, longitude: candidate.longitude as number },
       ),
     }))
-    .filter((area) => area.distanceKm <= area.radiusKm)
+    .filter((area) => area.distanceKm <= area.radiusKm + approximationMarginKm)
     .sort((left, right) => left.distanceKm - right.distanceKm);
-  return matchingAreas[0] ?? null;
+  const match = matchingAreas[0];
+  return match ? { ...match, isApproximate: match.distanceKm > match.radiusKm } : null;
 }
 
 const excludedInterkabTypes = ["terrain", "viager", "garage", "parking", "cave", "immeuble", "autre", "architecture"];
@@ -225,7 +231,9 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
   if (rawBudgetGapPercent !== null && rawBudgetGapPercent > 8) return null;
 
   const locationReason = candidate.searchArea
-    ? candidate.searchArea.distanceKm && candidate.searchArea.distanceKm >= 0.1
+    ? candidate.searchArea.isApproximate
+      ? `${candidate.city}, commune limitrophe à ${candidate.searchArea.distanceKm?.toFixed(1)} km de ${candidate.searchArea.name}`
+      : candidate.searchArea.distanceKm && candidate.searchArea.distanceKm >= 0.1
       ? `${candidate.city} à ${candidate.searchArea.distanceKm.toFixed(1)} km de ${candidate.searchArea.name}`
       : `${candidate.searchArea.name} sélectionnée`
     : "ville conforme";
