@@ -312,18 +312,21 @@ export async function restoreAdminBuyerSearch(id: string, session: AdminSession)
 export async function deleteAdminBuyerSearch(id: string, session: AdminSession) {
   const config = getAdminSupabaseConfig();
   if (!config) return { message: "Ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour supprimer une recherche.", success: false as const };
-  if (session.role === "agent") return { message: "Un agent commercial ne peut pas supprimer une recherche.", success: false as const };
-  if (!(await getAdminBuyerSearchMutationTarget(id, session))) return { message: "Recherche inaccessible.", success: false as const };
+  const target = await getAdminBuyerSearchMutationTarget(id, session);
+  if (!target) return { message: "Recherche inaccessible.", success: false as const };
+  if (session.role === "agent" && target.created_by_admin_user_id !== session.id) return { message: "Vous ne pouvez supprimer que les recherches que vous avez créées.", success: false as const };
 
   try {
     const response = await fetch(`${config.url}/rest/v1/buyer_searches?id=eq.${encodeURIComponent(id)}&select=id`, {
+      body: JSON.stringify({ deleted_at: new Date().toISOString(), status: "deleted_by_client" }),
       cache: "no-store",
       headers: {
         apikey: config.serviceRoleKey,
         Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
         Prefer: "return=representation",
       },
-      method: "DELETE",
+      method: "PATCH",
     });
     if (!response.ok) return { message: `Suppression impossible (${response.status}) : ${await response.text()}`, success: false as const };
     const rows = await response.json() as Array<{ id: string }>;
@@ -331,6 +334,15 @@ export async function deleteAdminBuyerSearch(id: string, session: AdminSession) 
   } catch (error) {
     return { message: error instanceof Error ? error.message : "La suppression a échoué.", success: false as const };
   }
+}
+
+export async function getDeletedAdminBuyerSearches(): Promise<AdminDataState<AdminBuyerSearchRow[]>> {
+  const config = getAdminSupabaseConfig(); if (!config) return missingConfig();
+  return supabaseAdminFetch<AdminBuyerSearchRow[]>(config, "buyer_searches?deleted_at=not.is.null&select=*&order=deleted_at.desc&limit=200");
+}
+
+export async function restoreDeletedAdminBuyerSearch(id: string) {
+  return patchAdminBuyerSearch(id, { deleted_at: null, status: "new" }, "Recherche introuvable dans la corbeille.");
 }
 
 async function patchAdminBuyerSearch(
@@ -367,10 +379,10 @@ async function getAdminBuyerSearchMutationTarget(id: string, session: AdminSessi
   const params = new URLSearchParams({
     id: `eq.${id}`,
     limit: "1",
-    select: "id,status,archived_from_status",
+    select: "id,status,archived_from_status,created_by_admin_user_id,assigned_admin_user_id,attributed_admin_user_id",
   });
   applyAgentScope(params, session);
-  const result = await supabaseAdminFetch<Array<Pick<AdminBuyerSearchRow, "archived_from_status" | "id" | "status">>>(
+  const result = await supabaseAdminFetch<Array<Pick<AdminBuyerSearchRow, "archived_from_status" | "assigned_admin_user_id" | "attributed_admin_user_id" | "created_by_admin_user_id" | "id" | "status">>>(
     config,
     `buyer_searches?${params}`,
   );

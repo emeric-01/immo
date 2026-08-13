@@ -171,8 +171,11 @@ export async function updateBuyerSearchRecord(
   updateRow.market_score_status = null;
   updateRow.market_scored_at = null;
 
-  const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
-  updateRow.client_account_id = clientAccount.id;
+  const isInternalCrm = metadata.source === "admin_import";
+  if (!isInternalCrm) {
+    const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
+    updateRow.client_account_id = clientAccount.id;
+  }
 
   await updateSupabaseRows(config, "buyer_searches", `id=eq.${encodeURIComponent(buyerSearchId)}`, updateRow);
 
@@ -182,13 +185,13 @@ export async function updateBuyerSearchRecord(
     await Promise.all([
       deleteSupabaseRows(config, "buyer_search_locations", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
       deleteSupabaseRows(config, "buyer_search_priorities", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
-      deleteSupabaseRows(config, "buyer_search_consents", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`),
+      ...(isInternalCrm ? [] : [deleteSupabaseRows(config, "buyer_search_consents", `buyer_search_id=eq.${encodeURIComponent(buyerSearchId)}`)]),
     ]);
 
     await Promise.all([
       insertLocations(config, buyerSearchId, data),
       insertPriorities(config, buyerSearchId, data),
-      insertConsent(config, buyerSearchId, data, metadata),
+      ...(isInternalCrm ? [] : [insertConsent(config, buyerSearchId, data, metadata)]),
     ]);
   } catch (error) {
     console.error("Buyer search secondary rows update failed", error);

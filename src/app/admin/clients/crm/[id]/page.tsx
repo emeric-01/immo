@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Calculator, Link2, Mail, Phone, Search, ShieldCheck, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Calculator, Link2, Mail, Pencil, Phone, Search, ShieldCheck, UserRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { requireAdminPermission } from "@/lib/admin/permissions";
-import { getCrmContact } from "@/lib/admin/crm-contacts";
+import { hasAdminPermission, requireAdminPermission } from "@/lib/admin/permissions";
+import { getCrmContact, isOwnCrmContact } from "@/lib/admin/crm-contacts";
 import { getAdminUserSummary } from "@/lib/admin/users";
 import styles from "../../../admin.module.css";
+import { DeleteCrmContactButton } from "./DeleteCrmContactButton";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,14 @@ export default async function CrmContactDetailPage({ params, searchParams }: { p
   if (result.status !== "ready" || !result.data) return <main className={styles.detailPage}><div className={styles.detailShell}><Link className={styles.backLink} href="/admin/clients"><ArrowLeft size={18}/>Retour aux contacts</Link><section className={styles.emptyState}><h1>Fiche CRM indisponible</h1><p>{result.status === "ready" ? "Cette fiche n’existe pas." : result.message}</p></section></div></main>;
   const { clientAccount, clientEstimations, clientSearches, contact, internalEstimations, internalSearches } = result.data;
   const agent = await getAdminUserSummary(contact.assigned_admin_user_id);
+  const ownsContact = isOwnCrmContact(contact, session);
+  const canEdit = session.role !== "agent" || (ownsContact && await hasAdminPermission(session, "crm_contacts:update_own"));
+  const canDelete = session.role !== "agent" || (contact.created_by_admin_user_id === session.id && await hasAdminPermission(session, "crm_contacts:delete_own"));
 
   return <main className={styles.detailPage}><div className={styles.detailShell}>
+    <div className={styles.detailTopActions}><span/>
+      <div className={styles.workspaceActions}>{canEdit ? <Link className={styles.secondaryButton} href={`/admin/clients/crm/${contact.id}/modifier`}><Pencil size={17}/>Modifier</Link> : null}{canDelete ? <DeleteCrmContactButton contactId={contact.id} contactName={`${contact.first_name} ${contact.last_name}`}/> : null}</div>
+    </div>
     <section className={styles.detailHero}><Link className={styles.backLink} href="/admin/clients"><ArrowLeft size={18}/>Retour aux contacts</Link><div className={styles.detailHeroGrid}><div><p className={styles.eyebrow}>Fiche CRM interne</p><h1>{contact.first_name} {contact.last_name}</h1><p>Agent responsable : {agent?.full_name ?? "Non attribué"}</p></div><div className={styles.contactBox}>{contact.email ? <a href={`mailto:${contact.email}`}><Mail size={18}/>{contact.email}</a> : <span><Mail size={18}/>E-mail non renseigné</span>}{contact.phone ? <a href={`tel:${contact.phone.replace(/\s/g, "")}`}><Phone size={18}/>{contact.phone}</a> : <span><Phone size={18}/>Téléphone non renseigné</span>}</div></div></section>
     {feedback.created ? <p className={styles.successText}>La fiche CRM a été créée sans notification au contact.</p> : null}
     <section className={styles.detailGrid}>

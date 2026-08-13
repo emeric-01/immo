@@ -127,16 +127,18 @@ type StepProps = {
 type BuyerSearchWizardProps = {
   crmContactId?: string;
   initialData?: BuyerSearchFormData;
-  mode?: "client" | "crm";
+  mode?: "admin-edit" | "client" | "crm";
+  searchId?: string;
 };
 
-export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }: BuyerSearchWizardProps = {}) {
+export function BuyerSearchWizard({ crmContactId, initialData, mode = "client", searchId }: BuyerSearchWizardProps = {}) {
   const isCrm = mode === "crm";
+  const isAdminEdit = mode === "admin-edit";
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [draftReady, setDraftReady] = useState(false);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
-  const [canReuseContact, setCanReuseContact] = useState(isCrm);
+  const [canReuseContact, setCanReuseContact] = useState(isCrm || isAdminEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [crmResult, setCrmResult] = useState<{ data: BuyerSearchFormData; id: string; marketScore?: BuyerSearchMarketScore } | null>(null);
   const isSubmittingRef = useRef(false);
@@ -162,7 +164,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
   }, [activeStep.id, clearErrors]);
 
   useEffect(() => {
-    if (isCrm) {
+    if (isCrm || isAdminEdit) {
       reset(initialData ?? defaultBuyerSearchData);
       setCanReuseContact(true);
       setDraftReady(true);
@@ -262,7 +264,7 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
         setDraftReady(true);
       }
     }
-  }, [initialData, isCrm, reset]);
+  }, [initialData, isAdminEdit, isCrm, reset]);
 
   useEffect(() => {
     if (!draftReady || isCrm) {
@@ -365,7 +367,12 @@ export function BuyerSearchWizard({ crmContactId, initialData, mode = "client" }
     setIsSubmitting(true);
     submissionIdRef.current ??= crypto.randomUUID();
     try {
-      if (isCrm && crmContactId) {
+      if (isAdminEdit && searchId) {
+        const response = await fetch(`/admin/api/recherches/${encodeURIComponent(searchId)}`, { body: JSON.stringify(finalData), headers: { "Content-Type": "application/json" }, method: "PATCH" });
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        if (!response.ok) throw new Error(payload?.error || "Modification impossible.");
+        router.push(`/admin/recherches/${searchId}`); router.refresh();
+      } else if (isCrm && crmContactId) {
         const response = await fetch(`/api/admin/crm/contacts/${encodeURIComponent(crmContactId)}/buyer-searches`, {
           body: JSON.stringify(finalData),
           headers: { "Content-Type": "application/json" },

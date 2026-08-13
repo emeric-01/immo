@@ -16,6 +16,8 @@ export type CrmContact = {
   assigned_admin_user_id: string | null;
   created_at: string;
   created_by_admin_user_id: string | null;
+  deleted_at: string | null;
+  deleted_by_admin_user_id: string | null;
   email: string;
   first_name: string;
   id: string;
@@ -46,10 +48,15 @@ export type CreateCrmContactInput = {
   phone?: string;
 };
 
+export type UpdateCrmContactInput = CreateCrmContactInput & { status?: CrmContactStatus };
+
+export function isOwnCrmContact(contact: CrmContact, session: AdminSession) {
+  return contact.created_by_admin_user_id === session.id || contact.assigned_admin_user_id === session.id;
+}
+
 function adminScope(session: AdminSession) {
-  return session.role === "agent"
-    ? `&or=(assigned_admin_user_id.eq.${session.id},created_by_admin_user_id.eq.${session.id})`
-    : "";
+  const ownership = session.role === "agent" ? `&or=(assigned_admin_user_id.eq.${session.id},created_by_admin_user_id.eq.${session.id})` : "";
+  return `&deleted_at=is.null${ownership}`;
 }
 
 export async function getCrmContacts(session: AdminSession): Promise<AdminDataState<CrmContact[]>> {
@@ -95,6 +102,59 @@ export async function createCrmContact(input: CreateCrmContactInput, session: Ad
   } catch (error) {
     return { message: message(error), success: false as const };
   }
+}
+
+export async function updateCrmContact(id: string, input: UpdateCrmContactInput, session: AdminSession) {
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
+  const email = input.email?.trim().toLowerCase() ?? "";
+  if (!firstName || !lastName) return { message: "Le prénom et le nom sont obligatoires.", success: false as const };
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) return { message: "Une adresse e-mail valide est obligatoire.", success: false as const };
+  try {
+    const rows = await clientSupabaseRequest<CrmContact[]>(`crm_contacts?id=eq.${encodeURIComponent(id)}&select=*${adminScope(session)}`, {
+      body: JSON.stringify({
+        ...(session.role === "agent" ? {} : { assigned_admin_user_id: input.assignedAdminUserId || null }),
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        linked_client_account_id: await findMatchingClientAccount(email, input.phone?.trim() ?? ""),
+        notes: input.notes?.trim() ?? "",
+        phone: input.phone?.trim() ?? "",
+        status: input.status ?? "prospect",
+      }),
+      headers: { Prefer: "return=representation" },
+      method: "PATCH",
+    });
+    return rows[0] ? { contact: rows[0], success: true as const } : { message: "Fiche CRM inaccessible.", success: false as const };
+  } catch (error) {
+    return { message: message(error), success: false as const };
+  }
+}
+
+export async function deleteCrmContact(id: string, session: AdminSession) {
+  try {
+    const ownership = session.role === "agent" ? `&created_by_admin_user_id=eq.${encodeURIComponent(session.id)}` : "";
+    const rows = await clientSupabaseRequest<Array<{ id: string }>>(`crm_contacts?id=eq.${encodeURIComponent(id)}${ownership}&deleted_at=is.null&select=id`, {
+      body: JSON.stringify({ deleted_at: new Date().toISOString(), deleted_by_admin_user_id: session.id }),
+      headers: { Prefer: "return=representation" },
+      method: "PATCH",
+    });
+    return rows[0] ? { success: true as const } : { message: "Fiche CRM inaccessible.", success: false as const };
+  } catch (error) {
+    return { message: message(error), success: false as const };
+  }
+}
+
+export async function getDeletedCrmContacts(): Promise<AdminDataState<CrmContact[]>> {
+  try { return { data: await clientSupabaseRequest<CrmContact[]>("crm_contacts?deleted_at=not.is.null&select=*&order=deleted_at.desc"), status: "ready" }; }
+  catch (error) { return { message: message(error), status: "error" }; }
+}
+
+export async function restoreCrmContact(id: string) {
+  try {
+    const rows = await clientSupabaseRequest<Array<{ id: string }>>(`crm_contacts?id=eq.${encodeURIComponent(id)}&deleted_at=not.is.null&select=id`, { body: JSON.stringify({ deleted_at: null, deleted_by_admin_user_id: null }), headers: { Prefer: "return=representation" }, method: "PATCH" });
+    return rows[0] ? { success: true as const } : { message: "Fiche introuvable dans la corbeille.", success: false as const };
+  } catch (error) { return { message: message(error), success: false as const }; }
 }
 
 export async function getCrmContact(id: string, session: AdminSession): Promise<AdminDataState<CrmContactDetail | null>> {

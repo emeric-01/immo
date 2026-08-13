@@ -15,6 +15,8 @@ export function PermissionChecklist({
   function toggle(permission: AdminPermission) {
     let next = value.includes(permission) ? value.filter((item) => item !== permission) : [...value, permission];
     if (!next.includes("properties:read")) next = next.filter((item) => !["properties:create", "properties:update_own", "properties:write"].includes(item));
+    if (!next.includes("buyer_searches:read")) next = next.filter((item) => !["buyer_searches:update_own", "buyer_searches:delete_own"].includes(item));
+    if (!next.includes("clients:read")) next = next.filter((item) => !["crm_contacts:update_own", "crm_contacts:delete_own"].includes(item));
     if (!next.includes("contents:read")) next = next.filter((item) => item !== "contents:write");
     onChange(next);
   }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Inbox, Plus, Search, ShieldCheck, UserRound, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarClock, Inbox, Plus, Search, ShieldCheck, Trash2, UserRound, UsersRound } from "lucide-react";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { requireAdminPermission } from "@/lib/admin/permissions";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -41,6 +41,7 @@ export default async function AdminClientsPage({
           <p className={styles.eyebrow}>Comptes clients</p>
           <h1>Vue globale de vos clients</h1>
           <p>Consultez vos clients, leur dernière demande et leur activité.</p>
+          {session.role !== "agent" ? <Link className={styles.secondaryButton} href="/admin/corbeille"><Trash2 size={18}/>Voir la corbeille</Link> : null}
         </div>
         <div className={styles.headerActions}><Link className={styles.secondaryButton} href="/admin/clients/nouveau"><Plus size={18}/>Ajouter un contact</Link><form action={logoutAdmin}><button className={styles.secondaryButton} type="submit">Deconnexion</button></form></div>
       </section>

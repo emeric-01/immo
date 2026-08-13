@@ -1875,6 +1875,7 @@
 .internalMatchesTotal { display:grid; min-width:145px; justify-items:end; }
 .internalMatchesTotal strong { font-family:Georgia,"Times New Roman",serif; font-size:2.5rem; font-weight:500; line-height:1; }
 .internalMatchesTotal span { color:#707789; font-size:.82rem; font-weight:700; }
+.internalMatchesTotal small { margin-top:3px; color:#8a8179; font-size:.68rem; }
 .internalMatchLegend { display:flex; flex-wrap:wrap; gap:8px; }
 .internalMatchLegend span { border-radius:999px; background:#eaf6ed; padding:6px 10px; color:#246034; font-size:.76rem; font-weight:700; }
 .internalMatchLegend span[data-tier="negotiation"] { background:#fff4df; color:#82501c; }

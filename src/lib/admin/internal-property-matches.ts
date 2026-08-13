@@ -100,7 +100,7 @@ function areaAnalysis(matches: InternalPropertyMatch[], alternatives: InternalPr
   }
   if (matches.length) return `${matches.length} bien${matches.length > 1 ? "s respectent" : " respecte"} les critères principaux de la recherche.`;
   if (surfaceAlternatives.length) {
-    const budgetCopy = budgetAlternatives.length ? ` ${budgetAlternatives.length} autre${budgetAlternatives.length > 1 ? "s dépassent" : " dépasse"} le budget mais peut servir de repère.` : "";
+    const budgetCopy = budgetAlternatives.length ? ` ${budgetAlternatives.length} autre${budgetAlternatives.length > 1 ? "s dépassent" : " dépasse"} le budget mais ${budgetAlternatives.length > 1 ? "peuvent" : "peut"} servir de repère.` : "";
     return `Aucun bien ne respecte actuellement tous les critères indispensables. ${surfaceAlternatives.length} alternative${surfaceAlternatives.length > 1 ? "s présentent" : " présente"} un compromis sur la surface.${budgetCopy}`;
   }
   if (budgetAlternatives.length) return `Aucun bien ne respecte le budget actuel. ${budgetAlternatives.length} alternative${budgetAlternatives.length > 1 ? "s proches sont proposées" : " proche est proposée"} pour matérialiser l’effort budgétaire nécessaire.`;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, BedDouble, CalendarDays, CircleOff, Euro, Gauge, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, BedDouble, CalendarDays, CircleOff, Euro, Gauge, Home, Mail, MapPin, Pencil, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/admin/buyer-searches";
 import { optionLabel, financingOptions, purchaseTimelineOptions, situationOptions } from "@/lib/buyer-search/options";
 import { requireAdminSession } from "@/lib/admin/auth";
-import { requireAdminPermission } from "@/lib/admin/permissions";
+import { hasAdminPermission, requireAdminPermission } from "@/lib/admin/permissions";
 import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOrigin } from "@/lib/admin/attribution-display";
 import { listAdminUsers } from "@/lib/admin/users";
 import { getInternalPropertyMatches } from "@/lib/admin/internal-property-matches";
@@ -77,6 +77,9 @@ export default async function AdminBuyerSearchDetailPage({
   const contactName = `${search.contact_first_name} ${search.contact_last_name}`.trim();
   const contactEmail = search.contact_email.trim();
   const contactPhone = search.contact_phone.trim();
+  const canDelete = session.role !== "agent" || (search.created_by_admin_user_id === session.id && await hasAdminPermission(session, "buyer_searches:delete_own"));
+  const ownsSearch = search.created_by_admin_user_id === session.id || search.assigned_admin_user_id === session.id || search.attributed_admin_user_id === session.id;
+  const canEdit = session.role !== "agent" || (ownsSearch && await hasAdminPermission(session, "buyer_searches:update_own"));
 
   return (
     <DetailFrame>
@@ -86,9 +89,10 @@ export default async function AdminBuyerSearchDetailPage({
             <ArrowLeft size={18} aria-hidden="true" />
             Retour aux recherches
           </Link>
-          {session.role !== "agent" ? <div className={styles.workspaceActions}>
-            {search.status !== "deleted_by_client" ? <ArchiveBuyerSearchButton hasClient={Boolean(search.client_account_id)} isArchived={search.status === "archived"} searchId={search.id} /> : null}
-            <DeleteBuyerSearchButton contactName={contactName || "ce contact"} searchId={search.id} />
+          {session.role !== "agent" || canDelete || canEdit ? <div className={styles.workspaceActions}>
+            {canEdit ? <Link className={styles.secondaryButton} href={`/admin/recherches/${search.id}/modifier`}><Pencil size={17}/>Modifier</Link> : null}
+            {session.role !== "agent" && search.status !== "deleted_by_client" ? <ArchiveBuyerSearchButton hasClient={Boolean(search.client_account_id)} isArchived={search.status === "archived"} searchId={search.id} /> : null}
+            {canDelete ? <DeleteBuyerSearchButton contactName={contactName || "ce contact"} searchId={search.id} /> : null}
           </div> : null}
         </div>
         <div className={styles.detailHeroGrid}>
@@ -226,9 +230,11 @@ export default async function AdminBuyerSearchDetailPage({
 }
 
 function InternalMatchesPanel({ groups }: { groups: InternalPropertyMatchGroup[] }) {
-  const total = groups.reduce((sum, group) => sum + group.agency.length + group.interkab.length, 0);
+  const matchesTotal = groups.reduce((sum, group) => sum + group.agency.length + group.interkab.length, 0);
+  const alternativesTotal = groups.reduce((sum, group) => sum + group.alternatives.length, 0);
+  const total = matchesTotal + alternativesTotal;
   return <section className={styles.internalMatchesSection} aria-labelledby="internal-matches-title">
-    <header className={styles.internalMatchesHeading}><div><p className={styles.eyebrow}>Sélection interne · après analyse du dossier</p><h2 id="internal-matches-title">Biens pouvant correspondre à cette recherche</h2><p>Classement par ville sélectionnée, rayon inclus. Résultats réservés aux administrateurs et agents : rien n’est affiché ni envoyé au client.</p></div><div className={styles.internalMatchesTotal}><strong>{total}</strong><span>bien{total > 1 ? "s" : ""} à examiner</span></div></header>
+    <header className={styles.internalMatchesHeading}><div><p className={styles.eyebrow}>Sélection interne · après analyse du dossier</p><h2 id="internal-matches-title">Biens pouvant correspondre à cette recherche</h2><p>Classement par ville sélectionnée, rayon inclus. Résultats réservés aux administrateurs et agents : rien n’est affiché ni envoyé au client.</p></div><div className={styles.internalMatchesTotal}><strong>{total}</strong><span>piste{total > 1 ? "s" : ""} à examiner</span><small>{matchesTotal} correspondance{matchesTotal > 1 ? "s" : ""} · {alternativesTotal} alternative{alternativesTotal > 1 ? "s" : ""}</small></div></header>
     <div className={styles.internalMatchLegend}><span data-tier="strict">Correspondance stricte</span><span data-tier="negotiation">Négociation ≤ 5 %</span><span data-tier="expanded">Opportunité ≤ 8 %</span></div>
     <div className={styles.internalMatchAreas}>{groups.map((group) => <MatchArea group={group} key={group.area.id} />)}</div>
   </section>;
@@ -237,7 +243,7 @@ function InternalMatchesPanel({ groups }: { groups: InternalPropertyMatchGroup[]
 function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
   const total = group.agency.length + group.interkab.length;
   return <section className={styles.internalMatchArea}>
-    <header><div><MapPin size={19} aria-hidden="true" /><div><h3>{group.area.name}</h3><p>Rayon de {formatRadius(group.area.radiusKm)} · communes limitrophes incluses lorsque la position exacte du bien est inconnue</p></div></div><span>{total} bien{total > 1 ? "s" : ""}</span></header>
+    <header><div><MapPin size={19} aria-hidden="true" /><div><h3>{group.area.name}</h3><p>Rayon de {formatRadius(group.area.radiusKm)} · communes limitrophes incluses lorsque la position exacte du bien est inconnue</p></div></div><span>{total} correspondance{total > 1 ? "s" : ""} · {group.alternatives.length} alternative{group.alternatives.length > 1 ? "s" : ""}</span></header>
     <div className={styles.internalMatchColumns}>
       <MatchColumn matches={group.agency} title="Biens de l’agence" />
       <MatchColumn matches={group.interkab} title="Réseau Interkab" />
