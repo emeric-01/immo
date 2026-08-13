@@ -9,6 +9,7 @@ import {
 } from "@/lib/buyer-search/options";
 import type { BuyerSearchSubmissionResult } from "@/lib/buyer-search/database";
 import type { BuyerSearchFormData } from "@/lib/buyer-search/types";
+import { listAdminUsers } from "@/lib/admin/users";
 import type { ReferralInput } from "@/lib/referrals";
 import {
   getAttributionNotificationContext,
@@ -48,14 +49,15 @@ export async function sendBuyerSearchCreatedEmails({
 
   if (!config) {
     return {
-      warnings: ["Emails transactionnels non configures : aucun email de confirmation n'a ete envoye."],
+      warnings: ["Emails transactionnels non configures : aucune notification interne n'a ete envoyee."],
     };
   }
 
   const warnings: string[] = [];
-  const messages: EmailMessage[] = [buildClientConfirmationEmail(config, data)];
-  const delivery = await getOperationalDelivery(config, attribution);
-  messages.push(buildAdminNewSearchEmail(config, data, result.id, delivery.origin, delivery.recipients));
+  const delivery = await getBuyerSearchOperationalDelivery(config, attribution);
+  const messages: EmailMessage[] = [
+    buildAdminNewSearchEmail(config, data, result.id, delivery.origin, delivery.recipients),
+  ];
 
   await Promise.all(
     messages.map(async (message) => {
@@ -87,7 +89,7 @@ export async function sendBuyerSearchUpdatedEmails({
   }
 
   try {
-    const delivery = await getOperationalDelivery(config, attribution);
+    const delivery = await getBuyerSearchOperationalDelivery(config, attribution);
     await sendEmail(
       config,
       buildAdminUpdatedSearchEmail(config, data, searchId, delivery.origin, delivery.recipients),
@@ -438,6 +440,38 @@ async function getOperationalDelivery(
   return { origin, recipients };
 }
 
+async function getBuyerSearchOperationalDelivery(
+  config: EmailConfig,
+  attribution?: AttributionSnapshot | null,
+) {
+  const origin = await getAttributionNotificationContext(attribution ?? null);
+  const users = await listAdminUsers();
+  const roleRecipients = users.status === "ready"
+    ? users.data
+      .filter((user) => user.is_active && (user.role === "admin" || user.role === "agent"))
+      .map((user) => user.email)
+    : [];
+  const fallbackRecipient = config.adminEmail || "contact@jumellesimmo.fr";
+  const recipients = uniqueEmails([
+    fallbackRecipient,
+    ...roleRecipients,
+    ...(roleRecipients.length === 0 ? [origin.agentEmail] : []),
+  ]);
+
+  return { origin, recipients };
+}
+
+function uniqueEmails(values: Array<string | null | undefined>) {
+  return Array.from(
+    new Map(
+      values
+        .map((email) => email?.trim())
+        .filter((email): email is string => Boolean(email))
+        .map((email) => [email.toLowerCase(), email]),
+    ).values(),
+  );
+}
+
 function buildOriginBlock(origin: AttributionNotificationContext) {
   return `
     <div style="border-top:1px solid #eee6df;margin-top:20px;padding-top:14px;color:#687084;font-size:13px;line-height:1.6;">
@@ -554,39 +588,6 @@ function parseEmailIdentity(value: string) {
   return {
     email: match[2].trim(),
     name: match[1]?.trim() || undefined,
-  };
-}
-
-function buildClientConfirmationEmail(
-  config: EmailConfig,
-  data: BuyerSearchFormData,
-): EmailMessage {
-  const projectUrl = `${config.appUrl}/client/login?email=${encodeURIComponent(data.contact.email.trim().toLowerCase())}`;
-  const title = "Votre recherche Les Jumelles Immo est bien enregistree";
-  const summary = buildSearchSummary(data);
-
-  return {
-    html: emailLayout(
-      title,
-      `
-        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Bonjour ${escapeHtml(data.contact.firstName)},</p>
-        <p style="margin:0 0 16px;color:#555f70;line-height:1.6;">Votre recherche immobiliere est bien enregistree. Nous reviendrons vers vous des qu'un bien correspondra a vos criteres.</p>
-        ${summary}
-        <p style="margin:24px 0 0;">
-          <a href="${escapeHtml(projectUrl)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700;">Acceder a mon espace client</a>
-        </p>
-      `,
-    ),
-    subject: "Votre recherche immobiliere est enregistree",
-    text: [
-      `Bonjour ${data.contact.firstName},`,
-      "Votre recherche immobiliere est bien enregistree.",
-      `Espace client : ${projectUrl}`,
-      formatTextSummary(data),
-    ]
-      .filter(Boolean)
-      .join("\n\n"),
-    to: data.contact.email.trim().toLowerCase(),
   };
 }
 
