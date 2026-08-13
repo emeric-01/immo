@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distanceInKm, findCandidateSearchArea, matchPropertyToSearch } from "./search-property-matching";
+import { distanceInKm, findCandidateSearchArea, interkabAsideReason, matchPropertyToSearch } from "./search-property-matching";
 
 const search = { city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 300000, minimum_living_area: 60, minimum_rooms: 3, minimum_bedrooms: 2, minimum_bathrooms: null, minimum_land_area: null } as never;
 const candidate = { id: "1", source: "interkab", title: "Appartement", url: "#", city: "Aubagne", propertyType: "Appartement", price: 300000, surfaceM2: 65, rooms: 3, bedrooms: 2, bathrooms: null, landAreaM2: null } as const;
@@ -14,6 +14,13 @@ describe("internal property matching", () => {
     "excludes non-residential Interkab category %s",
     (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, search)).toBeNull(),
   );
+  it.each([
+    ["Terrain à bâtir", "Terrain non demandé pour cette recherche"],
+    ["Parking", "Annexe vendue seule, hors critères"],
+    ["Viager appartement", "Vente en viager non demandée"],
+  ])("explains why %s is set aside", (propertyType, reason) => {
+    expect(interkabAsideReason(propertyType)).toBe(reason);
+  });
   it.each([["Maison de village", "house"], ["Bastide", "house"], ["Rez de jardin", "apartment"], ["Triplex", "apartment"]] as const)(
     "keeps residential Interkab category %s",
     (propertyType, expectedType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, {

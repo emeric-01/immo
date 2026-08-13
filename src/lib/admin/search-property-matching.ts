@@ -45,6 +45,10 @@ export type InternalPropertyMatch = InternalMatchCandidate & {
   tier: InternalMatchTier;
 };
 
+export type InternalPropertyAside = InternalMatchCandidate & {
+  reason: string;
+};
+
 function normalize(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
@@ -91,6 +95,16 @@ const excludedInterkabTypes = ["terrain", "viager", "garage", "parking", "cave",
 export function isExcludedInterkabPropertyType(value: string) {
   const type = normalize(value);
   return excludedInterkabTypes.some((item) => type.includes(item));
+}
+
+export function interkabAsideReason(value: string) {
+  const type = normalize(value);
+  if (type.includes("terrain")) return "Terrain non demandé pour cette recherche";
+  if (type.includes("viager")) return "Vente en viager non demandée";
+  if (["garage", "parking", "cave"].some((item) => type.includes(item))) return "Annexe vendue seule, hors critères";
+  if (type.includes("immeuble")) return "Immeuble entier hors critères";
+  if (["autre", "architecture"].some((item) => type.includes(item))) return "Catégorie atypique hors critères";
+  return "Type de bien non compatible avec cette recherche";
 }
 
 export function propertyCategory(value: string) {

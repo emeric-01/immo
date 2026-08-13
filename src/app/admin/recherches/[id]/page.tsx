@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, BedDouble, CalendarDays, Euro, Gauge, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, BedDouble, CalendarDays, CircleOff, Euro, Gauge, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
 import {
   formatAdminPreferences,
@@ -16,7 +16,7 @@ import { formatAdminAttribution, formatAdminAttributionCampaign, formatRecordOri
 import { listAdminUsers } from "@/lib/admin/users";
 import { getInternalPropertyMatches } from "@/lib/admin/internal-property-matches";
 import type { InternalPropertyMatchGroup } from "@/lib/admin/internal-property-matches";
-import type { InternalPropertyMatch } from "@/lib/admin/search-property-matching";
+import type { InternalPropertyAside, InternalPropertyMatch } from "@/lib/admin/search-property-matching";
 import styles from "../../admin.module.css";
 import { updateBuyerSearchAssignmentAction } from "../actions";
 import { ArchiveBuyerSearchButton } from "./ArchiveBuyerSearchButton";
@@ -240,7 +240,20 @@ function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
       <MatchColumn matches={group.agency} title="Biens de l’agence" />
       <MatchColumn matches={group.interkab} title="Réseau Interkab" />
     </div>
+    {group.interkabAside.length ? <AsideColumn matches={group.interkabAside} /> : null}
   </section>;
+}
+
+function AsideColumn({ matches }: { matches: InternalPropertyAside[] }) {
+  return <details className={styles.internalMatchAside}>
+    <summary><span><CircleOff aria-hidden="true" size={17} />Biens mis à l’écart pour cette recherche</span><strong>{matches.length}</strong></summary>
+    <p>Ces annonces Interkab ne correspondent pas au type de bien demandé. Elles restent disponibles pour les autres recherches.</p>
+    <div>{matches.map((match) => <article key={`aside-${match.id}`}>
+      <div className={styles.internalMatchAsideMedia}>{match.imageUrl ? <Image alt="" fill sizes="72px" src={match.imageUrl} /> : <Home aria-hidden="true" size={22} />}</div>
+      <div><strong>{match.title}</strong><span>{formatCurrency(match.price)}{match.surfaceM2 ? ` · ${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : ""}</span><small>{match.reason}</small></div>
+      <Link href={match.url} rel="noreferrer" target="_blank">Consulter →</Link>
+    </article>)}</div>
+  </details>;
 }
 
 function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; title: string }) {

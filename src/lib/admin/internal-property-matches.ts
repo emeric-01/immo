@@ -9,9 +9,12 @@ import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import { adminRest } from "@/lib/properties";
 import {
   findCandidateSearchArea,
+  interkabAsideReason,
+  isExcludedInterkabPropertyType,
   propertyCategory,
   rankPropertyMatches,
   type InternalMatchCandidate,
+  type InternalPropertyAside,
   type InternalPropertyMatch,
   type InternalSearchArea,
 } from "./search-property-matching";
@@ -27,6 +30,7 @@ export type InternalPropertyMatchGroup = {
   agency: InternalPropertyMatch[];
   area: InternalSearchArea;
   interkab: InternalPropertyMatch[];
+  interkabAside: InternalPropertyAside[];
 };
 
 function normalize(value: string) {
@@ -51,6 +55,16 @@ function groupMatches(matches: InternalPropertyMatch[], areas: InternalSearchAre
   return new Map(areas.map((area) => [
     String(area.id),
     matches.filter((match) => String(match.searchArea?.id) === String(area.id)).slice(0, limit),
+  ]));
+}
+
+function groupAside(candidates: InternalMatchCandidate[], areas: InternalSearchArea[], limit: number) {
+  return new Map(areas.map((area) => [
+    String(area.id),
+    candidates
+      .filter((candidate) => String(candidate.searchArea?.id) === String(area.id))
+      .slice(0, limit)
+      .map((candidate): InternalPropertyAside => ({ ...candidate, reason: interkabAsideReason(candidate.propertyType) })),
   ]));
 }
 
@@ -116,8 +130,12 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
 
   const rankedAgency = rankPropertyMatches(agencyCandidates, search);
   const rankedInterkab = rankPropertyMatches(interkabCandidates, search);
+  const interkabAsideCandidates = interkabCandidates.filter((candidate) => (
+    isExcludedInterkabPropertyType(candidate.propertyType) || propertyCategory(candidate.propertyType) === null
+  ));
   const agencyByArea = groupMatches(rankedAgency, areas, 12);
   const interkabByArea = groupMatches(rankedInterkab, areas, 24);
+  const interkabAsideByArea = groupAside(interkabAsideCandidates, areas, 12);
   const agency = [...agencyByArea.values()].flat();
   const interkab = [...interkabByArea.values()].flat();
 
@@ -127,6 +145,7 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
       agency: agencyByArea.get(String(area.id)) ?? [],
       area,
       interkab: interkabByArea.get(String(area.id)) ?? [],
+      interkabAside: interkabAsideByArea.get(String(area.id)) ?? [],
     })),
     interkab,
   };

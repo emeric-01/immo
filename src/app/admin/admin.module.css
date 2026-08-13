@@ -1891,9 +1891,8 @@
 .internalMatchColumn > header { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e9e2db; padding:15px 17px; background:#faf8f5; }
 .internalMatchColumn h3 { margin:0; font-size:1rem; }
 .internalMatchColumn > header > span { min-width:28px; border-radius:999px; background:#eee7df; padding:4px 8px; color:#70401e; font-size:.76rem; font-weight:800; text-align:center; }
-.internalMatchList { display:grid; }
-.internalMatchCard { display:grid; grid-template-columns:176px minmax(0,1fr); gap:0; border-bottom:1px solid #eee7df; background:#fff; }
-.internalMatchCard:last-child { border-bottom:0; }
+.internalMatchList { display:grid; gap:8px; padding:8px; background:#faf8f5; }
+.internalMatchCard { display:grid; grid-template-columns:176px minmax(0,1fr); gap:0; overflow:hidden; border:1px solid #eee7df; border-radius:10px; background:#fff; }
 .internalMatchMedia { position:relative; display:grid; min-height:190px; place-items:center; overflow:hidden; background:#eee9e3; color:#a99e94; }
 .internalMatchMedia img { object-fit:cover; }
 .internalMatchContent { display:grid; gap:11px; padding:16px 17px; }
@@ -1918,5 +1917,21 @@
 .internalMatchScore[data-tier="negotiation"] { background:#fff4df; color:#82501c; }
 .internalMatchScore[data-tier="expanded"] { background:#f6eee6; color:#8b4a22; }
 .internalMatchEmpty { margin:0; padding:28px 18px; color:#707789; text-align:center; }
+.internalMatchAside { overflow:hidden; border:1px solid #e4ddd5; border-radius:12px; background:#faf8f5; }
+.internalMatchAside summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 16px; color:#665f58; cursor:pointer; font-size:.84rem; font-weight:800; list-style:none; }
+.internalMatchAside summary::-webkit-details-marker { display:none; }
+.internalMatchAside summary > span { display:flex; align-items:center; gap:8px; }
+.internalMatchAside summary > strong { min-width:27px; border-radius:999px; background:#e6e0da; padding:4px 8px; text-align:center; }
+.internalMatchAside > p { margin:0; border-top:1px solid #ebe4dc; padding:11px 16px; color:#707789; font-size:.78rem; }
+.internalMatchAside > div { display:grid; border-top:1px solid #ebe4dc; }
+.internalMatchAside article { display:grid; grid-template-columns:72px minmax(0,1fr) auto; align-items:center; gap:12px; border-bottom:1px solid #ebe4dc; padding:9px 12px; }
+.internalMatchAside article:last-child { border-bottom:0; }
+.internalMatchAsideMedia { position:relative; display:grid; width:72px; height:58px; place-items:center; overflow:hidden; border-radius:7px; background:#e9e4de; color:#9b9188; }
+.internalMatchAsideMedia img { object-fit:cover; }
+.internalMatchAside article > div:nth-child(2) { display:grid; gap:2px; min-width:0; }
+.internalMatchAside article strong { overflow:hidden; font-size:.84rem; text-overflow:ellipsis; white-space:nowrap; }
+.internalMatchAside article span,.internalMatchAside article small { color:#707789; font-size:.72rem; }
+.internalMatchAside article small { color:#915735; font-weight:700; }
+.internalMatchAside article a { color:#70401e; font-size:.76rem; font-weight:800; text-decoration:none; }
 @media (max-width:900px) { .internalMatchColumns { grid-template-columns:1fr; } .internalMatchesHeading { align-items:flex-start; flex-direction:column; } .internalMatchesTotal { justify-items:start; } }
-@media (max-width:700px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } }
+@media (max-width:700px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } .internalMatchAside article { grid-template-columns:58px minmax(0,1fr); } .internalMatchAsideMedia { width:58px; height:52px; } .internalMatchAside article a { grid-column:2; } }
