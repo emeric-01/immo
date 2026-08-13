@@ -14,9 +14,13 @@ describe("internal property matching", () => {
     "excludes non-residential Interkab category %s",
     (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, search)).toBeNull(),
   );
-  it.each(["Maison de village", "Bastide", "Rez de jardin", "Triplex"])(
+  it.each([["Maison de village", "house"], ["Bastide", "house"], ["Rez de jardin", "apartment"], ["Triplex", "apartment"]] as const)(
     "keeps residential Interkab category %s",
-    (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, { ...search, property_types: [] } as never)).not.toBeNull(),
+    (propertyType, expectedType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, {
+      city_names: ["Aubagne"], property_types: [expectedType], maximum_budget: 300000,
+      minimum_living_area: 60, minimum_rooms: 3, minimum_bedrooms: 2,
+      minimum_bathrooms: null, minimum_land_area: null,
+    } as never)).not.toBeNull(),
   );
   it("includes a neighboring city within the selected radius", () => {
     const area = findCandidateSearchArea(

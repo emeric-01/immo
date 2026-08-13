@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, BedDouble, CalendarDays, Euro, Gauge, Home, Mail, MapPin, Phone, ShieldCheck, Star, Trash2, UserRound } from "lucide-react";
 import { MarketScoreCard } from "@/components/buyer-search/MarketScoreCard";
@@ -244,15 +245,35 @@ function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
 
 function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; title: string }) {
   return <section className={styles.internalMatchColumn}><header><h3>{title}</h3><span>{matches.length}</span></header>{matches.length ? <div className={styles.internalMatchList}>{matches.map((match) => <article className={styles.internalMatchCard} key={`${match.source}-${match.id}`}>
-    <div className={styles.internalMatchIdentity}><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2} m²` : "Surface NC"}</span></div>
-    <span className={styles.internalMatchScore} data-tier={match.tier}><strong>{match.score}/100</strong><small>{matchTierLabel(match.tier)}</small></span>
-    <p>{match.reasons.slice(0, 4).join(" · ")}</p>
-    <footer>{match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : <small>Critères principaux renseignés</small>}<Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien →</Link></footer>
+    <div className={styles.internalMatchMedia}>{match.imageUrl ? <Image alt={match.title} fill sizes="(max-width: 600px) 100vw, 180px" src={match.imageUrl}/> : <Home aria-hidden="true" size={30}/>}</div>
+    <div className={styles.internalMatchContent}>
+      <div className={styles.internalMatchTop}><div className={styles.internalMatchIdentity}><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : "Surface NC"}</span></div><span className={styles.internalMatchScore} data-tier={match.tier}><strong>{match.score}/100</strong><small>{matchTierLabel(match.tier)}</small></span></div>
+      <div className={styles.internalMatchMarket}><div><small>Prix affiché au m²</small><strong>{formatPricePerM2(match.pricePerM2)}</strong></div><div><small>Position face au marché</small><strong data-tone={marketGapTone(match.marketGapPercent)}>{formatMarketGap(match.marketGapPercent)}</strong>{match.marketPricePerM2 ? <span>Moyenne locale : {formatPricePerM2(match.marketPricePerM2)}</span> : null}</div></div>
+      <p>{match.reasons.slice(0, 4).join(" · ")}</p>
+      <footer>{match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : <small>Critères principaux renseignés</small>}<Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien →</Link></footer>
+    </div>
   </article>)}</div> : <p className={styles.internalMatchEmpty}>Aucun rapprochement suffisant pour le moment.</p>}</section>;
 }
 
 function matchTierLabel(tier: InternalPropertyMatch["tier"]) {
   return tier === "strict" ? "Correspondance stricte" : tier === "negotiation" ? "Négociation ≤ 5 %" : "Opportunité ≤ 8 %";
+}
+
+function formatPricePerM2(value?: number | null) {
+  return value ? `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value)} €/m²` : "Non disponible";
+}
+
+function formatMarketGap(value?: number | null) {
+  if (value === null || value === undefined) return "Référence indisponible";
+  const gap = Math.abs(value).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+  if (value < 0) return `${gap} % sous le prix moyen`;
+  if (value > 0) return `${gap} % au-dessus du prix moyen`;
+  return "Aligné avec le prix moyen";
+}
+
+function marketGapTone(value?: number | null) {
+  if (value === null || value === undefined) return "neutral";
+  return value <= 0 ? "positive" : value <= 8 ? "coherent" : "warning";
 }
 
 function formatRadius(radiusKm: number) {
