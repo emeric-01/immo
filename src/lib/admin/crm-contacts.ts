@@ -69,7 +69,7 @@ export async function createCrmContact(input: CreateCrmContactInput, session: Ad
   if (!firstName || !lastName) return { message: "Le prénom et le nom sont obligatoires.", success: false as const };
   const email = input.email?.trim().toLowerCase() ?? "";
   const phone = input.phone?.trim() ?? "";
-  if (email && !/^\S+@\S+\.\S+$/.test(email)) return { message: "L’adresse e-mail n’est pas valide.", success: false as const };
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) return { message: "Une adresse e-mail valide est obligatoire.", success: false as const };
 
   try {
     const linkedClientAccountId = await findMatchingClientAccount(email, phone);

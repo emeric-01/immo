@@ -14,6 +14,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const contactResult = await getCrmContact(id, session);
   if (contactResult.status !== "ready" || !contactResult.data) return NextResponse.json({ error: "Fiche CRM inaccessible." }, { status: 404 });
+  const contactEmail = contactResult.data.contact.email.trim();
+  if (!/^\S+@\S+\.\S+$/.test(contactEmail)) return NextResponse.json({ error: "Ajoutez une adresse e-mail valide à la fiche contact avant de créer sa recherche." }, { status: 400 });
   const payload = await request.json().catch(() => null);
   const parsed = buyerSearchSchema.safeParse(payload);
   if (!parsed.success || internalSteps.some((step) => !stepSchemas[step].safeParse(parsed.success ? parsed.data[step] : null).success)) {
@@ -28,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       contact: {
         ...parsed.data.contact,
         consent: false,
-        email: contact.email,
+        email: contactEmail,
         firstName: contact.first_name,
         lastName: contact.last_name,
         phone: contact.phone,

@@ -75,6 +75,8 @@ export default async function AdminBuyerSearchDetailPage({
   const creatorAgent = search.created_by_admin_user_id ? usersById.get(search.created_by_admin_user_id) : null;
   const commercialAgent = assignedAgent ?? attributedAgent ?? creatorAgent;
   const contactName = `${search.contact_first_name} ${search.contact_last_name}`.trim();
+  const contactEmail = search.contact_email.trim();
+  const contactPhone = search.contact_phone.trim();
 
   return (
     <DetailFrame>
@@ -98,14 +100,14 @@ export default async function AdminBuyerSearchDetailPage({
             <p>{search.location_summary || "Localisation non renseignee"}</p>
           </div>
           <div className={styles.contactBox}>
-            <a href={`mailto:${search.contact_email}`}>
+            {contactEmail ? <a href={`mailto:${contactEmail}`}>
               <Mail size={18} aria-hidden="true" />
-              {search.contact_email}
-            </a>
-            <a href={`tel:${search.contact_phone.replace(/\s/g, "")}`}>
+              {contactEmail}
+            </a> : <span><Mail size={18} aria-hidden="true" />E-mail non renseigné</span>}
+            {contactPhone ? <a href={`tel:${contactPhone.replace(/\s/g, "")}`}>
               <Phone size={18} aria-hidden="true" />
-              {search.contact_phone}
-            </a>
+              {contactPhone}
+            </a> : <span><Phone size={18} aria-hidden="true" />Téléphone non renseigné</span>}
           </div>
         </div>
       </section>
@@ -240,17 +242,30 @@ function MatchArea({ group }: { group: InternalPropertyMatchGroup }) {
       <MatchColumn matches={group.agency} title="Biens de l’agence" />
       <MatchColumn matches={group.interkab} title="Réseau Interkab" />
     </div>
-    {group.interkabAside.length ? <AsideColumn matches={group.interkabAside} /> : null}
+    <div className={styles.internalMatchSummary}><strong>Lecture rapide</strong><p>{group.analysis}</p></div>
+    {group.alternatives.length ? <AlternativeColumn matches={group.alternatives} /> : null}
+    {group.excluded.length ? <AsideColumn matches={group.excluded} /> : null}
+  </section>;
+}
+
+function AlternativeColumn({ matches }: { matches: InternalPropertyAside[] }) {
+  return <section className={styles.internalMatchAlternatives}>
+    <header><div><Gauge aria-hidden="true" size={18} /><div><h4>Alternatives avec compromis</h4><p>De la plus proche à la plus éloignée des critères, pour nourrir l’échange avec le prospect.</p></div></div><strong>{matches.length}</strong></header>
+    <div>{matches.map((match) => <article key={`alternative-${match.source}-${match.id}`}>
+      <div className={styles.internalMatchAsideMedia}>{match.imageUrl ? <Image alt="" fill sizes="72px" src={match.imageUrl} /> : <Home aria-hidden="true" size={22} />}</div>
+      <div><strong>{match.title}</strong><span>{formatCurrency(match.price)}{match.surfaceM2 ? ` · ${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : ""}</span><small>{match.reason}</small><p>{match.analysis}</p></div>
+      <Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Consulter →</Link>
+    </article>)}</div>
   </section>;
 }
 
 function AsideColumn({ matches }: { matches: InternalPropertyAside[] }) {
   return <details className={styles.internalMatchAside}>
-    <summary><span><CircleOff aria-hidden="true" size={17} />Biens mis à l’écart pour cette recherche</span><strong>{matches.length}</strong></summary>
-    <p>Ces annonces Interkab ne correspondent pas au type de bien demandé. Elles restent disponibles pour les autres recherches.</p>
+    <summary><span><CircleOff aria-hidden="true" size={17} />Catégories hors recherche</span><strong>{matches.length}</strong></summary>
+    <p>Terrains, parkings, viagers et autres catégories réellement différentes du bien demandé.</p>
     <div>{matches.map((match) => <article key={`aside-${match.id}`}>
       <div className={styles.internalMatchAsideMedia}>{match.imageUrl ? <Image alt="" fill sizes="72px" src={match.imageUrl} /> : <Home aria-hidden="true" size={22} />}</div>
-      <div><strong>{match.title}</strong><span>{formatCurrency(match.price)}{match.surfaceM2 ? ` · ${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : ""}</span><small>{match.reason}</small></div>
+      <div><strong>{match.title}</strong><span>{formatCurrency(match.price)}{match.surfaceM2 ? ` · ${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : ""}</span><small>{match.reason}</small><p>{match.analysis}</p></div>
       <Link href={match.url} rel="noreferrer" target="_blank">Consulter →</Link>
     </article>)}</div>
   </details>;
@@ -262,6 +277,7 @@ function MatchColumn({ matches, title }: { matches: InternalPropertyMatch[]; tit
     <div className={styles.internalMatchContent}>
       <div className={styles.internalMatchTop}><div className={styles.internalMatchIdentity}><strong>{match.title}</strong><span>{formatCurrency(match.price)} · {match.surfaceM2 ? `${match.surfaceM2.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m²` : "Surface NC"}</span></div><span className={styles.internalMatchScore} data-tier={match.tier}><strong>{match.score}/100</strong><small>{matchTierLabel(match.tier)}</small></span></div>
       <div className={styles.internalMatchMarket}><div><small>Prix affiché au m²</small><strong>{formatPricePerM2(match.pricePerM2)}</strong></div><div><small>Position face au marché</small><strong data-tone={marketGapTone(match.marketGapPercent)}>{formatMarketGap(match.marketGapPercent)}</strong>{match.marketPricePerM2 ? <span>Moyenne locale : {formatPricePerM2(match.marketPricePerM2)}</span> : null}</div></div>
+      <div className={styles.internalMatchAnalysis}><strong>Analyse</strong><span>{match.analysis}</span></div>
       <p>{match.reasons.slice(0, 4).join(" · ")}</p>
       <footer>{match.checks.length ? <small>À vérifier : {match.checks.join(", ")}</small> : <small>Critères principaux renseignés</small>}<Link href={match.url} rel={match.source === "interkab" ? "noreferrer" : undefined} target={match.source === "interkab" ? "_blank" : undefined}>Voir le bien →</Link></footer>
     </div>

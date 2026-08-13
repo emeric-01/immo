@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distanceInKm, findCandidateSearchArea, interkabAsideReason, matchPropertyToSearch } from "./search-property-matching";
+import { distanceInKm, essentialMismatchReasons, findCandidateSearchArea, interkabAsideReason, matchPropertyToSearch, propertyMatchAnalysis } from "./search-property-matching";
 
 const search = { city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 300000, minimum_living_area: 60, minimum_rooms: 3, minimum_bedrooms: 2, minimum_bathrooms: null, minimum_land_area: null } as never;
 const candidate = { id: "1", source: "interkab", title: "Appartement", url: "#", city: "Aubagne", propertyType: "Appartement", price: 300000, surfaceM2: 65, rooms: 3, bedrooms: 2, bathrooms: null, landAreaM2: null } as const;
@@ -58,5 +58,33 @@ describe("internal property matching", () => {
       { latitude: 43.2928, longitude: 5.5707 },
       { latitude: 43.2989, longitude: 5.6284 },
     )).toBeGreaterThan(4);
+  });
+  it("blocks a large surface gap when the minimum surface is essential", () => {
+    const essentialSearch = {
+      city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 300000,
+      minimum_rooms: 3, minimum_bedrooms: 2, minimum_bathrooms: null, minimum_land_area: null,
+      minimum_living_area: 85,
+      priorities: [{ key: "characteristics-minimumLivingArea", level: "essential" }],
+    } as never;
+    expect(matchPropertyToSearch({ ...candidate, surfaceM2: 56 }, essentialSearch)).toBeNull();
+    expect(essentialMismatchReasons({ ...candidate, surfaceM2: 56 }, essentialSearch)[0]).toContain("29 m² manquants");
+  });
+  it("keeps a surface within five percent of an essential minimum", () => {
+    const essentialSearch = {
+      city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 300000,
+      minimum_rooms: 3, minimum_bedrooms: 2, minimum_bathrooms: null, minimum_land_area: null,
+      minimum_living_area: 85,
+      priorities: [{ key: "characteristics-minimumLivingArea", level: "essential" }],
+    } as never;
+    expect(matchPropertyToSearch({ ...candidate, surfaceM2: 81 }, essentialSearch)).not.toBeNull();
+  });
+  it("writes a deterministic budget and surface analysis", () => {
+    const analyzedSearch = {
+      city_names: ["Aubagne"], property_types: ["apartment"], maximum_budget: 320000,
+      minimum_living_area: 85, minimum_rooms: 3, minimum_bedrooms: 2,
+      minimum_bathrooms: null, minimum_land_area: null, priorities: [],
+    } as never;
+    expect(propertyMatchAnalysis({ ...candidate, price: 259000, surfaceM2: 49.46 }, analyzedSearch))
+      .toBe("Le prix entre dans le budget, avec 61 000 € de marge, mais la surface est inférieure de 35,54 m² au minimum demandé.");
   });
 });

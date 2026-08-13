@@ -26,7 +26,7 @@ export default async function NewCrmContactPage({ searchParams }: { searchParams
         <form action={createCrmContactAction} className={styles.userForm}>
           <label htmlFor="firstName">Prénom</label><input id="firstName" name="firstName" required />
           <label htmlFor="lastName">Nom</label><input id="lastName" name="lastName" required />
-          <label htmlFor="email">E-mail <small>(facultatif)</small></label><input id="email" name="email" type="email" />
+          <label htmlFor="email">E-mail</label><input autoComplete="email" id="email" name="email" required type="email" />
           <label htmlFor="phone">Téléphone <small>(facultatif)</small></label><input id="phone" name="phone" type="tel" />
           {session.role !== "agent" ? <><label htmlFor="assignedAdminUserId">Agent commercial responsable <small>(facultatif)</small></label><select defaultValue="" id="assignedAdminUserId" name="assignedAdminUserId"><option value="">Non attribué</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.full_name}</option>)}</select></> : null}
           <label htmlFor="notes">Notes internes <small>(facultatif)</small></label><textarea id="notes" name="notes" rows={5}/>

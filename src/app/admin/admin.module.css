@@ -386,7 +386,8 @@
 
 .iconLink,
 .backLink,
-.contactBox a {
+.contactBox a,
+.contactBox span {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1908,6 +1909,11 @@
 .internalMatchMarket strong[data-tone="coherent"] { color:#82501c; }
 .internalMatchMarket strong[data-tone="warning"] { color:#9b3d30; }
 .internalMatchMarket span { color:#707789; font-size:.7rem; }
+.internalMatchSummary { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:10px; border-left:3px solid #b46f45; background:#f7f2ec; padding:12px 14px; color:#4f5665; }
+.internalMatchSummary strong { color:#70401e; font-size:.78rem; white-space:nowrap; }
+.internalMatchSummary p { margin:0; font-size:.82rem; line-height:1.45; }
+.internalMatchAnalysis { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; border-radius:8px; background:#f6f1eb; padding:9px 11px; color:#555d6d; font-size:.8rem; line-height:1.4; }
+.internalMatchAnalysis strong { color:#70401e; }
 .internalMatchCard p { margin:0; color:#555d6d; font-size:.86rem; line-height:1.45; }
 .internalMatchCard footer { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed #eee7df; padding-top:9px; }
 .internalMatchCard footer a { flex:0 0 auto; color:#70401e; font-size:.84rem; font-weight:800; text-decoration:none; }
@@ -1932,6 +1938,7 @@
 .internalMatchAside article strong { overflow:hidden; font-size:.84rem; text-overflow:ellipsis; white-space:nowrap; }
 .internalMatchAside article span,.internalMatchAside article small { color:#707789; font-size:.72rem; }
 .internalMatchAside article small { color:#915735; font-weight:700; }
+.internalMatchAside article p { margin:3px 0 0; color:#555d6d; font-size:.74rem; line-height:1.4; }
 .internalMatchAside article a { color:#70401e; font-size:.76rem; font-weight:800; text-decoration:none; }
 @media (max-width:900px) { .internalMatchColumns { grid-template-columns:1fr; } .internalMatchesHeading { align-items:flex-start; flex-direction:column; } .internalMatchesTotal { justify-items:start; } }
-@media (max-width:700px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } .internalMatchAside article { grid-template-columns:58px minmax(0,1fr); } .internalMatchAsideMedia { width:58px; height:52px; } .internalMatchAside article a { grid-column:2; } }
+@media (max-width:700px) { .internalMatchArea > header { align-items:flex-start; flex-direction:column; gap:8px; } .internalMatchSummary,.internalMatchAnalysis { grid-template-columns:1fr; } .internalMatchCard { grid-template-columns:1fr; } .internalMatchMedia { min-height:210px; } .internalMatchTop { grid-template-columns:1fr; } .internalMatchScore { justify-items:start; width:max-content; } .internalMatchMarket { grid-template-columns:1fr; } .internalMatchCard footer { align-items:flex-start; flex-direction:column; } .internalMatchAside article { grid-template-columns:58px minmax(0,1fr); } .internalMatchAsideMedia { width:58px; height:52px; } .internalMatchAside article a { grid-column:2; } }

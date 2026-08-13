@@ -38,6 +38,7 @@ export type InternalSearchAreaMatch = InternalSearchArea & {
 };
 
 export type InternalPropertyMatch = InternalMatchCandidate & {
+  analysis: string;
   budgetGapPercent: number | null;
   checks: string[];
   reasons: string[];
@@ -46,11 +47,94 @@ export type InternalPropertyMatch = InternalMatchCandidate & {
 };
 
 export type InternalPropertyAside = InternalMatchCandidate & {
+  analysis: string;
   reason: string;
 };
 
 function normalize(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function formatNumber(value: number) {
+  return value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+}
+
+function formatCurrency(value: number) {
+  return `${Math.round(value).toLocaleString("fr-FR")} €`;
+}
+
+function isEssential(search: AdminBuyerSearchRow, key: string) {
+  const normalizedKey = normalize(key);
+  return (search.priorities ?? []).some((priority) => (
+    priority.level === "essential" && normalize(priority.key).includes(normalizedKey)
+  ));
+}
+
+export function essentialMismatchReasons(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow) {
+  const reasons: string[] = [];
+  const minimumSurface = search.minimum_living_area;
+  if (
+    minimumSurface
+    && isEssential(search, "minimumLivingArea")
+    && candidate.surfaceM2 !== null
+    && candidate.surfaceM2 < minimumSurface * 0.95
+  ) {
+    const missingSurface = minimumSurface - candidate.surfaceM2;
+    reasons.push(
+      `La surface est de ${formatNumber(candidate.surfaceM2)} m² au lieu des ${formatNumber(minimumSurface)} m² indispensables (${formatNumber(missingSurface)} m² manquants).`,
+    );
+  }
+  return reasons;
+}
+
+export function propertyMatchAnalysis(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow) {
+  const parts: string[] = [];
+  if (search.maximum_budget && candidate.price) {
+    const difference = search.maximum_budget - candidate.price;
+    if (difference >= 0) parts.push(`Le prix entre dans le budget, avec ${formatCurrency(difference)} de marge`);
+    else parts.push(`Le prix dépasse le budget de ${formatCurrency(Math.abs(difference))}`);
+  } else if (search.maximum_budget) {
+    parts.push("Le respect du budget reste à vérifier");
+  }
+
+  if (search.minimum_living_area && candidate.surfaceM2 !== null) {
+    const difference = candidate.surfaceM2 - search.minimum_living_area;
+    if (difference >= 0) parts.push(`la surface respecte le minimum de ${formatNumber(search.minimum_living_area)} m²`);
+    else parts.push(`la surface est inférieure de ${formatNumber(Math.abs(difference))} m² au minimum demandé`);
+  } else if (search.minimum_living_area) {
+    parts.push("la surface reste à vérifier");
+  }
+
+  if (!parts.length) return "Les principaux critères connus sont compatibles avec la recherche.";
+  return `${parts.join(", mais ")}.`;
+}
+
+export function propertyAlternativeReason(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow) {
+  const essentialReasons = essentialMismatchReasons(candidate, search);
+  if (essentialReasons.length) return essentialReasons[0];
+  if (search.maximum_budget && candidate.price && candidate.price > search.maximum_budget) {
+    const difference = candidate.price - search.maximum_budget;
+    const percent = (difference / search.maximum_budget) * 100;
+    return `Budget dépassé de ${formatCurrency(difference)} (+${formatNumber(percent)} %).`;
+  }
+  if (search.minimum_living_area && candidate.surfaceM2 !== null && candidate.surfaceM2 < search.minimum_living_area) {
+    return `Surface inférieure de ${formatNumber(search.minimum_living_area - candidate.surfaceM2)} m² au minimum demandé.`;
+  }
+  return "Alternative proche avec plusieurs critères à vérifier.";
+}
+
+export function alternativeCompromiseScore(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow) {
+  const budgetPenalty = search.maximum_budget
+    ? candidate.price === null
+      ? 0.35
+      : Math.max(0, candidate.price - search.maximum_budget) / search.maximum_budget
+    : 0;
+  const surfacePenalty = search.minimum_living_area
+    ? candidate.surfaceM2 === null
+      ? 0.35
+      : Math.max(0, search.minimum_living_area - candidate.surfaceM2) / search.minimum_living_area
+    : 0;
+  return budgetPenalty + surfacePenalty;
 }
 
 function toRadians(value: number) {
@@ -131,6 +215,7 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
   if (candidate.source === "interkab" && isExcludedInterkabPropertyType(candidate.propertyType)) return null;
   if (candidate.source === "interkab" && category === null) return null;
   if (search.property_types.length > 0 && category && !search.property_types.includes(category)) return null;
+  if (essentialMismatchReasons(candidate, search).length) return null;
 
   const maximumBudget = search.maximum_budget;
   const rawBudgetGapPercent = maximumBudget && candidate.price
@@ -174,7 +259,7 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
   const tier: InternalMatchTier = rawBudgetGapPercent === null || rawBudgetGapPercent <= 0
     ? "strict"
     : rawBudgetGapPercent <= 5 ? "negotiation" : "expanded";
-  return { ...candidate, budgetGapPercent, checks, reasons, score: Math.min(100, score), tier };
+  return { ...candidate, analysis: propertyMatchAnalysis(candidate, search), budgetGapPercent, checks, reasons, score: Math.min(100, score), tier };
 }
 
 export function rankPropertyMatches(candidates: InternalMatchCandidate[], search: AdminBuyerSearchRow) {

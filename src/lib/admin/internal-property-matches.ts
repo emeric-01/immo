@@ -8,10 +8,14 @@ import { INTERKAB_CITIES, getAllStoredInterkabListings } from "@/lib/interkab";
 import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import { adminRest } from "@/lib/properties";
 import {
+  alternativeCompromiseScore,
+  essentialMismatchReasons,
   findCandidateSearchArea,
   interkabAsideReason,
   isExcludedInterkabPropertyType,
   propertyCategory,
+  propertyAlternativeReason,
+  propertyMatchAnalysis,
   rankPropertyMatches,
   type InternalMatchCandidate,
   type InternalPropertyAside,
@@ -28,9 +32,11 @@ type AgencyPropertyRow = {
 
 export type InternalPropertyMatchGroup = {
   agency: InternalPropertyMatch[];
+  alternatives: InternalPropertyAside[];
+  analysis: string;
   area: InternalSearchArea;
+  excluded: InternalPropertyAside[];
   interkab: InternalPropertyMatch[];
-  interkabAside: InternalPropertyAside[];
 };
 
 function normalize(value: string) {
@@ -58,14 +64,46 @@ function groupMatches(matches: InternalPropertyMatch[], areas: InternalSearchAre
   ]));
 }
 
-function groupAside(candidates: InternalMatchCandidate[], areas: InternalSearchArea[], limit: number) {
+function groupAside(
+  candidates: InternalMatchCandidate[],
+  areas: InternalSearchArea[],
+  limit: number,
+  search: AdminBuyerSearchRow,
+  reason: (candidate: InternalMatchCandidate) => string,
+) {
   return new Map(areas.map((area) => [
     String(area.id),
     candidates
       .filter((candidate) => String(candidate.searchArea?.id) === String(area.id))
+      .sort((left, right) => alternativeCompromiseScore(left, search) - alternativeCompromiseScore(right, search))
       .slice(0, limit)
-      .map((candidate): InternalPropertyAside => ({ ...candidate, reason: interkabAsideReason(candidate.propertyType) })),
+      .map((candidate): InternalPropertyAside => ({
+        ...candidate,
+        analysis: propertyMatchAnalysis(candidate, search),
+        reason: reason(candidate),
+      })),
   ]));
+}
+
+function matchesRequestedType(candidate: InternalMatchCandidate, search: AdminBuyerSearchRow) {
+  const category = propertyCategory(candidate.propertyType);
+  return category !== null && (!search.property_types.length || search.property_types.includes(category));
+}
+
+function areaAnalysis(matches: InternalPropertyMatch[], alternatives: InternalPropertyAside[]) {
+  const surfaceAlternatives = alternatives.filter((candidate) => candidate.reason.toLowerCase().includes("surface"));
+  const budgetAlternatives = alternatives.filter((candidate) => candidate.reason.toLowerCase().includes("budget"));
+  if (matches.length && surfaceAlternatives.length) {
+    return `${matches.length} bien${matches.length > 1 ? "s respectent" : " respecte"} les critères principaux. ${surfaceAlternatives.length} alternative${surfaceAlternatives.length > 1 ? "s entrent" : " entre"} dans l’enveloppe étudiée mais s’écarte d’un critère indispensable.`;
+  }
+  if (matches.length) return `${matches.length} bien${matches.length > 1 ? "s respectent" : " respecte"} les critères principaux de la recherche.`;
+  if (surfaceAlternatives.length) {
+    const budgetCopy = budgetAlternatives.length ? ` ${budgetAlternatives.length} autre${budgetAlternatives.length > 1 ? "s dépassent" : " dépasse"} le budget mais peut servir de repère.` : "";
+    return `Aucun bien ne respecte actuellement tous les critères indispensables. ${surfaceAlternatives.length} alternative${surfaceAlternatives.length > 1 ? "s présentent" : " présente"} un compromis sur la surface.${budgetCopy}`;
+  }
+  if (budgetAlternatives.length) return `Aucun bien ne respecte le budget actuel. ${budgetAlternatives.length} alternative${budgetAlternatives.length > 1 ? "s proches sont proposées" : " proche est proposée"} pour matérialiser l’effort budgétaire nécessaire.`;
+  if (alternatives.length) return `Aucun bien ne respecte tous les critères. ${alternatives.length} alternative${alternatives.length > 1 ? "s sont proposées" : " est proposée"} avec les compromis clairement indiqués.`;
+  return "Aucun bien suffisamment proche des critères n’est disponible actuellement dans ce secteur.";
 }
 
 function marketMetrics(propertyType: string, price: number | null, surfaceM2: number | null, market: CityMarketData | null) {
@@ -130,23 +168,38 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
 
   const rankedAgency = rankPropertyMatches(agencyCandidates, search);
   const rankedInterkab = rankPropertyMatches(interkabCandidates, search);
-  const interkabAsideCandidates = interkabCandidates.filter((candidate) => (
+  const typeAsideCandidates = interkabCandidates.filter((candidate) => (
     isExcludedInterkabPropertyType(candidate.propertyType) || propertyCategory(candidate.propertyType) === null
+  ));
+  const alternativeCandidates = [...agencyCandidates, ...interkabCandidates].filter((candidate) => (
+    matchesRequestedType(candidate, search)
+    && (
+      essentialMismatchReasons(candidate, search).length > 0
+      || (search.maximum_budget !== null && candidate.price !== null && candidate.price > search.maximum_budget * 1.08)
+    )
   ));
   const agencyByArea = groupMatches(rankedAgency, areas, 12);
   const interkabByArea = groupMatches(rankedInterkab, areas, 24);
-  const interkabAsideByArea = groupAside(interkabAsideCandidates, areas, 12);
+  const alternativesByArea = groupAside(alternativeCandidates, areas, 12, search, (candidate) => propertyAlternativeReason(candidate, search));
+  const excludedByArea = groupAside(typeAsideCandidates, areas, 12, search, (candidate) => interkabAsideReason(candidate.propertyType));
   const agency = [...agencyByArea.values()].flat();
   const interkab = [...interkabByArea.values()].flat();
 
   return {
     agency,
-    groups: areas.map((area) => ({
-      agency: agencyByArea.get(String(area.id)) ?? [],
-      area,
-      interkab: interkabByArea.get(String(area.id)) ?? [],
-      interkabAside: interkabAsideByArea.get(String(area.id)) ?? [],
-    })),
+    groups: areas.map((area) => {
+      const groupedAgency = agencyByArea.get(String(area.id)) ?? [];
+      const groupedInterkab = interkabByArea.get(String(area.id)) ?? [];
+      const alternatives = alternativesByArea.get(String(area.id)) ?? [];
+      return {
+        agency: groupedAgency,
+        alternatives,
+        analysis: areaAnalysis([...groupedAgency, ...groupedInterkab], alternatives),
+        area,
+        excluded: excludedByArea.get(String(area.id)) ?? [],
+        interkab: groupedInterkab,
+      };
+    }),
     interkab,
   };
 }
