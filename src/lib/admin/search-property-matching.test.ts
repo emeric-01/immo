@@ -10,6 +10,14 @@ describe("internal property matching", () => {
   it("allows an eight percent expanded opportunity", () => expect(matchPropertyToSearch({ ...candidate, price: 324000 }, search)?.tier).toBe("expanded"));
   it("rejects a property above eight percent", () => expect(matchPropertyToSearch({ ...candidate, price: 324001 }, search)).toBeNull());
   it("rejects a different city", () => expect(matchPropertyToSearch({ ...candidate, city: "Toulon" }, search)).toBeNull());
+  it.each(["Terrain à bâtir", "Viager appartement", "Garage", "Parking", "Cave", "Immeuble"])(
+    "excludes non-residential Interkab category %s",
+    (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, search)).toBeNull(),
+  );
+  it.each(["Maison de village", "Bastide", "Rez de jardin", "Triplex"])(
+    "keeps residential Interkab category %s",
+    (propertyType) => expect(matchPropertyToSearch({ ...candidate, propertyType }, { ...search, property_types: [] } as never)).not.toBeNull(),
+  );
   it("includes a neighboring city within the selected radius", () => {
     const area = findCandidateSearchArea(
       { ...candidate, city: "Gémenos", latitude: 43.2989, longitude: 5.6284 },

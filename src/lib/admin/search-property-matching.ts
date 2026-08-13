@@ -8,10 +8,14 @@ export type InternalMatchCandidate = {
   bathrooms: number | null;
   city: string;
   id: string;
+  imageUrl?: string | null;
   latitude?: number | null;
   landAreaM2: number | null;
   longitude?: number | null;
+  marketGapPercent?: number | null;
+  marketPricePerM2?: number | null;
   price: number | null;
+  pricePerM2?: number | null;
   propertyType: string;
   rooms: number | null;
   searchArea?: InternalSearchAreaMatch;
@@ -82,10 +86,18 @@ export function findCandidateSearchArea(candidate: InternalMatchCandidate, areas
   return matchingAreas[0] ?? null;
 }
 
-function propertyCategory(value: string) {
+const excludedInterkabTypes = ["terrain", "viager", "garage", "parking", "cave", "immeuble", "autre", "architecture"];
+
+export function isExcludedInterkabPropertyType(value: string) {
   const type = normalize(value);
-  if (["appartement", "studio", "loft", "duplex", "attique"].some((item) => type.includes(item))) return "apartment";
-  if (["maison", "villa", "mas", "propriete", "pavillon"].some((item) => type.includes(item))) return "house";
+  return excludedInterkabTypes.some((item) => type.includes(item));
+}
+
+export function propertyCategory(value: string) {
+  const type = normalize(value);
+  if (isExcludedInterkabPropertyType(type)) return null;
+  if (["appartement", "studio", "loft", "duplex", "triplex", "attique", "rez de jardin"].some((item) => type.includes(item))) return "apartment";
+  if (["maison", "villa", "mas", "propriete", "pavillon", "bastide", "ferme", "cabanon"].some((item) => type.includes(item))) return "house";
   return null;
 }
 
@@ -102,6 +114,8 @@ export function matchPropertyToSearch(candidate: InternalMatchCandidate, search:
   if (!cityMatches) return null;
 
   const category = propertyCategory(candidate.propertyType);
+  if (candidate.source === "interkab" && isExcludedInterkabPropertyType(candidate.propertyType)) return null;
+  if (candidate.source === "interkab" && search.property_types.length > 0 && category === null) return null;
   if (search.property_types.length > 0 && category && !search.property_types.includes(category)) return null;
 
   const maximumBudget = search.maximum_budget;
