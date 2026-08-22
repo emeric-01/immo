@@ -36,18 +36,18 @@ function formatPercent(value: number) {
   return `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 }
 
-function populationSentence(city: City, population: number, vintage: number, change?: number) {
+function populationSentence(city: City, population: number, change?: number) {
   const formattedPopulation = population.toLocaleString("fr-FR");
   if (change === undefined) {
-    return `${city.name} compte ${formattedPopulation} habitants selon les données INSEE ${vintage}.`;
+    return `${city.name} compte ${formattedPopulation} habitants selon les derniers chiffres publiés par l’INSEE.`;
   }
   if (change > 1) {
-    return `${city.name} compte ${formattedPopulation} habitants selon les données INSEE ${vintage}, soit une progression de ${formatPercent(change)} entre 2017 et 2023.`;
+    return `${city.name} compte ${formattedPopulation} habitants selon les derniers chiffres publiés par l’INSEE, soit une progression de ${formatPercent(change)} entre 2017 et 2023.`;
   }
   if (change < -1) {
-    return `${city.name} compte ${formattedPopulation} habitants selon les données INSEE ${vintage}, soit un recul de ${formatPercent(Math.abs(change))} entre 2017 et 2023.`;
+    return `${city.name} compte ${formattedPopulation} habitants selon les derniers chiffres publiés par l’INSEE, soit un recul de ${formatPercent(Math.abs(change))} entre 2017 et 2023.`;
   }
-  return `${city.name} compte ${formattedPopulation} habitants selon les données INSEE ${vintage}, et sa population est restée globalement stable entre 2017 et 2023.`;
+  return `${city.name} compte ${formattedPopulation} habitants selon les derniers chiffres publiés par l’INSEE, et sa population est restée globalement stable entre 2017 et 2023.`;
 }
 
 export function createCityLocalMarketInsight(
@@ -72,7 +72,6 @@ export function createCityLocalMarketInsight(
   const summaryParts = [populationSentence(
     city,
     demographics.population,
-    profile.vintage,
     demographics.change2017To2023Percent,
   )];
   if (dominantHousing) {

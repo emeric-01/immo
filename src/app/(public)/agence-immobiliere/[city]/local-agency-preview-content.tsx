@@ -378,7 +378,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           </div>
           {localInsight && previewProfile ? (
             <p className={styles.marketNote}>
-              Source : INSEE, recensement {previewProfile.vintage}, et transactions disponibles. Les données communales contextualisent l’estimation sans déterminer seules la valeur du bien.
+              Sources : derniers chiffres publiés par l’INSEE et transactions disponibles. Les données communales contextualisent l’estimation sans déterminer seules la valeur du bien.
             </p>
           ) : null}
         </article>

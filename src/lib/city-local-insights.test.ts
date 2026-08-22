@@ -44,6 +44,7 @@ describe("createCityLocalMarketInsight", () => {
     );
 
     expect(insight?.dominantHousing).toEqual({ label: "maisons", share: 70 });
+    expect(insight?.summary).toContain("selon les derniers chiffres publiés par l’INSEE");
     expect(insight?.summary).toContain("progression de 6,3 %");
     expect(insight?.signals[0]?.description).toContain("€/m²");
     expect(insight?.summary).toContain("ne déterminent jamais à eux seuls");
