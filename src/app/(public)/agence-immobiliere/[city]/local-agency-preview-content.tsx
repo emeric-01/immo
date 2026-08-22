@@ -27,6 +27,7 @@ import { getCityBySlug } from "@/lib/cities";
 import { getCityMarketData, getStaticCityMarketData } from "@/lib/city-market-data";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import { getInseeHousingProfile } from "@/lib/insee-housing";
+import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import {
   getLocalAgencyPage,
   getLocalAgencyPageSlugs,
@@ -46,33 +47,10 @@ export type LocalAgencyPageProps = {
 };
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-
-const neighborhoodProfiles: Record<string, Array<{ code?: string; description: string; title: string }>> = {
-  gemenos: [
-    {
-      title: "Village central",
-      description:
-        "Au cœur de Gémenos, le charme du bâti ancien s’apprécie rue par rue. L’état du bien, la luminosité, les extérieurs, l’accès et les possibilités de stationnement peuvent créer de vrais écarts de valeur.",
-    },
-    {
-      title: "Petit Versailles",
-      description:
-        "Situé sur les hauteurs, le Petit Versailles se distingue par ses jardins et son cadre résidentiel. L’exposition, l’ensoleillement, la vue et la qualité du bâti y jouent un rôle important dans l’estimation.",
-    },
-    {
-      code: "IRIS 130420101",
-      title: "Ouest-La Plaine",
-      description:
-        "Dans cette partie de Gémenos, la surface du terrain, l’environnement immédiat et la facilité d’accès comptent particulièrement. Une maison doit être comparée avec des ventes réellement proches et présentant des caractéristiques similaires.",
-    },
-    {
-      code: "IRIS 130420102",
-      title: "Est de Gémenos",
-      description:
-        "À l’est de Gémenos, le relief, le cadre paysager, l’exposition et les accès créent des situations très différentes. L’analyse de l’adresse et une visite du bien restent indispensables pour déterminer un prix cohérent.",
-    },
-  ],
-};
+const neighborhoodListFormatter = new Intl.ListFormat("fr-FR", {
+  style: "long",
+  type: "disjunction",
+});
 
 function formatPrice(value: number) {
   return `${euroFormatter.format(value)} €`;
@@ -118,10 +96,13 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
   if (!config || !city) notFound();
 
+  const neighborhoodProfile = getLocalAgencyNeighborhoodProfile(city.slug);
+  const seoEnhanced = seoPreview || neighborhoodProfile !== null;
+
   const [market, articles, inseeProfile] = await Promise.all([
     getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
-    seoPreview ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
+    seoEnhanced ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
@@ -142,7 +123,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
   const averageTrend = market?.apartment.trendSource === "history" && market.house.trendSource === "history" ? Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
   ) : null;
-  const previewLocalInfo = seoPreview
+  const previewLocalInfo = seoEnhanced
     ? market?.localInfo ?? getStaticCityMarketData(city).localInfo
     : market?.localInfo;
   const previewProfile = inseeProfile && !inseeProfile.demographics && previewLocalInfo
@@ -165,7 +146,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         moveIn: [],
         demographics: { population: previewLocalInfo.population },
       } : null);
-  const localInsight = seoPreview
+  const localInsight = seoEnhanced
     ? createCityLocalMarketInsight(city, market, previewProfile)
     : null;
   const dominantMarketPrice = localInsight?.dominantHousing && market
@@ -207,8 +188,8 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           : []),
       ]
     : [];
-  const neighborhoodProfile = seoPreview ? neighborhoodProfiles[city.slug] ?? [] : [];
-  const previewAgencyFactors = seoPreview
+  const neighborhoods = neighborhoodProfile?.neighborhoods ?? [];
+  const previewAgencyFactors = seoEnhanced
     ? config.localFactors.map((factor) => ({
         description: factor.description.replace(/micro[- ]secteur/gi, "quartier"),
         title: factor.title.replace(/micro[- ]secteur/gi, "quartier"),
@@ -223,11 +204,11 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         ...previewAgencyFactors,
       ].slice(0, 6)
     : previewAgencyFactors;
-  const neighborhoodFaqs = neighborhoodProfile.length > 0
+  const neighborhoodFaqs = neighborhoods.length > 0
     ? [
         {
           question: `Quels quartiers prenez-vous en compte pour estimer un bien à ${city.name} ?`,
-          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles, Ouest-La Plaine ou l’est de Gémenos lorsque son adresse le justifie. Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
+          answer: `Nous replaçons notamment le bien dans ${neighborhoodListFormatter.format(neighborhoods.map((item) => item.title))} lorsque son adresse le justifie. Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
         },
         {
           question: `Le quartier suffit-il pour connaître le prix d’un bien à ${city.name} ?`,
@@ -235,7 +216,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         },
       ]
     : [];
-  const pageFaqs = seoPreview ? [...config.faqs, ...neighborhoodFaqs] : config.faqs;
+  const pageFaqs = seoEnhanced ? [...config.faqs, ...neighborhoodFaqs] : config.faqs;
   const pagePath = `/agence-immobiliere/${city.slug}`;
   const faqJsonLd = {
     "@type": "FAQPage",
@@ -427,12 +408,12 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         </div>
       </section>
 
-      {market && averagePrice !== null ? <section className={`${styles.marketSection} ${seoPreview ? previewStyles.marketSection : ""}`} aria-label={`Repères immobiliers à ${city.name}`}>
+      {market && averagePrice !== null ? <section className={`${styles.marketSection} ${seoEnhanced ? previewStyles.marketSection : ""}`} aria-label={`Repères immobiliers à ${city.name}`}>
         <article className={styles.chartCard}>
           <div className={styles.sectionHeadingRow}>
             <div><p className={styles.eyebrow}>Repères locaux</p><h2>Le marché immobilier à {city.name}</h2></div>
             <Link href={`/prix-m2/${city.slug}`}>
-              {seoPreview ? `Voir l’analyse des prix à ${city.name}` : "Analyse complète"}
+              {seoEnhanced ? `Voir l’analyse des prix à ${city.name}` : "Analyse complète"}
               <ArrowRight size={15} />
             </Link>
           </div>
@@ -441,7 +422,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
           </div>
-          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod={seoPreview ? "all" : "5y"} points={market.history} /> : null}
+          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod={seoEnhanced ? "all" : "5y"} points={market.history} /> : null}
           <p className={styles.marketNote}>
             {localInsight
               ? `Les courbes présentent des repères moyens pour ${city.name}. Elles servent à situer la tendance avant de comparer le bien avec des transactions de même typologie, dans son quartier puis autour de son adresse.`
@@ -449,8 +430,8 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           </p>
         </article>
 
-        <article className={`${styles.factorsCard} ${seoPreview ? previewStyles.factorsCard : ""}`}>
-          {seoPreview && localInsight ? (
+        <article className={`${styles.factorsCard} ${seoEnhanced ? previewStyles.factorsCard : ""}`}>
+          {seoEnhanced && localInsight ? (
             <>
               <header className={previewStyles.sectionHeader}>
                 <div>
@@ -518,7 +499,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 </section>
               </div>
 
-              {neighborhoodProfile.length > 0 ? (
+              {neighborhoods.length > 0 ? (
                 <section className={previewStyles.neighborhoodSection} aria-labelledby="neighborhood-title">
                   <div className={previewStyles.neighborhoodHeading}>
                     <div>
@@ -526,14 +507,14 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                       <h3 id="neighborhood-title">À {city.name}, chaque quartier a son caractère</h3>
                     </div>
                     <p>
-                      Du cœur du village aux secteurs plus résidentiels, l’adresse,
+                      Du centre-ville aux secteurs plus résidentiels, l’adresse,
                       l’environnement et les caractéristiques du bien peuvent faire varier sa
                       valeur. Notre connaissance locale permet d’affiner l’estimation au-delà
                       d’un simple prix moyen au m².
                     </p>
                   </div>
                   <div className={previewStyles.neighborhoodGrid}>
-                    {neighborhoodProfile.map((neighborhood, index) => (
+                    {neighborhoods.map((neighborhood, index) => (
                       <article key={neighborhood.title}>
                         <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                         <h4>{neighborhood.title}</h4>
@@ -574,10 +555,21 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
               {previewProfile ? (
                 <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
-                  Sources : données de l’
-                  <a href="https://www.insee.fr/fr/metadonnees/geographie/commune/13042-gemenos" rel="noreferrer" target="_blank">INSEE</a>
-                  {" et des "}<a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS</a>,
-                  documents du <a href="https://plui.ampmetropole.fr/plui/Marseille" rel="noreferrer" target="_blank">PLUi Marseille Provence</a> et transactions DVF disponibles. Ces repères éclairent l’estimation sans déterminer, à eux seuls, la valeur d’un bien.
+                  Sources : derniers chiffres publiés par l’
+                  <a href={`https://www.insee.fr/fr/metadonnees/geographie/commune/${city.inseeCode}-${city.slug}`} rel="noreferrer" target="_blank">INSEE</a>
+                  {" et le référentiel "}<a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS</a>
+                  {neighborhoodProfile ? (
+                    <>
+                      {" ; "}
+                      {neighborhoodProfile.sources.map((source, index) => (
+                        <span key={source.href}>
+                          {index > 0 ? ", " : ""}
+                          <a href={source.href} rel="noreferrer" target="_blank">{source.label}</a>
+                        </span>
+                      ))}
+                    </>
+                  ) : null}
+                  {" ; transactions DVF disponibles. Ces repères éclairent l’estimation sans déterminer, à eux seuls, la valeur d’un bien."}
                 </p>
               ) : null}
             </>
@@ -624,7 +616,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
             </span>
           </div>
           <Link href={`/prix-m2/${city.slug}`}>
-            {seoPreview ? `Consulter les prix au m² à ${city.name}` : "Voir les prix"}
+            {seoEnhanced ? `Consulter les prix au m² à ${city.name}` : "Voir les prix"}
             <ArrowRight size={15} />
           </Link>
         </article> : null}
@@ -634,7 +626,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
             <h2>{relatedArticle?.title || "Préparer son bien, choisir le bon moment et comprendre les attentes locales."}</h2>
             <p>{relatedArticle?.excerpt || "Nos conseils concrets pour vendre sereinement et dans les meilleures conditions."}</p>
             <Link href={relatedArticle ? `/contenus/${relatedArticle.slug}` : "/contenus"}>
-              {seoPreview ? `Lire nos conseils pour vendre à ${city.name}` : "Lire nos conseils"}
+              {seoEnhanced ? `Lire nos conseils pour vendre à ${city.name}` : "Lire nos conseils"}
               <ArrowRight size={15} />
             </Link>
           </div>
