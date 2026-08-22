@@ -91,12 +91,11 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
   if (!config || !city) notFound();
 
-  const [cachedMarket, articles, inseeProfile] = await Promise.all([
+  const [market, articles, inseeProfile] = await Promise.all([
     getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
     seoPreview ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
-  const market = seoPreview ? cachedMarket ?? getStaticCityMarketData(city) : cachedMarket;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
