@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { getCityMarketDataSet } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
@@ -13,9 +13,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = createPageMetadata({ title: "Prix au m² par ville dans le 13 et le 83 | Les Jumelles Immo", description: "Consultez les prix au m² par ville dans les Bouches-du-Rhône (13) et le Var (83) : appartements, maisons et tendances du marché immobilier local.", path: "/prix-m2" });
 
 async function getDirectoryCities(): Promise<DirectoryCity[]> {
-  const cities = southCities.filter(
-    (city) => city.department === "Bouches-du-Rhone" || city.department === "Var",
-  );
+  const cities = localMarketCities;
   const cachedMarkets = await getCityMarketDataSet(cities);
 
   return cities.map((city) => {

@@ -1,4 +1,4 @@
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { absoluteUrl } from "@/lib/site";
 
 type LlmsArticle = {
@@ -25,9 +25,6 @@ function link(label: string, path: string, description?: string) {
 }
 
 export function buildLlmsText({ articles, properties }: LlmsTextOptions) {
-  const localCities = southCities.filter((city) =>
-    ["Bouches-du-Rhone", "Var"].includes(city.department),
-  );
   const publicProperties = properties.filter((property) =>
     !property.seo_noindex && ["published", "sold"].includes(property.status),
   );
@@ -54,17 +51,17 @@ export function buildLlmsText({ articles, properties }: LlmsTextOptions) {
     "",
     "## Prix au m2 par ville",
     "",
-    ...southCities.map((city) => link(`Prix m2 a ${city.name}`, `/prix-m2/${city.slug}`)),
+    ...localMarketCities.map((city) => link(`Prix m2 a ${city.name}`, `/prix-m2/${city.slug}`)),
     "",
     "## Estimation immobiliere locale",
     "",
-    ...localCities.map((city) =>
+    ...localMarketCities.map((city) =>
       link(`Estimation immobiliere a ${city.name}`, `/estimation-immobiliere/${city.slug}`),
     ),
     "",
     "## Agence immobiliere par secteur",
     "",
-    ...localCities.map((city) =>
+    ...localMarketCities.map((city) =>
       link(`Agence immobiliere a ${city.name}`, `/agence-immobiliere/${city.slug}`),
     ),
     "",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, Handshake, MapPin } from "lucide-react";
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import styles from "../estimation-immobiliere/estimation-cities.module.css";
@@ -13,9 +13,7 @@ export const metadata: Metadata = createPageMetadata({
   path: "/agence-immobiliere",
 });
 
-const agencyCities = southCities.filter((city) =>
-  ["Bouches-du-Rhone", "Var"].includes(city.department),
-);
+const agencyCities = localMarketCities;
 
 const departments = [
   { key: "Bouches-du-Rhone", label: "Bouches-du-Rhône (13)" },

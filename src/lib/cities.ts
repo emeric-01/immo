@@ -585,8 +585,21 @@ export const southCities: City[] = [
   },
 ];
 
+const LOCAL_MARKET_DEPARTMENTS = new Set(["Bouches-du-Rhone", "Var"]);
+
+export function isLocalMarketCity(city: City | undefined): city is City {
+  return Boolean(city && LOCAL_MARKET_DEPARTMENTS.has(city.department));
+}
+
+export const localMarketCities = southCities.filter(isLocalMarketCity);
+
 export function getCityBySlug(slug: string) {
   return southCities.find((city) => city.slug === slug);
+}
+
+export function getLocalMarketCityBySlug(slug: string) {
+  const city = getCityBySlug(slug);
+  return isLocalMarketCity(city) ? city : undefined;
 }
 
 export function getCityByMarketIdentifier({
@@ -617,6 +630,10 @@ export function getNearbyCities(city: City) {
   return city.nearbySlugs
     .map((slug) => getCityBySlug(slug))
     .filter((nearbyCity): nearbyCity is City => Boolean(nearbyCity));
+}
+
+export function getNearbyLocalMarketCities(city: City) {
+  return getNearbyCities(city).filter(isLocalMarketCity);
 }
 
 function normalizeCityName(value: string) {

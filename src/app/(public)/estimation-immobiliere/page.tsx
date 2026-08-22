@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, Home, MapPin } from "lucide-react";
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { readCityMarketTrends } from "@/lib/city-market-cache";
 import { createPageMetadata } from "@/lib/seo";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
@@ -14,9 +14,7 @@ export const metadata: Metadata = createPageMetadata({
   path: "/estimation-immobiliere",
 });
 
-const estimationCities = southCities.filter((city) =>
-  ["Bouches-du-Rhone", "Var"].includes(city.department),
-);
+const estimationCities = localMarketCities;
 
 function formatTrend(value: number) {
   return `${value > 0 ? "+" : ""}${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;

@@ -2,7 +2,7 @@ import "server-only";
 
 import type { MetadataRoute } from "next";
 import { readCityMarketCacheDates } from "@/lib/city-market-cache";
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { getContentArticleSitemapEntries } from "@/lib/content/articles";
 import { getPublishedProperties } from "@/lib/properties";
 import { absoluteUrl } from "@/lib/site";
@@ -18,10 +18,6 @@ export const sitemapSections = [
 ] as const;
 
 export type SitemapSection = (typeof sitemapSections)[number]["id"];
-
-const localCities = southCities.filter((city) =>
-  ["Bouches-du-Rhone", "Var"].includes(city.department),
-);
 
 export async function getSitemapSectionEntries(section: SitemapSection): Promise<MetadataRoute.Sitemap> {
   if (section === "pages") {
@@ -52,10 +48,10 @@ export async function getSitemapSectionEntries(section: SitemapSection): Promise
       })));
   }
 
-  const cityMarketDates = await readCityMarketCacheDates(southCities);
+  const cityMarketDates = await readCityMarketCacheDates(localMarketCities);
 
   if (section === "prix-m2") {
-    return mergePublicSitemapEntries(southCities.map((city) => ({
+    return mergePublicSitemapEntries(localMarketCities.map((city) => ({
       changeFrequency: "weekly" as const,
       lastModified: cityMarketDates.get(city.inseeCode),
       priority: 0.8,
@@ -65,7 +61,7 @@ export async function getSitemapSectionEntries(section: SitemapSection): Promise
 
   const prefix = section === "estimations" ? "estimation-immobiliere" : "agence-immobiliere";
 
-  return mergePublicSitemapEntries(localCities.map((city) => ({
+  return mergePublicSitemapEntries(localMarketCities.map((city) => ({
     changeFrequency: "weekly" as const,
     lastModified: cityMarketDates.get(city.inseeCode),
     priority: 0.9,

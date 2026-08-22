@@ -65,8 +65,6 @@ export const legacyAgenceAsmRedirects = [
 
   // Villes disposant deja d'une page locale dans le nouveau site
   { source: "/ville/marseille", destination: "/prix-m2/marseille", permanent: true },
-  { source: "/ville/nice", destination: "/prix-m2/nice", permanent: true },
-  { source: "/ville/perpignan", destination: "/prix-m2/perpignan", permanent: true },
   { source: "/ville/gemenos", destination: "/prix-m2/gemenos", permanent: true },
   { source: "/ville/aix-en-provence", destination: "/prix-m2/aix-en-provence", permanent: true },
   { source: "/ville/aubagne", destination: "/prix-m2/aubagne", permanent: true },

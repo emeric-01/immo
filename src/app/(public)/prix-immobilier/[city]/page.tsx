@@ -16,7 +16,11 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { getCityBySlug, getNearbyCities, type City } from "@/lib/cities";
+import {
+  getLocalMarketCityBySlug,
+  getNearbyLocalMarketCities,
+  type City,
+} from "@/lib/cities";
 import {
   getCityMarketDataSet,
   type PropertyMarketStat,
@@ -130,9 +134,9 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: CityPricePageProps): Promise<Metadata> {
   const { city: citySlug } = await params;
-  const city = getCityBySlug(citySlug);
+  const city = getLocalMarketCityBySlug(citySlug);
 
-  if (!city) return {};
+  if (!city) return { robots: { index: false, follow: false } };
 
   const title = `Prix m2 à ${city.name} (${city.postalCode}) : appartement et maison`;
   const socialTitle = `Prix au m² à ${city.name}`;
@@ -163,11 +167,11 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
 
 export default async function CityPricePage({ params }: CityPricePageProps) {
   const { city: citySlug } = await params;
-  const city = getCityBySlug(citySlug);
+  const city = getLocalMarketCityBySlug(citySlug);
 
   if (!city) notFound();
 
-  const nearbyCities = getNearbyCities(city);
+  const nearbyCities = getNearbyLocalMarketCities(city);
   const marketSnapshots = await getCityMarketDataSet([city, ...nearbyCities]);
   const market = marketSnapshots.get(city.inseeCode);
 

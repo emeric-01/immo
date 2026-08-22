@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getCityByMarketIdentifier, getCityBySlug, getNearbyCities } from "./cities";
+import {
+  getCityByMarketIdentifier,
+  getCityBySlug,
+  getLocalMarketCityBySlug,
+  getNearbyCities,
+  getNearbyLocalMarketCities,
+  localMarketCities,
+} from "./cities";
 
 const addedCities = [
   ["la-ciotat", "13028"],
@@ -51,5 +58,19 @@ describe("city price pages", () => {
 
     expect(city).toBeDefined();
     expect(getNearbyCities(city!)).toHaveLength(city!.nearbySlugs.length);
+  });
+
+  it("limits the public local market silo to departments 13 and 83", () => {
+    expect(localMarketCities).toHaveLength(43);
+    expect(localMarketCities.every((city) => ["Bouches-du-Rhone", "Var"].includes(city.department))).toBe(true);
+    expect(getLocalMarketCityBySlug("aubagne")?.department).toBe("Bouches-du-Rhone");
+    expect(getLocalMarketCityBySlug("nice")).toBeUndefined();
+  });
+
+  it("does not link a local market page to an out-of-scope neighboring city", () => {
+    const frejus = getLocalMarketCityBySlug("frejus");
+
+    expect(frejus).toBeDefined();
+    expect(getNearbyLocalMarketCities(frejus!).map((city) => city.slug)).toEqual(["hyeres"]);
   });
 });

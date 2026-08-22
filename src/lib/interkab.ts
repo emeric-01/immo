@@ -1,5 +1,5 @@
 import "server-only";
-import { southCities, type City } from "@/lib/cities";
+import { localMarketCities, type City } from "@/lib/cities";
 
 export const AUBAGNE_INTERKAB_URL =
   "https://interkab.com/annonces?search%5BuniqueGeolocalite%5D%5B0%5D=4462_662&search%5BorderBy%5D=date_desc";
@@ -9,8 +9,8 @@ const PILOT_DETAIL_LIMIT = 6;
 
 const INTERKAB_EXCLUDED_CITY_SLUGS = new Set(["marseille-11e", "marseille-12e"]);
 
-export const INTERKAB_CITIES = southCities.filter((city) =>
-  ["13", "83"].includes(city.inseeCode.slice(0, 2)) && !INTERKAB_EXCLUDED_CITY_SLUGS.has(city.slug)
+export const INTERKAB_CITIES = localMarketCities.filter((city) =>
+  !INTERKAB_EXCLUDED_CITY_SLUGS.has(city.slug)
 );
 export const INTERKAB_SYNC_BATCH_SIZE = 4;
 

@@ -1,4 +1,4 @@
-import { getCityBySlug, southCities, type City } from "@/lib/cities";
+import { getCityBySlug, localMarketCities, type City } from "@/lib/cities";
 
 export type LocalAgencyPage = {
   citySlug: string;
@@ -178,9 +178,7 @@ const localAgencyPages: Record<string, LocalAgencyPage> = {
   },
 };
 
-const localPageCities = southCities.filter((city) =>
-  ["Bouches-du-Rhone", "Var"].includes(city.department),
-);
+const localPageCities = localMarketCities;
 
 const coastalCitySlugs = new Set([
   "bandol",
@@ -302,12 +300,11 @@ export function getNearestLocalAgencyCities(citySlug: string, limit = 4) {
 
   const publishedSlugs = new Set(getLocalAgencyPageSlugs());
 
-  return southCities
+  return localMarketCities
     .filter(
       (candidate) =>
         candidate.slug !== citySlug &&
-        publishedSlugs.has(candidate.slug) &&
-        ["Bouches-du-Rhone", "Var"].includes(candidate.department),
+        publishedSlugs.has(candidate.slug),
     )
     .map((candidate) => ({
       city: candidate,

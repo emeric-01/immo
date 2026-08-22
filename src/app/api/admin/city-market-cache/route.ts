@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin/auth";
-import { southCities } from "@/lib/cities";
+import { localMarketCities } from "@/lib/cities";
 import { refreshCityMarketData } from "@/lib/city-market-data";
 
 export const maxDuration = 300;
@@ -15,10 +15,8 @@ export async function POST(request: Request) {
   }
 
   const requestedSlug = new URL(request.url).searchParams.get("city");
-  const cities = southCities.filter(
-    (city) =>
-      (city.department === "Bouches-du-Rhone" || city.department === "Var") &&
-      (!requestedSlug || city.slug === requestedSlug),
+  const cities = localMarketCities.filter(
+    (city) => !requestedSlug || city.slug === requestedSlug,
   );
   const results: Array<{ city: string; status: "stored" | "error"; message?: string }> = [];
 

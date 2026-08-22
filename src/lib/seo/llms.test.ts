@@ -28,5 +28,7 @@ describe("llms text", () => {
     expect(content).not.toContain("bien-prive");
     expect(content).not.toContain("/admin");
     expect(content).not.toContain("/client");
+    expect(content).toContain("/prix-m2/hyeres");
+    expect(content).not.toContain("/prix-m2/nice");
   });
 });
