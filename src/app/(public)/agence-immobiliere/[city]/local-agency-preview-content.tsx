@@ -7,9 +7,11 @@ import {
   Building2,
   ClipboardCheck,
   Eye,
+  Euro,
   FileSearch,
   Handshake,
   Home,
+  KeyRound,
   MapPin,
   ParkingCircle,
   Ruler,
@@ -17,6 +19,7 @@ import {
   Sofa,
   Sparkles,
   Trees,
+  UsersRound,
 } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
 import { createCityLocalMarketInsight } from "@/lib/city-local-insights";
@@ -36,6 +39,7 @@ import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
 import { LocalAgencyQuickActions } from "./LocalAgencyQuickActions";
 import { LocalAgencySalesMap } from "./LocalAgencySalesMap";
 import styles from "./local-agency.module.css";
+import previewStyles from "./local-agency-preview.module.css";
 
 export type LocalAgencyPageProps = {
   params: Promise<{ city: string }>;
@@ -87,11 +91,12 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
   if (!config || !city) notFound();
 
-  const [market, articles, inseeProfile] = await Promise.all([
+  const [cachedMarket, articles, inseeProfile] = await Promise.all([
     getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
     seoPreview ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
+  const market = seoPreview ? cachedMarket ?? getStaticCityMarketData(city) : cachedMarket;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
@@ -137,6 +142,45 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
   const localInsight = seoPreview
     ? createCityLocalMarketInsight(city, market, previewProfile)
     : null;
+  const dominantMarketPrice = localInsight?.dominantHousing && market
+    ? localInsight.dominantHousing.label === "maisons"
+      ? market.house.averagePricePerM2
+      : market.apartment.averagePricePerM2
+    : null;
+  const localSnapshotStats = localInsight
+    ? [
+        {
+          description: "habitants dans la commune",
+          icon: UsersRound,
+          label: "Population",
+          value: localInsight.population.toLocaleString("fr-FR"),
+        },
+        ...(localInsight.dominantHousing
+          ? [{
+              description: `du parc composé de ${localInsight.dominantHousing.label}`,
+              icon: Home,
+              label: "Parc résidentiel",
+              value: `${localInsight.dominantHousing.share.toLocaleString("fr-FR")} %`,
+            }]
+          : []),
+        ...(localInsight.ownerShare !== undefined
+          ? [{
+              description: "des résidences principales occupées par leurs propriétaires",
+              icon: KeyRound,
+              label: "Propriétaires",
+              value: `${localInsight.ownerShare.toLocaleString("fr-FR")} %`,
+            }]
+          : []),
+        ...(dominantMarketPrice !== null && localInsight.dominantHousing
+          ? [{
+              description: `repère moyen pour les ${localInsight.dominantHousing.label}`,
+              icon: Euro,
+              label: "Prix au m²",
+              value: `${euroFormatter.format(dominantMarketPrice)} €/m²`,
+            }]
+          : []),
+      ]
+    : [];
   const previewFactors = localInsight
     ? [
         ...localInsight.signals.map((signal) => ({
@@ -337,7 +381,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         </div>
       </section>
 
-      {market && averagePrice !== null ? <section className={styles.marketSection} aria-label={`Repères immobiliers à ${city.name}`}>
+      {market && averagePrice !== null ? <section className={`${styles.marketSection} ${seoPreview ? previewStyles.marketSection : ""}`} aria-label={`Repères immobiliers à ${city.name}`}>
         <article className={styles.chartCard}>
           <div className={styles.sectionHeadingRow}>
             <div><p className={styles.eyebrow}>Repères locaux</p><h2>Le marché immobilier à {city.name}</h2></div>
@@ -356,31 +400,104 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           </p>
         </article>
 
-        <article className={styles.factorsCard}>
-          <p className={styles.eyebrow}>Estimer au-delà de la moyenne</p>
-          <h2>Ce qui fait varier la valeur d’un bien à {city.name}</h2>
-          <LocalAgencySalesMap
-            accessToken={mapboxToken}
-            center={{ latitude: city.latitude, longitude: city.longitude }}
-            cityName={city.name}
-            salePoints={market.salePoints}
-          />
-          <div className={styles.factorList}>
-            {previewFactors.map((factor, index) => {
-              const Icon = factorIcons[index];
-              return (
-                <div key={factor.title}>
-                  <Icon aria-hidden="true" />
-                  <span><strong>{factor.title}</strong><small>{factor.description}</small></span>
+        <article className={`${styles.factorsCard} ${seoPreview ? previewStyles.factorsCard : ""}`}>
+          {seoPreview && localInsight ? (
+            <>
+              <header className={previewStyles.sectionHeader}>
+                <div>
+                  <p className={styles.eyebrow}>Estimer au-delà de la moyenne</p>
+                  <h2>Ce qui fait varier la valeur d’un bien à {city.name}</h2>
                 </div>
-              );
-            })}
-          </div>
-          {localInsight && previewProfile ? (
-            <p className={styles.marketNote}>
-              Sources : derniers chiffres publiés par l’INSEE et transactions disponibles. Les données communales contextualisent l’estimation sans déterminer seules la valeur du bien.
-            </p>
-          ) : null}
+                <p>
+                  Pour situer un bien avec justesse, nous croisons les derniers chiffres de
+                  l’INSEE, les ventes DVF disponibles et les caractéristiques précises de son
+                  adresse. Ces repères orientent l’analyse sans remplacer la visite.
+                </p>
+              </header>
+
+              <ul className={previewStyles.snapshotGrid} aria-label={`Chiffres clés de ${city.name}`}>
+                {localSnapshotStats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <li key={stat.label}>
+                      <Icon aria-hidden="true" />
+                      <span>
+                        <small>{stat.label}</small>
+                        <strong>{stat.value}</strong>
+                        <em>{stat.description}</em>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className={previewStyles.analysisGrid}>
+                <section className={previewStyles.mapPanel} aria-labelledby="local-sales-title">
+                  <div className={previewStyles.panelHeading}>
+                    <p className={styles.eyebrow}>Transactions comparables</p>
+                    <h3 id="local-sales-title">Les ventes récentes autour de {city.name}</h3>
+                    <p>
+                      La carte localise les dernières transactions disponibles. Chaque point
+                      doit ensuite être comparé à la typologie, à la surface et à l’état du bien.
+                    </p>
+                  </div>
+                  <LocalAgencySalesMap
+                    accessToken={mapboxToken}
+                    center={{ latitude: city.latitude, longitude: city.longitude }}
+                    cityName={city.name}
+                    salePoints={market.salePoints}
+                  />
+                </section>
+
+                <section className={previewStyles.criteriaPanel} aria-labelledby="valuation-criteria-title">
+                  <div className={previewStyles.panelHeading}>
+                    <p className={styles.eyebrow}>Lecture du bien</p>
+                    <h3 id="valuation-criteria-title">Six critères qui affinent réellement le prix</h3>
+                    <p>La moyenne communale devient pertinente lorsqu’elle est replacée dans le contexte du logement.</p>
+                  </div>
+                  <div className={`${styles.factorList} ${previewStyles.criteriaList}`}>
+                    {config.localFactors.map((factor, index) => {
+                      const Icon = factorIcons[index];
+                      return (
+                        <div key={factor.title}>
+                          <Icon aria-hidden="true" />
+                          <span><strong>{factor.title}</strong><small>{factor.description}</small></span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              </div>
+
+              {previewProfile ? (
+                <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
+                  Sources : derniers chiffres publiés par l’INSEE et transactions DVF disponibles. Les données communales contextualisent l’estimation sans déterminer seules la valeur du bien.
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className={styles.eyebrow}>Estimer au-delà de la moyenne</p>
+              <h2>Ce qui fait varier la valeur d’un bien à {city.name}</h2>
+              <LocalAgencySalesMap
+                accessToken={mapboxToken}
+                center={{ latitude: city.latitude, longitude: city.longitude }}
+                cityName={city.name}
+                salePoints={market.salePoints}
+              />
+              <div className={styles.factorList}>
+                {previewFactors.map((factor, index) => {
+                  const Icon = factorIcons[index];
+                  return (
+                    <div key={factor.title}>
+                      <Icon aria-hidden="true" />
+                      <span><strong>{factor.title}</strong><small>{factor.description}</small></span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </article>
       </section> : null}
 
