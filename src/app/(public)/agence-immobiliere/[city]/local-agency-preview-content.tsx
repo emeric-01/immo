@@ -47,6 +47,26 @@ export type LocalAgencyPageProps = {
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
+const neighborhoodProfiles: Record<string, Array<{ description: string; title: string }>> = {
+  gemenos: [
+    {
+      title: "Village central",
+      description:
+        "Le PLUi identifie le « village central » comme le noyau historique de Gémenos, caractérisé par un bâti resserré. L’état, les accès, le stationnement et les éventuelles contraintes patrimoniales doivent y être examinés à l’échelle de la rue.",
+    },
+    {
+      title: "Petit Versailles",
+      description:
+        "Le PLUi reconnaît le « quartier Versailles », aussi appelé « Petit Versailles », situé en belvédère et associé à de petits jardins. L’exposition, l’ensoleillement, les extérieurs et la qualité du bâti deviennent ici des critères de comparaison essentiels.",
+    },
+    {
+      title: "Ouest-La Plaine et Est",
+      description:
+        "L’INSEE distingue Ouest-La Plaine et Est comme grands quartiers statistiques. Ce découpage aide à contextualiser le parc, mais ne constitue pas une carte de prix : la comparaison doit revenir au quartier, à la rue et au bien.",
+    },
+  ],
+};
+
 function formatPrice(value: number) {
   return `${euroFormatter.format(value)} €`;
 }
@@ -91,11 +111,12 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
   if (!config || !city) notFound();
 
-  const [market, articles, inseeProfile] = await Promise.all([
+  const [cachedMarket, articles, inseeProfile] = await Promise.all([
     getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
     seoPreview ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
+  const market = seoPreview ? cachedMarket ?? getStaticCityMarketData(city) : cachedMarket;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
@@ -180,19 +201,39 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           : []),
       ]
     : [];
+  const neighborhoodProfile = seoPreview ? neighborhoodProfiles[city.slug] ?? [] : [];
+  const previewAgencyFactors = seoPreview
+    ? config.localFactors.map((factor) => ({
+        description: factor.description.replace(/micro[- ]secteur/gi, "quartier"),
+        title: factor.title.replace(/micro[- ]secteur/gi, "quartier"),
+      }))
+    : config.localFactors;
   const previewFactors = localInsight
     ? [
         ...localInsight.signals.map((signal) => ({
           title: signal.title,
           description: signal.description,
         })),
-        ...config.localFactors,
+        ...previewAgencyFactors,
       ].slice(0, 6)
-    : config.localFactors;
+    : previewAgencyFactors;
+  const neighborhoodFaqs = neighborhoodProfile.length > 0
+    ? [
+        {
+          question: `Quels quartiers prenez-vous en compte pour estimer un bien à ${city.name} ?`,
+          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles ou les grands quartiers statistiques Ouest-La Plaine et Est lorsque son adresse le justifie. Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
+        },
+        {
+          question: `Le quartier suffit-il pour connaître le prix d’un bien à ${city.name} ?`,
+          answer: `Non. Le quartier fournit un contexte, mais il ne fixe pas un prix. Deux biens proches peuvent présenter des valeurs différentes selon la surface, l’état, l’exposition, les extérieurs, le stationnement, les travaux ou les qualités propres à leur adresse. Nous privilégions donc les transactions comparables et la visite du bien.`,
+        },
+      ]
+    : [];
+  const pageFaqs = seoPreview ? [...config.faqs, ...neighborhoodFaqs] : config.faqs;
   const pagePath = `/agence-immobiliere/${city.slug}`;
   const faqJsonLd = {
     "@type": "FAQPage",
-    mainEntity: config.faqs.map((faq) => ({
+    mainEntity: pageFaqs.map((faq) => ({
       "@type": "Question",
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
       name: faq.question,
@@ -307,7 +348,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           <h2>Vendre son bien à {city.name} : le bon prix attire, la bonne stratégie fait vendre.</h2>
           <p>
             {localInsight
-              ? `${localInsight.summary} Nous croisons ensuite ces repères avec la localisation précise, la surface, l’état, les prestations et les transactions comparables du micro-secteur.`
+              ? `${localInsight.summary} Nous croisons ensuite ces repères avec le quartier, la rue, la localisation précise, la surface, l’état, les prestations et les transactions comparables à proximité.`
               : "Vue, lumière, extérieur, stationnement, état ou potentiel : nous analysons ce qui rend votre bien différent pour fixer un prix cohérent, soigner sa présentation et attirer des acquéreurs réellement qualifiés."}
           </p>
           <LocalAgencyQuickActions cityName={city.name} inseeCode={city.inseeCode} />
@@ -394,7 +435,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod="5y" points={market.history} /> : null}
           <p className={styles.marketNote}>
             {localInsight
-              ? localInsight.summary
+              ? `Les courbes présentent des repères moyens pour ${city.name}. Elles servent à situer la tendance avant de comparer le bien avec des transactions de même typologie, dans son quartier puis autour de son adresse.`
               : "Ces moyennes donnent un repère. Elles ne remplacent jamais la visite et l’analyse des caractéristiques propres au bien."}
           </p>
         </article>
@@ -455,7 +496,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                     <p>La moyenne communale devient pertinente lorsqu’elle est replacée dans le contexte du logement.</p>
                   </div>
                   <div className={`${styles.factorList} ${previewStyles.criteriaList}`}>
-                    {config.localFactors.map((factor, index) => {
+                    {previewAgencyFactors.map((factor, index) => {
                       const Icon = factorIcons[index];
                       return (
                         <div key={factor.title}>
@@ -468,9 +509,36 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 </section>
               </div>
 
+              {neighborhoodProfile.length > 0 ? (
+                <section className={previewStyles.neighborhoodSection} aria-labelledby="neighborhood-title">
+                  <div className={previewStyles.neighborhoodHeading}>
+                    <div>
+                      <p className={styles.eyebrow}>Quartiers de {city.name}</p>
+                      <h3 id="neighborhood-title">Comprendre le quartier avant de comparer les prix</h3>
+                    </div>
+                    <p>
+                      Les noms de quartiers donnent un cadre géographique et historique.
+                      L’estimation reste ensuite fondée sur la rue, les ventes comparables et
+                      les caractéristiques réelles du logement.
+                    </p>
+                  </div>
+                  <div className={previewStyles.neighborhoodGrid}>
+                    {neighborhoodProfile.map((neighborhood, index) => (
+                      <article key={neighborhood.title}>
+                        <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                        <h4>{neighborhood.title}</h4>
+                        <p>{neighborhood.description}</p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
               {previewProfile ? (
                 <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
-                  Sources : derniers chiffres publiés par l’INSEE et transactions DVF disponibles. Les données communales contextualisent l’estimation sans déterminer seules la valeur du bien.
+                  Sources : derniers chiffres publiés par l’
+                  <a href="https://www.insee.fr/fr/metadonnees/geographie/commune/13042-gemenos" rel="noreferrer" target="_blank">INSEE</a>,
+                  documents du <a href="https://plui.ampmetropole.fr/plui/Marseille" rel="noreferrer" target="_blank">PLUi Marseille Provence</a> et transactions DVF disponibles. Les données communales et les quartiers contextualisent l’estimation sans déterminer seuls la valeur du bien.
                 </p>
               ) : null}
             </>
@@ -539,7 +607,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           réponses aux principales questions avant de vendre une maison ou un appartement à {city.name}.
         </p>
         <div className={styles.faqList}>
-          {config.faqs.map((faq) => (
+          {pageFaqs.map((faq) => (
             <details key={faq.question}>
               <summary>{faq.question}<span aria-hidden="true">+</span></summary>
               <p>{faq.answer}</p>

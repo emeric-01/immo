@@ -90,7 +90,7 @@ export function createCityLocalMarketInsight(
       : market.apartment.averagePricePerM2;
     signals.push({
       title: `Un parc dominé par les ${dominantHousing.label}`,
-      description: `${formatPercent(dominantHousing.share)} du parc correspond à cette typologie. Son repère de marché s’établit autour de ${Math.round(relevantPrice).toLocaleString("fr-FR")} €/m², à confronter à la surface, à l’état et au micro-secteur du bien.`,
+      description: `${formatPercent(dominantHousing.share)} du parc correspond à cette typologie. Son repère de marché s’établit autour de ${Math.round(relevantPrice).toLocaleString("fr-FR")} €/m², à confronter à la surface, à l’état et au quartier du bien.`,
     });
   }
 
