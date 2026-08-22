@@ -90,6 +90,10 @@ export async function LocalAgencyCityPreview({ citySlug }: { citySlug: string })
   return renderLocalAgencyCityPage(citySlug, true);
 }
 
+export async function LocalAgencyCityEnhanced({ citySlug }: { citySlug: string }) {
+  return renderLocalAgencyCityPage(citySlug, false);
+}
+
 async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) {
   const config = getLocalAgencyPage(citySlug);
   const city = getCityBySlug(citySlug);

@@ -27,12 +27,14 @@ import {
   getLocalAgencyPageSlugs,
   getNearestLocalAgencyCities,
 } from "@/lib/local-agency-pages";
+import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import { createPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
 import { LocalAgencyQuickActions } from "./LocalAgencyQuickActions";
 import { LocalAgencySalesMap } from "./LocalAgencySalesMap";
+import { LocalAgencyCityEnhanced } from "./local-agency-preview-content";
 import styles from "./local-agency.module.css";
 
 type LocalAgencyPageProps = {
@@ -72,6 +74,11 @@ export async function generateMetadata({ params }: LocalAgencyPageProps): Promis
 
 export default async function LocalAgencyCityPage({ params }: LocalAgencyPageProps) {
   const { city: citySlug } = await params;
+
+  if (getLocalAgencyNeighborhoodProfile(citySlug)) {
+    return <LocalAgencyCityEnhanced citySlug={citySlug} />;
+  }
+
   const config = getLocalAgencyPage(citySlug);
   const city = getCityBySlug(citySlug);
 
