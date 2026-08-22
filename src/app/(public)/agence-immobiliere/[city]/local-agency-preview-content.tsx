@@ -52,24 +52,24 @@ const neighborhoodProfiles: Record<string, Array<{ code?: string; description: s
     {
       title: "Village central",
       description:
-        "Le PLUi identifie le « village central » comme le noyau historique de Gémenos, caractérisé par un bâti resserré. L’état, les accès, le stationnement et les éventuelles contraintes patrimoniales doivent y être examinés à l’échelle de la rue.",
+        "Au cœur de Gémenos, le charme du bâti ancien s’apprécie rue par rue. L’état du bien, la luminosité, les extérieurs, l’accès et les possibilités de stationnement peuvent créer de vrais écarts de valeur.",
     },
     {
       title: "Petit Versailles",
       description:
-        "Le PLUi reconnaît le « quartier Versailles », aussi appelé « Petit Versailles », situé en belvédère et associé à de petits jardins. L’exposition, l’ensoleillement, les extérieurs et la qualité du bâti deviennent ici des critères de comparaison essentiels.",
+        "Situé sur les hauteurs, le Petit Versailles se distingue par ses jardins et son cadre résidentiel. L’exposition, l’ensoleillement, la vue et la qualité du bâti y jouent un rôle important dans l’estimation.",
     },
     {
       code: "IRIS 130420101",
       title: "Ouest-La Plaine",
       description:
-        "Ce quartier statistique officiel de l’INSEE permet de contextualiser les données infracommunales de la partie ouest de Gémenos. Il ne constitue pas une zone de prix homogène : l’analyse revient ensuite à la rue et au bien.",
+        "Dans cette partie de Gémenos, la surface du terrain, l’environnement immédiat et la facilité d’accès comptent particulièrement. Une maison doit être comparée avec des ventes réellement proches et présentant des caractéristiques similaires.",
     },
     {
       code: "IRIS 130420102",
-      title: "Est",
+      title: "Est de Gémenos",
       description:
-        "L’INSEE identifie aussi l’IRIS Est. Ce repère statistique aide à lire la structure locale du parc et de la population, sans remplacer les transactions comparables situées autour de l’adresse.",
+        "À l’est de Gémenos, le relief, le cadre paysager, l’exposition et les accès créent des situations très différentes. L’analyse de l’adresse et une visite du bien restent indispensables pour déterminer un prix cohérent.",
     },
   ],
 };
@@ -227,7 +227,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
     ? [
         {
           question: `Quels quartiers prenez-vous en compte pour estimer un bien à ${city.name} ?`,
-          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles ou dans l’un des deux quartiers statistiques IRIS de l’INSEE : Ouest-La Plaine (130420101) et Est (130420102). Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
+          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles, Ouest-La Plaine ou l’est de Gémenos lorsque son adresse le justifie. Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
         },
         {
           question: `Le quartier suffit-il pour connaître le prix d’un bien à ${city.name} ?`,
@@ -431,14 +431,17 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
         <article className={styles.chartCard}>
           <div className={styles.sectionHeadingRow}>
             <div><p className={styles.eyebrow}>Repères locaux</p><h2>Le marché immobilier à {city.name}</h2></div>
-            <Link href={`/prix-m2/${city.slug}`}>Analyse complète <ArrowRight size={15} /></Link>
+            <Link href={`/prix-m2/${city.slug}`}>
+              {seoPreview ? `Voir l’analyse des prix à ${city.name}` : "Analyse complète"}
+              <ArrowRight size={15} />
+            </Link>
           </div>
           <div className={styles.marketMetrics}>
             <span><Building2 /><small>Appartement</small><strong>{formatPrice(market.apartment.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
           </div>
-          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod="5y" points={market.history} /> : null}
+          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod={seoPreview ? "all" : "5y"} points={market.history} /> : null}
           <p className={styles.marketNote}>
             {localInsight
               ? `Les courbes présentent des repères moyens pour ${city.name}. Elles servent à situer la tendance avant de comparer le bien avec des transactions de même typologie, dans son quartier puis autour de son adresse.`
@@ -520,33 +523,61 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                   <div className={previewStyles.neighborhoodHeading}>
                     <div>
                       <p className={styles.eyebrow}>Quartiers de {city.name}</p>
-                      <h3 id="neighborhood-title">Comprendre le quartier avant de comparer les prix</h3>
+                      <h3 id="neighborhood-title">À {city.name}, chaque quartier a son caractère</h3>
                     </div>
                     <p>
-                      Les noms de quartiers donnent un cadre géographique et historique.
-                      L’estimation reste ensuite fondée sur la rue, les ventes comparables et
-                      les caractéristiques réelles du logement.
+                      Du cœur du village aux secteurs plus résidentiels, l’adresse,
+                      l’environnement et les caractéristiques du bien peuvent faire varier sa
+                      valeur. Notre connaissance locale permet d’affiner l’estimation au-delà
+                      d’un simple prix moyen au m².
                     </p>
                   </div>
                   <div className={previewStyles.neighborhoodGrid}>
                     {neighborhoodProfile.map((neighborhood, index) => (
                       <article key={neighborhood.title}>
                         <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                        {neighborhood.code ? <small>{neighborhood.code}</small> : null}
                         <h4>{neighborhood.title}</h4>
                         <p>{neighborhood.description}</p>
                       </article>
                     ))}
                   </div>
+                  <aside className={previewStyles.neighborhoodCta} aria-labelledby="neighborhood-cta-title">
+                    <div>
+                      <p>Besoin d’un avis local ?</p>
+                      <h4 id="neighborhood-cta-title">
+                        Quelle est la valeur de votre bien à {city.name} ?
+                      </h4>
+                      <span>
+                        Une estimation fiable commence par l’adresse, le quartier et les
+                        caractéristiques réelles du logement.
+                      </span>
+                    </div>
+                    <nav aria-label={`Estimation et prix immobilier à ${city.name}`}>
+                      <Link
+                        className={previewStyles.neighborhoodPrimaryLink}
+                        href={`/estimation-immobiliere/${city.slug}`}
+                      >
+                        Faire estimer mon bien à {city.name}
+                        <ArrowRight aria-hidden="true" size={16} />
+                      </Link>
+                      <Link
+                        className={previewStyles.neighborhoodSecondaryLink}
+                        href={`/prix-m2/${city.slug}`}
+                      >
+                        Consulter les prix au m² à {city.name}
+                        <ArrowRight aria-hidden="true" size={15} />
+                      </Link>
+                    </nav>
+                  </aside>
                 </section>
               ) : null}
 
               {previewProfile ? (
                 <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
-                  Sources : derniers chiffres publiés par l’
-                  <a href="https://www.insee.fr/fr/metadonnees/geographie/commune/13042-gemenos" rel="noreferrer" target="_blank">INSEE</a>,
-                  table officielle des <a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS 2026</a>,
-                  documents du <a href="https://plui.ampmetropole.fr/plui/Marseille" rel="noreferrer" target="_blank">PLUi Marseille Provence</a> et transactions DVF disponibles. Les données communales et les quartiers contextualisent l’estimation sans déterminer seuls la valeur du bien.
+                  Sources : données de l’
+                  <a href="https://www.insee.fr/fr/metadonnees/geographie/commune/13042-gemenos" rel="noreferrer" target="_blank">INSEE</a>
+                  {" et des "}<a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS</a>,
+                  documents du <a href="https://plui.ampmetropole.fr/plui/Marseille" rel="noreferrer" target="_blank">PLUi Marseille Provence</a> et transactions DVF disponibles. Ces repères éclairent l’estimation sans déterminer, à eux seuls, la valeur d’un bien.
                 </p>
               ) : null}
             </>
@@ -592,14 +623,20 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
               <strong>{formatPrice(market.house.averagePricePerM2)}/m²</strong>
             </span>
           </div>
-          <Link href={`/prix-m2/${city.slug}`}>Voir les prix <ArrowRight size={15} /></Link>
+          <Link href={`/prix-m2/${city.slug}`}>
+            {seoPreview ? `Consulter les prix au m² à ${city.name}` : "Voir les prix"}
+            <ArrowRight size={15} />
+          </Link>
         </article> : null}
         <article className={styles.adviceResource}>
           <div>
             <p className={styles.eyebrow}>Conseils pour vendre à {city.name}</p>
             <h2>{relatedArticle?.title || "Préparer son bien, choisir le bon moment et comprendre les attentes locales."}</h2>
             <p>{relatedArticle?.excerpt || "Nos conseils concrets pour vendre sereinement et dans les meilleures conditions."}</p>
-            <Link href={relatedArticle ? `/contenus/${relatedArticle.slug}` : "/contenus"}>Lire nos conseils <ArrowRight size={15} /></Link>
+            <Link href={relatedArticle ? `/contenus/${relatedArticle.slug}` : "/contenus"}>
+              {seoPreview ? `Lire nos conseils pour vendre à ${city.name}` : "Lire nos conseils"}
+              <ArrowRight size={15} />
+            </Link>
           </div>
           {relatedArticle?.cover_image_url ? (
             <div className={styles.adviceImage}><ContentImage alt={relatedArticle.cover_image_alt || relatedArticle.title} fill sizes="260px" src={relatedArticle.cover_image_url} /></div>

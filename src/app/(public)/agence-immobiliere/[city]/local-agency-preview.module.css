@@ -252,18 +252,6 @@
   font: 400 1.45rem Georgia, "Times New Roman", serif;
 }
 
-.neighborhoodGrid small {
-  display: inline-flex;
-  margin: -20px 0 14px;
-  border-radius: 999px;
-  background: #f7eee8;
-  padding: 5px 9px;
-  color: #8b5333;
-  font-size: .58rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-}
-
 .neighborhoodGrid p {
   position: relative;
   z-index: 1;
@@ -271,6 +259,83 @@
   color: #746c64;
   font-size: .69rem;
   line-height: 1.58;
+}
+
+.neighborhoodCta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(30px, 6vw, 84px);
+  align-items: center;
+  margin-top: 14px;
+  border: 1px solid #e5d5c8;
+  border-radius: 15px;
+  background: #f7f0ea;
+  padding: 26px 30px;
+}
+
+.neighborhoodCta > div > p {
+  margin: 0 0 8px;
+  color: #b5673b;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.neighborhoodCta h4 {
+  margin: 0 0 8px;
+  color: #1d1b18;
+  font: 400 clamp(1.45rem, 2vw, 2rem)/1.08 Georgia, "Times New Roman", serif;
+}
+
+.neighborhoodCta span {
+  display: block;
+  max-width: 660px;
+  color: #756d65;
+  font-size: .7rem;
+  line-height: 1.55;
+}
+
+.neighborhoodCta nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 285px;
+}
+
+.neighborhoodCta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: .67rem;
+  font-weight: 700;
+  transition: border-color .2s ease, background .2s ease, color .2s ease;
+}
+
+.neighborhoodPrimaryLink {
+  width: 100%;
+  border-radius: 999px;
+  background: #26221e;
+  padding: 13px 17px;
+  color: #fff;
+}
+
+.neighborhoodPrimaryLink:hover,
+.neighborhoodPrimaryLink:focus-visible {
+  background: #b5673b;
+}
+
+.neighborhoodSecondaryLink {
+  color: #5f4a3b;
+  text-underline-offset: 4px;
+}
+
+.neighborhoodSecondaryLink:hover,
+.neighborhoodSecondaryLink:focus-visible {
+  color: #b5673b;
+  text-decoration: underline;
 }
 
 @media (max-width: 1180px) {
@@ -303,6 +368,15 @@
   .criteriaList {
     grid-template-columns: 1fr 1fr;
   }
+
+  .neighborhoodCta {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .neighborhoodCta nav {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 760px) {
@@ -322,6 +396,15 @@
 
   .neighborhoodGrid article {
     min-height: 0;
+  }
+
+  .neighborhoodCta {
+    padding: 23px 20px;
+  }
+
+  .neighborhoodCta nav,
+  .neighborhoodPrimaryLink {
+    width: 100%;
   }
 
   .snapshotGrid li {
