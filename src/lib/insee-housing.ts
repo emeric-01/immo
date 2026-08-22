@@ -1,6 +1,18 @@
 import "server-only";
 
 export type InseeDistributionItem = { label: string; value: number };
+export type InseeDemographics = {
+  population: number;
+  population2012?: number;
+  population2017?: number;
+  change2017To2023Percent?: number;
+  under20Share?: number;
+  age25To39Share?: number;
+  age65PlusShare?: number;
+  medianStandardOfLiving?: number;
+  povertyRate?: number;
+};
+
 export type InseeHousingProfile = {
   cityName: string;
   inseeCode: string;
@@ -14,6 +26,12 @@ export type InseeHousingProfile = {
   surfaces: InseeDistributionItem[];
   construction: InseeDistributionItem[];
   moveIn: InseeDistributionItem[];
+  demographics?: InseeDemographics;
+  dataVintages?: {
+    census: number;
+    income?: number;
+    surfaces?: number;
+  };
 };
 
 export async function getInseeHousingProfile(inseeCode?: string | null): Promise<InseeHousingProfile | null> {
