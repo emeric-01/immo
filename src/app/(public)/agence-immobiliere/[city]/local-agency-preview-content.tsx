@@ -559,9 +559,9 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
               {previewProfile ? (
                 <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
-                  Sources : derniers chiffres publiés par l’
-                  <a href={`https://www.insee.fr/fr/metadonnees/geographie/commune/${city.inseeCode}-${city.slug}`} rel="noreferrer" target="_blank">INSEE</a>
-                  {" et le référentiel "}<a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS</a>
+                  Sources : <a href={`https://www.insee.fr/fr/metadonnees/geographie/commune/${city.inseeCode}-${city.slug}`} rel="noreferrer" target="_blank">INSEE</a>,
+                  {" "}<a href="https://www.insee.fr/fr/statistiques/8229323" rel="noreferrer" target="_blank">Filosofi 2021</a>
+                  {" et "}<a href="https://www.insee.fr/fr/statistiques/8647012" rel="noreferrer" target="_blank">Logement 2022 à l’IRIS</a>
                   {neighborhoodProfile ? (
                     <>
                       {" ; "}

@@ -28,6 +28,11 @@ describe("local agency neighborhood previews", () => {
       profile?.neighborhoods.length,
     );
     expect(profile?.neighborhoods.every((item) => item.description.length >= 120)).toBe(true);
+    expect(
+      profile?.neighborhoods.every((item) =>
+        item.codes?.every((code) => /^\d{9}$/.test(code)),
+      ),
+    ).toBe(true);
     expect(profile?.sources.length).toBeGreaterThan(0);
     expect(profile?.sources.every((source) => source.href.startsWith("https://"))).toBe(true);
   });

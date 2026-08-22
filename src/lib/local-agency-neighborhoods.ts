@@ -16,40 +16,40 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   aubagne: {
     neighborhoods: [
       {
-        codes: ["130050101", "130050102"],
-        title: "Centre-ville et Beaumond",
-        description:
-          "Autour du centre ancien et de Beaumond, la proximité des commerces, l’accès, le stationnement et l’état du bâti peuvent créer des écarts sensibles d’une rue à l’autre.",
-      },
-      {
-        codes: ["130050501", "130050502"],
-        title: "La Tourtelle",
-        description:
-          "À La Tourtelle, l’environnement immédiat, l’exposition, les extérieurs et la facilité de stationnement comptent autant que la surface affichée du logement.",
-      },
-      {
-        codes: ["130050403", "130050603"],
-        title: "Charrel et Camp Major",
-        description:
-          "Dans les secteurs du Charrel et de Camp Major, la typologie du bien, son état, ses accès et sa proximité avec les services doivent être comparés avec des ventes réellement voisines.",
-      },
-      {
-        codes: ["130050703"],
-        title: "Saint-Mitre",
-        description:
-          "À Saint-Mitre, terrain, orientation, qualité du bâti, calme et stationnement peuvent différencier fortement deux maisons pourtant proches sur la carte.",
-      },
-      {
-        codes: ["130050201", "130050301"],
-        title: "Les Passons et Pin Vert",
-        description:
-          "Aux Passons comme au Pin Vert, nous replaçons le logement dans son environnement précis avant de comparer ses prestations, ses extérieurs et son niveau de travaux.",
-      },
-      {
         codes: ["130050702"],
         title: "Garlaban et Royante",
         description:
-          "Aux abords du Garlaban et de Royante, le relief, les vues, la parcelle, les accès et l’exposition deviennent essentiels pour apprécier la valeur d’une propriété.",
+          "Aux abords du Garlaban et de Royante, les maisons dominent largement. Vue, exposition, qualité de la parcelle, accès et intégration dans le paysage deviennent essentiels pour apprécier la valeur d’une propriété.",
+      },
+      {
+        codes: ["130050701"],
+        title: "Arnaud-Solans",
+        description:
+          "Arnaud-Solans présente un tissu très largement composé de maisons. La surface du terrain, le calme, les vues, les dépendances et la facilité d’accès doivent être comparés avec des propriétés réellement proches.",
+      },
+      {
+        codes: ["130050601"],
+        title: "Longuillar",
+        description:
+          "À Longuillar, le parc résidentiel est principalement constitué de maisons. Parcelle, orientation, environnement immédiat, niveau de rénovation et prestations extérieures structurent la comparaison.",
+      },
+      {
+        codes: ["130050602"],
+        title: "Pérussone",
+        description:
+          "À Pérussone, la présence importante de maisons invite à raisonner au-delà du prix moyen communal. Terrain, état du bâti, exposition, stationnement et qualité des extérieurs font la différence.",
+      },
+      {
+        codes: ["130050401"],
+        title: "Les Gavots",
+        description:
+          "Dans le secteur des Gavots, les maisons et leurs terrains occupent une place importante. L’accès, le relief, l’exposition, les vues et le potentiel du bâti demandent une lecture à l’échelle de l’adresse.",
+      },
+      {
+        codes: ["130050705"],
+        title: "Baudinard",
+        description:
+          "À Baudinard, le parc est très majoritairement composé de maisons. La superficie utile de la parcelle, le calme, les accès, les dépendances et les prestations doivent être confrontés à des ventes comparables.",
       },
     ],
     sources: [
@@ -62,26 +62,28 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   gemenos: {
     neighborhoods: [
       {
-        title: "Village central",
+        codes: ["130420102"],
+        title: "Petit Versailles et les hauteurs",
         description:
-          "Au cœur de Gémenos, le charme du bâti ancien s’apprécie rue par rue. L’état du bien, la luminosité, les extérieurs, l’accès et les possibilités de stationnement peuvent créer de vrais écarts de valeur.",
-      },
-      {
-        title: "Petit Versailles",
-        description:
-          "Situé sur les hauteurs, le Petit Versailles se distingue par ses jardins et son cadre résidentiel. L’exposition, l’ensoleillement, la vue et la qualité du bâti y jouent un rôle important dans l’estimation.",
+          "Le Petit Versailles et les hauteurs s’inscrivent dans la partie est de Gémenos, où les maisons sont très présentes. Ensoleillement, vue, jardin, accès et qualité du bâti y orientent fortement l’estimation.",
       },
       {
         codes: ["130420101"],
-        title: "Ouest-La Plaine",
+        title: "Les Craux et Le Coupier",
         description:
-          "Dans cette partie de Gémenos, la surface du terrain, l’environnement immédiat et la facilité d’accès comptent particulièrement. Une maison doit être comparée avec des ventes réellement proches et présentant des caractéristiques similaires.",
+          "À l’ouest, Les Craux et Le Coupier appartiennent au paysage résidentiel de la Plaine. Terrain, accès, environnement immédiat et qualité des extérieurs doivent être comparés avec des maisons proches.",
       },
       {
         codes: ["130420102"],
-        title: "Est de Gémenos",
+        title: "Coulin et Les Nègles",
         description:
-          "À l’est de Gémenos, le relief, le cadre paysager, l’exposition et les accès créent des situations très différentes. L’analyse de l’adresse et une visite du bien restent indispensables pour déterminer un prix cohérent.",
+          "Au sud-est de Gémenos, Coulin et Les Nègles regroupent un habitat plus diffus. Relief, calme, orientation, parcelle et conditions d’accès peuvent différencier fortement deux propriétés voisines.",
+      },
+      {
+        codes: ["130420101"],
+        title: "Saint-Jean-de-Garguier",
+        description:
+          "Vers Saint-Jean-de-Garguier, les maisons s’inscrivent dans un environnement plus rural et paysager. Parcelle, dépendances, accès, assainissement et état général nécessitent une analyse sur place.",
       },
     ],
     sources: [
@@ -94,28 +96,28 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   "la-ciotat": {
     neighborhoods: [
       {
-        codes: ["130280101", "130280102"],
-        title: "Centre-ville et Vieux-Port",
-        description:
-          "Dans le centre et autour du Vieux-Port, l’état du bâti, l’étage, la luminosité, les nuisances, l’accès et le stationnement font varier la valeur d’une adresse à l’autre.",
-      },
-      {
-        codes: ["130280103"],
-        title: "Calanques et Le Mugel",
-        description:
-          "Du côté des Calanques et du Mugel, la vue, l’exposition, la proximité du littoral, les extérieurs et les conditions d’accès demandent une comparaison particulièrement localisée.",
-      },
-      {
         codes: ["130280107"],
         title: "Peymian et Clos des Plages",
         description:
-          "À Peymian et au Clos des Plages, la distance réelle au bord de mer, le calme, le stationnement et la qualité des espaces extérieurs comptent fortement dans l’attractivité du bien.",
+          "Peymian et le Clos des Plages comptent parmi les secteurs résidentiels à examiner pour une maison. Distance au littoral, terrain, calme, exposition et stationnement restent déterminants.",
       },
       {
         codes: ["130280111"],
         title: "Fontsainte et Saint-Jean",
         description:
-          "Dans les secteurs de Fontsainte et Saint-Jean, orientation, aperçu mer, environnement immédiat, accès et caractéristiques de la résidence doivent être étudiés au cas par cas.",
+          "À l’est, Fontsainte et Saint-Jean associent secteurs résidentiels, maisons et proximité du littoral. Vue, exposition, accès, qualité des extérieurs et environnement immédiat doivent être étudiés séparément.",
+      },
+      {
+        codes: ["130280104"],
+        title: "Les Crêtes",
+        description:
+          "Les Crêtes se distinguent par une présence importante de maisons. Relief, dégagement, exposition, parcelle et facilité d’accès jouent un rôle central pour comparer deux biens situés dans ce secteur.",
+      },
+      {
+        codes: ["130280103"],
+        title: "Calanques et Le Mugel",
+        description:
+          "Du côté des Calanques et du Mugel, les données INSEE montrent que près d’un logement sur deux est une maison. Vue, extérieur, contraintes d’accès et proximité du littoral imposent une comparaison très locale.",
       },
     ],
     sources: [
@@ -128,28 +130,28 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   cassis: {
     neighborhoods: [
       {
-        codes: ["130220101"],
-        title: "Centre ancien et port",
+        codes: ["130220104"],
+        title: "Revestel, Les Janots et Sainte-Croix",
         description:
-          "Dans le centre ancien et autour du port, charme, état du bâti, étage, luminosité, accès et stationnement peuvent produire des écarts importants sur quelques rues.",
+          "La périphérie résidentielle, du Revestel aux Janots et à Sainte-Croix, est la partie de Cassis où les maisons sont les plus présentes selon l’INSEE. Terrain, vues et accès y sont essentiels.",
       },
       {
-        codes: ["130220102"],
-        title: "Le Bestouan",
+        codes: ["130220104"],
+        title: "Brigadan et Grande Bastide",
         description:
-          "Au Bestouan, la proximité de la plage ne suffit pas à fixer un prix : vue, exposition, extérieur, accès, stationnement et qualité du bâti restent déterminants.",
+          "Vers le Brigadan et la Grande Bastide, les propriétés se comparent selon la parcelle, les vues, l’exposition, les accès et les prestations. La visite reste indispensable pour apprécier ces écarts.",
       },
       {
         codes: ["130220103"],
         title: "Presqu’île et Port-Miou",
         description:
-          "Sur la Presqu’île et vers Port-Miou, l’ouverture sur le paysage, le calme, la parcelle et les contraintes propres à l’adresse doivent être confrontés à des ventes très comparables.",
+          "Sur la Presqu’île et vers Port-Miou, l’ouverture sur le paysage, le calme, la parcelle et les contraintes propres à l’adresse doivent être confrontés à des ventes de maisons très comparables.",
       },
       {
-        codes: ["130220104"],
-        title: "Revestel et Les Janots",
+        codes: ["130220102"],
+        title: "Bestouan et Petite Couronne",
         description:
-          "Du Revestel aux Janots, relief, vues, orientation, accès et configuration du terrain créent des situations immobilières très différentes au sein d’un même secteur.",
+          "Au Bestouan et dans la Petite Couronne, la proximité du littoral ne suffit pas à fixer un prix. Vue, exposition, extérieur, stationnement et qualité du bâti restent déterminants.",
       },
     ],
     sources: [
@@ -162,40 +164,40 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   "aix-en-provence": {
     neighborhoods: [
       {
-        codes: ["130010101", "130010102", "130010104", "130010105"],
-        title: "Centre historique et Mazarin",
+        codes: ["130010804"],
+        title: "Sud-Ouest du plateau de Puyricard",
         description:
-          "Dans le centre historique et le quartier Mazarin, adresse, étage, ascenseur, luminosité, état du bâti et possibilités de stationnement expliquent une grande partie des écarts de valeur.",
+          "Le sud-ouest du plateau de Puyricard présente un parc presque entièrement composé de maisons. Terrain, vues, dépendances, environnement et qualité du bâti y sont décisifs.",
       },
       {
-        codes: ["130010304", "130010401", "130010402"],
-        title: "La Torse et Val Saint-André",
+        codes: ["130010801", "130010802", "130010803"],
+        title: "Plateau nord et village de Puyricard",
         description:
-          "À La Torse et au Val Saint-André, environnement, résidence, extérieur, exposition, accès au centre et stationnement doivent être comparés à une échelle très locale.",
+          "Du plateau nord au village de Puyricard, les maisons occupent une place dominante. Parcelle, environnement, exposition, dépendances et temps d’accès à Aix structurent la comparaison.",
       },
       {
-        codes: ["130010701", "130010702", "130010703", "130010704", "130010705", "130010706"],
-        title: "Jas de Bouffan",
+        codes: ["130010404"],
+        title: "Campagne Repentance",
         description:
-          "Au Jas de Bouffan, la résidence, les travaux, l’étage, les charges, les espaces extérieurs et les services à proximité permettent d’affiner le prix au-delà de la moyenne du quartier.",
+          "Campagne Repentance présente un parc largement pavillonnaire dans un environnement recherché. Calme, terrain, végétation, accès, dépendances et état du bâti guident l’estimation.",
       },
       {
-        codes: ["130010801", "130010802", "130010803", "130010804"],
-        title: "Puyricard et Couteron",
+        codes: ["130010902"],
+        title: "Montaiguet",
         description:
-          "Sur le plateau de Puyricard et vers Couteron, terrain, qualité du bâti, environnement, vues, dépendances et temps d’accès à Aix deviennent essentiels pour comparer les maisons.",
+          "Au Montaiguet, la majorité du parc est constituée de maisons. Relief, environnement naturel, accès, surface du terrain et contraintes propres à la parcelle créent des écarts importants.",
       },
       {
-        codes: ["130010905", "130010906", "130010907", "130010908"],
-        title: "Les Milles et La Duranne",
+        codes: ["130010707", "130010710"],
+        title: "Les Granettes et Campagne Ouest",
         description:
-          "Aux Milles et à La Duranne, typologie du logement, date de construction, extérieur, stationnement, accès et proximité des pôles d’activité structurent la comparaison.",
+          "Des Granettes à Campagne Ouest, le paysage résidentiel mêle maisons, grands terrains et poches de campagne. Accès, vues, potentiel et niveau de prestations doivent être analysés adresse par adresse.",
       },
       {
-        codes: ["130010901", "130010903"],
-        title: "Luynes et Pont de l’Arc",
+        codes: ["130010903"],
+        title: "Luynes village",
         description:
-          "À Luynes et au Pont de l’Arc, l’environnement immédiat, la parcelle, les accès, les établissements voisins et les prestations du bien créent des marchés distincts.",
+          "À Luynes, plus d’un logement sur deux est une maison. L’environnement immédiat, la parcelle, les accès vers Aix et Marseille, les nuisances éventuelles et les prestations créent des marchés distincts.",
       },
     ],
     sources: [
@@ -208,28 +210,28 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
   "saint-cyr-sur-mer": {
     neighborhoods: [
       {
-        codes: ["831120101"],
-        title: "Centre du village",
+        codes: ["831120102"],
+        title: "Frégate et Port d’Alon",
         description:
-          "Dans le centre du village, proximité des commerces, état du bâti, extérieur, accès et stationnement permettent de distinguer des biens pourtant situés à quelques rues seulement.",
+          "De Frégate à Port d’Alon, l’environnement paysager et la présence de maisons placent la parcelle, les vues, l’exposition, les accès et les prestations au cœur de l’estimation.",
       },
       {
         codes: ["831120103"],
-        title: "Les Lecques",
+        title: "Les Lecques, Banette et Pradeaux",
         description:
-          "Aux Lecques, la distance réelle à la plage, la vue, l’exposition, le calme, les extérieurs et la place de stationnement comptent particulièrement dans l’estimation.",
+          "Des Lecques à Banette et aux Pradeaux, les maisons sont très présentes parmi les résidences principales. Distance à la plage, vue, calme, extérieur et stationnement comptent particulièrement.",
       },
       {
         codes: ["831120102"],
-        title: "La Madrague",
+        title: "La Madrague et Rampale",
         description:
-          "Autour du port de La Madrague, environnement maritime, accès, vue, relief et caractéristiques du bâti doivent être comparés avec des ventes situées dans un périmètre proche.",
+          "Autour de La Madrague et vers Rampale, environnement maritime, accès, vue, relief et caractéristiques du bâti doivent être comparés avec des ventes de maisons situées dans un périmètre proche.",
       },
       {
-        codes: ["831120102"],
-        title: "Port d’Alon et Frégate",
+        codes: ["831120101"],
+        title: "Cagueloup et Gueissard",
         description:
-          "Vers Port d’Alon et Frégate, parcelle, paysage, exposition, accès et prestations de la propriété prennent une importance particulière dans la détermination de la valeur.",
+          "À Cagueloup et Gueissard, la présence de maisons et la proximité du village créent un marché différent du littoral. Terrain, calme, accès, travaux et qualité des extérieurs doivent être pondérés.",
       },
     ],
     sources: [
