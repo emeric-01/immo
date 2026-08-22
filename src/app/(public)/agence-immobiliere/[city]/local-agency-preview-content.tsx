@@ -47,7 +47,7 @@ export type LocalAgencyPageProps = {
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
-const neighborhoodProfiles: Record<string, Array<{ description: string; title: string }>> = {
+const neighborhoodProfiles: Record<string, Array<{ code?: string; description: string; title: string }>> = {
   gemenos: [
     {
       title: "Village central",
@@ -60,9 +60,16 @@ const neighborhoodProfiles: Record<string, Array<{ description: string; title: s
         "Le PLUi reconnaît le « quartier Versailles », aussi appelé « Petit Versailles », situé en belvédère et associé à de petits jardins. L’exposition, l’ensoleillement, les extérieurs et la qualité du bâti deviennent ici des critères de comparaison essentiels.",
     },
     {
-      title: "Ouest-La Plaine et Est",
+      code: "IRIS 130420101",
+      title: "Ouest-La Plaine",
       description:
-        "L’INSEE distingue Ouest-La Plaine et Est comme grands quartiers statistiques. Ce découpage aide à contextualiser le parc, mais ne constitue pas une carte de prix : la comparaison doit revenir au quartier, à la rue et au bien.",
+        "Ce quartier statistique officiel de l’INSEE permet de contextualiser les données infracommunales de la partie ouest de Gémenos. Il ne constitue pas une zone de prix homogène : l’analyse revient ensuite à la rue et au bien.",
+    },
+    {
+      code: "IRIS 130420102",
+      title: "Est",
+      description:
+        "L’INSEE identifie aussi l’IRIS Est. Ce repère statistique aide à lire la structure locale du parc et de la population, sans remplacer les transactions comparables situées autour de l’adresse.",
     },
   ],
 };
@@ -111,12 +118,11 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
 
   if (!config || !city) notFound();
 
-  const [cachedMarket, articles, inseeProfile] = await Promise.all([
+  const [market, articles, inseeProfile] = await Promise.all([
     getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
     seoPreview ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
-  const market = seoPreview ? cachedMarket ?? getStaticCityMarketData(city) : cachedMarket;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
@@ -221,7 +227,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
     ? [
         {
           question: `Quels quartiers prenez-vous en compte pour estimer un bien à ${city.name} ?`,
-          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles ou les grands quartiers statistiques Ouest-La Plaine et Est lorsque son adresse le justifie. Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
+          answer: `Nous replaçons notamment le bien dans le Village central, le Petit Versailles ou dans l’un des deux quartiers statistiques IRIS de l’INSEE : Ouest-La Plaine (130420101) et Est (130420102). Cette première lecture est ensuite affinée à l’échelle de la rue, de l’environnement immédiat et des caractéristiques propres au logement.`,
         },
         {
           question: `Le quartier suffit-il pour connaître le prix d’un bien à ${city.name} ?`,
@@ -526,6 +532,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                     {neighborhoodProfile.map((neighborhood, index) => (
                       <article key={neighborhood.title}>
                         <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                        {neighborhood.code ? <small>{neighborhood.code}</small> : null}
                         <h4>{neighborhood.title}</h4>
                         <p>{neighborhood.description}</p>
                       </article>
@@ -538,6 +545,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
                   Sources : derniers chiffres publiés par l’
                   <a href="https://www.insee.fr/fr/metadonnees/geographie/commune/13042-gemenos" rel="noreferrer" target="_blank">INSEE</a>,
+                  table officielle des <a href="https://www.insee.fr/fr/information/7708995" rel="noreferrer" target="_blank">IRIS 2026</a>,
                   documents du <a href="https://plui.ampmetropole.fr/plui/Marseille" rel="noreferrer" target="_blank">PLUi Marseille Provence</a> et transactions DVF disponibles. Les données communales et les quartiers contextualisent l’estimation sans déterminer seuls la valeur du bien.
                 </p>
               ) : null}

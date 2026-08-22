@@ -213,7 +213,7 @@
 
 .neighborhoodGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-top: 26px;
 }
@@ -250,6 +250,18 @@
   margin: 0 0 11px;
   color: #1d1b18;
   font: 400 1.45rem Georgia, "Times New Roman", serif;
+}
+
+.neighborhoodGrid small {
+  display: inline-flex;
+  margin: -20px 0 14px;
+  border-radius: 999px;
+  background: #f7eee8;
+  padding: 5px 9px;
+  color: #8b5333;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .neighborhoodGrid p {
