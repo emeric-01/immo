@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { southCities } from "@/lib/cities";
-import { readCityMarketTrends } from "@/lib/city-market-cache";
-import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { getCityMarketDataSet } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
 import { CityHeroSearch } from "./city-hero-search";
@@ -17,20 +16,22 @@ async function getDirectoryCities(): Promise<DirectoryCity[]> {
   const cities = southCities.filter(
     (city) => city.department === "Bouches-du-Rhone" || city.department === "Var",
   );
-  const cachedTrends = await readCityMarketTrends(cities);
+  const cachedMarkets = await getCityMarketDataSet(cities);
 
   return cities.map((city) => {
-    const market = getStaticCityMarketData(city);
-    const averagePrice = Math.round(
-      (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
-    );
-    const trend = cachedTrends.get(city.inseeCode) ?? getStoredCityMarketTrend(city);
+    const market = cachedMarkets.get(city.inseeCode);
+    const averagePrice = market
+      ? Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2)
+      : null;
+    const trend = market?.apartment.trendSource === "history" && market.house.trendSource === "history"
+      ? Number(((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1))
+      : getStoredCityMarketTrend(city);
 
     return {
       averagePrice,
       departmentCode: city.department === "Var" ? ("83" as const) : ("13" as const),
-      housePrice: market.house.averagePricePerM2,
-      apartmentPrice: market.apartment.averagePricePerM2,
+      housePrice: market?.house.averagePricePerM2 ?? null,
+      apartmentPrice: market?.apartment.averagePricePerM2 ?? null,
       name: city.name,
       postalCode: city.postalCode,
       slug: city.slug,

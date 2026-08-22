@@ -1,5 +1,5 @@
 import type { City } from "./cities";
-import { readCityMarketCache, writeCityMarketCache } from "./city-market-cache";
+import { readCityMarketCache, readCityMarketCaches, writeCityMarketCache } from "./city-market-cache";
 
 export type PropertyMarketStat = {
   averagePricePerM2: number;
@@ -7,6 +7,19 @@ export type PropertyMarketStat = {
   highPricePerM2: number;
   confidenceScore: number;
   trend1Year: number;
+  rangeSource?: "estimated" | "transactions";
+  trendSource?: "history" | "unavailable";
+};
+
+export type CityLocalInfo = {
+  population: number;
+  medianAge?: number;
+  density: number;
+  areaKm2: number;
+  homes?: number;
+  ownerShare?: number;
+  source?: "INSEE";
+  vintage?: number;
 };
 
 export type CityPriceHistoryPoint = {
@@ -41,7 +54,7 @@ export type CityMarketData = {
   updatedAt: string;
   apartment: PropertyMarketStat;
   house: PropertyMarketStat;
-  rent: {
+  rent?: {
     apartmentPerM2: number;
     housePerM2: number;
   };
@@ -62,14 +75,7 @@ export type CityMarketData = {
     name: string;
     pricePerM2: number;
   }>;
-  localInfo: {
-    population: number;
-    medianAge?: number;
-    density: number;
-    areaKm2: number;
-    homes?: number;
-    ownerShare?: number;
-  };
+  localInfo?: CityLocalInfo;
 };
 
 type ImmoDataConfig = {
@@ -340,6 +346,8 @@ const aubagneMarketData: CityMarketData = {
     areaKm2: 54.8,
     homes: 21025,
     ownerShare: 48.7,
+    source: "INSEE",
+    vintage: 2022,
   },
 };
 
@@ -603,7 +611,14 @@ function streetsFromTransactions(
     .slice(0, 5);
 }
 
-const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
+const cityLocalInfoOverrides: Record<string, CityLocalInfo> = {
+  "aix-en-provence": {
+    population: 149695,
+    density: 804.5,
+    areaKm2: 186.08,
+    source: "INSEE",
+    vintage: 2023,
+  },
   allauch: {
     population: 21443,
     density: 426,
@@ -796,6 +811,80 @@ const cityLocalInfoOverrides: Record<string, CityMarketData["localInfo"]> = {
   },
 };
 
+function getCityLocalInfo(city: City): CityLocalInfo | undefined {
+  if (city.slug === "aubagne") return aubagneMarketData.localInfo;
+  return cityLocalInfoOverrides[city.slug];
+}
+
+function quantile(sortedValues: number[], ratio: number) {
+  const position = (sortedValues.length - 1) * ratio;
+  const lowerIndex = Math.floor(position);
+  const upperIndex = Math.ceil(position);
+  const lower = sortedValues[lowerIndex];
+  const upper = sortedValues[upperIndex];
+
+  return Math.round(lower + (upper - lower) * (position - lowerIndex));
+}
+
+function withObservedTransactionRange(
+  stat: PropertyMarketStat,
+  salePoints: CitySalePoint[],
+  propertyType: CitySalePoint["propertyType"],
+): PropertyMarketStat {
+  const prices = salePoints
+    .filter((sale) => sale.propertyType === propertyType)
+    .map((sale) => sale.pricePerM2)
+    .filter((price): price is number => typeof price === "number" && price > 300 && price < 30_000)
+    .sort((left, right) => left - right);
+
+  if (prices.length < 5) {
+    return { ...stat, rangeSource: stat.rangeSource ?? "estimated" };
+  }
+
+  return {
+    ...stat,
+    lowPricePerM2: Math.min(stat.averagePricePerM2, quantile(prices, 0.15)),
+    highPricePerM2: Math.max(stat.averagePricePerM2, quantile(prices, 0.85)),
+    rangeSource: "transactions",
+  };
+}
+
+function normalizePublishedMarketData(city: City, market: CityMarketData): CityMarketData {
+  const syntheticFallback = getStaticCityMarketData(city);
+  const isSynthetic = <T,>(value: T, fallbackValue: T) =>
+    JSON.stringify(value) === JSON.stringify(fallbackValue);
+  const history = isSynthetic(market.history, syntheticFallback.history) ? [] : market.history;
+  const salePoints = isSynthetic(market.salePoints, syntheticFallback.salePoints)
+    ? []
+    : market.salePoints;
+  const trendSource = history.length >= 2 ? "history" : "unavailable";
+
+  return {
+    ...market,
+    apartment: {
+      ...withObservedTransactionRange(market.apartment, salePoints, "Appartement"),
+      trendSource,
+    },
+    house: {
+      ...withObservedTransactionRange(market.house, salePoints, "Maison"),
+      trendSource,
+    },
+    history,
+    localInfo: getCityLocalInfo(city),
+    neighborhoods: isSynthetic(market.neighborhoods, syntheticFallback.neighborhoods)
+      ? []
+      : market.neighborhoods,
+    expensiveStreets: isSynthetic(market.expensiveStreets, syntheticFallback.expensiveStreets)
+      ? []
+      : market.expensiveStreets,
+    affordableStreets: isSynthetic(market.affordableStreets, syntheticFallback.affordableStreets)
+      ? []
+      : market.affordableStreets,
+    salePoints,
+    zones: isSynthetic(market.zones, syntheticFallback.zones) ? [] : market.zones,
+  };
+}
+
 const genericZoneNames = [
   "Secteur central",
   "Secteur nord",
@@ -959,18 +1048,14 @@ async function getCityImmoDataMarket(
       ?.map(toSalePoint)
       .filter((salePoint): salePoint is CitySalePoint => Boolean(salePoint))
       .slice(0, 30) ?? [];
-  const salePoints =
-    salePointsFromTransactions.length > 0
-      ? salePointsFromTransactions
-      : fallbackData.salePoints;
-  const expensiveStreets =
-    streetsFromTransactions(transactions?.data, "desc").length > 0
-      ? streetsFromTransactions(transactions?.data, "desc")
-      : fallbackData.expensiveStreets;
-  const affordableStreets =
-    streetsFromTransactions(transactions?.data, "asc").length > 0
-      ? streetsFromTransactions(transactions?.data, "asc")
-      : fallbackData.affordableStreets;
+  const expensiveStreets = streetsFromTransactions(transactions?.data, "desc");
+  const affordableStreets = streetsFromTransactions(transactions?.data, "asc");
+  const hasCompleteImmoDataPrice =
+    hasPriceValue(currentApartment) && hasPriceValue(currentHouse);
+
+  if (!hasCompleteImmoDataPrice) {
+    return fallbackData;
+  }
 
   const apartment = getRangeFromAverage(
     currentApartment?.value ?? undefined,
@@ -982,35 +1067,33 @@ async function getCityImmoDataMarket(
     "house",
     fallbackData.house,
   );
-  const hasImmoDataPrice = hasPriceValue(currentApartment) || hasPriceValue(currentHouse);
 
   return {
     ...fallbackData,
-    source: hasImmoDataPrice ? "immo-data" : "fallback",
+    source: "immo-data",
     updatedAt: new Date().toISOString().slice(0, 10),
     apartment: {
       ...apartment,
-      trend1Year: getTrend1Year(apartmentHistory) || fallbackData.apartment.trend1Year,
+      trend1Year: getTrend1Year(apartmentHistory),
     },
     house: {
       ...house,
-      trend1Year: getTrend1Year(houseHistory) || fallbackData.house.trend1Year,
+      trend1Year: getTrend1Year(houseHistory),
     },
-    history: toHistoryPoints(apartmentHistory, houseHistory, fallbackData.history),
-    zones: zones.length > 0 ? zones : fallbackData.zones,
-    salePoints,
+    history: toHistoryPoints(apartmentHistory, houseHistory, []),
+    zones,
+    salePoints: salePointsFromTransactions,
     transactionCount: transactions?.total,
     saleDurationDays:
       typeof saleDuration?.value === "number" ? Math.round(saleDuration.value) : undefined,
-    neighborhoods:
-      zones.length > 0
-        ? zones.map((zone) => ({
-            name: zone.name,
-            pricePerM2: zone.pricePerM2,
-          }))
-        : fallbackData.neighborhoods,
+    neighborhoods: zones.map((zone) => ({
+      name: zone.name,
+      pricePerM2: zone.pricePerM2,
+    })),
     expensiveStreets,
     affordableStreets,
+    localInfo: getCityLocalInfo(city),
+    rent: undefined,
   };
 }
 
@@ -1070,7 +1153,7 @@ function shiftMarketData(city: City): CityMarketData {
       name: genericStreetNames[index] ?? street.name,
       pricePerM2: Math.round(street.pricePerM2 * multiplier),
     })),
-    localInfo: cityLocalInfoOverrides[city.slug] ?? aubagneMarketData.localInfo,
+    localInfo: getCityLocalInfo(city),
   };
 }
 
@@ -1091,34 +1174,31 @@ export async function refreshCityMarketData(city: City): Promise<CityMarketData>
     throw new Error(`Immo Data n'a retourné aucun prix pour ${city.name}.`);
   }
 
-  const stored = await writeCityMarketCache(city, market);
+  const publishedMarket = normalizePublishedMarketData(city, market);
+  const stored = await writeCityMarketCache(city, publishedMarket);
 
   if (!stored) {
     throw new Error(`Enregistrement Supabase impossible pour ${city.name}.`);
   }
 
-  return market;
+  return publishedMarket;
 }
 
-export async function getCityMarketData(city: City): Promise<CityMarketData> {
+export async function getCityMarketData(city: City): Promise<CityMarketData | null> {
   const cached = await readCityMarketCache(city);
+  return cached?.data ? normalizePublishedMarketData(city, cached.data) : null;
+}
 
-  if (cached?.fresh) {
-    return cached.data;
+export async function getCityMarketDataSet(cities: City[]) {
+  const cachedMarkets = await readCityMarketCaches(cities);
+  const markets = new Map<string, CityMarketData>();
+
+  for (const city of cities) {
+    const cached = cachedMarkets.get(city.inseeCode);
+    if (cached?.data) {
+      markets.set(city.inseeCode, normalizePublishedMarketData(city, cached.data));
+    }
   }
 
-  const config = getImmoDataConfig();
-
-  if (!config) {
-    return cached?.data ?? getStaticCityMarketData(city);
-  }
-
-  const market = await optionalImmoData(() => getCityImmoDataMarket(config, city));
-
-  if (market?.source === "immo-data") {
-    await writeCityMarketCache(city, market);
-    return market;
-  }
-
-  return cached?.data ?? market ?? getStaticCityMarketData(city);
+  return markets;
 }

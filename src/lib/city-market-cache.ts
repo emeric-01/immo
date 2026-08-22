@@ -1,5 +1,6 @@
 import "server-only";
 
+import { revalidateTag } from "next/cache";
 import type { City } from "./cities";
 import type { CityMarketData } from "./city-market-data";
 
@@ -21,6 +22,8 @@ export type CityMarketCacheEntry = {
 };
 
 const DAY_SECONDS = 86_400;
+const CITY_MARKET_CACHE_TAG = "city-market-cache";
+const PUBLIC_SNAPSHOT_REVALIDATE_SECONDS = 15 * 60;
 
 function cacheLifetimeMs() {
   const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
@@ -58,8 +61,11 @@ export async function readCityMarketCache(city: City): Promise<CityMarketCacheEn
 
   try {
     const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
-      cache: "no-store",
       headers: headers(config),
+      next: {
+        revalidate: PUBLIC_SNAPSHOT_REVALIDATE_SECONDS,
+        tags: [CITY_MARKET_CACHE_TAG],
+      },
     });
     if (!response.ok) return null;
 
@@ -74,6 +80,44 @@ export async function readCityMarketCache(city: City): Promise<CityMarketCacheEn
   } catch {
     return null;
   }
+}
+
+export async function readCityMarketCaches(cities: City[]) {
+  const config = getConfig();
+  const entries = new Map<string, CityMarketCacheEntry>();
+  if (!config || cities.length === 0) return entries;
+
+  const codes = cities.map((city) => `"${city.inseeCode}"`).join(",");
+  const params = new URLSearchParams({
+    insee_code: `in.(${codes})`,
+    select: "insee_code,market_data,fetched_at",
+  });
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
+      headers: headers(config),
+      next: {
+        revalidate: PUBLIC_SNAPSHOT_REVALIDATE_SECONDS,
+        tags: [CITY_MARKET_CACHE_TAG],
+      },
+    });
+    if (!response.ok) return entries;
+
+    const rows = (await response.json()) as CacheRow[];
+    for (const row of rows) {
+      if (!row.insee_code || !row.market_data || !row.fetched_at) continue;
+
+      entries.set(row.insee_code, {
+        data: row.market_data,
+        fetchedAt: row.fetched_at,
+        fresh: Date.now() - new Date(row.fetched_at).getTime() < cacheLifetimeMs(),
+      });
+    }
+  } catch {
+    return entries;
+  }
+
+  return entries;
 }
 
 export async function writeCityMarketCache(city: City, data: CityMarketData) {
@@ -96,7 +140,10 @@ export async function writeCityMarketCache(city: City, data: CityMarketData) {
       method: "POST",
     });
 
-    return response.ok;
+    if (!response.ok) return false;
+
+    revalidateTag(CITY_MARKET_CACHE_TAG);
+    return true;
   } catch {
     return false;
   }

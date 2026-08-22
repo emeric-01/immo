@@ -16,10 +16,9 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { getCityBySlug, getNearbyCities } from "@/lib/cities";
+import { getCityBySlug, getNearbyCities, type City } from "@/lib/cities";
 import {
-  getCityMarketData,
-  getStaticCityMarketData,
+  getCityMarketDataSet,
   type PropertyMarketStat,
 } from "@/lib/city-market-data";
 import { CityMarketChart } from "./city-market-chart";
@@ -64,6 +63,7 @@ function MarketPriceCard({
   label: string;
   stat: PropertyMarketStat;
 }) {
+  const hasObservedTrend = stat.trendSource !== "unavailable";
   const TrendIcon = stat.trend1Year >= 0 ? TrendingUp : TrendingDown;
   const rangeWidth = stat.highPricePerM2 - stat.lowPricePerM2;
   const averagePosition = rangeWidth > 0
@@ -81,7 +81,7 @@ function MarketPriceCard({
         <strong>{formatPrice(stat.averagePricePerM2)}<small>/m²</small></strong>
         <div className="city-market-range" style={rangeStyle}>
           <div className="city-market-range-values">
-            <span>Fourchette observée</span>
+            <span>{stat.rangeSource === "transactions" ? "Fourchette observée" : "Fourchette indicative"}</span>
             <strong>
               {formatPrice(stat.lowPricePerM2)}
               <small>à</small>
@@ -95,14 +95,37 @@ function MarketPriceCard({
           </div>
         </div>
       </div>
-      <span className={stat.trend1Year >= 0 ? "city-trend positive" : "city-trend negative"}>
-        <TrendIcon size={14} /> {formatPercent(stat.trend1Year)}
+      <span className={hasObservedTrend ? (stat.trend1Year >= 0 ? "city-trend positive" : "city-trend negative") : "city-trend"}>
+        {hasObservedTrend ? <><TrendIcon size={14} /> {formatPercent(stat.trend1Year)}</> : "Évolution à venir"}
       </span>
     </article>
   );
 }
 
-// This page reads and may refresh the persistent market cache at request time.
+function CityMarketUnavailable({ city }: { city: City }) {
+  return (
+    <main className="city-price-page city-price-modern">
+      <nav className="city-breadcrumb city-modern-container" aria-label="Fil d’Ariane">
+        <Link href="/">Accueil</Link><Link href="/prix-m2">Prix au m²</Link><span>{city.name}</span>
+      </nav>
+      <section className="city-modern-hero" aria-labelledby="city-price-title">
+        <div className="city-modern-container city-modern-hero-grid">
+          <div className="city-modern-hero-copy">
+            <p className="city-section-kicker">Observatoire local · {city.postalCode}</p>
+            <h1 id="city-price-title">Prix au m²<br />à {city.name}</h1>
+            <p className="city-hero-intro">
+              Aucun snapshot de marché vérifié n’est encore publié pour cette commune.
+              Nous préférons ne pas afficher de prix artificiel.
+            </p>
+            <Link href="/estimation">Demander une estimation personnalisée <ArrowRight size={17} /></Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// Public requests only read published snapshots. Refreshes are admin-only.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: CityPricePageProps): Promise<Metadata> {
@@ -144,15 +167,19 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
 
   if (!city) notFound();
 
-  const market = await getCityMarketData(city);
   const nearbyCities = getNearbyCities(city);
+  const marketSnapshots = await getCityMarketDataSet([city, ...nearbyCities]);
+  const market = marketSnapshots.get(city.inseeCode);
+
+  if (!market) return <CityMarketUnavailable city={city} />;
+
   const averagePrice = getAverageMarketPrice(
     market.apartment.averagePricePerM2,
     market.house.averagePricePerM2,
   );
-  const averageTrend = Number(
+  const averageTrend = market.apartment.trendSource === "history" && market.house.trendSource === "history" ? Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
-  );
+  ) : null;
   const sourceLabel = market.source === "immo-data" ? "Transactions DVF agrégées" : "Repères indicatifs";
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const faqs = [
@@ -218,7 +245,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
 
             <div className="city-trust-row">
               <span><ShieldCheck size={16} /> Données sécurisées</span>
-              <span><CalendarDays size={16} /> Actualisé le {formatDate(market.updatedAt)}</span>
+              <span><CalendarDays size={16} /> Données du {formatDate(market.updatedAt)}</span>
             </div>
 
           </div>
@@ -242,8 +269,8 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
           <MarketPriceCard icon={Home} label="Maison" stat={market.house} />
           <article className="city-market-signal-card">
             <span>Évolution sur un an</span>
-            <strong>{formatPercent(averageTrend)}</strong>
-            <p>{Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
+            <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+            <p>{averageTrend === null ? "Historique insuffisant pour publier une tendance" : Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
           </article>
         </div>
       </section>
@@ -266,7 +293,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
               <h3>Prix m² appartement à {city.name}</h3>
               <strong>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></strong>
               <p>
-                Les appartements observés se situent généralement entre {formatPrice(market.apartment.lowPricePerM2)} et {formatPrice(market.apartment.highPricePerM2)}/m².
+                {market.apartment.rangeSource === "transactions" ? "Les transactions observées situent" : "La fourchette indicative situe"} les appartements entre {formatPrice(market.apartment.lowPricePerM2)} et {formatPrice(market.apartment.highPricePerM2)}/m².
                 L’étage, l’extérieur, le stationnement et l’état de la copropriété affinent ce repère.
               </p>
             </div>
@@ -277,7 +304,7 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
               <h3>Prix m² maison à {city.name}</h3>
               <strong>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></strong>
               <p>
-                Les maisons observées évoluent entre {formatPrice(market.house.lowPricePerM2)} et {formatPrice(market.house.highPricePerM2)}/m².
+                {market.house.rangeSource === "transactions" ? "Les transactions observées situent" : "La fourchette indicative situe"} les maisons entre {formatPrice(market.house.lowPricePerM2)} et {formatPrice(market.house.highPricePerM2)}/m².
                 La parcelle, la vue, les annexes et les travaux rendent la comparaison plus sélective.
               </p>
             </div>
@@ -288,10 +315,12 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
       <section className="city-market-dashboard city-modern-container" aria-labelledby="trend-title">
         <div className="city-dashboard-chart">
           <div className="city-dashboard-title">
-            <div><p className="city-section-kicker">Historique depuis 2014</p><h2 id="trend-title">Évolution des prix</h2></div>
-            <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div>
+            <div><p className="city-section-kicker">Historique du marché</p><h2 id="trend-title">Évolution des prix</h2></div>
+            {market.history.length > 0 ? <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div> : null}
           </div>
-          <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
+          {market.history.length > 0
+            ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
+            : <p>L’historique vérifié n’est pas encore disponible pour cette commune.</p>}
         </div>
 
         <aside className="city-dashboard-side" id="ventes">
@@ -307,19 +336,20 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
                 <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{sale.soldAt}</small></div>
               </div>
             ))}
+            {market.salePoints.length === 0 ? <p>Aucune transaction localisée vérifiée n’est publiée pour le moment.</p> : null}
           </article>
         </aside>
 
         <article className="city-analysis-strip">
           <i />
-          <div><span>Notre analyse</span><strong>{Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</strong></div>
+          <div><span>Notre analyse</span><strong>{averageTrend === null ? "La tendance annuelle reste à qualifier." : Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</strong></div>
           <p>La moyenne communale donne une tendance. L&apos;adresse, l&apos;état, l&apos;extérieur et le stationnement restent déterminants pour établir un prix précis.</p>
           <small>{sourceLabel} · Mise à jour le {formatDate(market.updatedAt)}</small>
         </article>
       </section>
 
       <section className="city-local-modern city-modern-container">
-        <article>
+        {market.localInfo ? <article>
           <p className="city-section-kicker">Cadre de vie</p><h2>{city.name} en quelques repères</h2>
           <dl>
             <div><dt>Population</dt><dd>{euroFormatter.format(market.localInfo.population)} habitants</dd></div>
@@ -327,14 +357,17 @@ export default async function CityPricePage({ params }: CityPricePageProps) {
             <div><dt>Surface</dt><dd>{decimalFormatter.format(market.localInfo.areaKm2)} km²</dd></div>
             {market.localInfo.ownerShare ? <div><dt>Propriétaires</dt><dd>{decimalFormatter.format(market.localInfo.ownerShare)} %</dd></div> : null}
           </dl>
-        </article>
+          {market.localInfo.source ? <small>Source : {market.localInfo.source}{market.localInfo.vintage ? ` · recensement ${market.localInfo.vintage}` : ""}</small> : null}
+        </article> : null}
         <article>
           <p className="city-section-kicker">Comparer</p><h2>Les villes voisines</h2>
           <div className="nearby-city-list">
             {nearbyCities.map((nearbyCity) => {
-              const nearby = getStaticCityMarketData(nearbyCity);
-              const price = getAverageMarketPrice(nearby.apartment.averagePricePerM2, nearby.house.averagePricePerM2);
-              return <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug} title={`Prix m² à ${nearbyCity.name}`}><span>Prix m² à {nearbyCity.name}</span><strong>{formatPrice(price)}/m²</strong><ArrowRight size={15} /></Link>;
+              const nearby = marketSnapshots.get(nearbyCity.inseeCode);
+              const price = nearby
+                ? getAverageMarketPrice(nearby.apartment.averagePricePerM2, nearby.house.averagePricePerM2)
+                : null;
+              return <Link href={`/prix-m2/${nearbyCity.slug}`} key={nearbyCity.slug} title={`Prix m² à ${nearbyCity.name}`}><span>Prix m² à {nearbyCity.name}</span><strong>{price !== null ? `${formatPrice(price)}/m²` : "Donnée à venir"}</strong><ArrowRight size={15} /></Link>;
             })}
           </div>
         </article>

@@ -6,10 +6,10 @@ import { useState } from "react";
 import styles from "./prix-m2.module.css";
 
 export type DirectoryCity = {
-  apartmentPrice: number;
-  averagePrice: number;
+  apartmentPrice: number | null;
+  averagePrice: number | null;
   departmentCode: "13" | "83";
-  housePrice: number;
+  housePrice: number | null;
   name: string;
   postalCode: string;
   slug: string;
@@ -40,8 +40,12 @@ export function CityDirectory({ cities }: { cities: DirectoryCity[] }) {
       normalizeSearch(`${city.name} ${city.postalCode}`).includes(normalizedQuery),
     )
     .sort((cityA, cityB) => {
-      if (sortOrder === "price-asc") return cityA.averagePrice - cityB.averagePrice;
-      if (sortOrder === "price-desc") return cityB.averagePrice - cityA.averagePrice;
+      if (sortOrder === "price-asc") {
+        return (cityA.averagePrice ?? Number.POSITIVE_INFINITY) - (cityB.averagePrice ?? Number.POSITIVE_INFINITY);
+      }
+      if (sortOrder === "price-desc") {
+        return (cityB.averagePrice ?? Number.NEGATIVE_INFINITY) - (cityA.averagePrice ?? Number.NEGATIVE_INFINITY);
+      }
       return cityA.name.localeCompare(cityB.name, "fr");
     });
 
@@ -136,11 +140,17 @@ export function CityDirectory({ cities }: { cities: DirectoryCity[] }) {
                         <div className={styles.cityIdentity}>
                           <span>{city.postalCode}</span>
                           <h4>{seoTitle}</h4>
-                          <small>Appartement {formatter.format(city.apartmentPrice)} · Maison {formatter.format(city.housePrice)} €/m²</small>
+                          <small>
+                            {city.apartmentPrice !== null && city.housePrice !== null
+                              ? `Appartement ${formatter.format(city.apartmentPrice)} · Maison ${formatter.format(city.housePrice)} €/m²`
+                              : "Snapshot de marché à venir"}
+                          </small>
                         </div>
                         <div className={styles.cityPrice}>
-                          <span>Prix moyen indicatif</span>
-                          <strong>{formatter.format(city.averagePrice)} €<small>/m²</small></strong>
+                          <span>{city.averagePrice !== null ? "Prix moyen observé" : "Données de marché"}</span>
+                          <strong>
+                            {city.averagePrice !== null ? <>{formatter.format(city.averagePrice)} €<small>/m²</small></> : "À venir"}
+                          </strong>
                         </div>
                         {city.trend === null ? (
                           <span className={styles.missingTrend}>Donnée à venir</span>

@@ -15,8 +15,7 @@ import {
   UserRoundSearch,
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
-import { readCityMarketTrends } from "@/lib/city-market-cache";
-import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { getCityMarketDataSet } from "@/lib/city-market-data";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
 import { ContentImage } from "@/components/content/ContentImage";
@@ -81,11 +80,15 @@ export default async function HomePage() {
     const city = getCityBySlug(slug);
     return city ? [city] : [];
   });
-  const cachedTrends = await readCityMarketTrends(cities);
+  const cachedMarkets = await getCityMarketDataSet(cities);
   const featuredCities = cities.map((city) => {
-    const market = getStaticCityMarketData(city);
-    const average = Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2);
-    const trend = cachedTrends.get(city.inseeCode) ?? getStoredCityMarketTrend(city);
+    const market = cachedMarkets.get(city.inseeCode);
+    const average = market
+      ? Math.round((market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2)
+      : null;
+    const trend = market?.apartment.trendSource === "history" && market.house.trendSource === "history"
+      ? Number(((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1))
+      : getStoredCityMarketTrend(city);
     return { city, market, average, trend };
   });
 
@@ -153,13 +156,14 @@ export default async function HomePage() {
                   )}
                 </div>
                 <div className={styles.cityCardBody}>
-                  <h3>Prix m² à {city.name}</h3><strong>{formatPrice(average)} €/m²</strong>
+                  <h3>Prix m² à {city.name}</h3>
+                  <strong>{average !== null ? `${formatPrice(average)} €/m²` : "Données à venir"}</strong>
                   {trend === null ? (
                     <span className={styles.trendMissing}>Évolution à venir</span>
                   ) : (
                     <span className={trend >= 0 ? styles.trendUp : styles.trendDown}><TrendIcon size={14} /> {trend > 0 ? "+" : ""}{trend.toLocaleString("fr-FR")} % sur 1 an</span>
                   )}
-                  <small>{market.transactionCount ? `${market.transactionCount.toLocaleString("fr-FR")} transactions analysées` : "Données de marché disponibles"}</small>
+                  <small>{market?.transactionCount ? `${market.transactionCount.toLocaleString("fr-FR")} transactions analysées` : market ? "Snapshot de marché disponible" : "Aucun prix artificiel affiché"}</small>
                 </div>
               </Link>
             );

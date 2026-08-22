@@ -10,8 +10,7 @@ import {
   Ruler,
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
-import { readCityMarketCache } from "@/lib/city-market-cache";
-import { getStaticCityMarketData, type CityPriceZone, type CitySalePoint } from "@/lib/city-market-data";
+import { getCityMarketData, type CityPriceZone, type CitySalePoint } from "@/lib/city-market-data";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { CityPriceMap } from "../../prix-immobilier/[city]/city-price-map";
@@ -115,13 +114,12 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
     question: faq.question.replaceAll("Aubagne", city.name),
     answer: faq.answer.replaceAll("Aubagne", city.name),
   }));
-  const cachedMarket = await readCityMarketCache(city);
-  const market = cachedMarket?.data ?? getStaticCityMarketData(city);
-  const zones = labelZones(market.zones, city.slug);
-  const recentSales = selectRecentSales(market.salePoints);
-  const averagePrice = Math.round(
+  const market = await getCityMarketData(city);
+  const zones = labelZones(market?.zones ?? [], city.slug);
+  const recentSales = selectRecentSales(market?.salePoints ?? []);
+  const averagePrice = market ? Math.round(
     (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
-  );
+  ) : null;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const pagePath = `/estimation-immobiliere/${city.slug}`;
   const localSectorNames = zones.slice(0, 9).map((zone) => zone.name).join(", ");
@@ -175,7 +173,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
             center={{ latitude: city.latitude, longitude: city.longitude }}
             cityName={city.name}
             fitToSalePoints
-            salePoints={market.salePoints.slice(0, 30)}
+            salePoints={market?.salePoints.slice(0, 30) ?? []}
             salePointsFitMode="hero"
             zones={[]}
           />
@@ -190,7 +188,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
             selon les qualités réelles de votre bien.
           </span>
           <a href="#estimer">Estimer mon bien à {city.name} <ArrowRight aria-hidden="true" size={19} /></a>
-          <small><MapPin aria-hidden="true" size={15} /> {market.salePoints.length} ventes récentes positionnées sur la carte</small>
+          <small><MapPin aria-hidden="true" size={15} /> {market ? `${market.salePoints.length} ventes récentes positionnées sur la carte` : "Aucun prix artificiel affiché"}</small>
         </div>
       </section>
 
@@ -198,7 +196,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
         <AubagneEstimationStarter cityName={city.name} inseeCode={city.inseeCode} />
       </section>
 
-      <section className={styles.marketStrip} aria-labelledby="aubagne-prices-title">
+      {market ? <section className={styles.marketStrip} aria-labelledby="aubagne-prices-title">
         <div className={styles.sectionHeading}>
           <div>
             <p>Repères de marché</p>
@@ -226,9 +224,9 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
             <p>Mise à jour {formatDate(market.updatedAt)}</p>
           </article>
         </div>
-      </section>
+      </section> : null}
 
-      <section className={styles.salesSection} aria-labelledby="aubagne-sales-title">
+      {recentSales.length > 0 ? <section className={styles.salesSection} aria-labelledby="aubagne-sales-title">
         <div className={styles.sectionHeading}>
           <div>
             <p>Demandes de valeurs foncières</p>
@@ -268,9 +266,9 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
           Données DVF publiées par la DGFiP. Elles décrivent les mutations enregistrées et ne
           remplacent pas l’analyse de l’état, de la vue, des prestations ou des travaux du bien.
         </p>
-      </section>
+      </section> : null}
 
-      <section className={styles.trendSection} aria-labelledby="aubagne-trend-title">
+      {market && averagePrice !== null && market.history.length > 0 ? <section className={styles.trendSection} aria-labelledby="aubagne-trend-title">
         <div className={styles.trendCopy}>
           <p>Évolution du marché</p>
           <h2 id="aubagne-trend-title">Maisons et appartements à {city.name} ne suivent pas toujours la même trajectoire</h2>
@@ -282,9 +280,9 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
         <div className={styles.chartWrap}>
           <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
         </div>
-      </section>
+      </section> : null}
 
-      <section className={styles.areasSection} aria-labelledby="aubagne-areas-title">
+      {market && zones.length > 0 ? <section className={styles.areasSection} aria-labelledby="aubagne-areas-title">
         <div className={styles.sectionHeading}>
           <div>
             <p>Découpage infra-communal</p>
@@ -308,7 +306,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
             </article>
           ))}
         </div>
-      </section>
+      </section> : null}
 
       <section className={styles.seoSection} aria-labelledby="aubagne-local-estimation-title">
         <header className={styles.seoLead}>

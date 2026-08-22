@@ -20,8 +20,7 @@ import {
 } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
 import { getCityBySlug } from "@/lib/cities";
-import { readCityMarketCache } from "@/lib/city-market-cache";
-import { getStaticCityMarketData } from "@/lib/city-market-data";
+import { getCityMarketData } from "@/lib/city-market-data";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import {
   getLocalAgencyPage,
@@ -78,11 +77,10 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
 
   if (!config || !city) notFound();
 
-  const [cachedMarket, articles] = await Promise.all([
-    readCityMarketCache(city),
+  const [market, articles] = await Promise.all([
+    getCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
   ]);
-  const market = cachedMarket?.data ?? getStaticCityMarketData(city);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
@@ -96,12 +94,12 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
   ].slice(0, 4);
   const relatedArticle =
     articles.find((article) => article.related_city_slug === city.slug) ?? articles[0] ?? null;
-  const averagePrice = Math.round(
+  const averagePrice = market ? Math.round(
     (market.apartment.averagePricePerM2 + market.house.averagePricePerM2) / 2,
-  );
-  const averageTrend = Number(
+  ) : null;
+  const averageTrend = market?.apartment.trendSource === "history" && market.house.trendSource === "history" ? Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
-  );
+  ) : null;
   const pagePath = `/agence-immobiliere/${city.slug}`;
   const faqJsonLd = {
     "@type": "FAQPage",
@@ -293,7 +291,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
         </div>
       </section>
 
-      <section className={styles.marketSection} aria-label={`Repères immobiliers à ${city.name}`}>
+      {market && averagePrice !== null ? <section className={styles.marketSection} aria-label={`Repères immobiliers à ${city.name}`}>
         <article className={styles.chartCard}>
           <div className={styles.sectionHeadingRow}>
             <div><p className={styles.eyebrow}>Repères locaux</p><h2>Le marché immobilier à {city.name}</h2></div>
@@ -302,9 +300,9 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
           <div className={styles.marketMetrics}>
             <span><Building2 /><small>Appartement</small><strong>{formatPrice(market.apartment.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
-            <span><Sparkles /><small>Tendance annuelle</small><strong>{formatTrend(averageTrend)}</strong></span>
+            <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
           </div>
-          <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod="5y" points={market.history} />
+          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod="5y" points={market.history} /> : null}
           <p className={styles.marketNote}>Ces moyennes donnent un repère. Elles ne remplacent jamais la visite et l’analyse des caractéristiques propres au bien.</p>
         </article>
 
@@ -329,10 +327,10 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             })}
           </div>
         </article>
-      </section>
+      </section> : null}
 
       <section className={styles.resourceSection}>
-        <article className={styles.priceResource}>
+        {market ? <article className={styles.priceResource}>
           <p className={styles.eyebrow}>Observatoire local</p>
           <h2>Prix au m² à {city.name}</h2>
           <div>
@@ -348,7 +346,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             </span>
           </div>
           <Link href={`/prix-m2/${city.slug}`}>Voir les prix <ArrowRight size={15} /></Link>
-        </article>
+        </article> : null}
         <article className={styles.adviceResource}>
           <div>
             <p className={styles.eyebrow}>Conseils pour vendre à {city.name}</p>
