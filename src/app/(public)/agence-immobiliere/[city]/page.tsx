@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
 import { getCityBySlug } from "@/lib/cities";
-import { getCityMarketData } from "@/lib/city-market-data";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import {
   getLocalAgencyPage,
@@ -96,7 +96,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
   if (!config || !city) notFound();
 
   const [market, articles] = await Promise.all([
-    getCityMarketData(city),
+    getPublishedCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
   ]);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";

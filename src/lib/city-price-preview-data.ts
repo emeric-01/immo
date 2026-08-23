@@ -1,12 +1,13 @@
 import type { CityMarketData } from "./city-market-data";
 import { aubagnePreviewZones } from "./aubagne-preview-zones";
 
-// Preview-only Aubagne snapshot based on official DVF statistics for 2014–2025.
+// Published Aubagne snapshot based on official DVF statistics for 2014–2025.
 // The 2014–2020 annual medians come from the public Cerema DVF+ API; the
 // 2021–2025 points come from the latest geolocated DVF release on data.gouv.fr.
 // The central values are the commune medians published by data.gouv.fr.
 // The displayed ranges use the first and third quartiles of comparable resale transactions (Q1–Q3).
-// The canonical price page never reads this fixture.
+// The same snapshot feeds the price page and every public price consumer so
+// agency, estimation, directory and editorial pages cannot drift apart.
 const aubagnePricePreviewSnapshot: CityMarketData = {
   source: "dvf",
   updatedAt: "2026-04-27",

@@ -23,7 +23,7 @@ import {
 import { ContentImage } from "@/components/content/ContentImage";
 import { createCityLocalMarketInsight } from "@/lib/city-local-insights";
 import { getCityBySlug } from "@/lib/cities";
-import { getCityMarketData, getStaticCityMarketData } from "@/lib/city-market-data";
+import { getStaticCityMarketData } from "@/lib/city-market-data";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import { getInseeHousingProfile } from "@/lib/insee-housing";
 import {
@@ -32,6 +32,7 @@ import {
 } from "@/lib/local-agency-neighborhoods";
 import { getLocalAgencyPage, getNearestLocalAgencyCities } from "@/lib/local-agency-pages";
 import { absoluteUrl } from "@/lib/site";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
 import { LocalAgencyQuickActions } from "./LocalAgencyQuickActions";
@@ -159,7 +160,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
   const seoEnhanced = seoPreview || neighborhoodProfile !== null;
 
   const [market, articles, inseeProfile] = await Promise.all([
-    getCityMarketData(city),
+    getPublishedCityMarketData(city),
     getPublishedContentArticles(12).catch(() => []),
     seoEnhanced ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);

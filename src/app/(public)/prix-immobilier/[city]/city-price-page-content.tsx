@@ -29,11 +29,10 @@ import {
 } from "@/lib/city-market-data";
 import {
   getAubagneNearbyPreviewPrice,
-  getCityPricePreviewSnapshot,
 } from "@/lib/city-price-preview-data";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
-import { getInterkabMarketPulse } from "@/lib/interkab-market-pulse";
+import { resolvePublishedCityMarket } from "@/lib/published-city-market";
 import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
@@ -315,7 +314,7 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
 
 export default async function CityPricePage({ params }: CityPricePageProps) {
   const { city: citySlug } = await params;
-  return renderCityPricePage(citySlug, false);
+  return renderCityPricePage(citySlug, citySlug === "aubagne");
 }
 
 export async function CityPriceSeoPreview({ citySlug }: { citySlug: string }) {
@@ -328,21 +327,15 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   if (!city) notFound();
 
   const nearbyCities = getNearbyLocalMarketCities(city);
-  const previewMarket = seoPreview ? getCityPricePreviewSnapshot(city.slug) : null;
-  const marketSnapshots = previewMarket
+  const publishedMarket = seoPreview ? await resolvePublishedCityMarket(city) : null;
+  const marketSnapshots = publishedMarket
     ? new Map<string, CityMarketData>()
     : await getCityMarketDataSet([city, ...nearbyCities]);
-  const market = previewMarket ?? marketSnapshots.get(city.inseeCode);
+  const market = publishedMarket?.base ?? marketSnapshots.get(city.inseeCode);
 
   if (!market) return <CityMarketUnavailable city={city} />;
 
-  const currentMarketPulse = seoPreview && city.slug === "aubagne"
-    ? await getInterkabMarketPulse(
-      city.inseeCode,
-      market.apartment.averagePricePerM2,
-      market.house.averagePricePerM2,
-    )
-    : null;
+  const currentMarketPulse = publishedMarket?.pulse ?? null;
 
   const apartmentMarketReference = currentMarketPulse?.apartment?.nowcastPricePerM2
     ?? market.apartment.averagePricePerM2;

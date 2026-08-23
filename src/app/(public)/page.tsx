@@ -15,7 +15,7 @@ import {
   UserRoundSearch,
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
-import { getCityMarketDataSet } from "@/lib/city-market-data";
+import { getPublishedCityMarketDataSet } from "@/lib/published-city-market";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { HomeAddressSearch } from "./home-address-search";
 import { ContentImage } from "@/components/content/ContentImage";
@@ -80,7 +80,7 @@ export default async function HomePage() {
     const city = getCityBySlug(slug);
     return city ? [city] : [];
   });
-  const cachedMarkets = await getCityMarketDataSet(cities);
+  const cachedMarkets = await getPublishedCityMarketDataSet(cities);
   const featuredCities = cities.map((city) => {
     const market = cachedMarkets.get(city.inseeCode);
     const average = market

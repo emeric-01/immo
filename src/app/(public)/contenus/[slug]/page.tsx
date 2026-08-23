@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
 import { MarkdownContent } from "@/components/content/MarkdownContent";
 import { getCityBySlug, southCities, type City } from "@/lib/cities";
-import { readCityMarketCache } from "@/lib/city-market-cache";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { formatArticleDate } from "@/lib/content/article-utils";
 import {
   getPublishedContentArticle,
@@ -79,8 +79,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
   const publishedArticles = await getPublishedContentArticles(30);
   const suggestedArticles = selectSuggestedArticles(article, publishedArticles, relatedCity);
   const suggestedCities = relatedCity ? selectSuggestedCities(relatedCity) : [];
-  const cityMarketCache = relatedCity ? await readCityMarketCache(relatedCity) : null;
-  const cityMarket = cityMarketCache?.data;
+  const cityMarket = relatedCity ? await getPublishedCityMarketData(relatedCity) : null;
   const averagePrice = cityMarket
     ? Math.round((cityMarket.apartment.averagePricePerM2 + cityMarket.house.averagePricePerM2) / 2)
     : null;

@@ -10,7 +10,8 @@ import {
   Ruler,
 } from "lucide-react";
 import { getCityBySlug } from "@/lib/cities";
-import { getCityMarketData, type CityPriceZone, type CitySalePoint } from "@/lib/city-market-data";
+import type { CityPriceZone, CitySalePoint } from "@/lib/city-market-data";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { CityPriceMap } from "../../prix-immobilier/[city]/city-price-map";
@@ -114,7 +115,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
     question: faq.question.replaceAll("Aubagne", city.name),
     answer: faq.answer.replaceAll("Aubagne", city.name),
   }));
-  const market = await getCityMarketData(city);
+  const market = await getPublishedCityMarketData(city);
   const zones = labelZones(market?.zones ?? [], city.slug);
   const recentSales = selectRecentSales(market?.salePoints ?? []);
   const averagePrice = market ? Math.round(

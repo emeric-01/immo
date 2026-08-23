@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { localMarketCities } from "@/lib/cities";
-import { getCityMarketDataSet } from "@/lib/city-market-data";
+import { getPublishedCityMarketDataSet } from "@/lib/published-city-market";
 import { getStoredCityMarketTrend } from "@/lib/stored-city-market-trends";
 import { CityDirectory, type DirectoryCity } from "./city-directory";
 import { CityHeroSearch } from "./city-hero-search";
@@ -14,7 +14,7 @@ export const metadata: Metadata = createPageMetadata({ title: "Prix au m² par v
 
 async function getDirectoryCities(): Promise<DirectoryCity[]> {
   const cities = localMarketCities;
-  const cachedMarkets = await getCityMarketDataSet(cities);
+  const cachedMarkets = await getPublishedCityMarketDataSet(cities);
 
   return cities.map((city) => {
     const market = cachedMarkets.get(city.inseeCode);
