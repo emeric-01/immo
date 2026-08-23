@@ -57,9 +57,9 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
       },
       {
         codes: ["130050705"],
-        title: "Baudinard",
+        title: "Beaudinard",
         description:
-          "À Baudinard, le parc est très majoritairement composé de maisons. La superficie utile de la parcelle, le calme, les accès, les dépendances et les prestations doivent être confrontés à des ventes comparables.",
+          "À Beaudinard, le parc est très majoritairement composé de maisons. La superficie utile de la parcelle, le calme, les accès, les dépendances et les prestations doivent être confrontés à des ventes comparables.",
       },
     ],
     sources: [

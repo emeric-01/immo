@@ -223,30 +223,38 @@ function CityMarketDashboard({
       </div>
 
       <aside className="city-dashboard-side" id="ventes">
-        <article className={`city-sale-duration-card ${showTrendCard ? previewStyles.dashboardTrendCard : ""}`}>
-          <span><TrendIcon size={22} /></span>
-          {showTrendCard ? (
-            <div>
-              <small>Tendance du marché sur un an</small>
-              <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
-              <p>
-                Appartement {market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "à venir"}
-                <span aria-hidden="true"> · </span>
-                Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "à venir"}
-              </p>
-              <em>{marketTrendLabel}</em>
-              {market.saleDurationDays ? (
-                <span className={previewStyles.dashboardDuration}>
-                  <Clock3 aria-hidden="true" size={14} />
-                  Délai moyen de vente
-                  <b>{market.saleDurationDays} jours</b>
-                </span>
-              ) : null}
-            </div>
-          ) : (
+        {showTrendCard ? (
+          <div className={previewStyles.dashboardSignalGrid}>
+            <article className={`city-sale-duration-card ${previewStyles.dashboardTrendCard}`}>
+              <span><TrendIcon aria-hidden="true" size={22} /></span>
+              <div>
+                <small>Tendance sur un an</small>
+                <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+                <p>
+                  Appartement {market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "à venir"}
+                  <span aria-hidden="true"> · </span>
+                  Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "à venir"}
+                </p>
+                <em>{marketTrendLabel}</em>
+              </div>
+            </article>
+            {market.saleDurationDays ? (
+              <article className={`city-sale-duration-card ${previewStyles.dashboardDurationCard}`}>
+                <span><Clock3 aria-hidden="true" size={22} /></span>
+                <div>
+                  <small>Délai moyen de vente</small>
+                  <strong>{market.saleDurationDays}<small> jours</small></strong>
+                  <p>Moyenne observée à {city.name}</p>
+                </div>
+              </article>
+            ) : null}
+          </div>
+        ) : (
+          <article className="city-sale-duration-card">
+            <span><Clock3 aria-hidden="true" size={22} /></span>
             <div><small>Délai moyen de vente</small><strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong><p>Moyenne observée à {city.name}</p></div>
-          )}
-        </article>
+          </article>
+        )}
         <article className="city-compact-sales" aria-labelledby="sales-title">
           <div><h2 id="sales-title">Dernières ventes</h2><span>{market.transactionCount ? `${euroFormatter.format(market.transactionCount)} disponibles` : sourceLabel}</span></div>
           {market.salePoints.slice(0, 3).map((sale) => (

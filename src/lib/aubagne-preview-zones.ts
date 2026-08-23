@@ -2769,7 +2769,7 @@ export const aubagnePreviewZones = [
       "Garlaban-Royante",
       "Saint-Mitre",
       "Paluds",
-      "Baudinard",
+      "Beaudinard",
       "Napollon"
     ]
   }

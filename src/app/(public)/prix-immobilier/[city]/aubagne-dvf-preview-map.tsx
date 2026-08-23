@@ -28,7 +28,7 @@ const MAP_PADDING = 32;
 const LONGITUDE_CORRECTION = Math.cos((43.3 * Math.PI) / 180);
 const FEATURED_LABELS = new Set([
   "Arnaud Solans",
-  "Baudinard",
+  "Beaudinard",
   "Camp Major",
   "Centre Ville",
   "Garlaban-Royante",
