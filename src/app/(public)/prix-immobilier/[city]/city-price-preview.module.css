@@ -194,124 +194,30 @@
   font-weight: 750;
 }
 
-.trendOverview {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 18px;
-  overflow: hidden;
-  border: 1px solid #e5d9ce;
-  border-radius: 15px;
-  background: #fff;
-}
-
-.trendOverview > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 12px;
+.dashboardTrendCard {
   align-items: center;
-  min-height: 82px;
-  padding: 15px 20px;
-}
-
-.trendOverview > div + div {
-  border-left: 1px solid #e9e0d8;
-}
-
-.trendOverview span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #776f67;
-  font-size: .67rem;
-}
-
-.trendOverview span svg {
-  color: var(--preview-copper);
-}
-
-.trendOverview strong {
-  color: #332c27;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.45rem;
-  font-weight: 400;
-}
-
-.trendOverview small {
-  grid-column: 1 / -1;
-  color: #918880;
-  font-size: .57rem;
-}
-
-.marketMethodSection {
-  margin-top: 42px;
-  border: 1px solid #e5d7ca;
-  border-radius: 20px;
   background:
-    radial-gradient(circle at 100% 0, rgba(182, 111, 67, .1), transparent 34%),
-    #fffdfb;
-  padding: clamp(26px, 3.4vw, 42px);
+    radial-gradient(circle at 100% 0, rgba(182, 111, 67, .12), transparent 45%),
+    #fff;
 }
 
-.marketMethodHeading {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(310px, .88fr);
-  gap: clamp(28px, 5vw, 72px);
-  align-items: end;
+.dashboardTrendCard > div {
+  gap: 4px;
 }
 
-.marketMethodHeading h2 {
-  max-width: 680px;
-  margin: 0;
-  color: var(--preview-ink);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 3.2vw, 3.35rem);
-  font-weight: 400;
-  letter-spacing: -.045em;
-  line-height: 1.02;
+.dashboardTrendCard strong {
+  font-size: 2rem;
 }
 
-.marketMethodHeading > p {
-  max-width: 570px;
-  margin: 0 0 4px;
-  color: #736b64;
-  font-size: .78rem;
-  line-height: 1.7;
+.dashboardTrendCard p {
+  line-height: 1.45;
 }
 
-.nowcastMethod {
-  margin-top: 24px;
-  border: 1px solid #e5d8cd;
-  border-radius: 15px;
-  background: #fff;
-}
-
-.nowcastMethod summary {
-  cursor: pointer;
-  padding: 17px 20px;
-  color: #423a33;
-  font-size: .72rem;
-  font-weight: 800;
-}
-
-.nowcastMethod > div {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  border-top: 1px solid #eee5dd;
-  padding: 18px 20px 20px;
-}
-
-.nowcastMethod p,
-.nowcastSource {
-  margin: 0;
-  color: #766e67;
-  font-size: .65rem;
-  line-height: 1.65;
-}
-
-.nowcastSource {
-  padding: 16px 3px 0;
-  color: #918980;
+.dashboardTrendCard em {
+  color: #a65f38;
+  font-size: .61rem;
+  font-style: normal;
+  font-weight: 750;
 }
 
 .neighborhoodSection {
@@ -348,6 +254,40 @@
   color: #736b64;
   font-size: .82rem;
   line-height: 1.7;
+}
+
+.neighborhoodHeading > p strong {
+  color: var(--preview-copper);
+  font-weight: 800;
+}
+
+.projectEstimateCta {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 9px;
+  margin-top: 4px;
+  border: 1px solid #dcc7b6;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  padding: 10px 15px;
+  color: #7f482b;
+  font-size: .68rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: border-color .2s ease, background .2s ease, color .2s ease;
+}
+
+.projectEstimateCta:hover,
+.projectEstimateCta:focus-visible {
+  border-color: var(--preview-copper);
+  background: #fff;
+  color: var(--preview-copper);
+}
+
+.projectEstimateCta:focus-visible {
+  outline: 2px solid rgba(182, 111, 67, .28);
+  outline-offset: 3px;
 }
 
 .neighborhoodGrid {
@@ -614,7 +554,6 @@
 
 @media (max-width: 900px) {
   .neighborhoodHeading,
-  .marketMethodHeading,
   .dataGuardrail,
   .irisComparisonHeading {
     grid-template-columns: 1fr;
@@ -632,9 +571,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .marketMethodHeading {
-    gap: 18px;
-  }
 }
 
 @media (max-width: 680px) {
@@ -657,21 +593,6 @@
     gap: 3px;
   }
 
-  .trendOverview {
-    grid-template-columns: 1fr;
-    margin-top: 12px;
-  }
-
-  .trendOverview > div {
-    min-height: 68px;
-    padding: 13px 16px;
-  }
-
-  .trendOverview > div + div {
-    border-top: 1px solid #e9e0d8;
-    border-left: 0;
-  }
-
   .irisComparisonGrid {
     grid-template-columns: 1fr;
   }
@@ -680,20 +601,6 @@
     margin-top: 24px;
     border-radius: 17px;
     padding: 28px 18px;
-  }
-
-  .marketMethodSection {
-    margin-top: 24px;
-    border-radius: 17px;
-    padding: 28px 18px;
-  }
-
-  .marketMethodHeading h2 {
-    font-size: 2.25rem;
-  }
-
-  .nowcastMethod > div {
-    grid-template-columns: 1fr;
   }
 
   .neighborhoodHeading h2 {

@@ -171,6 +171,84 @@ function CityMarketUnavailable({ city }: { city: City }) {
   );
 }
 
+function CityMarketDashboard({
+  averagePrice,
+  averageTrend,
+  city,
+  market,
+  seoPreview,
+  showTrendCard,
+  sourceLabel,
+}: {
+  averagePrice: number;
+  averageTrend: number | null;
+  city: City;
+  market: CityMarketData;
+  seoPreview: boolean;
+  showTrendCard: boolean;
+  sourceLabel: string;
+}) {
+  const TrendIcon = averageTrend === null ? Clock3 : averageTrend >= 0 ? TrendingUp : TrendingDown;
+  const marketTrendLabel = averageTrend === null
+    ? "Historique encore insuffisant"
+    : Math.abs(averageTrend) < 1
+      ? "Marché globalement stable"
+      : averageTrend > 0
+        ? "Dynamique haussière"
+        : "Marché en léger ajustement";
+
+  return (
+    <section className="city-market-dashboard city-modern-container" aria-labelledby="trend-title">
+      <div className="city-dashboard-chart">
+        <div className="city-dashboard-title">
+          <div><p className="city-section-kicker">Historique du marché</p><h2 id="trend-title">Évolution des prix</h2></div>
+          {market.history.length > 0 ? <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div> : null}
+        </div>
+        {market.history.length > 0
+          ? <CityMarketChart averagePrice={seoPreview ? undefined : averagePrice} cityName={city.name} points={market.history} />
+          : <p>L’historique vérifié n’est pas encore disponible pour cette commune.</p>}
+      </div>
+
+      <aside className="city-dashboard-side" id="ventes">
+        <article className={`city-sale-duration-card ${showTrendCard ? previewStyles.dashboardTrendCard : ""}`}>
+          <span><TrendIcon size={22} /></span>
+          {showTrendCard ? (
+            <div>
+              <small>Tendance du marché sur un an</small>
+              <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+              <p>
+                Appartement {market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "à venir"}
+                <span aria-hidden="true"> · </span>
+                Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "à venir"}
+              </p>
+              <em>{marketTrendLabel}</em>
+            </div>
+          ) : (
+            <div><small>Délai moyen de vente</small><strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong><p>Moyenne observée à {city.name}</p></div>
+          )}
+        </article>
+        <article className="city-compact-sales" aria-labelledby="sales-title">
+          <div><h2 id="sales-title">Dernières ventes</h2><span>{market.transactionCount ? `${euroFormatter.format(market.transactionCount)} disponibles` : sourceLabel}</span></div>
+          {market.salePoints.slice(0, 3).map((sale) => (
+            <div className="city-compact-sale-row" key={sale.id}>
+              <div><span>{sale.propertyType}</span><strong>{sale.label}</strong><small>{sale.rooms || "—"} pièces · {sale.surfaceM2 || "—"} m²</small></div>
+              <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{sale.soldAt}</small></div>
+            </div>
+          ))}
+          {market.salePoints.length === 0 ? <p>Aucune transaction localisée vérifiée n’est publiée pour le moment.</p> : null}
+        </article>
+      </aside>
+
+      <article className="city-analysis-strip">
+        <i />
+        <div><span>Notre analyse</span><strong>{seoPreview ? `À ${city.name}, maisons et appartements suivent des marchés différents.` : averageTrend === null ? "La tendance annuelle reste à qualifier." : Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</strong></div>
+        <p>{seoPreview ? `Les secteurs de maisons, la taille des parcelles, les vues vers le Garlaban, l’accès et le niveau de rénovation créent des écarts que la moyenne communale ne peut pas résumer.` : "La moyenne communale donne une tendance. L’adresse, l’état, l’extérieur et le stationnement restent déterminants pour établir un prix précis."}</p>
+        <small>{sourceLabel} · Mise à jour le {formatDate(market.updatedAt)}</small>
+      </article>
+    </section>
+  );
+}
+
 // Canonical requests only read published snapshots. Refreshes are admin-only.
 export const dynamic = "force-dynamic";
 
@@ -361,9 +439,6 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                         <i aria-hidden="true"><b /></i>
                         <small><span>Prix bas</span><span>Repère Marché</span><span>Prix haut</span></small>
                       </div>
-                      <span className={previewStyles.heroPriceRange}>
-                        Médiane DVF {formatPrice(market.apartment.averagePricePerM2)}/m² · {currentMarketPulse.apartment.listingCount} offres analysées
-                      </span>
                     </>
                   ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
@@ -390,9 +465,6 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                         <i aria-hidden="true"><b /></i>
                         <small><span>Prix bas</span><span>Repère Marché</span><span>Prix haut</span></small>
                       </div>
-                      <span className={previewStyles.heroPriceRange}>
-                        Médiane DVF {formatPrice(market.house.averagePricePerM2)}/m² · {currentMarketPulse.house.listingCount} offres analysées
-                      </span>
                     </>
                   ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
@@ -434,7 +506,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <div className="city-trust-row">
               {seoPreview ? (
                 <>
-                  <span><Database size={16} /> {hasCurrentMarketReference ? "Repère Marché Les Jumelles" : usesDvfMedian ? "Transactions publiées · DVF DGFiP" : "Repères communaux · Immo Data"}</span>
+                  <span><Database size={16} /> {hasCurrentMarketReference ? "Ventes DVF + annonces immobilières locales" : usesDvfMedian ? "Transactions publiées · DVF DGFiP" : "Repères communaux · Immo Data"}</span>
                   <span><CalendarDays size={16} /> Calcul actualisé en {formatMonthYear(marketReferenceUpdatedAt)}</span>
                   {latestObservedSaleDate ? (
                     <span><ShieldCheck size={16} /> Dernières mutations disponibles : {formatDate(latestObservedSaleDate)}</span>
@@ -478,22 +550,15 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       </section>
 
       {hasCurrentMarketReference ? (
-        <section className={`city-modern-container ${previewStyles.trendOverview}`} aria-labelledby="overview-title">
-          <h2 className="city-visually-hidden" id="overview-title">Évolution du marché sur un an</h2>
-          <div>
-            <span><Building2 size={17} /> Appartement</span>
-            <strong>{market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "À venir"}</strong>
-          </div>
-          <div>
-            <span><Home size={17} /> Maison</span>
-            <strong>{market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "À venir"}</strong>
-          </div>
-          <div>
-            <span>Évolution du marché sur un an</span>
-            <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
-            <small>{averageTrend === null ? "Historique encore insuffisant" : Math.abs(averageTrend) < 1 ? "Marché globalement stable" : averageTrend > 0 ? "Dynamique haussière" : "Marché en léger ajustement"}</small>
-          </div>
-        </section>
+        <CityMarketDashboard
+          averagePrice={averagePrice}
+          averageTrend={averageTrend}
+          city={city}
+          market={market}
+          seoPreview={seoPreview}
+          showTrendCard
+          sourceLabel={sourceLabel}
+        />
       ) : (
         <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
           <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
@@ -508,42 +573,6 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           </div>
         </section>
       )}
-
-      {seoPreview && currentMarketPulse && (currentMarketPulse.apartment || currentMarketPulse.house) ? (
-        <section className={`city-modern-container ${previewStyles.marketMethodSection}`} aria-labelledby="current-market-title">
-          <header className={previewStyles.marketMethodHeading}>
-            <div>
-              <p className="city-section-kicker">Le Repère Marché Les Jumelles</p>
-              <h2 id="current-market-title">Un prix plus actuel qu&apos;une simple moyenne</h2>
-            </div>
-            <p>
-              Les ventes DVF constituent le socle factuel. Les offres professionnelles actives
-              permettent de détecter la direction du marché sans confondre prix demandé et prix vendu.
-            </p>
-          </header>
-
-          <details className={previewStyles.nowcastMethod}>
-            <summary>Comment construisons-nous ce repère ?</summary>
-            <div>
-              <p>
-                Nous partons des médianes des ventes DVF comparables, puis analysons séparément les
-                prix demandés des appartements et maisons actuellement proposés par des professionnels.
-              </p>
-              <p>
-                L&apos;écart est plafonné à ±12 % et seulement 60 % de ce signal peut être retenu. Son poids
-                diminue lorsque l&apos;échantillon est faible. Viagers, terrains, locaux, valeurs incohérentes
-                et doublons détectables sont exclus.
-              </p>
-            </div>
-          </details>
-
-          <p className={previewStyles.nowcastSource}>
-            Sources : DVF DGFiP / data.gouv.fr et agrégats internes issus d&apos;annonces professionnelles actives
-            {currentMarketPulse.updatedAt ? `, synchronisées en ${formatMonthYear(currentMarketPulse.updatedAt)}` : ""}.
-            Ce repère de tendance ne remplace pas l&apos;estimation d&apos;un logement précis.
-          </p>
-        </section>
-      ) : null}
 
       <section className="city-property-guide city-modern-container" aria-labelledby="property-price-title">
         <div className="city-property-guide-heading">
@@ -588,14 +617,26 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <div>
               <p className="city-section-kicker">Quartiers de {city.name}</p>
               <h2 id="price-neighborhood-title">
-                À {city.name}, le quartier compte autant que la moyenne
+                {city.slug === "aubagne"
+                  ? "Une tendance de marché, des réalités différentes selon les quartiers d’Aubagne"
+                  : `À ${city.name}, le quartier compte autant que la moyenne`}
               </h2>
             </div>
-            <p>
-              Le prix communal donne un ordre de grandeur. Pour comparer deux maisons,
-              il faut ensuite regarder le quartier, la rue, le terrain, l’exposition,
-              les accès et les prestations réelles du bien.
-            </p>
+            {city.slug === "aubagne" && averageTrend !== null ? (
+              <p>
+                Sur un an, le marché aubagnais évolue de <strong>{formatPercent(averageTrend)}</strong>,
+                avec <strong>{formatPercent(market.apartment.trend1Year)}</strong> pour les appartements et
+                {" "}<strong>{formatPercent(market.house.trend1Year)}</strong> pour les maisons. Cette tendance
+                communale n&apos;est pas uniforme : la rareté de l&apos;offre, la parcelle, la vue, l&apos;état
+                et l&apos;adresse créent des écarts importants entre les quartiers présentés ci-dessous.
+              </p>
+            ) : (
+              <p>
+                Le prix communal donne un ordre de grandeur. Pour comparer deux maisons,
+                il faut ensuite regarder le quartier, la rue, le terrain, l’exposition,
+                les accès et les prestations réelles du bien.
+              </p>
+            )}
           </div>
 
           <div className={previewStyles.neighborhoodGrid}>
@@ -676,41 +717,17 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
         </section>
       ) : null}
 
-      <section className="city-market-dashboard city-modern-container" aria-labelledby="trend-title">
-        <div className="city-dashboard-chart">
-          <div className="city-dashboard-title">
-            <div><p className="city-section-kicker">Historique du marché</p><h2 id="trend-title">Évolution des prix</h2></div>
-            {market.history.length > 0 ? <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div> : null}
-          </div>
-          {market.history.length > 0
-            ? <CityMarketChart averagePrice={seoPreview ? undefined : averagePrice} cityName={city.name} points={market.history} />
-            : <p>L’historique vérifié n’est pas encore disponible pour cette commune.</p>}
-        </div>
-
-        <aside className="city-dashboard-side" id="ventes">
-          <article className="city-sale-duration-card">
-            <span><Clock3 size={22} /></span>
-            <div><small>Délai moyen de vente</small><strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong><p>Moyenne observée à {city.name}</p></div>
-          </article>
-          <article className="city-compact-sales" aria-labelledby="sales-title">
-            <div><h2 id="sales-title">Dernières ventes</h2><span>{market.transactionCount ? `${euroFormatter.format(market.transactionCount)} disponibles` : sourceLabel}</span></div>
-            {market.salePoints.slice(0, 3).map((sale) => (
-              <div className="city-compact-sale-row" key={sale.id}>
-                <div><span>{sale.propertyType}</span><strong>{sale.label}</strong><small>{sale.rooms || "—"} pièces · {sale.surfaceM2 || "—"} m²</small></div>
-                <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{sale.soldAt}</small></div>
-              </div>
-            ))}
-            {market.salePoints.length === 0 ? <p>Aucune transaction localisée vérifiée n’est publiée pour le moment.</p> : null}
-          </article>
-        </aside>
-
-        <article className="city-analysis-strip">
-          <i />
-          <div><span>Notre analyse</span><strong>{seoPreview ? `À ${city.name}, maisons et appartements suivent des marchés différents.` : averageTrend === null ? "La tendance annuelle reste à qualifier." : Math.abs(averageTrend) < 1 ? "Le marché marque une phase de stabilité." : averageTrend > 0 ? "La demande continue de soutenir les prix." : "Les prix se rééquilibrent progressivement."}</strong></div>
-          <p>{seoPreview ? `Les secteurs de maisons, la taille des parcelles, les vues vers le Garlaban, l’accès et le niveau de rénovation créent des écarts que la moyenne communale ne peut pas résumer.` : "La moyenne communale donne une tendance. L’adresse, l’état, l’extérieur et le stationnement restent déterminants pour établir un prix précis."}</p>
-          <small>{sourceLabel} · Mise à jour le {formatDate(market.updatedAt)}</small>
-        </article>
-      </section>
+      {!hasCurrentMarketReference ? (
+        <CityMarketDashboard
+          averagePrice={averagePrice}
+          averageTrend={averageTrend}
+          city={city}
+          market={market}
+          seoPreview={seoPreview}
+          showTrendCard={false}
+          sourceLabel={sourceLabel}
+        />
+      ) : null}
 
       <section className="city-local-modern city-modern-container">
         {market.localInfo ? <article>
@@ -777,6 +794,11 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           <p className="city-section-kicker">Votre projet à {city.name}</p>
           <h2 id="city-project-title">Passer du {usesDvfMedian ? "prix médian" : "prix moyen"} à votre bien</h2>
           <p>Utilisez les données du marché pour cadrer votre projet, puis obtenez une analyse adaptée à votre adresse.</p>
+          {seoPreview && city.slug === "aubagne" ? (
+            <Link className={previewStyles.projectEstimateCta} href={`/estimation-immobiliere/${city.slug}`}>
+              Demander mon estimation <ArrowRight size={16} />
+            </Link>
+          ) : null}
         </div>
         <div className="city-project-link-list">
           <Link href={`/estimation-immobiliere/${city.slug}`}>
