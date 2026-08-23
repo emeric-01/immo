@@ -1,5 +1,10 @@
 import "server-only";
-import { getAllStoredInterkabListings, getInterkabCities } from "@/lib/interkab";
+import {
+  getAllStoredInterkabListings,
+  getInterkabCities,
+  getLiveInterkabCityListings,
+  INTERKAB_CITIES,
+} from "@/lib/interkab";
 import { buildMarketNowcast, type MarketNowcast } from "@/lib/market-nowcast";
 
 export type InterkabMarketPulse = {
@@ -25,6 +30,17 @@ export async function getInterkabMarketPulse(
       updatedAt: cityState?.last_synced_at ?? null,
     };
   } catch {
-    return null;
+    const city = INTERKAB_CITIES.find((candidate) => candidate.inseeCode === inseeCode);
+    if (!city) return null;
+    try {
+      const live = await getLiveInterkabCityListings(city);
+      return {
+        apartment: buildMarketNowcast(live.listings, "apartment", apartmentDvfMedian),
+        house: buildMarketNowcast(live.listings, "house", houseDvfMedian),
+        updatedAt: live.fetchedAt,
+      };
+    } catch {
+      return null;
+    }
   }
 }

@@ -507,6 +507,31 @@ export async function getAubagneInterkabPilot(): Promise<InterkabPilot> {
   };
 }
 
+export async function getLiveInterkabCityListings(city: City): Promise<InterkabPilot> {
+  const sourceUrl = getInterkabCitySourceUrl(city);
+  const searchHtml = await fetchHtml(sourceUrl);
+  const firstPage = parseInterkabSearchPage(searchHtml);
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.max(0, firstPage.pageCount - 1) }, (_, index) =>
+      fetchHtml(`${sourceUrl}?page=${index + 2}`),
+    ),
+  );
+  const byId = new Map(firstPage.listings.map((listing) => [listing.externalId, listing]));
+  for (const html of remainingPages) {
+    for (const listing of parseInterkabSearchPage(html).listings) {
+      byId.set(listing.externalId, listing);
+    }
+  }
+
+  return {
+    fetchedAt: new Date().toISOString(),
+    listings: [...byId.values()],
+    pageCount: firstPage.pageCount,
+    resultCount: firstPage.resultCount,
+    sourceUrl,
+  };
+}
+
 export function formatFrenchPhone(value: string | null) {
   if (!value) return null;
   const digits = value.replace(/\D/g, "");
