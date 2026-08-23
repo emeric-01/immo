@@ -83,6 +83,14 @@ function getAverageMarketPrice(apartment: number, house: number) {
   return Math.round((apartment + house) / 2);
 }
 
+function getMarketRangeStyle(value: number, low: number, high: number) {
+  const rangeWidth = high - low;
+  const position = rangeWidth > 0
+    ? Math.min(100, Math.max(0, ((value - low) / rangeWidth) * 100))
+    : 50;
+  return { "--market-range-position": `${position}%` } as CSSProperties;
+}
+
 function getLatestObservedSaleDate(salePoints: CitySalePoint[]) {
   const timestamps = salePoints
     .map((sale) => new Date(sale.soldAt).getTime())
@@ -96,24 +104,20 @@ function MarketPriceCard({
   centralLabel = "Moyenne",
   icon: Icon,
   label,
-  rangeLabel,
   stat,
 }: {
   centralLabel?: string;
   icon: typeof Building2;
   label: string;
-  rangeLabel?: string;
   stat: PropertyMarketStat;
 }) {
   const hasObservedTrend = stat.trendSource !== "unavailable";
   const TrendIcon = stat.trend1Year >= 0 ? TrendingUp : TrendingDown;
-  const rangeWidth = stat.highPricePerM2 - stat.lowPricePerM2;
-  const averagePosition = rangeWidth > 0
-    ? Math.min(100, Math.max(0, ((stat.averagePricePerM2 - stat.lowPricePerM2) / rangeWidth) * 100))
-    : 50;
-  const rangeStyle = {
-    "--market-range-position": `${averagePosition}%`,
-  } as CSSProperties;
+  const rangeStyle = getMarketRangeStyle(
+    stat.averagePricePerM2,
+    stat.lowPricePerM2,
+    stat.highPricePerM2,
+  );
 
   return (
     <article className="city-market-price-card">
@@ -123,7 +127,7 @@ function MarketPriceCard({
         <strong>{formatPrice(stat.averagePricePerM2)}<small>/m²</small></strong>
         <div className="city-market-range" style={rangeStyle}>
           <div className="city-market-range-values">
-            <span>{rangeLabel ?? (stat.rangeSource === "transactions" ? "Fourchette observée" : "Fourchette indicative")}</span>
+            <span>{stat.rangeSource === "transactions" ? "Fourchette observée" : "Fourchette indicative"}</span>
             <strong>
               {formatPrice(stat.lowPricePerM2)}
               <small>à</small>
@@ -248,6 +252,16 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   const houseOverviewStat = hasCurrentMarketReference
     ? { ...market.house, averagePricePerM2: houseMarketReference }
     : market.house;
+  const apartmentHeroRangeStyle = getMarketRangeStyle(
+    apartmentMarketReference,
+    market.apartment.lowPricePerM2,
+    market.apartment.highPricePerM2,
+  );
+  const houseHeroRangeStyle = getMarketRangeStyle(
+    houseMarketReference,
+    market.house.lowPricePerM2,
+    market.house.highPricePerM2,
+  );
 
   const averagePrice = getAverageMarketPrice(
     apartmentMarketReference,
@@ -338,9 +352,19 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                     <span className={previewStyles.heroPriceAmount}>{formatPrice(apartmentMarketReference)}<small>/m²</small></span>
                   </dd>
                   {hasCurrentMarketReference && currentMarketPulse?.apartment ? (
-                    <span className={previewStyles.heroPriceRange}>
-                      Socle DVF : {formatPrice(market.apartment.averagePricePerM2)}/m² · {currentMarketPulse.apartment.listingCount} offres comparables
-                    </span>
+                    <>
+                      <div className={previewStyles.heroMarketRange} style={apartmentHeroRangeStyle}>
+                        <div>
+                          <span>Fourchette des ventes DVF</span>
+                          <strong>{formatPrice(market.apartment.lowPricePerM2)} à {formatPrice(market.apartment.highPricePerM2)}<small>/m²</small></strong>
+                        </div>
+                        <i aria-hidden="true"><b /></i>
+                        <small><span>Prix bas</span><span>Repère Marché</span><span>Prix haut</span></small>
+                      </div>
+                      <span className={previewStyles.heroPriceRange}>
+                        Médiane DVF {formatPrice(market.apartment.averagePricePerM2)}/m² · {currentMarketPulse.apartment.listingCount} offres analysées
+                      </span>
+                    </>
                   ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
                       Fourchette observée : {formatPrice(market.apartment.lowPricePerM2)} à {formatPrice(market.apartment.highPricePerM2)}/m²
@@ -357,9 +381,19 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                     <span className={previewStyles.heroPriceAmount}>{formatPrice(houseMarketReference)}<small>/m²</small></span>
                   </dd>
                   {hasCurrentMarketReference && currentMarketPulse?.house ? (
-                    <span className={previewStyles.heroPriceRange}>
-                      Socle DVF : {formatPrice(market.house.averagePricePerM2)}/m² · {currentMarketPulse.house.listingCount} offres comparables
-                    </span>
+                    <>
+                      <div className={previewStyles.heroMarketRange} style={houseHeroRangeStyle}>
+                        <div>
+                          <span>Fourchette des ventes DVF</span>
+                          <strong>{formatPrice(market.house.lowPricePerM2)} à {formatPrice(market.house.highPricePerM2)}<small>/m²</small></strong>
+                        </div>
+                        <i aria-hidden="true"><b /></i>
+                        <small><span>Prix bas</span><span>Repère Marché</span><span>Prix haut</span></small>
+                      </div>
+                      <span className={previewStyles.heroPriceRange}>
+                        Médiane DVF {formatPrice(market.house.averagePricePerM2)}/m² · {currentMarketPulse.house.listingCount} offres analysées
+                      </span>
+                    </>
                   ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
                       Fourchette observée : {formatPrice(market.house.lowPricePerM2)} à {formatPrice(market.house.highPricePerM2)}/m²
@@ -433,30 +467,37 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
         </div>
       </section>
 
-      <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
-        <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
-        <div className="city-overview-grid">
-          <MarketPriceCard
-            centralLabel={hasCurrentMarketReference ? "Repère" : usesDvfMedian ? "Médiane" : undefined}
-            icon={Building2}
-            label="Appartement"
-            rangeLabel={hasCurrentMarketReference ? "Fourchette des ventes DVF" : undefined}
-            stat={apartmentOverviewStat}
-          />
-          <MarketPriceCard
-            centralLabel={hasCurrentMarketReference ? "Repère" : usesDvfMedian ? "Médiane" : undefined}
-            icon={Home}
-            label="Maison"
-            rangeLabel={hasCurrentMarketReference ? "Fourchette des ventes DVF" : undefined}
-            stat={houseOverviewStat}
-          />
-          <article className="city-market-signal-card">
-            <span>Évolution sur un an</span>
+      {hasCurrentMarketReference ? (
+        <section className={`city-modern-container ${previewStyles.trendOverview}`} aria-labelledby="overview-title">
+          <h2 className="city-visually-hidden" id="overview-title">Évolution du marché sur un an</h2>
+          <div>
+            <span><Building2 size={17} /> Appartement</span>
+            <strong>{market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "À venir"}</strong>
+          </div>
+          <div>
+            <span><Home size={17} /> Maison</span>
+            <strong>{market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "À venir"}</strong>
+          </div>
+          <div>
+            <span>Évolution du marché sur un an</span>
             <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
-            <p>{averageTrend === null ? "Historique insuffisant pour publier une tendance" : Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
-          </article>
-        </div>
-      </section>
+            <small>{averageTrend === null ? "Historique encore insuffisant" : Math.abs(averageTrend) < 1 ? "Marché globalement stable" : averageTrend > 0 ? "Dynamique haussière" : "Marché en léger ajustement"}</small>
+          </div>
+        </section>
+      ) : (
+        <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
+          <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
+          <div className="city-overview-grid">
+            <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Building2} label="Appartement" stat={apartmentOverviewStat} />
+            <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Home} label="Maison" stat={houseOverviewStat} />
+            <article className="city-market-signal-card">
+              <span>Évolution sur un an</span>
+              <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+              <p>{averageTrend === null ? "Historique insuffisant pour publier une tendance" : Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
+            </article>
+          </div>
+        </section>
+      )}
 
       {seoPreview && currentMarketPulse && (currentMarketPulse.apartment || currentMarketPulse.house) ? (
         <section className={`city-modern-container ${previewStyles.marketMethodSection}`} aria-labelledby="current-market-title">

@@ -205,10 +205,10 @@
 }
 
 .detailTopline {
-  align-items: center;
+  align-items: stretch;
   display: flex;
-  gap: 6px;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .detailTopline > span {
@@ -217,29 +217,45 @@
   letter-spacing: 0.06em;
 }
 
-.detailTopline em {
-  background: #f2e7dd;
+.confidenceIndex {
+  align-items: center;
+  background: #f4eee8;
   border-radius: 99px;
-  color: #9a5f3b;
+  box-sizing: border-box;
+  color: #6e655d;
+  display: inline-flex;
+  gap: 6px;
+  justify-content: space-between;
   font-size: 0.54rem;
-  font-style: normal;
   font-weight: 800;
-  padding: 5px 7px;
+  padding: 5px 8px;
+  width: 100%;
+  white-space: nowrap;
 }
 
-.detailTopline em[data-reliability="robust"] {
-  background: #e9eee4;
-  color: #536347;
+.confidenceIndex > i {
+  display: inline-flex;
+  gap: 3px;
 }
 
-.detailTopline em[data-reliability="insufficient"] {
-  background: #eeeae5;
-  color: #706860;
+.confidenceIndex b {
+  background: #d7d0c8;
+  border-radius: 50%;
+  display: block;
+  height: 6px;
+  width: 6px;
 }
 
-.detailTopline em[data-reliability="exploratory"] {
-  background: #f3e1d2;
-  color: #9a532a;
+.confidenceIndex b.activeDot {
+  background: #6d795c;
+}
+
+.confidenceIndex[data-reliability="exploratory"] b.activeDot {
+  background: #bd7245;
+}
+
+.confidenceIndex[data-reliability="insufficient"] b.activeDot {
+  background: #9a9188;
 }
 
 .detailPanel h3 {
@@ -248,7 +264,7 @@
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 1;
-  margin: 19px 0 5px;
+  margin: 14px 0 5px;
 }
 
 .propertyContext {

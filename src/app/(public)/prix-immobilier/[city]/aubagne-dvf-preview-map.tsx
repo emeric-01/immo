@@ -77,11 +77,12 @@ function getPath(zone: AubagneDvfPreviewZone) {
   }).join(" ")} Z`;
 }
 
-function getReliabilityLabel(stat: DvfIrisPriceStat) {
-  if (stat.reliability === "robust") return "Repère robuste";
-  if (stat.reliability === "indicative") return "Repère indicatif";
-  if (stat.reliability === "exploratory") return "Faible échantillon";
-  return "Données insuffisantes";
+function getConfidenceScore(stat: DvfIrisPriceStat) {
+  if (stat.medianPricePerM2 === null || stat.observations < 3) return 1;
+  if (stat.observations >= 50) return 5;
+  if (stat.observations >= 20) return 4;
+  if (stat.observations >= 8) return 3;
+  return 2;
 }
 
 function getZoneColor(value: number | null, min: number, max: number) {
@@ -144,6 +145,7 @@ export function AubagneDvfPreviewMap({
   const activeZone = aubagneDvfPreviewZones.find((zone) => zone.code === activeZoneCode)
     ?? aubagneDvfPreviewZones[0];
   const activeStat = activeZone[propertyType];
+  const confidenceScore = getConfidenceScore(activeStat);
   const propertyLabel = propertyType === "apartment" ? "appartements" : "maisons";
   const communalPrice = propertyType === "apartment"
     ? communalApartmentPrice
@@ -407,7 +409,16 @@ export function AubagneDvfPreviewMap({
           <aside className={styles.detailPanel} aria-live="polite">
             <div className={styles.detailTopline}>
               <span>IRIS {activeZone.code}</span>
-              <em data-reliability={activeStat.reliability}>{getReliabilityLabel(activeStat)}</em>
+              <div
+                aria-label={`Indice de confiance : ${confidenceScore} sur 5`}
+                className={styles.confidenceIndex}
+                data-reliability={activeStat.reliability}
+              >
+                <span>Indice de confiance</span>
+                <i aria-hidden="true">
+                  {Array.from({ length: 5 }, (_, index) => <b className={index < confidenceScore ? styles.activeDot : undefined} key={index} />)}
+                </i>
+              </div>
             </div>
             <h3>{activeZone.name}</h3>
             <p className={styles.propertyContext}>
@@ -430,7 +441,7 @@ export function AubagneDvfPreviewMap({
               </>
             ) : (
               <div className={styles.communalFallback}>
-                <span>Repère communal à Aubagne</span>
+                <span>Prix communal à Aubagne</span>
                 <strong>{euroFormatter.format(communalPrice)} €<small>/m²</small></strong>
                 <p>
                   Seulement {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} locale{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""}.
@@ -444,7 +455,7 @@ export function AubagneDvfPreviewMap({
             <span>{euroFormatter.format(scale.min)} €/m²</span>
             <i aria-hidden="true" />
             <span>{euroFormatter.format(scale.max)} €/m²</span>
-            <small><b /> Repère communal si moins de 3 ventes</small>
+            <small><b /> Prix communal si moins de 3 ventes</small>
           </div>
         </div>
       </div>
@@ -472,9 +483,9 @@ export function AubagneDvfPreviewMap({
           </dl>
           <p className={styles.methodNote}>
             Une mutation est comptée une seule fois. Les ventes mixtes ou multiples, les surfaces
-            manquantes et les valeurs atypiques sont écartées. Seuils : prix robuste dès 15 ventes,
-            indicatif de 8 à 14, faible échantillon de 3 à 7. En dessous de 3 ventes,
-            seul le repère communal est présenté.
+            manquantes et les valeurs atypiques sont écartées. L’indice de confiance progresse avec
+            le nombre de ventes comparables : de 1 à 5 points. En dessous de 3 ventes,
+            seul le prix communal est présenté.
           </p>
         </div>
       </details>
