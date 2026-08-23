@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  Activity,
   ArrowRight,
   Building2,
   Calculator,
@@ -33,6 +34,7 @@ import {
 } from "@/lib/city-price-preview-data";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
+import { getInterkabMarketPulse } from "@/lib/interkab-market-pulse";
 import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
@@ -223,6 +225,14 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
 
   if (!market) return <CityMarketUnavailable city={city} />;
 
+  const currentMarketPulse = seoPreview && city.slug === "aubagne"
+    ? await getInterkabMarketPulse(
+      city.inseeCode,
+      market.apartment.averagePricePerM2,
+      market.house.averagePricePerM2,
+    )
+    : null;
+
   const averagePrice = getAverageMarketPrice(
     market.apartment.averagePricePerM2,
     market.house.averagePricePerM2,
@@ -400,6 +410,92 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           </article>
         </div>
       </section>
+
+      {seoPreview && currentMarketPulse && (currentMarketPulse.apartment || currentMarketPulse.house) ? (
+        <section className={`city-modern-container ${previewStyles.nowcastSection}`} aria-labelledby="current-market-title">
+          <header className={previewStyles.nowcastHeading}>
+            <div>
+              <p className="city-section-kicker">Lecture du marché actuel · test</p>
+              <h2 id="current-market-title">Des ventes signées aux prix proposés aujourd&apos;hui</h2>
+            </div>
+            <p>
+              La base DVF reste notre socle. Les annonces professionnelles actives apportent
+              un signal plus récent, mais leur prix demandé n&apos;est jamais assimilé à un prix vendu.
+            </p>
+          </header>
+
+          <div className={previewStyles.nowcastGrid}>
+            <article>
+              <span className={previewStyles.nowcastLabel}><Database size={17} /> Ventes signées</span>
+              <h3>Socle DVF 2021–2025</h3>
+              <dl>
+                <div><dt><Building2 size={15} /> Appartement</dt><dd>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></dd></div>
+                <div><dt><Home size={15} /> Maison</dt><dd>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></dd></div>
+              </dl>
+              <p>Médianes des mutations comparables réellement enregistrées par la DGFiP.</p>
+            </article>
+
+            <article>
+              <span className={previewStyles.nowcastLabel}><Activity size={17} /> Annonces actives</span>
+              <h3>Prix actuellement demandés</h3>
+              <dl>
+                <div>
+                  <dt><Building2 size={15} /> Appartement</dt>
+                  <dd>{currentMarketPulse.apartment ? <>{formatPrice(currentMarketPulse.apartment.askingMedianPricePerM2)}<small>/m²</small></> : "Non disponible"}</dd>
+                  {currentMarketPulse.apartment ? <small>{currentMarketPulse.apartment.listingCount} biens comparables</small> : null}
+                </div>
+                <div>
+                  <dt><Home size={15} /> Maison</dt>
+                  <dd>{currentMarketPulse.house ? <>{formatPrice(currentMarketPulse.house.askingMedianPricePerM2)}<small>/m²</small></> : "Non disponible"}</dd>
+                  {currentMarketPulse.house ? <small>{currentMarketPulse.house.listingCount} biens comparables</small> : null}
+                </div>
+              </dl>
+              <p>
+                Biens résidentiels proposés par des professionnels, après exclusion des viagers,
+                terrains, locaux, valeurs incohérentes et doublons détectables.
+              </p>
+            </article>
+
+            <article className={previewStyles.nowcastResult}>
+              <span className={previewStyles.nowcastLabel}><Calculator size={17} /> Repère actualisé</span>
+              <h3>Lecture prudente du marché</h3>
+              <dl>
+                <div>
+                  <dt><Building2 size={15} /> Appartement</dt>
+                  <dd>{currentMarketPulse.apartment?.nowcastPricePerM2 ? <>{formatPrice(currentMarketPulse.apartment.nowcastPricePerM2)}<small>/m²</small></> : "Échantillon limité"}</dd>
+                  {currentMarketPulse.apartment?.nowcastPricePerM2 ? <small>Ajustement retenu : {formatPercent(currentMarketPulse.apartment.nowcastAdjustmentPercent)}</small> : null}
+                </div>
+                <div>
+                  <dt><Home size={15} /> Maison</dt>
+                  <dd>{currentMarketPulse.house?.nowcastPricePerM2 ? <>{formatPrice(currentMarketPulse.house.nowcastPricePerM2)}<small>/m²</small></> : "Échantillon limité"}</dd>
+                  {currentMarketPulse.house?.nowcastPricePerM2 ? <small>Ajustement retenu : {formatPercent(currentMarketPulse.house.nowcastAdjustmentPercent)}</small> : null}
+                </div>
+              </dl>
+              <p>Un indicateur expérimental de tendance, pas une estimation automatique d&apos;un logement précis.</p>
+            </article>
+          </div>
+
+          <details className={previewStyles.nowcastMethod}>
+            <summary>Comprendre rapidement le calcul</summary>
+            <div>
+              <p>
+                Nous calculons d&apos;abord la médiane du prix demandé par type de bien. L&apos;écart avec
+                la médiane DVF est plafonné à ±12 %, puis seulement 60 % de ce signal peut être retenu.
+                Son poids diminue automatiquement lorsque le nombre de biens comparables est faible.
+              </p>
+              <p>
+                Cette prudence évite qu&apos;une poignée d&apos;annonces ambitieuses fasse artificiellement
+                monter le prix communal. Le modèle devra ensuite être recalibré avec les futures ventes DVF 2026.
+              </p>
+            </div>
+          </details>
+
+          <p className={previewStyles.nowcastSource}>
+            Sources : DVF DGFiP / data.gouv.fr et agrégats internes issus d&apos;annonces professionnelles actives
+            {currentMarketPulse.updatedAt ? `, synchronisées en ${formatMonthYear(currentMarketPulse.updatedAt)}` : ""}.
+          </p>
+        </section>
+      ) : null}
 
       <section className="city-property-guide city-modern-container" aria-labelledby="property-price-title">
         <div className="city-property-guide-heading">

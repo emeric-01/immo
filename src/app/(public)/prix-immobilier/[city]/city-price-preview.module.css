@@ -75,6 +75,202 @@
   line-height: 1.45;
 }
 
+.nowcastSection {
+  margin-top: 42px;
+  border: 1px solid #e5d7ca;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(182, 111, 67, .09), transparent 30%),
+    #fffdfb;
+  padding: clamp(28px, 4.2vw, 58px);
+}
+
+.nowcastHeading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(310px, .85fr);
+  gap: clamp(30px, 6vw, 90px);
+  align-items: end;
+}
+
+.nowcastHeading h2 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--preview-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.2rem, 3.6vw, 4rem);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: 1;
+}
+
+.nowcastHeading > p {
+  max-width: 570px;
+  margin: 0 0 4px;
+  color: #736b64;
+  font-size: .78rem;
+  line-height: 1.7;
+}
+
+.nowcastGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.nowcastGrid > article {
+  display: flex;
+  min-height: 325px;
+  flex-direction: column;
+  border: 1px solid #e9ddd2;
+  border-radius: 18px;
+  background: #fbf8f4;
+  padding: 25px;
+}
+
+.nowcastGrid > article.nowcastResult {
+  border-color: #2f352d;
+  background: #2f352d;
+  color: #fff;
+}
+
+.nowcastLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a76038;
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.nowcastResult .nowcastLabel {
+  color: #e7b18e;
+}
+
+.nowcastGrid h3 {
+  margin: 18px 0 23px;
+  color: var(--preview-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.nowcastResult h3 {
+  color: #fff;
+}
+
+.nowcastGrid dl {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.nowcastGrid dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: end;
+  border-top: 1px solid #e9dfd6;
+  padding-top: 13px;
+}
+
+.nowcastResult dl > div {
+  border-color: rgba(255, 255, 255, .15);
+}
+
+.nowcastGrid dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #756d66;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.nowcastResult dt {
+  color: #d6d1ca;
+}
+
+.nowcastGrid dd {
+  margin: 0;
+  color: #2d2823;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nowcastResult dd {
+  color: #fff;
+}
+
+.nowcastGrid dd small {
+  margin-left: 3px;
+  color: inherit;
+  font-size: .48em;
+}
+
+.nowcastGrid dl > div > small {
+  grid-column: 1 / -1;
+  color: #9a9189;
+  font-size: .56rem;
+}
+
+.nowcastResult dl > div > small {
+  color: #bbb7b0;
+}
+
+.nowcastGrid article > p {
+  margin: auto 0 0;
+  padding-top: 24px;
+  color: #7a726b;
+  font-size: .66rem;
+  line-height: 1.55;
+}
+
+.nowcastGrid .nowcastResult > p {
+  color: #c8c4bd;
+}
+
+.nowcastMethod {
+  margin-top: 13px;
+  border: 1px solid #e5d8cd;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.nowcastMethod summary {
+  cursor: pointer;
+  padding: 17px 20px;
+  color: #423a33;
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.nowcastMethod > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  border-top: 1px solid #eee5dd;
+  padding: 18px 20px 20px;
+}
+
+.nowcastMethod p,
+.nowcastSource {
+  margin: 0;
+  color: #766e67;
+  font-size: .65rem;
+  line-height: 1.65;
+}
+
+.nowcastSource {
+  padding: 16px 3px 0;
+  color: #918980;
+}
+
 .neighborhoodSection {
   margin-top: 42px;
   border: 1px solid #e7d9cd;
@@ -375,6 +571,7 @@
 
 @media (max-width: 900px) {
   .neighborhoodHeading,
+  .nowcastHeading,
   .dataGuardrail,
   .irisComparisonHeading {
     grid-template-columns: 1fr;
@@ -390,6 +587,18 @@
 
   .irisComparisonGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nowcastHeading {
+    gap: 18px;
+  }
+
+  .nowcastGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .nowcastGrid > article {
+    min-height: 0;
   }
 }
 
@@ -407,6 +616,20 @@
     margin-top: 24px;
     border-radius: 17px;
     padding: 28px 18px;
+  }
+
+  .nowcastSection {
+    margin-top: 24px;
+    border-radius: 17px;
+    padding: 28px 18px;
+  }
+
+  .nowcastHeading h2 {
+    font-size: 2.25rem;
+  }
+
+  .nowcastMethod > div {
+    grid-template-columns: 1fr;
   }
 
   .neighborhoodHeading h2 {
