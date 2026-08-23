@@ -816,11 +816,22 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               : `Cette donnée constitue un point de départ. Deux logements de même surface peuvent avoir des valeurs différentes selon leur adresse, leur état, leur exposition, leur performance énergétique ou la présence d’un extérieur.`}
           </p>
         </div>
-        <ol className="city-dvf-steps">
-          <li><span><Database size={19} /></span><div><strong>1. Transactions DVF</strong><p>Lecture des ventes immobilières publiées par la DGFiP.</p></div></li>
-          <li><span><Calculator size={19} /></span><div><strong>2. Calcul par typologie</strong><p>Comparaison des prix au m² des appartements et des maisons.</p></div></li>
-          <li><span><MapPinned size={19} /></span><div><strong>3. Analyse locale</strong><p>Ajustement selon le quartier, l’adresse et les caractéristiques du bien.</p></div></li>
-        </ol>
+        <div className={previewStyles.methodStepsColumn}>
+          <ol className="city-dvf-steps">
+            <li><span><Database size={19} /></span><div><strong>1. Transactions DVF</strong><p>Lecture des ventes immobilières publiées par la DGFiP.</p></div></li>
+            <li><span><Calculator size={19} /></span><div><strong>2. Calcul par typologie</strong><p>Comparaison des prix au m² des appartements et des maisons.</p></div></li>
+            <li><span><MapPinned size={19} /></span><div><strong>3. Analyse locale</strong><p>Ajustement selon le quartier, l’adresse et les caractéristiques du bien.</p></div></li>
+          </ol>
+          {seoPreview ? (
+            <Link className={previewStyles.methodEstimateCta} href={`/estimation-immobiliere/${city.slug}`}>
+              <span>
+                <small>Votre adresse mérite une analyse précise</small>
+                Estimer mon bien à {city.name}
+              </span>
+              <ArrowRight aria-hidden="true" size={18} />
+            </Link>
+          ) : null}
+        </div>
       </section>
 
       <section className="city-project-links city-modern-container" aria-labelledby="city-project-title">
