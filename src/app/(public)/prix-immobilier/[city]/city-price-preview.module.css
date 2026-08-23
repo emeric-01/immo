@@ -22,11 +22,20 @@
 }
 
 .heroPrices dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: #786f67;
   font-size: .65rem;
   font-weight: 750;
   letter-spacing: .1em;
   text-transform: uppercase;
+}
+
+.heroPrices dt svg {
+  flex: 0 0 auto;
+  color: var(--preview-copper);
+  stroke-width: 1.8;
 }
 
 .heroPrices dd {

@@ -63,6 +63,13 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+function formatMonthYear(date: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
 function formatIrisObservationLabel(stat: { observations: number; reliability: string }) {
   const saleLabel = `${stat.observations} vente${stat.observations > 1 ? "s" : ""}`;
   if (stat.reliability === "insufficient") return `${saleLabel} locale${stat.observations > 1 ? "s" : ""} · prix communal`;
@@ -284,11 +291,11 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             {seoPreview ? (
               <dl className={previewStyles.heroPrices}>
                 <div>
-                  <dt>Appartement</dt>
+                  <dt><Building2 aria-hidden="true" size={17} /> Appartement</dt>
                   <dd>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></dd>
                 </div>
                 <div>
-                  <dt>Maison</dt>
+                  <dt><Home aria-hidden="true" size={17} /> Maison</dt>
                   <dd>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></dd>
                 </div>
               </dl>
@@ -309,7 +316,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               {seoPreview ? (
                 <>
                   <span><Database size={16} /> Repères communaux · Immo Data</span>
-                  <span><CalendarDays size={16} /> Calcul actualisé le {formatDate(market.updatedAt)}</span>
+                  <span><CalendarDays size={16} /> Calcul actualisé en {formatMonthYear(market.updatedAt)}</span>
                   {latestObservedSaleDate ? (
                     <span><ShieldCheck size={16} /> Dernières mutations disponibles : {formatDate(latestObservedSaleDate)}</span>
                   ) : null}
