@@ -422,7 +422,7 @@ export function AubagneDvfPreviewMap({
                 </strong>
                 <p className={styles.compactStats}>
                   <span><b>{activeStat.observations}</b> ventes comparables</span>
-                  <span>50 % entre <b>{euroFormatter.format(activeStat.p25PricePerM2!)} et {euroFormatter.format(activeStat.p75PricePerM2!)} €/m²</b></span>
+                  <span>Fourchette observée : <b>{euroFormatter.format(activeStat.p25PricePerM2!)} à {euroFormatter.format(activeStat.p75PricePerM2!)} €/m²</b></span>
                   {activeStat.reliability === "exploratory" ? (
                     <span className={styles.caution}>À interpréter avec prudence : faible volume de ventes.</span>
                   ) : null}

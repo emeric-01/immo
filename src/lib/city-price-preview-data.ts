@@ -3,7 +3,7 @@ import { aubagnePreviewZones } from "./aubagne-preview-zones";
 
 // Preview-only Aubagne snapshot based on official DVF statistics for 2021–2025.
 // The central values are the commune medians published by data.gouv.fr.
-// The ranges contain the middle 50% of comparable resale transactions (Q1–Q3).
+// The displayed ranges use the first and third quartiles of comparable resale transactions (Q1–Q3).
 // The canonical price page never reads this fixture.
 const aubagnePricePreviewSnapshot: CityMarketData = {
   source: "dvf",

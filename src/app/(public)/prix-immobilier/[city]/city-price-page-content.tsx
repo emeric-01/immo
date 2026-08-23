@@ -305,7 +305,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                   </dd>
                   {usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
-                      50 % des ventes entre {formatPrice(market.apartment.lowPricePerM2)} et {formatPrice(market.apartment.highPricePerM2)}/m²
+                      Fourchette observée : {formatPrice(market.apartment.lowPricePerM2)} à {formatPrice(market.apartment.highPricePerM2)}/m²
                     </span>
                   ) : null}
                 </div>
@@ -317,7 +317,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                   </dd>
                   {usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
-                      50 % des ventes entre {formatPrice(market.house.lowPricePerM2)} et {formatPrice(market.house.highPricePerM2)}/m²
+                      Fourchette observée : {formatPrice(market.house.lowPricePerM2)} à {formatPrice(market.house.highPricePerM2)}/m²
                     </span>
                   ) : null}
                 </div>
