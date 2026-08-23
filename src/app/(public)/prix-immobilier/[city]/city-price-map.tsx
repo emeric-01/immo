@@ -10,6 +10,7 @@ type CityPriceMapProps = {
   fitToSalePoints?: boolean;
   salePointsFitMode?: "map" | "hero";
   showPriceScale?: boolean;
+  zoneListLimit?: number;
   zoneMetricLabel?: string;
   zoneSelectionLabel?: string;
   center: {
@@ -120,8 +121,9 @@ export function CityPriceMap({
   fitToSalePoints = false,
   salePointsFitMode = "map",
   showPriceScale = true,
-  zoneMetricLabel = "Prix moyen du secteur",
-  zoneSelectionLabel = "Secteur sélectionné",
+  zoneListLimit = 4,
+  zoneMetricLabel,
+  zoneSelectionLabel = "Secteur selectionne",
   center,
   zones,
   salePoints,
@@ -426,11 +428,11 @@ export function CityPriceMap({
         </div>
         {showPriceScale ? (
           <div className="city-map-scale-wrap">
-            <strong>{zoneMetricLabel}</strong>
+            {zoneMetricLabel ? <strong>{zoneMetricLabel}</strong> : null}
             <div className="city-map-scale" aria-label="Légende des prix">
-              <span>&lt; 3 000 EUR/m²</span>
+              <span>{zoneMetricLabel ? "< 3 000 EUR/m²" : "< 3000 EUR"}</span>
               <span className="scale-track" aria-hidden="true" />
-              <span>&gt; 4 000 EUR/m²</span>
+              <span>{zoneMetricLabel ? "> 4 000 EUR/m²" : "> 4000 EUR"}</span>
             </div>
           </div>
         ) : null}
@@ -476,9 +478,9 @@ export function CityPriceMap({
           {activeZone.includedNeighborhoods?.length ? (
             <small>{activeZone.includedNeighborhoods.join(" · ")}</small>
           ) : null}
-          <p><span>{zoneMetricLabel}</span>{formatPrice(activeZone.pricePerM2)}</p>
+          <p>{zoneMetricLabel ? <span>{zoneMetricLabel}</span> : null}{formatPrice(activeZone.pricePerM2)}</p>
           <div className="city-map-zone-list">
-            {zones.map((zone) => (
+            {zones.slice(0, zoneListLimit).map((zone) => (
               <button
                 className={zone.id === activeZone.id ? "active" : ""}
                 key={zone.id}

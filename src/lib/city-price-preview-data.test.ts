@@ -3,6 +3,7 @@ import {
   getAubagneNearbyPreviewPrice,
   getCityPricePreviewSnapshot,
 } from "./city-price-preview-data";
+import { getNamedAubagnePreviewZones } from "./aubagne-preview-zones";
 
 describe("city price SEO preview snapshot", () => {
   it("is limited to the Aubagne noindex preview", () => {
@@ -32,6 +33,22 @@ describe("city price SEO preview snapshot", () => {
     });
     expect(zones[6]?.includedNeighborhoods).toContain("Napollon");
     expect(zones.every((zone) => zone.polygon.length >= 3)).toBe(true);
+  });
+
+  it("renames live Aubagne zones without replacing their market values", () => {
+    const zones = getNamedAubagnePreviewZones([{
+      id: "1300502",
+      name: "Grand Quartier 2",
+      pricePerM2: 2999,
+      color: "#fff",
+      polygon: [[5.5, 43.2], [5.6, 43.2], [5.6, 43.3]],
+    }]);
+
+    expect(zones[0]).toMatchObject({
+      name: "Passons et Verdun",
+      pricePerM2: 2999,
+      includedNeighborhoods: ["Passons", "Verdun"],
+    });
   });
 
   it("provides separate nearby prices for the Aubagne preview", () => {

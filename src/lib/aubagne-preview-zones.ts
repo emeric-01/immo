@@ -2775,3 +2775,20 @@ export const aubagnePreviewZones = [
   }
 ] satisfies CityPriceZone[];
 
+const aubagneZoneLabels = new Map(
+  aubagnePreviewZones.map((zone) => [
+    zone.id,
+    {
+      includedNeighborhoods: zone.includedNeighborhoods,
+      name: zone.name,
+    },
+  ]),
+);
+
+export function getNamedAubagnePreviewZones(zones: CityPriceZone[]) {
+  return zones.map((zone) => {
+    const label = aubagneZoneLabels.get(zone.id);
+
+    return label ? { ...zone, ...label } : zone;
+  });
+}

@@ -30,6 +30,7 @@ import {
   getAubagneNearbyPreviewPrice,
   getCityPricePreviewSnapshot,
 } from "@/lib/city-price-preview-data";
+import { getNamedAubagnePreviewZones } from "@/lib/aubagne-preview-zones";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
@@ -217,6 +218,9 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
     : null;
   const previewNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+  const mapZones = seoPreview && city.slug === "aubagne"
+    ? getNamedAubagnePreviewZones(market.zones)
+    : market.zones;
   const faqs = [
     {
       question: seoPreview
@@ -323,9 +327,10 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               fitToSalePoints={seoPreview}
               salePoints={market.salePoints}
               showPriceScale
+              zoneListLimit={seoPreview ? 7 : undefined}
               zoneMetricLabel={seoPreview ? "Prix moyen des appartements" : undefined}
               zoneSelectionLabel={seoPreview ? "Quartiers sélectionnés" : undefined}
-              zones={market.zones}
+              zones={mapZones}
             />
           </div>
         </div>
