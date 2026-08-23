@@ -102,6 +102,31 @@
   line-height: 1.45;
 }
 
+.heroConversion {
+  display: grid;
+  gap: 7px;
+  width: min(660px, 100%);
+  margin-top: 20px;
+  border-left: 2px solid var(--preview-copper);
+  padding-left: 16px;
+}
+
+.heroConversion strong {
+  color: #2f2924;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.05rem, 1.45vw, 1.3rem);
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.heroConversion p {
+  max-width: 650px;
+  margin: 0;
+  color: #756d65;
+  font-size: .74rem;
+  line-height: 1.65;
+}
+
 .heroMarketRange {
   display: grid;
   gap: 7px;

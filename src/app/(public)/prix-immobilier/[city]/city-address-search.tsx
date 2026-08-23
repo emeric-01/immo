@@ -12,6 +12,7 @@ import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
 
 type CityAddressSearchProps = {
   allowAnyCity?: boolean;
+  buttonLabel?: string;
   cityName: string;
   inseeCode: string;
   postalCode: string;
@@ -46,7 +47,13 @@ function buildEstimationUrl(address: AddressSuggestion) {
   return `/estimation?${params.toString()}`;
 }
 
-export function CityAddressSearch({ allowAnyCity = false, cityName, inseeCode, postalCode }: CityAddressSearchProps) {
+export function CityAddressSearch({
+  allowAnyCity = false,
+  buttonLabel = "Estimer mon bien",
+  cityName,
+  inseeCode,
+  postalCode,
+}: CityAddressSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion | null>(null);
@@ -163,7 +170,7 @@ export function CityAddressSearch({ allowAnyCity = false, cityName, inseeCode, p
         </div>
         <button disabled={!selectedAddress} type="submit">
           {selectedAddress ? <CheckCircle2 size={17} /> : null}
-          Estimer mon bien <ArrowRight size={17} />
+          {buttonLabel} <ArrowRight size={17} />
         </button>
       </div>
       {error ? <p className="city-address-error" role="alert">{error}</p> : null}

@@ -406,16 +406,26 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                 <strong>{formatPrice(averagePrice)}</strong><span>/m²</span>
               </div>
             )}
-            <p className="city-hero-intro">
-              {seoPreview
-                ? hasCurrentMarketReference
-                  ? `Le Repère Marché Les Jumelles croise les ventes signées et les offres professionnelles actuelles pour situer le marché de ${city.name} au plus près d’aujourd’hui.`
-                  : `${usesDvfMedian ? "Deux médianes DVF" : "Deux repères distincts"} pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
-                : `Une lecture claire du marché local pour estimer, acheter ou vérifier le prix d'un bien à ${city.name}.`}
-            </p>
+            {seoPreview && hasCurrentMarketReference ? (
+              <div className={previewStyles.heroConversion}>
+                <strong>Votre bien se situe-t-il au-dessus ou en dessous du marché à {city.name} ?</strong>
+                <p>
+                  Le prix au m² donne un premier repère dans une fourchette de marché. L’adresse,
+                  le quartier, l’état, la vue, l’extérieur, le stationnement et les prestations
+                  doivent ensuite être étudiés pour obtenir une estimation proche de la réalité.
+                </p>
+              </div>
+            ) : (
+              <p className="city-hero-intro">
+                {seoPreview
+                  ? `${usesDvfMedian ? "Deux médianes DVF" : "Deux repères distincts"} pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
+                  : `Une lecture claire du marché local pour estimer, acheter ou vérifier le prix d'un bien à ${city.name}.`}
+              </p>
+            )}
 
             <CityAddressSearch
               allowAnyCity={seoPreview}
+              buttonLabel={hasCurrentMarketReference ? "Situer mon bien" : undefined}
               cityName={city.name}
               inseeCode={city.inseeCode}
               postalCode={city.postalCode}
