@@ -21,6 +21,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { ContentImage } from "@/components/content/ContentImage";
+import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
 import { createCityLocalMarketInsight } from "@/lib/city-local-insights";
 import { getCityBySlug } from "@/lib/cities";
 import { getStaticCityMarketData } from "@/lib/city-market-data";
@@ -165,6 +166,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
     seoEnhanced ? getInseeHousingProfile(city.inseeCode).catch(() => null) : Promise.resolve(null),
   ]);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+  const salesMapZones = city.slug === "aubagne" ? aubagneDvfPreviewZones : undefined;
   const nearestAgencyCities = getNearestLocalAgencyCities(city.slug);
   const nearestAgencySlugs = new Set(nearestAgencyCities.map((nearbyCity) => nearbyCity.slug));
   const placeholderCities = config.nearbySlugs.flatMap((slug) => {
@@ -540,17 +542,32 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 <section className={previewStyles.mapPanel} aria-labelledby="local-sales-title">
                   <div className={previewStyles.panelHeading}>
                     <p className={styles.eyebrow}>Transactions comparables</p>
-                    <h3 id="local-sales-title">Les ventes récentes autour de {city.name}</h3>
-                    <p>
-                      La carte localise les dernières transactions disponibles. Chaque point
-                      doit ensuite être comparé à la typologie, à la surface et à l’état du bien.
-                    </p>
+                    {salesMapZones ? (
+                      <>
+                        <h3 id="local-sales-title">20 ventes récentes dans les quartiers de {city.name}</h3>
+                        <p>
+                          Les contours reprennent les 20 zones IRIS officielles de la commune.
+                          Les points localisent les dernières ventes DVF comparables, à replacer
+                          ensuite dans le contexte précis de chaque bien.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 id="local-sales-title">Les ventes récentes autour de {city.name}</h3>
+                        <p>
+                          La carte localise les dernières transactions disponibles. Chaque point
+                          doit ensuite être comparé à la typologie, à la surface et à l’état du bien.
+                        </p>
+                      </>
+                    )}
                   </div>
                   <LocalAgencySalesMap
                     accessToken={mapboxToken}
                     center={{ latitude: city.latitude, longitude: city.longitude }}
                     cityName={city.name}
+                    maxSales={salesMapZones ? 20 : 30}
                     salePoints={market.salePoints}
+                    zones={salesMapZones}
                   />
                 </section>
 
@@ -586,7 +603,9 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 accessToken={mapboxToken}
                 center={{ latitude: city.latitude, longitude: city.longitude }}
                 cityName={city.name}
+                maxSales={salesMapZones ? 20 : 30}
                 salePoints={market.salePoints}
+                zones={salesMapZones}
               />
               <div className={styles.factorList}>
                 {previewFactors.map((factor, index) => {

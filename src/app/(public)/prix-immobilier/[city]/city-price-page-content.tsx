@@ -38,6 +38,7 @@ import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
 import { CityAddressSearch } from "./city-address-search";
 import { createSocialImageUrl } from "@/lib/seo";
+import { getPricePageLastModified } from "@/lib/seo/last-modified";
 import { absoluteUrl } from "@/lib/site";
 import previewStyles from "./city-price-preview.module.css";
 
@@ -377,6 +378,10 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   const usesDvfMedian = market.source === "dvf";
   const latestObservedSaleDate = getLatestObservedSaleDate(market.salePoints);
   const marketReferenceUpdatedAt = currentMarketPulse?.updatedAt ?? market.updatedAt;
+  const pageLastModified = getPricePageLastModified(
+    market.updatedAt,
+    currentMarketPulse?.updatedAt,
+  );
   const neighborhoodProfile = getLocalAgencyNeighborhoodProfile(city.slug);
   const verifiedNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
   const previewNeighborhoods = seoPreview ? verifiedNeighborhoods : [];
@@ -428,7 +433,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
         { "@type": "ListItem", position: 2, name: "Prix au m²", item: absoluteUrl("/prix-m2") },
         { "@type": "ListItem", position: 3, name: city.name, item: absoluteUrl(`/prix-m2/${city.slug}`) },
       ] },
-      { "@type": "WebPage", "@id": `${absoluteUrl(`/prix-m2/${city.slug}`)}#webpage`, name: `Prix au m² à ${city.name}`, url: absoluteUrl(`/prix-m2/${city.slug}`), description: `Prix des appartements et maisons à ${city.name}, tendances et transactions immobilières locales.`, about: { "@type": "Place", name: city.name, postalCode: city.postalCode, geo: { "@type": "GeoCoordinates", latitude: city.latitude, longitude: city.longitude } }, isPartOf: { "@id": `${absoluteUrl("/")}#website` } },
+      { "@type": "WebPage", "@id": `${absoluteUrl(`/prix-m2/${city.slug}`)}#webpage`, name: `Prix au m² à ${city.name}`, url: absoluteUrl(`/prix-m2/${city.slug}`), description: `Prix des appartements et maisons à ${city.name}, tendances et transactions immobilières locales.`, ...(pageLastModified ? { dateModified: pageLastModified } : {}), about: { "@type": "Place", name: city.name, postalCode: city.postalCode, geo: { "@type": "GeoCoordinates", latitude: city.latitude, longitude: city.longitude } }, isPartOf: { "@id": `${absoluteUrl("/")}#website` } },
       { "@type": "FAQPage", mainEntity: faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })) },
     ],
   };

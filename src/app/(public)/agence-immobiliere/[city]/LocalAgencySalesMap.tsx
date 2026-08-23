@@ -2,8 +2,11 @@
 
 import type mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { AubagneDvfPreviewZone } from "@/lib/aubagne-dvf-preview-data";
 import type { CitySalePoint } from "@/lib/city-market-data";
 import styles from "./local-agency.module.css";
+
+type LocalAgencyMapZone = Pick<AubagneDvfPreviewZone, "code" | "name" | "polygon">;
 
 type LocalAgencySalesMapProps = {
   accessToken: string;
@@ -12,10 +15,13 @@ type LocalAgencySalesMapProps = {
     longitude: number;
   };
   cityName: string;
+  maxSales?: number;
   salePoints: CitySalePoint[];
+  zones?: LocalAgencyMapZone[];
 };
 
 type MapStatus = "loading" | "ready" | "unavailable";
+const EMPTY_ZONES: LocalAgencyMapZone[] = [];
 
 const priceFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
@@ -38,6 +44,24 @@ function buildSalesCollection(salePoints: CitySalePoint[]) {
       geometry: {
         type: "Point" as const,
         coordinates: [salePoint.longitude, salePoint.latitude],
+      },
+    })),
+  };
+}
+
+function buildZoneCollection(zones: LocalAgencyMapZone[]) {
+  return {
+    type: "FeatureCollection" as const,
+    features: zones.map((zone) => ({
+      type: "Feature" as const,
+      properties: {
+        code: zone.code,
+        name: zone.name,
+        shortName: zone.name === "Garlaban-Royante" ? "Garlaban" : zone.name,
+      },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [[...zone.polygon, zone.polygon[0]]],
       },
     })),
   };
@@ -82,6 +106,11 @@ function appendPopupLine(container: HTMLElement, value: string, strong = false) 
   container.appendChild(line);
 }
 
+function formatSaleDate(value: unknown) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : "Date non précisée";
+}
+
 function createSalePopup(properties: Record<string, unknown>) {
   const content = document.createElement("div");
   content.className = styles.salePopup;
@@ -99,7 +128,7 @@ function createSalePopup(properties: Record<string, unknown>) {
   );
   appendPopupLine(
     content,
-    [surfaceM2 > 0 ? `${surfaceM2} m²` : "", String(properties.soldAt || "Date non précisée")]
+    [surfaceM2 > 0 ? `${surfaceM2} m²` : "", formatSaleDate(properties.soldAt)]
       .filter(Boolean)
       .join(" · "),
   );
@@ -126,12 +155,19 @@ export function LocalAgencySalesMap({
   accessToken,
   center,
   cityName,
+  maxSales = 30,
   salePoints,
+  zones = EMPTY_ZONES,
 }: LocalAgencySalesMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [status, setStatus] = useState<MapStatus>("loading");
-  const latestSales = useMemo(() => salePoints.slice(0, 30), [salePoints]);
+  const latestSales = useMemo(
+    () => [...salePoints]
+      .sort((left, right) => right.soldAt.localeCompare(left.soldAt))
+      .slice(0, maxSales),
+    [maxSales, salePoints],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -167,6 +203,51 @@ export function LocalAgencySalesMap({
 
         map.on("load", () => {
           if (!map || cancelled) return;
+
+          if (zones.length > 0) {
+            map.addSource("local-agency-iris-zones", {
+              data: buildZoneCollection(zones),
+              type: "geojson",
+            });
+
+            map.addLayer({
+              id: "local-agency-iris-zones-fill",
+              paint: {
+                "fill-color": "#c9895e",
+                "fill-opacity": 0.2,
+              },
+              source: "local-agency-iris-zones",
+              type: "fill",
+            });
+
+            map.addLayer({
+              id: "local-agency-iris-zones-line",
+              paint: {
+                "line-color": "rgba(255, 255, 255, .96)",
+                "line-width": 1.4,
+              },
+              source: "local-agency-iris-zones",
+              type: "line",
+            });
+
+            map.addLayer({
+              id: "local-agency-iris-zones-label",
+              layout: {
+                "text-allow-overlap": false,
+                "text-field": ["get", "shortName"],
+                "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+                "text-max-width": 9,
+                "text-size": ["interpolate", ["linear"], ["zoom"], 10, 8, 12, 10.5],
+              },
+              paint: {
+                "text-color": "#44382f",
+                "text-halo-color": "rgba(255, 253, 250, .95)",
+                "text-halo-width": 1.35,
+              },
+              source: "local-agency-iris-zones",
+              type: "symbol",
+            });
+          }
 
           map.addSource("local-agency-dvf-sales", {
             data: buildSalesCollection(latestSales),
@@ -222,6 +303,19 @@ export function LocalAgencySalesMap({
             if (map) map.getCanvas().style.cursor = "";
           });
 
+          if (zones.length > 0) {
+            const bounds = new mapbox.LngLatBounds();
+            zones.forEach((zone) => zone.polygon.forEach((point) => bounds.extend(point)));
+            const compact = mapContainer.clientWidth <= 700;
+            map.fitBounds(bounds, {
+              duration: 0,
+              maxZoom: 12.35,
+              padding: compact
+                ? { top: 24, right: 20, bottom: 60, left: 20 }
+                : { top: 28, right: 30, bottom: 64, left: 30 },
+            });
+          }
+
           setStatus("ready");
         });
 
@@ -247,17 +341,17 @@ export function LocalAgencySalesMap({
       map?.remove();
       popupRef.current = null;
     };
-  }, [accessToken, center.latitude, center.longitude, latestSales]);
+  }, [accessToken, center.latitude, center.longitude, latestSales, zones]);
 
   const saleCountLabel =
-    latestSales.length === 30
-      ? "30 dernières ventes DVF"
+    latestSales.length === maxSales
+      ? `${maxSales} dernières ventes DVF`
       : `${latestSales.length} vente${latestSales.length > 1 ? "s" : ""} DVF disponible${latestSales.length > 1 ? "s" : ""}`;
 
   return (
     <div className={styles.localMap}>
       <div
-        aria-label={`Carte des dernières ventes immobilières à ${cityName}`}
+        aria-label={`Carte des quartiers et des dernières ventes immobilières à ${cityName}`}
         className={styles.localMapCanvas}
         ref={containerRef}
       />
@@ -274,9 +368,17 @@ export function LocalAgencySalesMap({
         <span>Appartement</span>
         <span className={styles.houseDot} />
         <span>Maison</span>
+        {zones.length > 0 ? (
+          <>
+            <span className={styles.irisSwatch} />
+            <span>{zones.length} zones IRIS</span>
+          </>
+        ) : null}
         <strong>{saleCountLabel}</strong>
       </div>
-      <span className={styles.mapCityLabel}>{cityName}</span>
+      <span className={styles.mapCityLabel}>
+        {cityName}{zones.length > 0 ? " · quartiers" : ""}
+      </span>
     </div>
   );
 }

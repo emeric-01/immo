@@ -4,8 +4,10 @@ import type { MetadataRoute } from "next";
 import { readCityMarketCacheDates } from "@/lib/city-market-cache";
 import { localMarketCities } from "@/lib/cities";
 import { getContentArticleSitemapEntries } from "@/lib/content/articles";
+import { getInterkabCities } from "@/lib/interkab";
 import { getPublishedProperties } from "@/lib/properties";
 import { absoluteUrl } from "@/lib/site";
+import { getPricePageLastModified } from "./last-modified";
 import { mergePublicSitemapEntries, publicSitemapRoutes } from "./sitemap";
 
 export const sitemapSections = [
@@ -48,17 +50,27 @@ export async function getSitemapSectionEntries(section: SitemapSection): Promise
       })));
   }
 
-  const cityMarketDates = await readCityMarketCacheDates(localMarketCities);
-
   if (section === "prix-m2") {
+    const [cityMarketDates, interkabCities] = await Promise.all([
+      readCityMarketCacheDates(localMarketCities),
+      getInterkabCities().catch(() => []),
+    ]);
+    const interkabDates = new Map(
+      interkabCities.map((city) => [city.insee_code, city.last_synced_at] as const),
+    );
+
     return mergePublicSitemapEntries(localMarketCities.map((city) => ({
       changeFrequency: "weekly" as const,
-      lastModified: cityMarketDates.get(city.inseeCode),
+      lastModified: getPricePageLastModified(
+        cityMarketDates.get(city.inseeCode),
+        interkabDates.get(city.inseeCode),
+      ),
       priority: 0.8,
       url: absoluteUrl(`/prix-m2/${city.slug}`),
     })));
   }
 
+  const cityMarketDates = await readCityMarketCacheDates(localMarketCities);
   const prefix = section === "estimations" ? "estimation-immobiliere" : "agence-immobiliere";
 
   return mergePublicSitemapEntries(localMarketCities.map((city) => ({

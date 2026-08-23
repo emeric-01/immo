@@ -36,6 +36,18 @@ describe("city price SEO preview snapshot", () => {
     expect(snapshot?.salePoints[0]?.soldAt).toBe("2025-12-30");
   });
 
+  it("publishes the 20 latest comparable Aubagne sales for the agency map", () => {
+    const sales = getCityPricePreviewSnapshot("aubagne")?.salePoints ?? [];
+
+    expect(sales).toHaveLength(20);
+    expect(new Set(sales.map((sale) => sale.id)).size).toBe(20);
+    expect(sales.every((sale) => ["Appartement", "Maison"].includes(sale.propertyType))).toBe(true);
+    expect(sales.every((sale) => sale.soldAt.startsWith("2025-12-"))).toBe(true);
+    expect(sales.map((sale) => sale.soldAt)).toEqual(
+      [...sales].map((sale) => sale.soldAt).sort((left, right) => right.localeCompare(left)),
+    );
+  });
+
   it("uses the seven Aubagne grand quarters with verified neighborhood labels", () => {
     const zones = getCityPricePreviewSnapshot("aubagne")?.zones ?? [];
 

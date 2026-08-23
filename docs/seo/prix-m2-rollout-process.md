@@ -23,8 +23,8 @@ Lorsqu’une ville est activée, vérifier systématiquement les consommateurs
 suivants :
 
 - `/prix-m2/[ville]` : page canonique, carte, historique, FAQ et JSON-LD ;
-- `/agence-immobiliere/[ville]` : cartes appartement/maison, graphique et
-  ressources liées ;
+- `/agence-immobiliere/[ville]` : cartes appartement/maison, graphique,
+  découpage local vérifié et ventes récentes ;
 - `/estimation-immobiliere/[ville]` : repères de marché et ventes récentes ;
 - `/prix-m2` : annuaire des villes ;
 - `/` : villes mises en avant sur l’accueil ;
@@ -54,9 +54,13 @@ Toute évolution de ces calculs exige une validation métier distincte.
    estimation/agence et villes voisines.
 8. Comparer les valeurs sur les pages prix, agence, estimation, annuaire et
    accueil. Elles doivent être identiques au même instant.
-9. Vérifier desktop/mobile, liens CTA, carte Mapbox, données structurées,
+9. Sur la page agence de la ville, remplacer l’ancienne carte ponctuelle par
+   la carte découpée en quartiers/zones IRIS validés et y afficher les 20
+   dernières ventes DVF comparables. Conserver ces données dans le snapshot
+   local afin d’éviter tout appel API au chargement.
+10. Vérifier desktop/mobile, liens CTA, carte Mapbox, données structurées,
    canonical, `index,follow`, sitemap et absence de débordement.
-10. Déployer d’abord une prévisualisation `noindex`, valider, puis activer la
+11. Déployer d’abord une prévisualisation `noindex`, valider, puis activer la
     page canonique et contrôler la production après déploiement.
 
 ## Contrôle de fraîcheur
@@ -64,5 +68,9 @@ Toute évolution de ces calculs exige une validation métier distincte.
 - conserver séparément la date de calcul et la dernière mutation DVF ;
 - afficher le mois et l’année du calcul lorsque le jour n’apporte rien ;
 - surveiller la date de synchronisation des annonces stockées ;
+- laisser le sitemap calculer `lastmod` à partir de la date la plus récente
+  entre le modèle de page versionné dans Git, le cache du marché et la dernière
+  synchronisation des annonces ; ne jamais utiliser la date de consultation ;
+- exposer la même date dans le `dateModified` du JSON-LD `WebPage` ;
 - relancer la génération seulement lorsqu’un nouveau millésime DVF ou un
   échantillon suffisamment significatif justifie une mise à jour.
