@@ -1,4 +1,5 @@
 import type { CityMarketData } from "./city-market-data";
+import { aubagnePreviewZones } from "./aubagne-preview-zones";
 
 // Preview-only fallback captured from the public Aubagne snapshot on 2026-08-16.
 // The canonical price page never reads this fixture.
@@ -39,7 +40,7 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
     { apartment: 2726, house: 4720, period: "2026-01" },
     { apartment: 2713, house: 4720, period: "2026-07" },
   ],
-  zones: [],
+  zones: aubagnePreviewZones,
   salePoints: [
     {
       id: "aubagne-preview-cle-des-champs",

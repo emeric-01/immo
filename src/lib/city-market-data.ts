@@ -34,6 +34,7 @@ export type CityPriceZone = {
   pricePerM2: number;
   color: string;
   polygon: [number, number][];
+  includedNeighborhoods?: string[];
 };
 
 export type CitySalePoint = {

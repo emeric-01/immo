@@ -10,6 +10,8 @@ type CityPriceMapProps = {
   fitToSalePoints?: boolean;
   salePointsFitMode?: "map" | "hero";
   showPriceScale?: boolean;
+  zoneMetricLabel?: string;
+  zoneSelectionLabel?: string;
   center: {
     longitude: number;
     latitude: number;
@@ -118,6 +120,8 @@ export function CityPriceMap({
   fitToSalePoints = false,
   salePointsFitMode = "map",
   showPriceScale = true,
+  zoneMetricLabel = "Prix moyen du secteur",
+  zoneSelectionLabel = "Secteur sélectionné",
   center,
   zones,
   salePoints,
@@ -421,10 +425,13 @@ export function CityPriceMap({
           ))}
         </div>
         {showPriceScale ? (
-          <div className="city-map-scale" aria-label="Legende des prix">
-            <span>&lt; 3000 EUR</span>
-            <span className="scale-track" aria-hidden="true" />
-            <span>&gt; 4000 EUR</span>
+          <div className="city-map-scale-wrap">
+            <strong>{zoneMetricLabel}</strong>
+            <div className="city-map-scale" aria-label="Légende des prix">
+              <span>&lt; 3 000 EUR/m²</span>
+              <span className="scale-track" aria-hidden="true" />
+              <span>&gt; 4 000 EUR/m²</span>
+            </div>
           </div>
         ) : null}
       </div>
@@ -464,11 +471,14 @@ export function CityPriceMap({
 
       {activeZone ? (
         <aside className="city-map-inspector" aria-live="polite">
-          <span>Secteur selectionne</span>
+          <span>{zoneSelectionLabel}</span>
           <strong>{activeZone.name}</strong>
-          <p>{formatPrice(activeZone.pricePerM2)}</p>
+          {activeZone.includedNeighborhoods?.length ? (
+            <small>{activeZone.includedNeighborhoods.join(" · ")}</small>
+          ) : null}
+          <p><span>{zoneMetricLabel}</span>{formatPrice(activeZone.pricePerM2)}</p>
           <div className="city-map-zone-list">
-            {zones.slice(0, 4).map((zone) => (
+            {zones.map((zone) => (
               <button
                 className={zone.id === activeZone.id ? "active" : ""}
                 key={zone.id}

@@ -322,8 +322,10 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               cityName={city.name}
               fitToSalePoints={seoPreview}
               salePoints={market.salePoints}
-              showPriceScale={!seoPreview}
-              zones={seoPreview ? [] : market.zones}
+              showPriceScale
+              zoneMetricLabel={seoPreview ? "Prix moyen des appartements" : undefined}
+              zoneSelectionLabel={seoPreview ? "Quartiers sélectionnés" : undefined}
+              zones={market.zones}
             />
           </div>
         </div>

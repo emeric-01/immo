@@ -3706,6 +3706,18 @@ button:focus-visible {
   font-weight: 500;
 }
 
+.city-map-scale-wrap {
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+}
+
+.city-map-scale-wrap > strong {
+  color: #343843;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
 .city-map-toolbar select {
   min-height: 34px;
   width: auto;
@@ -3786,9 +3798,23 @@ button:focus-visible {
 }
 
 .city-map-inspector p {
+  display: grid;
+  gap: 2px;
   margin: 0;
   color: #1f3ecb;
   font-weight: 700;
+}
+
+.city-map-inspector > small {
+  color: #736b64;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.city-map-inspector p > span {
+  color: #736b64;
+  font-size: .67rem;
+  font-weight: 600;
 }
 
 .city-map-zone-list {

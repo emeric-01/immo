@@ -18,6 +18,22 @@ describe("city price SEO preview snapshot", () => {
     expect(snapshot?.salePoints[0]?.soldAt).toBe("2025-12-30");
   });
 
+  it("uses the seven Aubagne grand quarters with verified neighborhood labels", () => {
+    const zones = getCityPricePreviewSnapshot("aubagne")?.zones ?? [];
+
+    expect(zones).toHaveLength(7);
+    expect(zones.map((zone) => zone.id)).toEqual([
+      "1300501", "1300502", "1300503", "1300504", "1300505", "1300506", "1300507",
+    ]);
+    expect(zones.some((zone) => zone.name.includes("Grand Quartier"))).toBe(false);
+    expect(zones[0]).toMatchObject({
+      name: "Centre-ville et Beaumond",
+      includedNeighborhoods: ["Beaumond", "Centre Ville"],
+    });
+    expect(zones[6]?.includedNeighborhoods).toContain("Napollon");
+    expect(zones.every((zone) => zone.polygon.length >= 3)).toBe(true);
+  });
+
   it("provides separate nearby prices for the Aubagne preview", () => {
     expect(getAubagneNearbyPreviewPrice("gemenos")).toEqual({
       apartment: 3436,
