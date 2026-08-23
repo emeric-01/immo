@@ -34,13 +34,18 @@ export type InseeHousingProfile = {
   };
 };
 
+const INSEE_PROFILE_REVALIDATE_SECONDS = 24 * 60 * 60;
+
 export async function getInseeHousingProfile(inseeCode?: string | null): Promise<InseeHousingProfile | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!url || !key || !inseeCode) return null;
   const response = await fetch(`${url}/rest/v1/insee_housing_profiles?insee_code=eq.${encodeURIComponent(inseeCode)}&select=payload&limit=1`, {
-    cache: "no-store",
     headers: { apikey: key, Authorization: `Bearer ${key}` },
+    next: {
+      revalidate: INSEE_PROFILE_REVALIDATE_SECONDS,
+      tags: [`insee-housing-${inseeCode}`],
+    },
   });
   if (!response.ok) throw new Error(`Lecture INSEE impossible (${response.status})`);
   const rows = await response.json() as Array<{ payload: InseeHousingProfile }>;

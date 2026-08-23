@@ -9,7 +9,7 @@ import { absoluteUrl } from "@/lib/site";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   const agencyJsonLd = { "@context": "https://schema.org", "@graph": [
-    { "@type": ["RealEstateAgent", "Organization"], "@id": `${absoluteUrl("/")}#organization`, name: "Les Jumelles Immo", url: absoluteUrl("/"), logo: absoluteUrl("/brand/logo-jumelles-immo-black.svg"), image: absoluteUrl("/images/agence-jumelles-immo-hero.webp"), email: "contact@lesjumelles.immo", areaServed: ["Aubagne", "Aix-en-Provence", "Cassis", "Gémenos", "La Ciotat", "Saint-Cyr-sur-Mer"], memberOf: { "@type": "Organization", name: "FNAIM" } },
+    { "@type": ["RealEstateAgent", "Organization"], "@id": `${absoluteUrl("/")}#organization`, name: "Les Jumelles Immo", url: absoluteUrl("/"), logo: absoluteUrl("/brand/logo-jumelles-immo-black.svg"), image: absoluteUrl("/images/agence-jumelles-immo-hero.webp"), email: "contact@lesjumelles.immo", areaServed: [{ "@type": "AdministrativeArea", name: "Bouches-du-Rhône" }, { "@type": "AdministrativeArea", name: "Var" }], memberOf: { "@type": "Organization", name: "FNAIM" } },
     { "@type": "WebSite", "@id": `${absoluteUrl("/")}#website`, url: absoluteUrl("/"), name: "Les Jumelles Immo", publisher: { "@id": `${absoluteUrl("/")}#organization` }, inLanguage: "fr-FR" },
   ] };
   return (

@@ -37,7 +37,7 @@ const localAgencyPages: Record<string, LocalAgencyPage> = {
     nearbySlugs: ["cassis", "ceyreste", "saint-cyr-sur-mer", "cuges-les-pins"],
     localFactors: [
       {
-        title: "Adresse et micro-secteur",
+        title: "Adresse et quartier",
         description: "La proximité du littoral, du centre ou des accès change profondément la lecture d’un bien.",
       },
       {
@@ -65,7 +65,7 @@ const localAgencyPages: Record<string, LocalAgencyPage> = {
       {
         question: "Vous déplacez-vous à La Ciotat pour réaliser l’estimation ?",
         answer:
-          "Oui. Une estimation immobilière sérieuse commence par une visite du bien. À La Ciotat, deux logements de surface comparable peuvent présenter des valeurs différentes selon le micro-secteur, la vue, l’exposition, le calme, le stationnement, l’étage, la qualité des extérieurs ou la proximité du littoral et des commodités. Le déplacement nous permet aussi d’apprécier l’état général, la distribution des pièces et les éventuels travaux. Ces éléments de terrain complètent les données de marché et permettent de proposer un prix de vente argumenté, et non une simple moyenne au mètre carré.",
+          "Oui. Une estimation immobilière sérieuse commence par une visite du bien. À La Ciotat, deux logements de surface comparable peuvent présenter des valeurs différentes selon le quartier, la vue, l’exposition, le calme, le stationnement, l’étage, la qualité des extérieurs ou la proximité du littoral et des commodités. Le déplacement nous permet aussi d’apprécier l’état général, la distribution des pièces et les éventuels travaux. Ces éléments de terrain complètent les données de marché et permettent de proposer un prix de vente argumenté, et non une simple moyenne au mètre carré.",
       },
       {
         question: "Comment déterminez-vous le prix de vente d’un bien à La Ciotat ?",
@@ -215,7 +215,7 @@ function createGenericLocalAgencyPage(city: City): LocalAgencyPage {
     nearbySlugs: city.nearbySlugs,
     localFactors: [
       {
-        title: "Adresse et micro-secteur",
+        title: "Adresse et quartier",
         description: `À ${city.name}, la rue, l’environnement immédiat et la proximité des services influencent la valeur.`,
       },
       {

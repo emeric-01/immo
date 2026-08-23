@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -27,13 +26,11 @@ import { getCityBySlug } from "@/lib/cities";
 import { getCityMarketData, getStaticCityMarketData } from "@/lib/city-market-data";
 import { getPublishedContentArticles } from "@/lib/content/articles";
 import { getInseeHousingProfile } from "@/lib/insee-housing";
-import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import {
-  getLocalAgencyPage,
-  getLocalAgencyPageSlugs,
-  getNearestLocalAgencyCities,
-} from "@/lib/local-agency-pages";
-import { createPageMetadata } from "@/lib/seo";
+  getLocalAgencyNeighborhoodProfile,
+  type LocalAgencyNeighborhoodProfile,
+} from "@/lib/local-agency-neighborhoods";
+import { getLocalAgencyPage, getNearestLocalAgencyCities } from "@/lib/local-agency-pages";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import { LocalAgencyLeadForm } from "./LocalAgencyLeadForm";
@@ -60,26 +57,84 @@ function formatTrend(value: number) {
   return `${value > 0 ? "+" : ""}${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 }
 
+function LocalAgencyNeighborhoodSection({
+  city,
+  profile,
+}: {
+  city: NonNullable<ReturnType<typeof getCityBySlug>>;
+  profile: LocalAgencyNeighborhoodProfile;
+}) {
+  return (
+    <>
+      <section className={previewStyles.neighborhoodSection} aria-labelledby="neighborhood-title">
+        <div className={previewStyles.neighborhoodHeading}>
+          <div>
+            <p className={styles.eyebrow}>Quartiers de {city.name}</p>
+            <h3 id="neighborhood-title">À {city.name}, chaque quartier a son caractère</h3>
+          </div>
+          <p>
+            Du centre-ville aux secteurs plus résidentiels, l’adresse, l’environnement et
+            les caractéristiques du bien peuvent faire varier sa valeur. Notre connaissance
+            locale permet d’affiner l’estimation au-delà d’un simple prix moyen au m².
+          </p>
+        </div>
+        <div className={previewStyles.neighborhoodGrid}>
+          {profile.neighborhoods.map((neighborhood, index) => (
+            <article key={neighborhood.title}>
+              <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <h4>{neighborhood.title}</h4>
+              <p>{neighborhood.description}</p>
+            </article>
+          ))}
+        </div>
+        <aside className={previewStyles.neighborhoodCta} aria-labelledby="neighborhood-cta-title">
+          <div>
+            <p>Besoin d’un avis local ?</p>
+            <h4 id="neighborhood-cta-title">
+              Quelle est la valeur de votre bien à {city.name} ?
+            </h4>
+            <span>
+              Une estimation fiable commence par l’adresse, le quartier et les
+              caractéristiques réelles du logement.
+            </span>
+          </div>
+          <nav aria-label={`Estimation et prix immobilier à ${city.name}`}>
+            <Link
+              className={previewStyles.neighborhoodPrimaryLink}
+              href={`/estimation-immobiliere/${city.slug}`}
+            >
+              Faire estimer mon bien à {city.name}
+              <ArrowRight aria-hidden="true" size={16} />
+            </Link>
+            <Link
+              className={previewStyles.neighborhoodSecondaryLink}
+              href={`/prix-m2/${city.slug}`}
+            >
+              Consulter les prix au m² à {city.name}
+              <ArrowRight aria-hidden="true" size={15} />
+            </Link>
+          </nav>
+        </aside>
+      </section>
+
+      <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
+        Sources : <a href={`https://www.insee.fr/fr/metadonnees/geographie/commune/${city.inseeCode}-${city.slug}`} rel="noreferrer" target="_blank">INSEE</a>,
+        {" "}<a href="https://www.insee.fr/fr/statistiques/8229323" rel="noreferrer" target="_blank">Filosofi 2021</a>
+        {" et "}<a href="https://www.insee.fr/fr/statistiques/8647012" rel="noreferrer" target="_blank">Logement 2022 à l’IRIS</a>
+        {" ; "}
+        {profile.sources.map((source, index) => (
+          <span key={source.href}>
+            {index > 0 ? ", " : ""}
+            <a href={source.href} rel="noreferrer" target="_blank">{source.label}</a>
+          </span>
+        ))}
+        {" ; transactions DVF disponibles. Les appellations sont recoupées avec le zonage IRIS et les documents locaux disponibles. Ces repères éclairent l’estimation sans déterminer, à eux seuls, la valeur d’un bien."}
+      </p>
+    </>
+  );
+}
+
 export const dynamic = "force-dynamic";
-
-export function generateStaticParams() {
-  return getLocalAgencyPageSlugs().map((city) => ({ city }));
-}
-
-export async function generateMetadata({ params }: LocalAgencyPageProps): Promise<Metadata> {
-  const { city: citySlug } = await params;
-  const config = getLocalAgencyPage(citySlug);
-  const city = getCityBySlug(citySlug);
-
-  if (!config || !city) return {};
-
-  return createPageMetadata({
-    title: `Agence immobilière ${city.name} | Les Jumelles Immo`,
-    description: `Les Jumelles Immo vous accompagnent à ${city.name} pour estimer, valoriser et vendre votre maison ou appartement avec une stratégie adaptée au marché local.`,
-    image: config.heroImage.src,
-    path: `/agence-immobiliere/${city.slug}`,
-  });
-}
 
 export default async function LocalAgencyCityPage({ params }: LocalAgencyPageProps) {
   const { city: citySlug } = await params;
@@ -223,6 +278,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
   const pageFaqs = seoEnhanced ? [...config.faqs, ...neighborhoodFaqs] : config.faqs;
   const pagePath = `/agence-immobiliere/${city.slug}`;
   const faqJsonLd = {
+    "@id": `${absoluteUrl(pagePath)}#faq`,
     "@type": "FAQPage",
     mainEntity: pageFaqs.map((faq) => ({
       "@type": "Question",
@@ -234,23 +290,37 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@id": `${absoluteUrl(pagePath)}#breadcrumb`,
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", item: absoluteUrl("/"), name: "Accueil", position: 1 },
-          { "@type": "ListItem", item: absoluteUrl(pagePath), name: `Agence immobilière à ${city.name}`, position: 2 },
+          { "@type": "ListItem", item: absoluteUrl("/agence-immobiliere"), name: "Agences immobilières", position: 2 },
+          { "@type": "ListItem", item: absoluteUrl(pagePath), name: `Agence immobilière à ${city.name}`, position: 3 },
         ],
       },
       {
+        "@id": `${absoluteUrl(pagePath)}#service`,
         "@type": "Service",
         areaServed: {
           "@type": "City",
-          address: { "@type": "PostalAddress", postalCode: city.postalCode },
+          address: { "@type": "PostalAddress", addressCountry: "FR", addressLocality: city.name, postalCode: city.postalCode },
           name: city.name,
         },
         description: config.heroIntro,
         name: `Accompagnement immobilier à ${city.name}`,
         provider: { "@id": `${absoluteUrl("/")}#organization` },
         serviceType: "Estimation, valorisation et vente immobilière",
+        url: absoluteUrl(pagePath),
+      },
+      {
+        "@id": `${absoluteUrl(pagePath)}#webpage`,
+        "@type": "WebPage",
+        about: { "@id": `${absoluteUrl(pagePath)}#service` },
+        breadcrumb: { "@id": `${absoluteUrl(pagePath)}#breadcrumb` },
+        inLanguage: "fr-FR",
+        isPartOf: { "@id": `${absoluteUrl("/")}#website` },
+        name: `Agence immobilière à ${city.name}`,
+        primaryImageOfPage: { "@type": "ImageObject", url: absoluteUrl(config.heroImage.src) },
         url: absoluteUrl(pagePath),
       },
       faqJsonLd,
@@ -290,7 +360,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
       <section className={styles.hero} aria-labelledby="local-agency-title">
         <div className={styles.heroCopy}>
           <nav className={styles.breadcrumb} aria-label="Fil d’Ariane">
-            <Link href="/">Accueil</Link><span>/</span><span>{city.name}</span>
+            <Link href="/">Accueil</Link><span>/</span><Link href="/agence-immobiliere">Agences immobilières</Link><span>/</span><span>{city.name}</span>
           </nav>
           <p className={styles.eyebrow}>{config.eyebrow}</p>
           <h1 id="local-agency-title">Agence immobilière à {city.name}</h1>
@@ -503,78 +573,8 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
                 </section>
               </div>
 
-              {neighborhoods.length > 0 ? (
-                <section className={previewStyles.neighborhoodSection} aria-labelledby="neighborhood-title">
-                  <div className={previewStyles.neighborhoodHeading}>
-                    <div>
-                      <p className={styles.eyebrow}>Quartiers de {city.name}</p>
-                      <h3 id="neighborhood-title">À {city.name}, chaque quartier a son caractère</h3>
-                    </div>
-                    <p>
-                      Du centre-ville aux secteurs plus résidentiels, l’adresse,
-                      l’environnement et les caractéristiques du bien peuvent faire varier sa
-                      valeur. Notre connaissance locale permet d’affiner l’estimation au-delà
-                      d’un simple prix moyen au m².
-                    </p>
-                  </div>
-                  <div className={previewStyles.neighborhoodGrid}>
-                    {neighborhoods.map((neighborhood, index) => (
-                      <article key={neighborhood.title}>
-                        <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                        <h4>{neighborhood.title}</h4>
-                        <p>{neighborhood.description}</p>
-                      </article>
-                    ))}
-                  </div>
-                  <aside className={previewStyles.neighborhoodCta} aria-labelledby="neighborhood-cta-title">
-                    <div>
-                      <p>Besoin d’un avis local ?</p>
-                      <h4 id="neighborhood-cta-title">
-                        Quelle est la valeur de votre bien à {city.name} ?
-                      </h4>
-                      <span>
-                        Une estimation fiable commence par l’adresse, le quartier et les
-                        caractéristiques réelles du logement.
-                      </span>
-                    </div>
-                    <nav aria-label={`Estimation et prix immobilier à ${city.name}`}>
-                      <Link
-                        className={previewStyles.neighborhoodPrimaryLink}
-                        href={`/estimation-immobiliere/${city.slug}`}
-                      >
-                        Faire estimer mon bien à {city.name}
-                        <ArrowRight aria-hidden="true" size={16} />
-                      </Link>
-                      <Link
-                        className={previewStyles.neighborhoodSecondaryLink}
-                        href={`/prix-m2/${city.slug}`}
-                      >
-                        Consulter les prix au m² à {city.name}
-                        <ArrowRight aria-hidden="true" size={15} />
-                      </Link>
-                    </nav>
-                  </aside>
-                </section>
-              ) : null}
-
-              {previewProfile ? (
-                <p className={`${styles.marketNote} ${previewStyles.sourceNote}`}>
-                  Sources : <a href={`https://www.insee.fr/fr/metadonnees/geographie/commune/${city.inseeCode}-${city.slug}`} rel="noreferrer" target="_blank">INSEE</a>,
-                  {" "}<a href="https://www.insee.fr/fr/statistiques/8229323" rel="noreferrer" target="_blank">Filosofi 2021</a>
-                  {" et "}<a href="https://www.insee.fr/fr/statistiques/8647012" rel="noreferrer" target="_blank">Logement 2022 à l’IRIS</a>
-                  {neighborhoodProfile ? (
-                    <>
-                      {" ; "}
-                      {neighborhoodProfile.sources.map((source, index) => (
-                        <span key={source.href}>
-                          {index > 0 ? ", " : ""}
-                          <a href={source.href} rel="noreferrer" target="_blank">{source.label}</a>
-                        </span>
-                      ))}
-                    </>
-                  ) : null}
-                  {" ; transactions DVF disponibles. Ces repères éclairent l’estimation sans déterminer, à eux seuls, la valeur d’un bien."}
-                </p>
+              {neighborhoodProfile ? (
+                <LocalAgencyNeighborhoodSection city={city} profile={neighborhoodProfile} />
               ) : null}
             </>
           ) : (
@@ -602,6 +602,17 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           )}
         </article>
       </section> : null}
+
+      {neighborhoodProfile && (!market || !localInsight) ? (
+        <section
+          className={`${styles.marketSection} ${previewStyles.marketSection}`}
+          aria-label={`Quartiers de ${city.name}`}
+        >
+          <article className={`${styles.factorsCard} ${previewStyles.factorsCard}`}>
+            <LocalAgencyNeighborhoodSection city={city} profile={neighborhoodProfile} />
+          </article>
+        </section>
+      ) : null}
 
       <section className={styles.resourceSection}>
         {market ? <article className={styles.priceResource}>

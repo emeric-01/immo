@@ -51,6 +51,15 @@ function formatTrend(value: number) {
   return `${value > 0 ? "+" : ""}${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 }
 
+function createLocalAgencyDescription(cityName: string, neighborhood?: string) {
+  const base = `Agence immobilière intervenant à ${cityName} pour estimer et vendre votre maison ou appartement`;
+  const localized = neighborhood ? `${base}, notamment à ${neighborhood} et dans les quartiers voisins.` : "";
+
+  return localized.length <= 165
+    ? localized
+    : `${base}, avec une stratégie adaptée au marché local.`;
+}
+
 export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
@@ -64,9 +73,11 @@ export async function generateMetadata({ params }: LocalAgencyPageProps): Promis
 
   if (!config || !city) return {};
 
+  const neighborhood = getLocalAgencyNeighborhoodProfile(city.slug)?.neighborhoods[0]?.title;
+
   return createPageMetadata({
     title: `Agence immobilière ${city.name} | Les Jumelles Immo`,
-    description: `Les Jumelles Immo vous accompagnent à ${city.name} pour estimer, valoriser et vendre votre maison ou appartement avec une stratégie adaptée au marché local.`,
+    description: createLocalAgencyDescription(city.name, neighborhood),
     image: config.heroImage.src,
     path: `/agence-immobiliere/${city.slug}`,
   });
@@ -109,6 +120,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
   ) : null;
   const pagePath = `/agence-immobiliere/${city.slug}`;
   const faqJsonLd = {
+    "@id": `${absoluteUrl(pagePath)}#faq`,
     "@type": "FAQPage",
     mainEntity: config.faqs.map((faq) => ({
       "@type": "Question",
@@ -120,23 +132,37 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@id": `${absoluteUrl(pagePath)}#breadcrumb`,
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", item: absoluteUrl("/"), name: "Accueil", position: 1 },
-          { "@type": "ListItem", item: absoluteUrl(pagePath), name: `Agence immobilière à ${city.name}`, position: 2 },
+          { "@type": "ListItem", item: absoluteUrl("/agence-immobiliere"), name: "Agences immobilières", position: 2 },
+          { "@type": "ListItem", item: absoluteUrl(pagePath), name: `Agence immobilière à ${city.name}`, position: 3 },
         ],
       },
       {
+        "@id": `${absoluteUrl(pagePath)}#service`,
         "@type": "Service",
         areaServed: {
           "@type": "City",
-          address: { "@type": "PostalAddress", postalCode: city.postalCode },
+          address: { "@type": "PostalAddress", addressCountry: "FR", addressLocality: city.name, postalCode: city.postalCode },
           name: city.name,
         },
         description: config.heroIntro,
         name: `Accompagnement immobilier à ${city.name}`,
         provider: { "@id": `${absoluteUrl("/")}#organization` },
         serviceType: "Estimation, valorisation et vente immobilière",
+        url: absoluteUrl(pagePath),
+      },
+      {
+        "@id": `${absoluteUrl(pagePath)}#webpage`,
+        "@type": "WebPage",
+        about: { "@id": `${absoluteUrl(pagePath)}#service` },
+        breadcrumb: { "@id": `${absoluteUrl(pagePath)}#breadcrumb` },
+        inLanguage: "fr-FR",
+        isPartOf: { "@id": `${absoluteUrl("/")}#website` },
+        name: `Agence immobilière à ${city.name}`,
+        primaryImageOfPage: { "@type": "ImageObject", url: absoluteUrl(config.heroImage.src) },
         url: absoluteUrl(pagePath),
       },
       faqJsonLd,
@@ -176,7 +202,7 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
       <section className={styles.hero} aria-labelledby="local-agency-title">
         <div className={styles.heroCopy}>
           <nav className={styles.breadcrumb} aria-label="Fil d’Ariane">
-            <Link href="/">Accueil</Link><span>/</span><span>{city.name}</span>
+            <Link href="/">Accueil</Link><span>/</span><Link href="/agence-immobiliere">Agences immobilières</Link><span>/</span><span>{city.name}</span>
           </nav>
           <p className={styles.eyebrow}>{config.eyebrow}</p>
           <h1 id="local-agency-title">Agence immobilière à {city.name}</h1>

@@ -14,9 +14,9 @@ describe("price sitemap scope", () => {
     const urls = entries.map((entry) => entry.url);
 
     expect(entries).toHaveLength(43);
-    expect(urls).toContain("https://immo-rho.vercel.app/prix-m2/aubagne");
-    expect(urls).toContain("https://immo-rho.vercel.app/prix-m2/hyeres");
-    expect(urls).not.toContain("https://immo-rho.vercel.app/prix-m2/nice");
-    expect(urls).not.toContain("https://immo-rho.vercel.app/prix-m2/montpellier");
+    expect(urls).toContain("https://jumellesimmo.fr/prix-m2/aubagne");
+    expect(urls).toContain("https://jumellesimmo.fr/prix-m2/hyeres");
+    expect(urls).not.toContain("https://jumellesimmo.fr/prix-m2/nice");
+    expect(urls).not.toContain("https://jumellesimmo.fr/prix-m2/montpellier");
   });
 });

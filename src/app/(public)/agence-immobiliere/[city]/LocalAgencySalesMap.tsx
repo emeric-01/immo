@@ -1,6 +1,6 @@
 "use client";
 
-import mapboxgl from "mapbox-gl";
+import type mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CitySalePoint } from "@/lib/city-market-data";
 import styles from "./local-agency.module.css";
@@ -134,91 +134,117 @@ export function LocalAgencySalesMap({
   const latestSales = useMemo(() => salePoints.slice(0, 30), [salePoints]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     if (!accessToken) {
       setStatus("unavailable");
       return;
     }
 
-    mapboxgl.accessToken = accessToken;
+    let cancelled = false;
+    let map: mapboxgl.Map | null = null;
 
-    const map = new mapboxgl.Map({
-      attributionControl: true,
-      center: [center.longitude, center.latitude],
-      container: containerRef.current,
-      maxZoom: 17,
-      minZoom: 9,
-      pitch: 0,
-      style: "mapbox://styles/mapbox/light-v11",
-      zoom: 11.15,
-    });
+    async function initializeMap(mapContainer: HTMLDivElement) {
+      try {
+        const mapboxModule = await import("mapbox-gl");
+        const mapbox = mapboxModule.default;
+        if (cancelled) return;
 
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+        mapbox.accessToken = accessToken;
+        map = new mapbox.Map({
+          attributionControl: true,
+          center: [center.longitude, center.latitude],
+          container: mapContainer,
+          maxZoom: 17,
+          minZoom: 9,
+          pitch: 0,
+          style: "mapbox://styles/mapbox/light-v11",
+          zoom: 11.15,
+        });
 
-    map.on("load", () => {
-      map.addSource("local-agency-dvf-sales", {
-        data: buildSalesCollection(latestSales),
-        type: "geojson",
-      });
+        map.addControl(new mapbox.NavigationControl({ showCompass: false }), "top-right");
 
-      map.addLayer({
-        id: "local-agency-dvf-sales-halo",
-        paint: {
-          "circle-color": "rgba(190, 112, 65, .18)",
-          "circle-radius": 10,
-        },
-        source: "local-agency-dvf-sales",
-        type: "circle",
-      });
+        map.on("load", () => {
+          if (!map || cancelled) return;
 
-      map.addLayer({
-        id: "local-agency-dvf-sales",
-        paint: {
-          "circle-color": [
-            "match",
-            ["get", "propertyType"],
-            "Maison",
-            "#74795d",
-            "#bd7145",
-          ],
-          "circle-radius": 5.5,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1.8,
-        },
-        source: "local-agency-dvf-sales",
-        type: "circle",
-      });
+          map.addSource("local-agency-dvf-sales", {
+            data: buildSalesCollection(latestSales),
+            type: "geojson",
+          });
 
-      map.on("click", "local-agency-dvf-sales", (event) => {
-        const feature = event.features?.[0];
-        const coordinates = getPointCoordinates(feature);
-        const properties = getFeatureProperties(feature);
+          map.addLayer({
+            id: "local-agency-dvf-sales-halo",
+            paint: {
+              "circle-color": "rgba(190, 112, 65, .18)",
+              "circle-radius": 10,
+            },
+            source: "local-agency-dvf-sales",
+            type: "circle",
+          });
 
-        if (!coordinates || !properties) return;
+          map.addLayer({
+            id: "local-agency-dvf-sales",
+            paint: {
+              "circle-color": [
+                "match",
+                ["get", "propertyType"],
+                "Maison",
+                "#74795d",
+                "#bd7145",
+              ],
+              "circle-radius": 5.5,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 1.8,
+            },
+            source: "local-agency-dvf-sales",
+            type: "circle",
+          });
 
-        popupRef.current?.remove();
-        popupRef.current = new mapboxgl.Popup({ closeButton: true, maxWidth: "270px" })
-          .setLngLat(coordinates)
-          .setDOMContent(createSalePopup(properties))
-          .addTo(map);
-      });
+          map.on("click", "local-agency-dvf-sales", (event) => {
+            const feature = event.features?.[0];
+            const coordinates = getPointCoordinates(feature);
+            const properties = getFeatureProperties(feature);
 
-      map.on("mouseenter", "local-agency-dvf-sales", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-      map.on("mouseleave", "local-agency-dvf-sales", () => {
-        map.getCanvas().style.cursor = "";
-      });
+            if (!coordinates || !properties || !map) return;
 
-      setStatus("ready");
-    });
+            popupRef.current?.remove();
+            popupRef.current = new mapbox.Popup({ closeButton: true, maxWidth: "270px" })
+              .setLngLat(coordinates)
+              .setDOMContent(createSalePopup(properties))
+              .addTo(map);
+          });
 
-    map.on("error", () => setStatus("unavailable"));
+          map.on("mouseenter", "local-agency-dvf-sales", () => {
+            if (map) map.getCanvas().style.cursor = "pointer";
+          });
+          map.on("mouseleave", "local-agency-dvf-sales", () => {
+            if (map) map.getCanvas().style.cursor = "";
+          });
+
+          setStatus("ready");
+        });
+
+        map.on("error", () => {
+          if (!cancelled) setStatus("unavailable");
+        });
+      } catch {
+        if (!cancelled) setStatus("unavailable");
+      }
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      void initializeMap(container);
+    }, { rootMargin: "320px" });
+    observer.observe(container);
 
     return () => {
+      cancelled = true;
+      observer.disconnect();
       popupRef.current?.remove();
-      map.remove();
+      map?.remove();
       popupRef.current = null;
     };
   }, [accessToken, center.latitude, center.longitude, latestSales]);
