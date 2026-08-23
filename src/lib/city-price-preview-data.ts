@@ -85,7 +85,6 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
     },
   ],
   transactionCount: 2573,
-  saleDurationDays: 45,
   neighborhoods: [],
   expensiveStreets: [],
   affordableStreets: [],
@@ -101,10 +100,10 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
 };
 
 const aubagneNearbyPreviewPrices: Record<string, { apartment: number; house: number }> = {
-  auriol: { apartment: 3210, house: 4643 },
-  "carnoux-en-provence": { apartment: 3895, house: 4807 },
-  gemenos: { apartment: 3436, house: 4932 },
-  "la-penne-sur-huveaune": { apartment: 3634, house: 4647 },
+  auriol: { apartment: 3264, house: 4543 },
+  "carnoux-en-provence": { apartment: 3440, house: 5097 },
+  gemenos: { apartment: 4184, house: 5496 },
+  "la-penne-sur-huveaune": { apartment: 3309, house: 4703 },
 };
 
 export function getCityPricePreviewSnapshot(citySlug: string) {

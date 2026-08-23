@@ -68,8 +68,8 @@ describe("city price SEO preview snapshot", () => {
 
   it("provides separate nearby prices for the Aubagne preview", () => {
     expect(getAubagneNearbyPreviewPrice("gemenos")).toEqual({
-      apartment: 3436,
-      house: 4932,
+      apartment: 4184,
+      house: 5496,
     });
     expect(getAubagneNearbyPreviewPrice("cassis")).toBeNull();
   });

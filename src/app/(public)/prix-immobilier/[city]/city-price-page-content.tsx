@@ -91,10 +91,12 @@ function getLatestObservedSaleDate(salePoints: CitySalePoint[]) {
 }
 
 function MarketPriceCard({
+  centralLabel = "Moyenne",
   icon: Icon,
   label,
   stat,
 }: {
+  centralLabel?: string;
   icon: typeof Building2;
   label: string;
   stat: PropertyMarketStat;
@@ -127,7 +129,7 @@ function MarketPriceCard({
           </div>
           <div className="city-market-range-track" aria-hidden="true"><span /></div>
           <div className="city-market-range-labels" aria-hidden="true">
-            <span>Prix bas</span><span>Moyenne</span><span>Prix haut</span>
+            <span>Prix bas</span><span>{centralLabel}</span><span>Prix haut</span>
           </div>
         </div>
       </div>
@@ -244,16 +246,16 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
         ? `Quels sont les prix au m² des appartements et des maisons à ${city.name} ?`
         : `Quel est le prix moyen au m² à ${city.name} ?`,
       answer: seoPreview
-        ? `Selon le dernier snapshot de marché publié, un appartement à ${city.name} se situe autour de ${formatPrice(market.apartment.averagePricePerM2)}/m² et une maison autour de ${formatPrice(market.house.averagePricePerM2)}/m². Ces deux repères sont volontairement séparés : les réunir dans une moyenne simple masquerait les différences de typologie et de nombre de ventes.`
+        ? `Selon les médianes DVF publiées, un appartement à ${city.name} se situe autour de ${formatPrice(market.apartment.averagePricePerM2)}/m² et une maison autour de ${formatPrice(market.house.averagePricePerM2)}/m². Ces deux repères sont volontairement séparés : les réunir masquerait les différences de typologie et de nombre de ventes.`
         : `Le prix moyen observé à ${city.name} est de ${formatPrice(averagePrice)}/m². Cette moyenne communale réunit des biens différents : un appartement se situe autour de ${formatPrice(market.apartment.averagePricePerM2)}/m² et une maison autour de ${formatPrice(market.house.averagePricePerM2)}/m².`,
     },
     {
       question: `Quel est le prix au m² d’un appartement à ${city.name} ?`,
-      answer: `Le prix moyen d’un appartement à ${city.name} est estimé à ${formatPrice(market.apartment.averagePricePerM2)}/m², avec une fourchette observée de ${formatPrice(market.apartment.lowPricePerM2)} à ${formatPrice(market.apartment.highPricePerM2)}/m². L’étage, l’ascenseur, l’état, la terrasse, la vue, le stationnement et la copropriété expliquent une partie des écarts.`,
+      answer: `${usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’un appartement à ${city.name} est de ${formatPrice(market.apartment.averagePricePerM2)}/m², avec une fourchette observée de ${formatPrice(market.apartment.lowPricePerM2)} à ${formatPrice(market.apartment.highPricePerM2)}/m². L’étage, l’ascenseur, l’état, la terrasse, la vue, le stationnement et la copropriété expliquent une partie des écarts.`,
     },
     {
       question: `Quel est le prix au m² d’une maison à ${city.name} ?`,
-      answer: `Le prix moyen d’une maison à ${city.name} est estimé à ${formatPrice(market.house.averagePricePerM2)}/m², dans une fourchette de ${formatPrice(market.house.lowPricePerM2)} à ${formatPrice(market.house.highPricePerM2)}/m². Le terrain, l’exposition, les extérieurs, la piscine, les dépendances et les travaux pèsent fortement dans l’estimation finale.`,
+      answer: `${usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’une maison à ${city.name} est de ${formatPrice(market.house.averagePricePerM2)}/m², dans une fourchette de ${formatPrice(market.house.lowPricePerM2)} à ${formatPrice(market.house.highPricePerM2)}/m². Le terrain, l’exposition, les extérieurs, la piscine, les dépendances et les travaux pèsent fortement dans l’estimation finale.`,
     },
     {
       question: `Comment connaître le prix au m² d’une adresse ou d’un quartier à ${city.name} ?`,
@@ -387,8 +389,8 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
         <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
         <div className="city-overview-grid">
-          <MarketPriceCard icon={Building2} label="Appartement" stat={market.apartment} />
-          <MarketPriceCard icon={Home} label="Maison" stat={market.house} />
+          <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Building2} label="Appartement" stat={market.apartment} />
+          <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Home} label="Maison" stat={market.house} />
           <article className="city-market-signal-card">
             <span>Évolution sur un an</span>
             <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
@@ -627,7 +629,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       <section className="city-project-links city-modern-container" aria-labelledby="city-project-title">
         <div>
           <p className="city-section-kicker">Votre projet à {city.name}</p>
-          <h2 id="city-project-title">Passer du prix moyen à votre bien</h2>
+          <h2 id="city-project-title">Passer du {usesDvfMedian ? "prix médian" : "prix moyen"} à votre bien</h2>
           <p>Utilisez les données du marché pour cadrer votre projet, puis obtenez une analyse adaptée à votre adresse.</p>
         </div>
         <div className="city-project-link-list">
@@ -646,7 +648,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
 
       <section className="city-final-cta city-modern-container">
         <div><CheckCircle2 size={22} /><span>Estimation gratuite et confidentielle</span></div>
-        <h2>{seoPreview ? `À ${city.name}, une moyenne ne suffit pas à estimer votre bien.` : `La moyenne de ${city.name} ne suffit pas à estimer votre bien.`}</h2>
+        <h2>{seoPreview ? `À ${city.name}, une médiane communale ne suffit pas à estimer votre bien.` : `La moyenne de ${city.name} ne suffit pas à estimer votre bien.`}</h2>
         <p>Obtenez une estimation qui tient compte de votre adresse et des caractéristiques réelles du logement.</p>
         <Link href={`/estimation-immobiliere/${city.slug}`}>Estimer mon bien à {city.name} <ArrowRight size={18} /></Link>
       </section>
