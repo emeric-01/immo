@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Activity,
   ArrowRight,
   Building2,
   Calculator,
@@ -97,11 +96,13 @@ function MarketPriceCard({
   centralLabel = "Moyenne",
   icon: Icon,
   label,
+  rangeLabel,
   stat,
 }: {
   centralLabel?: string;
   icon: typeof Building2;
   label: string;
+  rangeLabel?: string;
   stat: PropertyMarketStat;
 }) {
   const hasObservedTrend = stat.trendSource !== "unavailable";
@@ -122,7 +123,7 @@ function MarketPriceCard({
         <strong>{formatPrice(stat.averagePricePerM2)}<small>/m²</small></strong>
         <div className="city-market-range" style={rangeStyle}>
           <div className="city-market-range-values">
-            <span>{stat.rangeSource === "transactions" ? "Fourchette observée" : "Fourchette indicative"}</span>
+            <span>{rangeLabel ?? (stat.rangeSource === "transactions" ? "Fourchette observée" : "Fourchette indicative")}</span>
             <strong>
               {formatPrice(stat.lowPricePerM2)}
               <small>à</small>
@@ -233,9 +234,24 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
     )
     : null;
 
+  const apartmentMarketReference = currentMarketPulse?.apartment?.nowcastPricePerM2
+    ?? market.apartment.averagePricePerM2;
+  const houseMarketReference = currentMarketPulse?.house?.nowcastPricePerM2
+    ?? market.house.averagePricePerM2;
+  const hasCurrentMarketReference = Boolean(
+    currentMarketPulse?.apartment?.nowcastPricePerM2
+    || currentMarketPulse?.house?.nowcastPricePerM2,
+  );
+  const apartmentOverviewStat = hasCurrentMarketReference
+    ? { ...market.apartment, averagePricePerM2: apartmentMarketReference }
+    : market.apartment;
+  const houseOverviewStat = hasCurrentMarketReference
+    ? { ...market.house, averagePricePerM2: houseMarketReference }
+    : market.house;
+
   const averagePrice = getAverageMarketPrice(
-    market.apartment.averagePricePerM2,
-    market.house.averagePricePerM2,
+    apartmentMarketReference,
+    houseMarketReference,
   );
   const averageTrend = market.apartment.trendSource === "history" && market.house.trendSource === "history" ? Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
@@ -247,6 +263,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       : "Repères indicatifs";
   const usesDvfMedian = market.source === "dvf";
   const latestObservedSaleDate = getLatestObservedSaleDate(market.salePoints);
+  const marketReferenceUpdatedAt = currentMarketPulse?.updatedAt ?? market.updatedAt;
   const neighborhoodProfile = seoPreview
     ? getLocalAgencyNeighborhoodProfile(city.slug)
     : null;
@@ -258,16 +275,16 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
         ? `Quels sont les prix au m² des appartements et des maisons à ${city.name} ?`
         : `Quel est le prix moyen au m² à ${city.name} ?`,
       answer: seoPreview
-        ? `Selon les médianes DVF publiées, un appartement à ${city.name} se situe autour de ${formatPrice(market.apartment.averagePricePerM2)}/m² et une maison autour de ${formatPrice(market.house.averagePricePerM2)}/m². Ces deux repères sont volontairement séparés : les réunir masquerait les différences de typologie et de nombre de ventes.`
+        ? `${hasCurrentMarketReference ? "Selon le Repère Marché Les Jumelles" : "Selon les médianes DVF publiées"}, un appartement à ${city.name} se situe autour de ${formatPrice(apartmentMarketReference)}/m² et une maison autour de ${formatPrice(houseMarketReference)}/m². Ces deux repères sont volontairement séparés : les réunir masquerait les différences de typologie et de nombre de ventes.`
         : `Le prix moyen observé à ${city.name} est de ${formatPrice(averagePrice)}/m². Cette moyenne communale réunit des biens différents : un appartement se situe autour de ${formatPrice(market.apartment.averagePricePerM2)}/m² et une maison autour de ${formatPrice(market.house.averagePricePerM2)}/m².`,
     },
     {
       question: `Quel est le prix au m² d’un appartement à ${city.name} ?`,
-      answer: `${usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’un appartement à ${city.name} est de ${formatPrice(market.apartment.averagePricePerM2)}/m², avec une fourchette observée de ${formatPrice(market.apartment.lowPricePerM2)} à ${formatPrice(market.apartment.highPricePerM2)}/m². L’étage, l’ascenseur, l’état, la terrasse, la vue, le stationnement et la copropriété expliquent une partie des écarts.`,
+      answer: `${hasCurrentMarketReference ? "Le Repère Marché Les Jumelles" : usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’un appartement à ${city.name} est de ${formatPrice(apartmentMarketReference)}/m². Les ventes DVF comparables s’inscrivent dans une fourchette observée de ${formatPrice(market.apartment.lowPricePerM2)} à ${formatPrice(market.apartment.highPricePerM2)}/m². L’étage, l’ascenseur, l’état, la terrasse, la vue, le stationnement et la copropriété expliquent une partie des écarts.`,
     },
     {
       question: `Quel est le prix au m² d’une maison à ${city.name} ?`,
-      answer: `${usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’une maison à ${city.name} est de ${formatPrice(market.house.averagePricePerM2)}/m², dans une fourchette de ${formatPrice(market.house.lowPricePerM2)} à ${formatPrice(market.house.highPricePerM2)}/m². Le terrain, l’exposition, les extérieurs, la piscine, les dépendances et les travaux pèsent fortement dans l’estimation finale.`,
+      answer: `${hasCurrentMarketReference ? "Le Repère Marché Les Jumelles" : usesDvfMedian ? "Le prix médian DVF" : "Le prix moyen"} d’une maison à ${city.name} est de ${formatPrice(houseMarketReference)}/m². Les ventes DVF comparables s’inscrivent dans une fourchette observée de ${formatPrice(market.house.lowPricePerM2)} à ${formatPrice(market.house.highPricePerM2)}/m². Le terrain, l’exposition, les extérieurs, la piscine, les dépendances et les travaux pèsent fortement dans l’estimation finale.`,
     },
     {
       question: `Comment connaître le prix au m² d’une adresse ou d’un quartier à ${city.name} ?`,
@@ -275,7 +292,9 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
     },
     {
       question: `Comment le prix au m² à ${city.name} est-il calculé ?`,
-      answer: `Les repères sont établis à partir des transactions immobilières publiées dans la base DVF de la DGFiP. Les ventes sont regroupées par commune, secteur et type de bien, puis rapportées à la surface connue. Les mutations atypiques ou les informations incomplètes doivent toujours être interprétées avec prudence.`,
+      answer: hasCurrentMarketReference
+        ? `Le Repère Marché Les Jumelles part des transactions immobilières DVF publiées par la DGFiP, puis mesure prudemment le signal donné par les offres professionnelles actives comparables. Les terrains, viagers, locaux, valeurs incohérentes et doublons détectables sont exclus. Le prix demandé n’est jamais assimilé à un prix vendu.`
+        : `Les repères sont établis à partir des transactions immobilières publiées dans la base DVF de la DGFiP. Les ventes sont regroupées par commune, secteur et type de bien, puis rapportées à la surface connue. Les mutations atypiques ou les informations incomplètes doivent toujours être interprétées avec prudence.`,
     },
     {
       question: `Le prix moyen au m² suffit-il pour estimer un bien à ${city.name} ?`,
@@ -308,26 +327,40 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <p className="city-section-kicker">Observatoire local · {city.postalCode}</p>
             <h1 id="city-price-title">Prix au m²<br />à {city.name}</h1>
             {seoPreview ? (
-              <dl className={previewStyles.heroPrices}>
+              <dl className={`${previewStyles.heroPrices} ${hasCurrentMarketReference ? previewStyles.heroPricesCurrent : ""}`}>
                 <div>
-                  <dt>Appartement{usesDvfMedian ? " · médiane DVF" : ""}</dt>
+                  <dt>
+                    Appartement
+                    {hasCurrentMarketReference ? <span>Repère Marché</span> : usesDvfMedian ? " · médiane DVF" : ""}
+                  </dt>
                   <dd>
                     <span className={previewStyles.heroPriceIcon}><Building2 aria-hidden="true" size={22} /></span>
-                    <span className={previewStyles.heroPriceAmount}>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></span>
+                    <span className={previewStyles.heroPriceAmount}>{formatPrice(apartmentMarketReference)}<small>/m²</small></span>
                   </dd>
-                  {usesDvfMedian ? (
+                  {hasCurrentMarketReference && currentMarketPulse?.apartment ? (
+                    <span className={previewStyles.heroPriceRange}>
+                      Socle DVF : {formatPrice(market.apartment.averagePricePerM2)}/m² · {currentMarketPulse.apartment.listingCount} offres comparables
+                    </span>
+                  ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
                       Fourchette observée : {formatPrice(market.apartment.lowPricePerM2)} à {formatPrice(market.apartment.highPricePerM2)}/m²
                     </span>
                   ) : null}
                 </div>
                 <div>
-                  <dt>Maison{usesDvfMedian ? " · médiane DVF" : ""}</dt>
+                  <dt>
+                    Maison
+                    {hasCurrentMarketReference ? <span>Repère Marché</span> : usesDvfMedian ? " · médiane DVF" : ""}
+                  </dt>
                   <dd>
                     <span className={previewStyles.heroPriceIcon}><Home aria-hidden="true" size={22} /></span>
-                    <span className={previewStyles.heroPriceAmount}>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></span>
+                    <span className={previewStyles.heroPriceAmount}>{formatPrice(houseMarketReference)}<small>/m²</small></span>
                   </dd>
-                  {usesDvfMedian ? (
+                  {hasCurrentMarketReference && currentMarketPulse?.house ? (
+                    <span className={previewStyles.heroPriceRange}>
+                      Socle DVF : {formatPrice(market.house.averagePricePerM2)}/m² · {currentMarketPulse.house.listingCount} offres comparables
+                    </span>
+                  ) : usesDvfMedian ? (
                     <span className={previewStyles.heroPriceRange}>
                       Fourchette observée : {formatPrice(market.house.lowPricePerM2)} à {formatPrice(market.house.highPricePerM2)}/m²
                     </span>
@@ -341,7 +374,9 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             )}
             <p className="city-hero-intro">
               {seoPreview
-                ? `${usesDvfMedian ? "Deux médianes DVF" : "Deux repères distincts"} pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
+                ? hasCurrentMarketReference
+                  ? `Le Repère Marché Les Jumelles croise les ventes signées et les offres professionnelles actuelles pour situer le marché de ${city.name} au plus près d’aujourd’hui.`
+                  : `${usesDvfMedian ? "Deux médianes DVF" : "Deux repères distincts"} pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
                 : `Une lecture claire du marché local pour estimer, acheter ou vérifier le prix d'un bien à ${city.name}.`}
             </p>
 
@@ -355,8 +390,8 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <div className="city-trust-row">
               {seoPreview ? (
                 <>
-                  <span><Database size={16} /> {usesDvfMedian ? "Transactions publiées · DVF DGFiP" : "Repères communaux · Immo Data"}</span>
-                  <span><CalendarDays size={16} /> Calcul actualisé en {formatMonthYear(market.updatedAt)}</span>
+                  <span><Database size={16} /> {hasCurrentMarketReference ? "Repère Marché Les Jumelles" : usesDvfMedian ? "Transactions publiées · DVF DGFiP" : "Repères communaux · Immo Data"}</span>
+                  <span><CalendarDays size={16} /> Calcul actualisé en {formatMonthYear(marketReferenceUpdatedAt)}</span>
                   {latestObservedSaleDate ? (
                     <span><ShieldCheck size={16} /> Dernières mutations disponibles : {formatDate(latestObservedSaleDate)}</span>
                   ) : null}
@@ -401,8 +436,20 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       <section className="city-market-overview city-modern-container" aria-labelledby="overview-title">
         <h2 className="city-visually-hidden" id="overview-title">Le marché en un coup d&apos;œil</h2>
         <div className="city-overview-grid">
-          <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Building2} label="Appartement" stat={market.apartment} />
-          <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Home} label="Maison" stat={market.house} />
+          <MarketPriceCard
+            centralLabel={hasCurrentMarketReference ? "Repère" : usesDvfMedian ? "Médiane" : undefined}
+            icon={Building2}
+            label="Appartement"
+            rangeLabel={hasCurrentMarketReference ? "Fourchette des ventes DVF" : undefined}
+            stat={apartmentOverviewStat}
+          />
+          <MarketPriceCard
+            centralLabel={hasCurrentMarketReference ? "Repère" : usesDvfMedian ? "Médiane" : undefined}
+            icon={Home}
+            label="Maison"
+            rangeLabel={hasCurrentMarketReference ? "Fourchette des ventes DVF" : undefined}
+            stat={houseOverviewStat}
+          />
           <article className="city-market-signal-card">
             <span>Évolution sur un an</span>
             <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
@@ -412,80 +459,29 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       </section>
 
       {seoPreview && currentMarketPulse && (currentMarketPulse.apartment || currentMarketPulse.house) ? (
-        <section className={`city-modern-container ${previewStyles.nowcastSection}`} aria-labelledby="current-market-title">
-          <header className={previewStyles.nowcastHeading}>
+        <section className={`city-modern-container ${previewStyles.marketMethodSection}`} aria-labelledby="current-market-title">
+          <header className={previewStyles.marketMethodHeading}>
             <div>
-              <p className="city-section-kicker">Lecture du marché actuel · test</p>
-              <h2 id="current-market-title">Des ventes signées aux prix proposés aujourd&apos;hui</h2>
+              <p className="city-section-kicker">Le Repère Marché Les Jumelles</p>
+              <h2 id="current-market-title">Un prix plus actuel qu&apos;une simple moyenne</h2>
             </div>
             <p>
-              La base DVF reste notre socle. Les annonces professionnelles actives apportent
-              un signal plus récent, mais leur prix demandé n&apos;est jamais assimilé à un prix vendu.
+              Les ventes DVF constituent le socle factuel. Les offres professionnelles actives
+              permettent de détecter la direction du marché sans confondre prix demandé et prix vendu.
             </p>
           </header>
 
-          <div className={previewStyles.nowcastGrid}>
-            <article>
-              <span className={previewStyles.nowcastLabel}><Database size={17} /> Ventes signées</span>
-              <h3>Socle DVF 2021–2025</h3>
-              <dl>
-                <div><dt><Building2 size={15} /> Appartement</dt><dd>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></dd></div>
-                <div><dt><Home size={15} /> Maison</dt><dd>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></dd></div>
-              </dl>
-              <p>Médianes des mutations comparables réellement enregistrées par la DGFiP.</p>
-            </article>
-
-            <article>
-              <span className={previewStyles.nowcastLabel}><Activity size={17} /> Annonces actives</span>
-              <h3>Prix actuellement demandés</h3>
-              <dl>
-                <div>
-                  <dt><Building2 size={15} /> Appartement</dt>
-                  <dd>{currentMarketPulse.apartment ? <>{formatPrice(currentMarketPulse.apartment.askingMedianPricePerM2)}<small>/m²</small></> : "Non disponible"}</dd>
-                  {currentMarketPulse.apartment ? <small>{currentMarketPulse.apartment.listingCount} biens comparables</small> : null}
-                </div>
-                <div>
-                  <dt><Home size={15} /> Maison</dt>
-                  <dd>{currentMarketPulse.house ? <>{formatPrice(currentMarketPulse.house.askingMedianPricePerM2)}<small>/m²</small></> : "Non disponible"}</dd>
-                  {currentMarketPulse.house ? <small>{currentMarketPulse.house.listingCount} biens comparables</small> : null}
-                </div>
-              </dl>
-              <p>
-                Biens résidentiels proposés par des professionnels, après exclusion des viagers,
-                terrains, locaux, valeurs incohérentes et doublons détectables.
-              </p>
-            </article>
-
-            <article className={previewStyles.nowcastResult}>
-              <span className={previewStyles.nowcastLabel}><Calculator size={17} /> Repère actualisé</span>
-              <h3>Lecture prudente du marché</h3>
-              <dl>
-                <div>
-                  <dt><Building2 size={15} /> Appartement</dt>
-                  <dd>{currentMarketPulse.apartment?.nowcastPricePerM2 ? <>{formatPrice(currentMarketPulse.apartment.nowcastPricePerM2)}<small>/m²</small></> : "Échantillon limité"}</dd>
-                  {currentMarketPulse.apartment?.nowcastPricePerM2 ? <small>Ajustement retenu : {formatPercent(currentMarketPulse.apartment.nowcastAdjustmentPercent)}</small> : null}
-                </div>
-                <div>
-                  <dt><Home size={15} /> Maison</dt>
-                  <dd>{currentMarketPulse.house?.nowcastPricePerM2 ? <>{formatPrice(currentMarketPulse.house.nowcastPricePerM2)}<small>/m²</small></> : "Échantillon limité"}</dd>
-                  {currentMarketPulse.house?.nowcastPricePerM2 ? <small>Ajustement retenu : {formatPercent(currentMarketPulse.house.nowcastAdjustmentPercent)}</small> : null}
-                </div>
-              </dl>
-              <p>Un indicateur expérimental de tendance, pas une estimation automatique d&apos;un logement précis.</p>
-            </article>
-          </div>
-
           <details className={previewStyles.nowcastMethod}>
-            <summary>Comprendre rapidement le calcul</summary>
+            <summary>Comment construisons-nous ce repère ?</summary>
             <div>
               <p>
-                Nous calculons d&apos;abord la médiane du prix demandé par type de bien. L&apos;écart avec
-                la médiane DVF est plafonné à ±12 %, puis seulement 60 % de ce signal peut être retenu.
-                Son poids diminue automatiquement lorsque le nombre de biens comparables est faible.
+                Nous partons des médianes des ventes DVF comparables, puis analysons séparément les
+                prix demandés des appartements et maisons actuellement proposés par des professionnels.
               </p>
               <p>
-                Cette prudence évite qu&apos;une poignée d&apos;annonces ambitieuses fasse artificiellement
-                monter le prix communal. Le modèle devra ensuite être recalibré avec les futures ventes DVF 2026.
+                L&apos;écart est plafonné à ±12 % et seulement 60 % de ce signal peut être retenu. Son poids
+                diminue lorsque l&apos;échantillon est faible. Viagers, terrains, locaux, valeurs incohérentes
+                et doublons détectables sont exclus.
               </p>
             </div>
           </details>
@@ -493,6 +489,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           <p className={previewStyles.nowcastSource}>
             Sources : DVF DGFiP / data.gouv.fr et agrégats internes issus d&apos;annonces professionnelles actives
             {currentMarketPulse.updatedAt ? `, synchronisées en ${formatMonthYear(currentMarketPulse.updatedAt)}` : ""}.
+            Ce repère de tendance ne remplace pas l&apos;estimation d&apos;un logement précis.
           </p>
         </section>
       ) : null}
@@ -513,7 +510,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <span><Building2 size={21} /></span>
             <div>
               <h3>Prix m² appartement à {city.name}</h3>
-              <strong>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></strong>
+              <strong>{formatPrice(apartmentMarketReference)}<small>/m²</small></strong>
               <p>
                 {market.apartment.rangeSource === "transactions" ? "Les transactions observées situent" : "La fourchette indicative situe"} les appartements entre {formatPrice(market.apartment.lowPricePerM2)} et {formatPrice(market.apartment.highPricePerM2)}/m².
                 L’étage, l’extérieur, le stationnement et l’état de la copropriété affinent ce repère.
@@ -524,7 +521,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <span><Home size={21} /></span>
             <div>
               <h3>Prix m² maison à {city.name}</h3>
-              <strong>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></strong>
+              <strong>{formatPrice(houseMarketReference)}<small>/m²</small></strong>
               <p>
                 {market.house.rangeSource === "transactions" ? "Les transactions observées situent" : "La fourchette indicative situe"} les maisons entre {formatPrice(market.house.lowPricePerM2)} et {formatPrice(market.house.highPricePerM2)}/m².
                 La parcelle, la vue, les annexes et les travaux rendent la comparaison plus sélective.
