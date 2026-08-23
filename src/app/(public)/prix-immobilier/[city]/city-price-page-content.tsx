@@ -235,6 +235,13 @@ function CityMarketDashboard({
                 Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "à venir"}
               </p>
               <em>{marketTrendLabel}</em>
+              {market.saleDurationDays ? (
+                <span className={previewStyles.dashboardDuration}>
+                  <Clock3 aria-hidden="true" size={14} />
+                  Délai moyen de vente
+                  <b>{market.saleDurationDays} jours</b>
+                </span>
+              ) : null}
             </div>
           ) : (
             <div><small>Délai moyen de vente</small><strong>{market.saleDurationDays ? `${market.saleDurationDays} jours` : "À qualifier"}</strong><p>Moyenne observée à {city.name}</p></div>

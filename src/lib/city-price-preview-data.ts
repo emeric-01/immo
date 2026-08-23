@@ -94,6 +94,8 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
     },
   ],
   transactionCount: 2573,
+  // Persisted Immo Data snapshot from city_market_cache, fetched on 2026-08-16.
+  saleDurationDays: 45,
   neighborhoods: [],
   expensiveStreets: [],
   affordableStreets: [],

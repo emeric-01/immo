@@ -32,6 +32,7 @@ describe("city price SEO preview snapshot", () => {
     expect(snapshot?.history.at(0)).toMatchObject({ period: "2014" });
     expect(snapshot?.history.at(-1)).toMatchObject({ period: "2025" });
     expect(snapshot?.transactionCount).toBe(2573);
+    expect(snapshot?.saleDurationDays).toBe(45);
     expect(snapshot?.salePoints[0]?.soldAt).toBe("2025-12-30");
   });
 

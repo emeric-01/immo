@@ -220,6 +220,23 @@
   font-weight: 750;
 }
 
+.dashboardDuration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  border-top: 1px solid #eadfd5;
+  padding-top: 7px;
+  color: #756c64;
+  font-size: .61rem;
+}
+
+.dashboardDuration b {
+  margin-left: auto;
+  color: #2a241f;
+  font-size: .72rem;
+}
+
 .neighborhoodSection {
   margin-top: 42px;
   border: 1px solid #e7d9cd;
