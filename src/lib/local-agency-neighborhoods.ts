@@ -885,64 +885,6 @@ const localAgencyNeighborhoodProfiles: Record<string, LocalAgencyNeighborhoodPro
     ],
     sources: [INSEE_IRIS_SOURCE],
   },
-  "marseille-11e": {
-    neighborhoods: [
-      {
-        codes: ["132110401"],
-        title: "Éoures",
-        description:
-          "À Éoures, les maisons représentent l’essentiel du parc. Terrain, environnement, vues, accès et qualité du bâti structurent fortement la comparaison.",
-      },
-      {
-        codes: ["132110101"],
-        title: "Les Accates",
-        description:
-          "Aux Accates, les maisons sont très présentes. Parcelle, calme, desserte, exposition, dépendances et prestations extérieures orientent l’estimation.",
-      },
-      {
-        codes: ["132110301"],
-        title: "Les Camoins",
-        description:
-          "Aux Camoins, le parc est largement composé de maisons. Rue, terrain, accès, proximité des services et niveau de rénovation doivent être comparés localement.",
-      },
-      {
-        codes: ["132110201"],
-        title: "La Barasse",
-        description:
-          "À La Barasse, les maisons dominent dans plusieurs poches résidentielles. Parcelle, environnement, accès et nuisances éventuelles demandent une lecture à l’échelle de la rue.",
-      },
-    ],
-    sources: [INSEE_IRIS_SOURCE],
-  },
-  "marseille-12e": {
-    neighborhoods: [
-      {
-        codes: ["132120403"],
-        title: "Hagueneau et La Garoutte",
-        description:
-          "Dans ce secteur résidentiel, les maisons et leurs extérieurs sont bien représentés. Terrain, calme, accès et qualité du bâti structurent l’estimation.",
-      },
-      {
-        codes: ["132120406"],
-        title: "Gasquy, Hugues et Garlaban",
-        description:
-          "De Gasquy à Garlaban, rue, parcelle, environnement, stationnement et niveau de rénovation peuvent créer des écarts importants entre maisons voisines.",
-      },
-      {
-        codes: ["132120303"],
-        title: "Plateau de Montolivet",
-        description:
-          "Sur le plateau de Montolivet, la qualité de l’adresse, les vues, le calme, les extérieurs, le stationnement et les travaux orientent la comparaison.",
-      },
-      {
-        codes: ["132120602"],
-        title: "La Comtesse",
-        description:
-          "À La Comtesse, le contexte de la rue, l’implantation du bien, le terrain, l’accessibilité et les prestations doivent être confrontés aux ventes proches.",
-      },
-    ],
-    sources: [INSEE_IRIS_SOURCE],
-  },
   toulon: {
     neighborhoods: [
       {

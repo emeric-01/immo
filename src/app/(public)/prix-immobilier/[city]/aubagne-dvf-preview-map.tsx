@@ -3,12 +3,7 @@
 import mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, ChevronDown, Database, Home, MapPinned } from "lucide-react";
-import {
-  aubagneDvfAudit,
-  aubagneDvfPreviewZones,
-  type AubagneDvfPreviewZone,
-  type DvfIrisPriceStat,
-} from "@/lib/aubagne-dvf-preview-data";
+import type { DvfIrisPriceStat, DvfMarketZoneShape } from "@/lib/city-market-data";
 import styles from "./aubagne-dvf-preview-map.module.css";
 
 type PropertyType = "apartment" | "house";
@@ -16,8 +11,12 @@ type MapStatus = "idle" | "ready" | "missing-token" | "error";
 
 type AubagneDvfPreviewMapProps = {
   accessToken: string;
+  cityName: string;
+  comparableSales?: number;
   communalApartmentPrice: number;
   communalHousePrice: number;
+  observedPeriod: string;
+  zones: DvfMarketZoneShape[];
 };
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
@@ -26,23 +25,13 @@ const VIEWBOX_WIDTH = 900;
 const VIEWBOX_HEIGHT = 610;
 const MAP_PADDING = 32;
 const LONGITUDE_CORRECTION = Math.cos((43.3 * Math.PI) / 180);
-const FEATURED_LABELS = new Set([
-  "Arnaud Solans",
-  "Beaudinard",
-  "Camp Major",
-  "Centre Ville",
-  "Garlaban-Royante",
-  "Longuillar",
-  "Passons",
-  "Pérussone",
-]);
 const MAP_SOURCE_ID = "aubagne-dvf-iris";
 const MAP_FILL_LAYER_ID = "aubagne-dvf-iris-fill";
 const MAP_LINE_LAYER_ID = "aubagne-dvf-iris-line";
 const MAP_LABEL_LAYER_ID = "aubagne-dvf-iris-label";
 
-function getGeometry() {
-  const points = aubagneDvfPreviewZones.flatMap((zone) => zone.polygon);
+function getGeometry(zones: DvfMarketZoneShape[]) {
+  const points = zones.flatMap((zone) => zone.polygon);
   const longitudes = points.map(([longitude]) => longitude * LONGITUDE_CORRECTION);
   const latitudes = points.map(([, latitude]) => latitude);
   const minLongitude = Math.min(...longitudes);
@@ -68,9 +57,7 @@ function getGeometry() {
   return { project };
 }
 
-const geometry = getGeometry();
-
-function getPath(zone: AubagneDvfPreviewZone) {
+function getPath(zone: DvfMarketZoneShape, geometry: ReturnType<typeof getGeometry>) {
   return `${zone.polygon.map((point, index) => {
     const [x, y] = geometry.project(point);
     return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
@@ -97,17 +84,22 @@ function getZoneFill(value: number | null, min: number, max: number) {
   return getZoneColor(value, min, max);
 }
 
-function getPriceScale(propertyType: PropertyType) {
-  const values = aubagneDvfPreviewZones
+function getPriceScale(
+  zones: DvfMarketZoneShape[],
+  propertyType: PropertyType,
+  fallbackPrice: number,
+) {
+  const values = zones
     .map((zone) => zone[propertyType].medianPricePerM2)
     .filter((value): value is number => value !== null);
+  if (values.length === 0) return { min: fallbackPrice, max: fallbackPrice };
   return { min: Math.min(...values), max: Math.max(...values) };
 }
 
-function buildMapZoneCollection(propertyType: PropertyType, min: number, max: number) {
+function buildMapZoneCollection(zones: DvfMarketZoneShape[], propertyType: PropertyType, min: number, max: number) {
   return {
     type: "FeatureCollection" as const,
-    features: aubagneDvfPreviewZones.map((zone) => {
+    features: zones.map((zone) => {
       const stat = zone[propertyType];
       return {
         type: "Feature" as const,
@@ -134,16 +126,20 @@ function getMapFeatureCode(feature: unknown) {
 
 export function AubagneDvfPreviewMap({
   accessToken,
+  cityName,
+  comparableSales,
   communalApartmentPrice,
   communalHousePrice,
+  observedPeriod,
+  zones,
 }: AubagneDvfPreviewMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapStatus, setMapStatus] = useState<MapStatus>("idle");
   const [propertyType, setPropertyType] = useState<PropertyType>("apartment");
-  const [activeZoneCode, setActiveZoneCode] = useState("130050701");
-  const activeZone = aubagneDvfPreviewZones.find((zone) => zone.code === activeZoneCode)
-    ?? aubagneDvfPreviewZones[0];
+  const [activeZoneCode, setActiveZoneCode] = useState(zones[0]?.code ?? "");
+  const initialActiveZoneCode = zones[0]?.code ?? "";
+  const activeZone = zones.find((zone) => zone.code === activeZoneCode) ?? zones[0];
   const activeStat = activeZone[propertyType];
   const confidenceScore = getConfidenceScore(activeStat);
   const propertyLabel = propertyType === "apartment" ? "appartements" : "maisons";
@@ -151,7 +147,12 @@ export function AubagneDvfPreviewMap({
     ? communalApartmentPrice
     : communalHousePrice;
 
-  const scale = useMemo(() => getPriceScale(propertyType), [propertyType]);
+  const geometry = useMemo(() => getGeometry(zones), [zones]);
+  const featuredLabels = useMemo(() => new Set(zones.slice(0, 8).map((zone) => zone.name)), [zones]);
+  const scale = useMemo(
+    () => getPriceScale(zones, propertyType, communalPrice),
+    [communalPrice, propertyType, zones],
+  );
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -164,10 +165,10 @@ export function AubagneDvfPreviewMap({
 
     try {
       mapboxgl.accessToken = accessToken;
-      const initialScale = getPriceScale("apartment");
+      const initialScale = getPriceScale(zones, "apartment", communalApartmentPrice);
       const map = new mapboxgl.Map({
         attributionControl: true,
-        center: [5.5708, 43.2965],
+        center: zones[0]?.labelPoint ?? [5.5708, 43.2965],
         container: mapContainerRef.current,
         pitch: 0,
         style: "mapbox://styles/mapbox/light-v11",
@@ -181,7 +182,7 @@ export function AubagneDvfPreviewMap({
         mapLoaded = true;
         map.addSource(MAP_SOURCE_ID, {
           type: "geojson",
-          data: buildMapZoneCollection("apartment", initialScale.min, initialScale.max),
+          data: buildMapZoneCollection(zones, "apartment", initialScale.min, initialScale.max),
         });
         map.addLayer({
           id: MAP_FILL_LAYER_ID,
@@ -199,13 +200,13 @@ export function AubagneDvfPreviewMap({
           paint: {
             "line-color": [
               "case",
-              ["==", ["get", "code"], "130050701"],
+              ["==", ["get", "code"], initialActiveZoneCode],
               "#2d251f",
               "#ffffff",
             ],
             "line-width": [
               "case",
-              ["==", ["get", "code"], "130050701"],
+              ["==", ["get", "code"], initialActiveZoneCode],
               3.5,
               1.6,
             ],
@@ -230,7 +231,7 @@ export function AubagneDvfPreviewMap({
         });
 
         const bounds = new mapboxgl.LngLatBounds();
-        aubagneDvfPreviewZones.forEach((zone) => {
+        zones.forEach((zone) => {
           zone.polygon.forEach((point) => bounds.extend(point));
         });
         const isCompactMap = (mapContainerRef.current?.clientWidth ?? 0) <= 700;
@@ -267,14 +268,14 @@ export function AubagneDvfPreviewMap({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [accessToken]);
+  }, [accessToken, communalApartmentPrice, initialActiveZoneCode, zones]);
 
   useEffect(() => {
     const map = mapRef.current;
     const source = map?.getSource(MAP_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     if (mapStatus !== "ready" || !source) return;
-    source.setData(buildMapZoneCollection(propertyType, scale.min, scale.max));
-  }, [mapStatus, propertyType, scale.max, scale.min]);
+    source.setData(buildMapZoneCollection(zones, propertyType, scale.min, scale.max));
+  }, [mapStatus, propertyType, scale.max, scale.min, zones]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -305,18 +306,18 @@ export function AubagneDvfPreviewMap({
   }, [activeZoneCode, mapStatus]);
 
   return (
-    <section className={styles.wrapper} aria-label="Prix par quartier à Aubagne">
+    <section className={styles.wrapper} aria-label={`Prix par quartier à ${cityName}`}>
       <div className={styles.mapPanel}>
         <div className={styles.toolbar}>
           <div className={styles.mapTitle}>
             <span><MapPinned size={15} /> Prix par quartier</span>
-            <small>Médianes DVF · {aubagneDvfAudit.observedPeriod}</small>
+            <small>Médianes DVF · {observedPeriod}</small>
           </div>
           <div className={styles.controls}>
             <label className={styles.zoneSelect}>
               <span className="city-visually-hidden">Choisir une zone IRIS</span>
               <select value={activeZone.code} onChange={(event) => setActiveZoneCode(event.target.value)}>
-                {aubagneDvfPreviewZones.map((zone) => (
+                {zones.map((zone) => (
                   <option key={`${zone.code}-option`} value={zone.code}>{zone.name}</option>
                 ))}
               </select>
@@ -349,13 +350,13 @@ export function AubagneDvfPreviewMap({
 
         <div className={styles.mapCanvas}>
           <div
-            aria-label="Fond cartographique Mapbox d’Aubagne"
+            aria-label={`Fond cartographique Mapbox de ${cityName}`}
             className={`${styles.mapboxMap} ${mapStatus === "ready" ? styles.mapboxVisible : ""}`}
             ref={mapContainerRef}
           />
           <svg
             aria-hidden={mapStatus === "ready"}
-            aria-label={`Carte des prix médians des ${propertyLabel} dans les zones IRIS d’Aubagne`}
+            aria-label={`Carte des prix médians des ${propertyLabel} dans les zones IRIS de ${cityName}`}
             className={`${styles.map} ${mapStatus === "ready" ? styles.mapHidden : ""}`}
             role="img"
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
@@ -366,14 +367,14 @@ export function AubagneDvfPreviewMap({
                 <path d="M-3 3L3-3M0 12L12 0M9 15L15 9" stroke="#d1c9be" strokeWidth="2" />
               </pattern>
             </defs>
-            {aubagneDvfPreviewZones.map((zone) => {
+            {zones.map((zone) => {
               const stat = zone[propertyType];
               const selected = zone.code === activeZone.code;
               return (
                 <path
                   aria-label={`${zone.name} : ${stat.medianPricePerM2 === null ? "données insuffisantes" : `${euroFormatter.format(stat.medianPricePerM2)} euros par mètre carré`}`}
                   className={selected ? styles.selectedZone : styles.zone}
-                  d={getPath(zone)}
+                  d={getPath(zone, geometry)}
                   fill={getZoneFill(stat.medianPricePerM2, scale.min, scale.max)}
                   key={zone.code}
                   onClick={() => setActiveZoneCode(zone.code)}
@@ -387,10 +388,10 @@ export function AubagneDvfPreviewMap({
                 </path>
               );
             })}
-            {aubagneDvfPreviewZones.map((zone) => {
+            {zones.map((zone) => {
               const [x, y] = geometry.project(zone.labelPoint);
               const selected = zone.code === activeZone.code;
-              if (!selected && !FEATURED_LABELS.has(zone.name)) return null;
+              if (!selected && !featuredLabels.has(zone.name)) return null;
               const shortName = zone.name === "Garlaban-Royante" ? "Garlaban" : zone.name;
               return (
                 <text
@@ -441,11 +442,11 @@ export function AubagneDvfPreviewMap({
               </>
             ) : (
               <div className={styles.communalFallback}>
-                <span>Prix communal à Aubagne</span>
+                <span>Prix communal à {cityName}</span>
                 <strong>{euroFormatter.format(communalPrice)} €<small>/m²</small></strong>
                 <p>
                   Seulement {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} locale{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""}.
-                  Ce montant concerne Aubagne, pas ce quartier précisément.
+                  Ce montant concerne {cityName}, pas ce quartier précisément.
                 </p>
               </div>
             )}
@@ -463,7 +464,7 @@ export function AubagneDvfPreviewMap({
       <details className={styles.sourceDetails}>
         <summary>
           <span><Database size={16} /> Source et méthode</span>
-          <small>DVF DGFiP · 20 zones IRIS officielles</small>
+          <small>DVF DGFiP · {zones.length} zone{zones.length > 1 ? "s" : ""} IRIS officielle{zones.length > 1 ? "s" : ""}</small>
           <ChevronDown aria-hidden="true" size={16} />
         </summary>
         <div className={styles.audit}>
@@ -476,10 +477,10 @@ export function AubagneDvfPreviewMap({
             </p>
           </div>
           <dl>
-            <div><dt>Lignes DVF lues</dt><dd>{countFormatter.format(aubagneDvfAudit.rawRows)}</dd></div>
-            <div><dt>Mutations uniques</dt><dd>{countFormatter.format(aubagneDvfAudit.uniqueMutations)}</dd></div>
-            <div><dt>Ventes comparables</dt><dd>{countFormatter.format(aubagneDvfAudit.comparableSales)}</dd></div>
-            <div><dt>Dernière diffusion</dt><dd>Avril 2026</dd></div>
+            <div><dt>Zones IRIS</dt><dd>{countFormatter.format(zones.length)}</dd></div>
+            {comparableSales ? <div><dt>Ventes comparables</dt><dd>{countFormatter.format(comparableSales)}</dd></div> : null}
+            <div><dt>Période observée</dt><dd>{observedPeriod}</dd></div>
+            <div><dt>Source</dt><dd>DVF DGFiP</dd></div>
           </dl>
           <p className={styles.methodNote}>
             Une mutation est comptée une seule fois. Les ventes mixtes ou multiples, les surfaces

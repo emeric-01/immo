@@ -23,6 +23,7 @@ import {
 } from "@/lib/cities";
 import {
   getCityMarketDataSet,
+  isDvfMarketZone,
   type CityMarketData,
   type CitySalePoint,
   type PropertyMarketStat,
@@ -315,7 +316,7 @@ export async function generateMetadata({ params }: CityPricePageProps): Promise<
 
 export default async function CityPricePage({ params }: CityPricePageProps) {
   const { city: citySlug } = await params;
-  return renderCityPricePage(citySlug, citySlug === "aubagne");
+  return renderCityPricePage(citySlug, true);
 }
 
 export async function CityPriceSeoPreview({ citySlug }: { citySlug: string }) {
@@ -384,11 +385,38 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   );
   const neighborhoodProfile = getLocalAgencyNeighborhoodProfile(city.slug);
   const verifiedNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
-  const previewNeighborhoods = seoPreview ? verifiedNeighborhoods : [];
-  const neighborhoodFaq = verifiedNeighborhoods.length > 0
+  const storedDvfZones = market.zones.filter(isDvfMarketZone);
+  const detailedDvfZones = storedDvfZones.length > 0
+    ? storedDvfZones
+    : city.slug === "aubagne"
+      ? aubagneDvfPreviewZones
+      : [];
+  const observedPeriod = detailedDvfZones.find((zone) => zone.apartment.observedPeriod)?.apartment.observedPeriod
+    ?? detailedDvfZones.find((zone) => zone.house.observedPeriod)?.house.observedPeriod
+    ?? "2021–2025";
+  const generatedNeighborhoods = [...detailedDvfZones]
+    .filter((zone) => zone.house.medianPricePerM2 !== null && zone.house.observations >= 3)
+    .sort((left, right) => (right.house.medianPricePerM2 ?? 0) - (left.house.medianPricePerM2 ?? 0))
+    .slice(0, 4)
+    .map((zone) => ({
+      title: zone.name,
+      description: `Dans cette zone IRIS, ${zone.house.observations} ventes de maisons comparables situent le prix médian autour de ${formatPrice(zone.house.medianPricePerM2!)}/m². Ce repère doit ensuite être ajusté selon l’adresse, le terrain, l’état et les prestations du bien.`,
+    }));
+  const previewNeighborhoods = seoPreview
+    ? verifiedNeighborhoods.length > 0 ? verifiedNeighborhoods : generatedNeighborhoods
+    : [];
+  const comparisonZones = detailedDvfZones.length <= 24
+    ? detailedDvfZones
+    : [...detailedDvfZones]
+      .sort((left, right) => (
+        right.apartment.observations + right.house.observations
+        - left.apartment.observations - left.house.observations
+      ))
+      .slice(0, 24);
+  const neighborhoodFaq = previewNeighborhoods.length > 0
     ? {
         question: `Quels quartiers comparer pour connaître le prix au m² à ${city.name} ?`,
-        answer: `À ${city.name}, ${neighborhoodListFormatter.format(verifiedNeighborhoods.map((neighborhood) => neighborhood.title))} font partie des quartiers à comparer. Le quartier donne un premier contexte, mais les écarts de prix se vérifient ensuite à l’échelle de la rue, du type de bien et de ses caractéristiques : état, terrain, vue, extérieur, stationnement et prestations.`,
+        answer: `À ${city.name}, ${neighborhoodListFormatter.format(previewNeighborhoods.map((neighborhood) => neighborhood.title))} font partie des quartiers à comparer. Le quartier donne un premier contexte, mais les écarts de prix se vérifient ensuite à l’échelle de la rue, du type de bien et de ses caractéristiques : état, terrain, vue, extérieur, stationnement et prestations.`,
       }
     : null;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
@@ -555,11 +583,15 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           </div>
 
           <div className="city-modern-map-wrap">
-            {seoPreview && city.slug === "aubagne" ? (
+            {seoPreview && detailedDvfZones.length > 0 ? (
               <AubagneDvfPreviewMap
                 accessToken={mapboxToken}
+                cityName={city.name}
+                comparableSales={market.transactionCount}
                 communalApartmentPrice={market.apartment.averagePricePerM2}
                 communalHousePrice={market.house.averagePricePerM2}
+                observedPeriod={observedPeriod}
+                zones={detailedDvfZones}
               />
             ) : (
               <CityPriceMap
@@ -681,12 +713,12 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             ))}
           </div>
 
-          {city.slug === "aubagne" ? (
-            <section className={previewStyles.irisComparison} aria-labelledby="aubagne-iris-comparison-title">
+          {comparisonZones.length > 0 ? (
+            <section className={previewStyles.irisComparison} aria-labelledby={`${city.slug}-iris-comparison-title`}>
               <div className={previewStyles.irisComparisonHeading}>
                 <div>
-                  <span>20 zones IRIS officielles</span>
-                  <h3 id="aubagne-iris-comparison-title">Comparer les prix par quartier à Aubagne</h3>
+                  <span>{detailedDvfZones.length} zone{detailedDvfZones.length > 1 ? "s" : ""} IRIS officielle{detailedDvfZones.length > 1 ? "s" : ""}</span>
+                  <h3 id={`${city.slug}-iris-comparison-title`}>Comparer les prix par quartier à {city.name}</h3>
                 </div>
                 <p>
                   Médianes des ventes comparables DVF 2021–2025 dès trois ventes. En dessous,
@@ -695,7 +727,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               </div>
 
               <div className={previewStyles.irisComparisonGrid}>
-                {aubagneDvfPreviewZones.map((zone) => (
+                {comparisonZones.map((zone) => (
                   <article key={`${zone.code}-comparison`}>
                     <div className={previewStyles.irisZoneTitle}>
                       <h4>{zone.name}</h4>
@@ -707,7 +739,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                         <dd>
                           {zone.apartment.medianPricePerM2 !== null
                             ? <>{formatPrice(zone.apartment.medianPricePerM2)}<small>/m²</small></>
-                            : <span>Repère Aubagne : {formatPrice(market.apartment.averagePricePerM2)}/m²</span>}
+                            : <span>Repère {city.name} : {formatPrice(market.apartment.averagePricePerM2)}/m²</span>}
                         </dd>
                         <small>{formatIrisObservationLabel(zone.apartment)}</small>
                       </div>
@@ -716,7 +748,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                         <dd>
                           {zone.house.medianPricePerM2 !== null
                             ? <>{formatPrice(zone.house.medianPricePerM2)}<small>/m²</small></>
-                            : <span>Repère Aubagne : {formatPrice(market.house.averagePricePerM2)}/m²</span>}
+                            : <span>Repère {city.name} : {formatPrice(market.house.averagePricePerM2)}/m²</span>}
                         </dd>
                         <small>{formatIrisObservationLabel(zone.house)}</small>
                       </div>

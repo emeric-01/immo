@@ -52,6 +52,28 @@ const nextConfig: NextConfig = {
     return [
       ...legacyAgenceAsmRedirects,
       ...legacyWordPressRedirects,
+      ...["marseille-11e", "marseille-12e"].flatMap((legacyCity) => [
+        {
+          source: `/prix-m2/${legacyCity}`,
+          destination: "/prix-m2/marseille",
+          permanent: true,
+        },
+        {
+          source: `/prix-immobilier/${legacyCity}`,
+          destination: "/prix-m2/marseille",
+          permanent: true,
+        },
+        {
+          source: `/agence-immobiliere/${legacyCity}`,
+          destination: "/agence-immobiliere/marseille",
+          permanent: true,
+        },
+        {
+          source: `/estimation-immobiliere/${legacyCity}`,
+          destination: "/estimation-immobiliere/marseille",
+          permanent: true,
+        },
+      ]),
       {
         source: "/prix-immobilier/:city",
         destination: "/prix-m2/:city",

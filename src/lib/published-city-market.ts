@@ -47,14 +47,15 @@ export async function resolvePublishedCityMarket(
   cachedMarket?: CityMarketData | null,
 ): Promise<PublishedCityMarket | null> {
   const localSnapshot = getCityPricePreviewSnapshot(city.slug);
-  const base = localSnapshot ?? cachedMarket ?? await getCityMarketData(city);
+  const storedMarket = cachedMarket ?? await getCityMarketData(city);
+  const base = storedMarket ?? localSnapshot;
 
   if (!base) return null;
 
-  // A local snapshot marks a city whose new price-page methodology is published.
+  // A stored DVF snapshot marks a city whose new price-page methodology is published.
   // Current listing data is read from the stored back-office sync only: a public
   // page must stay usable even when the remote Interkab service is unavailable.
-  const pulse = localSnapshot
+  const pulse = base.source === "dvf"
     ? await getInterkabMarketPulse(
       city.inseeCode,
       base.apartment.averagePricePerM2,

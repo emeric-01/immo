@@ -2,11 +2,10 @@
 
 import type mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { AubagneDvfPreviewZone } from "@/lib/aubagne-dvf-preview-data";
-import type { CitySalePoint } from "@/lib/city-market-data";
+import type { CitySalePoint, DvfMarketZoneShape } from "@/lib/city-market-data";
 import styles from "./local-agency.module.css";
 
-type LocalAgencyMapZone = Pick<AubagneDvfPreviewZone, "code" | "name" | "polygon">;
+type LocalAgencyMapZone = Pick<DvfMarketZoneShape, "code" | "name" | "polygon">;
 
 type LocalAgencySalesMapProps = {
   accessToken: string;

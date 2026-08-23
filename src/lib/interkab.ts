@@ -7,11 +7,7 @@ export const AUBAGNE_INTERKAB_URL =
 const FOUR_DAYS = 60 * 60 * 24 * 4;
 const PILOT_DETAIL_LIMIT = 6;
 
-const INTERKAB_EXCLUDED_CITY_SLUGS = new Set(["marseille-11e", "marseille-12e"]);
-
-export const INTERKAB_CITIES = localMarketCities.filter((city) =>
-  !INTERKAB_EXCLUDED_CITY_SLUGS.has(city.slug)
-);
+export const INTERKAB_CITIES = localMarketCities;
 export const INTERKAB_SYNC_BATCH_SIZE = 4;
 
 export type InterkabListing = {

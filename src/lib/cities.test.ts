@@ -23,8 +23,6 @@ const addedCities = [
   ["la-bouilladisse", "13016"],
   ["peypin", "13073"],
   ["plan-de-cuques", "13075"],
-  ["marseille-11e", "13211"],
-  ["marseille-12e", "13212"],
   ["ceyreste", "13023"],
   ["cassis", "13022"],
   ["roquefort-la-bedoule", "13085"],
@@ -61,10 +59,16 @@ describe("city price pages", () => {
   });
 
   it("limits the public local market silo to departments 13 and 83", () => {
-    expect(localMarketCities).toHaveLength(43);
+    expect(localMarketCities).toHaveLength(41);
     expect(localMarketCities.every((city) => ["Bouches-du-Rhone", "Var"].includes(city.department))).toBe(true);
     expect(getLocalMarketCityBySlug("aubagne")?.department).toBe("Bouches-du-Rhone");
     expect(getLocalMarketCityBySlug("nice")).toBeUndefined();
+  });
+
+  it("publishes Marseille as one city instead of arrondissement pages", () => {
+    expect(getCityBySlug("marseille")?.inseeCode).toBe("13055");
+    expect(getCityBySlug("marseille-11e")).toBeUndefined();
+    expect(getCityBySlug("marseille-12e")).toBeUndefined();
   });
 
   it("does not link a local market page to an out-of-scope neighboring city", () => {

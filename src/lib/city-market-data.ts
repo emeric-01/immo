@@ -28,6 +28,17 @@ export type CityPriceHistoryPoint = {
   house: number;
 };
 
+export type DvfReliability = "robust" | "indicative" | "exploratory" | "insufficient";
+
+export type DvfIrisPriceStat = {
+  observations: number;
+  medianPricePerM2: number | null;
+  p25PricePerM2: number | null;
+  p75PricePerM2: number | null;
+  reliability: DvfReliability;
+  observedPeriod?: string;
+};
+
 export type CityPriceZone = {
   id: string;
   name: string;
@@ -36,7 +47,32 @@ export type CityPriceZone = {
   polygon: [number, number][];
   includedNeighborhoods?: string[];
   mapLabel?: string;
+  code?: string;
+  labelPoint?: [number, number];
+  apartment?: DvfIrisPriceStat;
+  house?: DvfIrisPriceStat;
 };
+
+export type DvfMarketZoneShape = {
+  code: string;
+  name: string;
+  polygon: [number, number][];
+  labelPoint: [number, number];
+  apartment: DvfIrisPriceStat;
+  house: DvfIrisPriceStat;
+};
+
+export type DvfMarketZone = CityPriceZone & DvfMarketZoneShape;
+
+export function isDvfMarketZone(zone: CityPriceZone): zone is DvfMarketZone {
+  return Boolean(
+    zone.code
+    && zone.labelPoint
+    && zone.apartment
+    && zone.house
+    && zone.polygon.length >= 3,
+  );
+}
 
 export type CitySalePoint = {
   id: string;
@@ -736,16 +772,6 @@ const cityLocalInfoOverrides: Record<string, CityLocalInfo> = {
     density: 3724,
     areaKm2: 237.9,
   },
-  "marseille-11e": {
-    population: 59883,
-    density: 1788,
-    areaKm2: 33.5,
-  },
-  "marseille-12e": {
-    population: 64399,
-    density: 4589,
-    areaKm2: 14.03,
-  },
   mimet: {
     population: 4241,
     density: 225,
@@ -833,6 +859,12 @@ function withObservedTransactionRange(
   salePoints: CitySalePoint[],
   propertyType: CitySalePoint["propertyType"],
 ): PropertyMarketStat {
+  // The persisted DVF snapshot already derives its interval from the complete
+  // comparable sample. The 20 map points are illustrative and must not replace it.
+  if (stat.rangeSource === "transactions") {
+    return stat;
+  }
+
   const prices = salePoints
     .filter((sale) => sale.propertyType === propertyType)
     .map((sale) => sale.pricePerM2)

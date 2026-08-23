@@ -1,21 +1,7 @@
-export type DvfReliability = "robust" | "indicative" | "exploratory" | "insufficient";
+import type { DvfIrisPriceStat, DvfMarketZoneShape, DvfReliability } from "./city-market-data";
 
-export type DvfIrisPriceStat = {
-  observations: number;
-  medianPricePerM2: number | null;
-  p25PricePerM2: number | null;
-  p75PricePerM2: number | null;
-  reliability: DvfReliability;
-};
-
-export type AubagneDvfPreviewZone = {
-  code: string;
-  name: string;
-  polygon: [number, number][];
-  labelPoint: [number, number];
-  apartment: DvfIrisPriceStat;
-  house: DvfIrisPriceStat;
-};
+export type { DvfIrisPriceStat, DvfReliability };
+export type AubagneDvfPreviewZone = DvfMarketZoneShape;
 
 export const aubagneDvfAudit = {
   source: "DVF géolocalisées · data.gouv.fr",
