@@ -15,7 +15,7 @@ import {
 import type { CityPriceHistoryPoint } from "@/lib/city-market-data";
 
 type CityMarketChartProps = {
-  averagePrice: number;
+  averagePrice?: number;
   cityName: string;
   defaultPeriod?: Period;
   points: CityPriceHistoryPoint[];
@@ -112,12 +112,14 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
           tickLine={false}
           width={48}
         />
-        <ReferenceLine
-          label={{ fill: "#81796f", fontSize: 11, position: "insideTopRight", value: `Moyenne ${cityName}` }}
-          stroke="#b9ada0"
-          strokeDasharray="3 5"
-          y={averagePrice}
-        />
+        {typeof averagePrice === "number" ? (
+          <ReferenceLine
+            label={{ fill: "#81796f", fontSize: 11, position: "insideTopRight", value: `Moyenne ${cityName}` }}
+            stroke="#b9ada0"
+            strokeDasharray="3 5"
+            y={averagePrice}
+          />
+        ) : null}
         <Tooltip content={MarketTooltip} cursor={{ stroke: "#171612", strokeDasharray: "4 4" }} />
         <Area
           activeDot={{ fill: "#171612", r: 6, stroke: "#fff", strokeWidth: 3 }}

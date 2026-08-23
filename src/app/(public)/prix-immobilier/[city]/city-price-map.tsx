@@ -9,6 +9,7 @@ type CityPriceMapProps = {
   cityName: string;
   fitToSalePoints?: boolean;
   salePointsFitMode?: "map" | "hero";
+  showPriceScale?: boolean;
   center: {
     longitude: number;
     latitude: number;
@@ -116,6 +117,7 @@ export function CityPriceMap({
   cityName,
   fitToSalePoints = false,
   salePointsFitMode = "map",
+  showPriceScale = true,
   center,
   zones,
   salePoints,
@@ -418,11 +420,13 @@ export function CityPriceMap({
             </button>
           ))}
         </div>
-        <div className="city-map-scale" aria-label="Legende des prix">
-          <span>&lt; 3000 EUR</span>
-          <span className="scale-track" aria-hidden="true" />
-          <span>&gt; 4000 EUR</span>
-        </div>
+        {showPriceScale ? (
+          <div className="city-map-scale" aria-label="Legende des prix">
+            <span>&lt; 3000 EUR</span>
+            <span className="scale-track" aria-hidden="true" />
+            <span>&gt; 4000 EUR</span>
+          </div>
+        ) : null}
       </div>
 
       <div
