@@ -23,6 +23,7 @@ import {
 } from "@/lib/cities";
 import {
   getCityMarketDataSet,
+  type CityMarketData,
   type CitySalePoint,
   type PropertyMarketStat,
 } from "@/lib/city-market-data";
@@ -214,10 +215,11 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   if (!city) notFound();
 
   const nearbyCities = getNearbyLocalMarketCities(city);
-  const marketSnapshots = await getCityMarketDataSet([city, ...nearbyCities]);
-  const market = marketSnapshots.get(city.inseeCode) ?? (
-    seoPreview ? getCityPricePreviewSnapshot(city.slug) : null
-  );
+  const previewMarket = seoPreview ? getCityPricePreviewSnapshot(city.slug) : null;
+  const marketSnapshots = previewMarket
+    ? new Map<string, CityMarketData>()
+    : await getCityMarketDataSet([city, ...nearbyCities]);
+  const market = previewMarket ?? marketSnapshots.get(city.inseeCode);
 
   if (!market) return <CityMarketUnavailable city={city} />;
 
