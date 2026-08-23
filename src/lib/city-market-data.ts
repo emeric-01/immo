@@ -35,6 +35,7 @@ export type CityPriceZone = {
   color: string;
   polygon: [number, number][];
   includedNeighborhoods?: string[];
+  mapLabel?: string;
 };
 
 export type CitySalePoint = {

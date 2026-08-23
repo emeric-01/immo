@@ -8,7 +8,9 @@ type CityPriceMapProps = {
   accessToken: string;
   cityName: string;
   fitToSalePoints?: boolean;
+  fitToZones?: boolean;
   salePointsFitMode?: "map" | "hero";
+  showZoneLabels?: boolean;
   showPriceScale?: boolean;
   zoneListLimit?: number;
   zoneMetricLabel?: string;
@@ -82,6 +84,7 @@ function buildZoneCollection(zones: CityPriceZone[]) {
       type: "Feature" as const,
       properties: {
         id: zone.id,
+        mapLabel: zone.mapLabel ?? zone.name,
         name: zone.name,
         pricePerM2: zone.pricePerM2,
         color: zone.color,
@@ -119,7 +122,9 @@ export function CityPriceMap({
   accessToken,
   cityName,
   fitToSalePoints = false,
+  fitToZones = false,
   salePointsFitMode = "map",
+  showZoneLabels = false,
   showPriceScale = true,
   zoneListLimit = 4,
   zoneMetricLabel,
@@ -224,6 +229,29 @@ export function CityPriceMap({
         },
       });
 
+      if (showZoneLabels) {
+        map.addLayer({
+          id: "price-zones-labels",
+          type: "symbol",
+          source: "price-zones",
+          layout: {
+            "text-field": ["get", "mapLabel"],
+            "text-size": 12,
+            "text-line-height": 1.15,
+            "text-letter-spacing": 0.01,
+            "text-max-width": 15,
+            "text-allow-overlap": false,
+            "text-padding": 6,
+          },
+          paint: {
+            "text-color": "#201c18",
+            "text-halo-color": "rgba(255, 253, 249, 0.96)",
+            "text-halo-width": 1.8,
+            "text-halo-blur": 0.5,
+          },
+        });
+      }
+
       map.addSource("sold-properties", {
         type: "geojson",
         data: salesCollection,
@@ -247,7 +275,26 @@ export function CityPriceMap({
         },
       });
 
-      if (fitToSalePoints && salePoints.length > 0) {
+      if (fitToZones && zones.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+
+        zones.forEach((zone) => {
+          zone.polygon.forEach(([longitude, latitude]) => {
+            if (Number.isFinite(longitude) && Number.isFinite(latitude)) {
+              bounds.extend([longitude, latitude]);
+            }
+          });
+        });
+
+        if (!bounds.isEmpty()) {
+          const containerWidth = containerRef.current?.clientWidth ?? 0;
+          const padding = containerWidth <= 720
+            ? { top: 70, right: 28, bottom: 175, left: 28 }
+            : { top: 88, right: 44, bottom: 220, left: 44 };
+
+          map.fitBounds(bounds, { duration: 0, maxZoom: 13, padding });
+        }
+      } else if (fitToSalePoints && salePoints.length > 0) {
         const bounds = new mapboxgl.LngLatBounds();
 
         salePoints.forEach((salePoint) => {
@@ -350,8 +397,10 @@ export function CityPriceMap({
     center.latitude,
     center.longitude,
     fitToSalePoints,
+    fitToZones,
     salePoints,
     salePointsFitMode,
+    showZoneLabels,
     zones,
   ]);
 
@@ -451,10 +500,17 @@ export function CityPriceMap({
                 key={zone.id}
                 style={{
                   background: zone.color,
-                  left: `${10 + (index % 3) * 27}%`,
-                  top: `${12 + Math.floor(index / 3) * 28}%`,
+                  left: showZoneLabels
+                    ? index < 3 ? `${5 + index * 31}%` : `${2 + (index - 3) * 24}%`
+                    : `${10 + (index % 3) * 27}%`,
+                  top: showZoneLabels
+                    ? index < 3 ? "12%" : "45%"
+                    : `${12 + Math.floor(index / 3) * 28}%`,
+                  width: showZoneLabels ? index < 3 ? "28%" : "22%" : undefined,
                 }}
-              />
+              >
+                {showZoneLabels ? <em>{zone.mapLabel ?? zone.name}</em> : null}
+              </span>
             ))}
             {filteredSalePoints.map((salePoint, index) => (
               <span
@@ -466,7 +522,7 @@ export function CityPriceMap({
                 }}
               />
             ))}
-            <strong>{cityName}</strong>
+            {showZoneLabels ? null : <strong>{cityName}</strong>}
           </div>
         ) : null}
       </div>

@@ -4,6 +4,10 @@ import {
   getCityPricePreviewSnapshot,
 } from "./city-price-preview-data";
 import { getNamedAubagnePreviewZones } from "./aubagne-preview-zones";
+import {
+  aubagneDvfAudit,
+  aubagneDvfPreviewZones,
+} from "./aubagne-dvf-preview-data";
 
 describe("city price SEO preview snapshot", () => {
   it("is limited to the Aubagne noindex preview", () => {
@@ -45,6 +49,7 @@ describe("city price SEO preview snapshot", () => {
     }]);
 
     expect(zones[0]).toMatchObject({
+      mapLabel: "Passons\nVerdun",
       name: "Passons et Verdun",
       pricePerM2: 2999,
       includedNeighborhoods: ["Passons", "Verdun"],
@@ -57,5 +62,45 @@ describe("city price SEO preview snapshot", () => {
       house: 4932,
     });
     expect(getAubagneNearbyPreviewPrice("cassis")).toBeNull();
+  });
+
+  it("covers the 20 official Aubagne IRIS with unique codes and usable polygons", () => {
+    expect(aubagneDvfPreviewZones).toHaveLength(20);
+    expect(new Set(aubagneDvfPreviewZones.map((zone) => zone.code)).size).toBe(20);
+    expect(aubagneDvfPreviewZones.every((zone) => zone.code.startsWith("13005"))).toBe(true);
+    expect(aubagneDvfPreviewZones.every((zone) => zone.polygon.length >= 3)).toBe(true);
+  });
+
+  it("separates apartment and house medians and withholds weak samples", () => {
+    const arnaudSolans = aubagneDvfPreviewZones.find((zone) => zone.name === "Arnaud Solans");
+    const charrel = aubagneDvfPreviewZones.find((zone) => zone.name === "Charrel");
+
+    expect(arnaudSolans?.apartment).toMatchObject({
+      observations: 27,
+      medianPricePerM2: 4511,
+      reliability: "robust",
+    });
+    expect(arnaudSolans?.house).toMatchObject({
+      observations: 92,
+      medianPricePerM2: 4765,
+      reliability: "robust",
+    });
+    expect(charrel?.apartment).toMatchObject({
+      observations: 2,
+      medianPricePerM2: null,
+      reliability: "insufficient",
+    });
+    expect(charrel?.house.medianPricePerM2).toBeNull();
+  });
+
+  it("exposes the DVF audit trail used by the preview", () => {
+    expect(aubagneDvfAudit).toMatchObject({
+      observedPeriod: "2021–2025",
+      rawRows: 10366,
+      uniqueMutations: 4069,
+      comparableSales: 2332,
+      mixedPropertyMutationsExcluded: 263,
+    });
+    expect(aubagneDvfAudit.uniqueMutations + aubagneDvfAudit.groupedRows).toBe(aubagneDvfAudit.rawRows);
   });
 });

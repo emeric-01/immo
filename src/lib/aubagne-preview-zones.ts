@@ -2775,11 +2775,22 @@ export const aubagnePreviewZones = [
   }
 ] satisfies CityPriceZone[];
 
+const aubagneMapLabels: Record<string, string> = {
+  "1300501": "Centre-ville\nBeaumond",
+  "1300502": "Passons\nVerdun",
+  "1300503": "Pin Vert\nCeinture Est",
+  "1300504": "Gavots · Bras d’Or\nCamp Major",
+  "1300505": "Tourtelle\nNord et Sud",
+  "1300506": "Longuillar · Pérussone\nCharrel",
+  "1300507": "Garlaban-Royante\nNord-est",
+};
+
 const aubagneZoneLabels = new Map(
   aubagnePreviewZones.map((zone) => [
     zone.id,
     {
       includedNeighborhoods: zone.includedNeighborhoods,
+      mapLabel: aubagneMapLabels[zone.id],
       name: zone.name,
     },
   ]),

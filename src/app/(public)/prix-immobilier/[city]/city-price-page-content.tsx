@@ -30,8 +30,8 @@ import {
   getAubagneNearbyPreviewPrice,
   getCityPricePreviewSnapshot,
 } from "@/lib/city-price-preview-data";
-import { getNamedAubagnePreviewZones } from "@/lib/aubagne-preview-zones";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
+import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
 import { CityAddressSearch } from "./city-address-search";
@@ -218,9 +218,6 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
     : null;
   const previewNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
-  const mapZones = seoPreview && city.slug === "aubagne"
-    ? getNamedAubagnePreviewZones(market.zones)
-    : market.zones;
   const faqs = [
     {
       question: seoPreview
@@ -303,7 +300,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <div className="city-trust-row">
               {seoPreview ? (
                 <>
-                  <span><Database size={16} /> Source DVF · DGFiP</span>
+                  <span><Database size={16} /> Repères communaux · Immo Data</span>
                   <span><CalendarDays size={16} /> Calcul actualisé le {formatDate(market.updatedAt)}</span>
                   {latestObservedSaleDate ? (
                     <span><ShieldCheck size={16} /> Dernières mutations disponibles : {formatDate(latestObservedSaleDate)}</span>
@@ -320,18 +317,24 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
           </div>
 
           <div className="city-modern-map-wrap">
-            <CityPriceMap
-              accessToken={mapboxToken}
-              center={{ longitude: city.longitude, latitude: city.latitude }}
-              cityName={city.name}
-              fitToSalePoints={seoPreview}
-              salePoints={market.salePoints}
-              showPriceScale
-              zoneListLimit={seoPreview ? 7 : undefined}
-              zoneMetricLabel={seoPreview ? "Prix moyen des appartements" : undefined}
-              zoneSelectionLabel={seoPreview ? "Quartiers sélectionnés" : undefined}
-              zones={mapZones}
-            />
+            {seoPreview && city.slug === "aubagne" ? (
+              <AubagneDvfPreviewMap />
+            ) : (
+              <CityPriceMap
+                accessToken={mapboxToken}
+                center={{ longitude: city.longitude, latitude: city.latitude }}
+                cityName={city.name}
+                fitToSalePoints={seoPreview}
+                fitToZones={seoPreview}
+                salePoints={market.salePoints}
+                showPriceScale
+                showZoneLabels={seoPreview}
+                zoneListLimit={seoPreview ? 7 : undefined}
+                zoneMetricLabel={seoPreview ? "Prix moyen des appartements" : undefined}
+                zoneSelectionLabel={seoPreview ? "Quartiers sélectionnés" : undefined}
+                zones={market.zones}
+              />
+            )}
           </div>
         </div>
       </section>
