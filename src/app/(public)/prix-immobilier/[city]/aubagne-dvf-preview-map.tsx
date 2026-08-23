@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
-import { Building2, Database, Home, Info, MapPinned } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Building2, ChevronDown, Database, Home, MapPinned } from "lucide-react";
 import {
   aubagneDvfAudit,
   aubagneDvfPreviewZones,
@@ -18,6 +18,16 @@ const VIEWBOX_WIDTH = 900;
 const VIEWBOX_HEIGHT = 610;
 const MAP_PADDING = 32;
 const LONGITUDE_CORRECTION = Math.cos((43.3 * Math.PI) / 180);
+const FEATURED_LABELS = new Set([
+  "Arnaud Solans",
+  "Baudinard",
+  "Camp Major",
+  "Centre Ville",
+  "Garlaban-Royante",
+  "Longuillar",
+  "Passons",
+  "Pérussone",
+]);
 
 function getGeometry() {
   const points = aubagneDvfPreviewZones.flatMap((zone) => zone.polygon);
@@ -84,35 +94,49 @@ export function AubagneDvfPreviewMap() {
   }, [propertyType]);
 
   return (
-    <section className={styles.wrapper} aria-labelledby="aubagne-iris-title">
-      <div className={styles.heading}>
-        <div>
-          <p><MapPinned size={16} /> Prix par quartier statistique</p>
-          <h2 id="aubagne-iris-title">Les 20 zones IRIS d’Aubagne</h2>
-          <span>Médianes des ventes comparables DVF · {aubagneDvfAudit.observedPeriod}</span>
+    <section className={styles.wrapper} aria-label="Prix par quartier à Aubagne">
+      <div className={styles.mapPanel}>
+        <div className={styles.toolbar}>
+          <div className={styles.mapTitle}>
+            <span><MapPinned size={15} /> Prix par quartier</span>
+            <small>Médianes DVF · {aubagneDvfAudit.observedPeriod}</small>
+          </div>
+          <div className={styles.controls}>
+            <label className={styles.zoneSelect}>
+              <span className="city-visually-hidden">Choisir une zone IRIS</span>
+              <select value={activeZone.code} onChange={(event) => setActiveZoneCode(event.target.value)}>
+                {aubagneDvfPreviewZones.map((zone) => (
+                  <option key={`${zone.code}-option`} value={zone.code}>{zone.name}</option>
+                ))}
+              </select>
+              <ChevronDown aria-hidden="true" size={14} />
+            </label>
+            <div className={styles.switcher} aria-label="Type de bien">
+              <button
+                aria-label="Appartements"
+                aria-pressed={propertyType === "apartment"}
+                className={propertyType === "apartment" ? styles.activeSwitch : undefined}
+                onClick={() => setPropertyType("apartment")}
+                title="Appartements"
+                type="button"
+              >
+                <Building2 size={17} /><span>Appartements</span>
+              </button>
+              <button
+                aria-label="Maisons"
+                aria-pressed={propertyType === "house"}
+                className={propertyType === "house" ? styles.activeSwitch : undefined}
+                onClick={() => setPropertyType("house")}
+                title="Maisons"
+                type="button"
+              >
+                <Home size={17} /><span>Maisons</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className={styles.switcher} aria-label="Type de bien">
-          <button
-            aria-pressed={propertyType === "apartment"}
-            className={propertyType === "apartment" ? styles.activeSwitch : undefined}
-            onClick={() => setPropertyType("apartment")}
-            type="button"
-          >
-            <Building2 size={17} /> Appartements
-          </button>
-          <button
-            aria-pressed={propertyType === "house"}
-            className={propertyType === "house" ? styles.activeSwitch : undefined}
-            onClick={() => setPropertyType("house")}
-            type="button"
-          >
-            <Home size={17} /> Maisons
-          </button>
-        </div>
-      </div>
 
-      <div className={styles.mapGrid}>
-        <div className={styles.mapPanel}>
+        <div className={styles.mapCanvas}>
           <svg
             aria-label={`Carte des prix médians des ${propertyLabel} dans les zones IRIS d’Aubagne`}
             className={styles.map}
@@ -142,13 +166,14 @@ export function AubagneDvfPreviewMap() {
                     if (event.key === "Enter" || event.key === " ") setActiveZoneCode(zone.code);
                   }}
                 >
-                  <title>{zone.name} · {stat.medianPricePerM2 === null ? "données insuffisantes" : `${euroFormatter.format(stat.medianPricePerM2)} €/m² · ${stat.observations} ventes`}</title>
+                  <title>{`${zone.name} · ${stat.medianPricePerM2 === null ? "données insuffisantes" : `${euroFormatter.format(stat.medianPricePerM2)} €/m² · ${stat.observations} ventes`}`}</title>
                 </path>
               );
             })}
             {aubagneDvfPreviewZones.map((zone) => {
               const [x, y] = geometry.project(zone.labelPoint);
               const selected = zone.code === activeZone.code;
+              if (!selected && !FEATURED_LABELS.has(zone.name)) return null;
               const shortName = zone.name === "Garlaban-Royante" ? "Garlaban" : zone.name;
               return (
                 <text
@@ -164,6 +189,30 @@ export function AubagneDvfPreviewMap() {
             })}
           </svg>
 
+          <aside className={styles.detailPanel} aria-live="polite">
+            <div className={styles.detailTopline}>
+              <span>IRIS {activeZone.code}</span>
+              <em data-reliability={activeStat.reliability}>{getReliabilityLabel(activeStat)}</em>
+            </div>
+            <h3>{activeZone.name}</h3>
+            <p className={styles.propertyContext}>Prix médian des {propertyLabel}</p>
+            {activeStat.medianPricePerM2 !== null ? (
+              <>
+                <strong className={styles.price}>
+                  {euroFormatter.format(activeStat.medianPricePerM2)} €<small>/m²</small>
+                </strong>
+                <p className={styles.compactStats}>
+                  <span><b>{activeStat.observations}</b> ventes comparables</span>
+                  <span>50 % entre <b>{euroFormatter.format(activeStat.p25PricePerM2!)} et {euroFormatter.format(activeStat.p75PricePerM2!)} €/m²</b></span>
+                </p>
+              </>
+            ) : (
+              <p className={styles.insufficientCard}>
+                {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""} : prix non publié.
+              </p>
+            )}
+          </aside>
+
           <div className={styles.legend}>
             <span>{euroFormatter.format(scale.min)} €/m²</span>
             <i aria-hidden="true" />
@@ -171,69 +220,16 @@ export function AubagneDvfPreviewMap() {
             <small><b /> Échantillon insuffisant</small>
           </div>
         </div>
-
-        <aside className={styles.detailPanel} aria-live="polite">
-          <div className={styles.detailTopline}>
-            <span>IRIS {activeZone.code}</span>
-            <em data-reliability={activeStat.reliability}>{getReliabilityLabel(activeStat)}</em>
-          </div>
-          <h3>{activeZone.name}</h3>
-          <p className={styles.propertyContext}>Prix médian des {propertyLabel}</p>
-          {activeStat.medianPricePerM2 !== null ? (
-            <>
-              <strong className={styles.price}>
-                {euroFormatter.format(activeStat.medianPricePerM2)} €<small>/m²</small>
-              </strong>
-              <dl className={styles.zoneStats}>
-                <div><dt>Ventes comparables</dt><dd>{activeStat.observations}</dd></div>
-                <div>
-                  <dt>50 % des ventes</dt>
-                  <dd>{euroFormatter.format(activeStat.p25PricePerM2!)}–{euroFormatter.format(activeStat.p75PricePerM2!)} €/m²</dd>
-                </div>
-              </dl>
-            </>
-          ) : (
-            <div className={styles.insufficientCard}>
-              <Info size={19} />
-              <p>
-                Seulement {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""}.
-                Aucun prix n’est publié pour éviter un repère trompeur.
-              </p>
-            </div>
-          )}
-          <p className={styles.contextNote}>
-            Une médiane de quartier situe le marché. La rue, l’état, la parcelle,
-            l’exposition et les prestations restent déterminants.
-          </p>
-        </aside>
       </div>
 
-      <div className={styles.zonePicker}>
-        <p>Choisir une zone IRIS</p>
-        <div>
-          {aubagneDvfPreviewZones.map((zone) => {
-            const stat = zone[propertyType];
-            return (
-              <button
-                aria-pressed={zone.code === activeZone.code}
-                key={`${zone.code}-picker`}
-                onClick={() => setActiveZoneCode(zone.code)}
-                style={{ "--zone-dot": getZoneFill(stat.medianPricePerM2, scale.min, scale.max) } as CSSProperties}
-                type="button"
-              >
-                <i />
-                <span>{zone.name}</span>
-                <small>{stat.medianPricePerM2 === null ? "—" : `${euroFormatter.format(stat.medianPricePerM2)} €`}</small>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={styles.audit}>
-        <div className={styles.auditIntro}>
-          <Database size={20} />
-          <div>
+      <details className={styles.sourceDetails}>
+        <summary>
+          <span><Database size={16} /> Source et méthode</span>
+          <small>DVF DGFiP · 20 zones IRIS officielles</small>
+          <ChevronDown aria-hidden="true" size={16} />
+        </summary>
+        <div className={styles.audit}>
+          <div className={styles.auditIntro}>
             <strong>D’où viennent ces prix au m² ?</strong>
             <p>
               Calcul local à partir des ventes DVF de la DGFiP, géolocalisées par data.gouv.fr,
@@ -241,19 +237,19 @@ export function AubagneDvfPreviewMap() {
               n’est nécessaire pour afficher cette carte.
             </p>
           </div>
+          <dl>
+            <div><dt>Lignes DVF lues</dt><dd>{countFormatter.format(aubagneDvfAudit.rawRows)}</dd></div>
+            <div><dt>Mutations uniques</dt><dd>{countFormatter.format(aubagneDvfAudit.uniqueMutations)}</dd></div>
+            <div><dt>Ventes comparables</dt><dd>{countFormatter.format(aubagneDvfAudit.comparableSales)}</dd></div>
+            <div><dt>Dernière diffusion</dt><dd>Avril 2026</dd></div>
+          </dl>
+          <p className={styles.methodNote}>
+            Une mutation est comptée une seule fois. Les ventes mixtes ou multiples, les surfaces
+            manquantes et les valeurs atypiques sont écartées. Seuils : prix robuste dès 15 ventes,
+            indicatif de 8 à 14, non publié en dessous de 8.
+          </p>
         </div>
-        <dl>
-          <div><dt>Lignes DVF lues</dt><dd>{countFormatter.format(aubagneDvfAudit.rawRows)}</dd></div>
-          <div><dt>Mutations uniques</dt><dd>{countFormatter.format(aubagneDvfAudit.uniqueMutations)}</dd></div>
-          <div><dt>Ventes comparables</dt><dd>{countFormatter.format(aubagneDvfAudit.comparableSales)}</dd></div>
-          <div><dt>Dernière diffusion</dt><dd>Avril 2026</dd></div>
-        </dl>
-        <p className={styles.methodNote}>
-          Une mutation est comptée une seule fois. Les ventes mixtes ou multiples, les surfaces
-          manquantes et les valeurs atypiques sont écartées. Seuils : prix robuste dès 15 ventes,
-          indicatif de 8 à 14, non publié en dessous de 8.
-        </p>
-      </div>
+      </details>
     </section>
   );
 }

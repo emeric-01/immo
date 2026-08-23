@@ -31,6 +31,7 @@ import {
   getCityPricePreviewSnapshot,
 } from "@/lib/city-price-preview-data";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
+import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
 import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
@@ -414,6 +415,52 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
               </article>
             ))}
           </div>
+
+          {city.slug === "aubagne" ? (
+            <section className={previewStyles.irisComparison} aria-labelledby="aubagne-iris-comparison-title">
+              <div className={previewStyles.irisComparisonHeading}>
+                <div>
+                  <span>20 zones IRIS officielles</span>
+                  <h3 id="aubagne-iris-comparison-title">Comparer les prix par quartier à Aubagne</h3>
+                </div>
+                <p>
+                  Médianes des ventes comparables DVF 2021–2025. Les appartements et les maisons
+                  sont séparés pour éviter de mélanger deux marchés différents.
+                </p>
+              </div>
+
+              <div className={previewStyles.irisComparisonGrid}>
+                {aubagneDvfPreviewZones.map((zone) => (
+                  <article key={`${zone.code}-comparison`}>
+                    <div className={previewStyles.irisZoneTitle}>
+                      <h4>{zone.name}</h4>
+                      <small>IRIS {zone.code.slice(-3)}</small>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt><Building2 size={14} /> Appartement</dt>
+                        <dd>
+                          {zone.apartment.medianPricePerM2 !== null
+                            ? <>{formatPrice(zone.apartment.medianPricePerM2)}<small>/m²</small></>
+                            : <span>Données insuffisantes</span>}
+                        </dd>
+                        <small>{zone.apartment.observations} vente{zone.apartment.observations > 1 ? "s" : ""} comparable{zone.apartment.observations > 1 ? "s" : ""}</small>
+                      </div>
+                      <div>
+                        <dt><Home size={14} /> Maison</dt>
+                        <dd>
+                          {zone.house.medianPricePerM2 !== null
+                            ? <>{formatPrice(zone.house.medianPricePerM2)}<small>/m²</small></>
+                            : <span>Données insuffisantes</span>}
+                        </dd>
+                        <small>{zone.house.observations} vente{zone.house.observations > 1 ? "s" : ""} comparable{zone.house.observations > 1 ? "s" : ""}</small>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <aside className={previewStyles.dataGuardrail}>
             <div>
