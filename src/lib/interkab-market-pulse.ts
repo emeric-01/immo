@@ -20,11 +20,11 @@ export async function getInterkabMarketPulse(
   options: { allowLiveFallback?: boolean } = {},
 ): Promise<InterkabMarketPulse | null> {
   try {
-    const [listings, cities] = await Promise.all([
-      getAllStoredInterkabListings({ inseeCode }),
-      getInterkabCities(),
-    ]);
-    const cityState = cities.find((city) => city.insee_code === inseeCode);
+    const listings = await getAllStoredInterkabListings({ inseeCode });
+    const cityState = await getInterkabCities()
+      .then((cities) => cities.find((city) => city.insee_code === inseeCode) ?? null)
+      .catch(() => null);
+
     return {
       apartment: buildMarketNowcast(listings, "apartment", apartmentDvfMedian),
       house: buildMarketNowcast(listings, "house", houseDvfMedian),
