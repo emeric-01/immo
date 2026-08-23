@@ -27,6 +27,28 @@ const priceFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 
+function yearFromPeriod(period: string) {
+  const year = Number.parseInt(period.slice(0, 4), 10);
+  return Number.isFinite(year) ? year : null;
+}
+
+export function filterCityMarketPoints(points: CityPriceHistoryPoint[], period: Period) {
+  if (period === "all" || points.length === 0) return points;
+
+  const latestYear = points.reduce<number | null>((latest, point) => {
+    const year = yearFromPeriod(point.period);
+    if (year === null) return latest;
+    return latest === null ? year : Math.max(latest, year);
+  }, null);
+
+  if (latestYear === null) return points.slice(-5);
+
+  return points.filter((point) => {
+    const year = yearFromPeriod(point.period);
+    return year !== null && year >= latestYear - 4;
+  });
+}
+
 function MarketTooltip({
   active,
   label,
@@ -52,16 +74,15 @@ function MarketTooltip({
 
 export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all", points }: CityMarketChartProps) {
   const [period, setPeriod] = useState<Period>(defaultPeriod);
-  const data = useMemo(() => {
-    if (period === "all") return points;
-    return points.slice(-61);
-  }, [period, points]);
+  const data = useMemo(() => filterCityMarketPoints(points, period), [period, points]);
+  const firstHistoryYear = yearFromPeriod(points[0]?.period ?? "");
 
   return (
     <div className="city-interactive-chart">
       <div className="city-chart-controls">
         <div aria-label="Période du graphique" role="group">
           <button
+            aria-pressed={period === "5y"}
             className={period === "5y" ? "active" : ""}
             onClick={() => setPeriod("5y")}
             type="button"
@@ -69,11 +90,12 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
             5 ans
           </button>
           <button
+            aria-pressed={period === "all"}
             className={period === "all" ? "active" : ""}
             onClick={() => setPeriod("all")}
             type="button"
           >
-            Depuis 2014
+            Depuis {firstHistoryYear ?? "l’origine"}
           </button>
         </div>
         <span>Survolez la courbe pour afficher les prix</span>
@@ -100,6 +122,7 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
         <XAxis
           axisLine={false}
           dataKey="period"
+          interval="preserveStartEnd"
           minTickGap={42}
           tick={{ fill: "#81796f", fontSize: 12 }}
           tickLine={false}

@@ -48,6 +48,10 @@ type CityPricePageProps = {
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const decimalFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+const neighborhoodListFormatter = new Intl.ListFormat("fr-FR", {
+  style: "long",
+  type: "conjunction",
+});
 
 function formatPrice(value: number) {
   return `${euroFormatter.format(value)} €`;
@@ -62,6 +66,15 @@ function formatDate(date: string) {
     day: "numeric",
     month: "long",
     year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatShortDate(date: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Europe/Paris",
   }).format(new Date(date));
 }
 
@@ -232,7 +245,7 @@ function CityMarketDashboard({
           {market.salePoints.slice(0, 3).map((sale) => (
             <div className="city-compact-sale-row" key={sale.id}>
               <div><span>{sale.propertyType}</span><strong>{sale.label}</strong><small>{sale.rooms || "—"} pièces · {sale.surfaceM2 || "—"} m²</small></div>
-              <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{sale.soldAt}</small></div>
+              <div><strong>{sale.price ? formatPrice(sale.price) : sale.pricePerM2 ? `${formatPrice(sale.pricePerM2)}/m²` : "Sur demande"}</strong><small>{formatShortDate(sale.soldAt)}</small></div>
             </div>
           ))}
           {market.salePoints.length === 0 ? <p>Aucune transaction localisée vérifiée n’est publiée pour le moment.</p> : null}
@@ -356,10 +369,15 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   const usesDvfMedian = market.source === "dvf";
   const latestObservedSaleDate = getLatestObservedSaleDate(market.salePoints);
   const marketReferenceUpdatedAt = currentMarketPulse?.updatedAt ?? market.updatedAt;
-  const neighborhoodProfile = seoPreview
-    ? getLocalAgencyNeighborhoodProfile(city.slug)
+  const neighborhoodProfile = getLocalAgencyNeighborhoodProfile(city.slug);
+  const verifiedNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
+  const previewNeighborhoods = seoPreview ? verifiedNeighborhoods : [];
+  const neighborhoodFaq = verifiedNeighborhoods.length > 0
+    ? {
+        question: `Quels quartiers comparer pour connaître le prix au m² à ${city.name} ?`,
+        answer: `À ${city.name}, ${neighborhoodListFormatter.format(verifiedNeighborhoods.map((neighborhood) => neighborhood.title))} font partie des quartiers à comparer. Le quartier donne un premier contexte, mais les écarts de prix se vérifient ensuite à l’échelle de la rue, du type de bien et de ses caractéristiques : état, terrain, vue, extérieur, stationnement et prestations.`,
+      }
     : null;
-  const previewNeighborhoods = neighborhoodProfile?.neighborhoods.slice(0, 4) ?? [];
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
   const faqs = [
     {
@@ -382,6 +400,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
       question: `Comment connaître le prix au m² d’une adresse ou d’un quartier à ${city.name} ?`,
       answer: `Le prix d’une rue ou d’un quartier se vérifie en rapprochant les transactions DVF récentes de biens comparables. Saisissez l’adresse du logement sur cette page pour lancer une estimation plus précise, puis confrontez ce repère à l’état et aux prestations réelles du bien.`,
     },
+    ...(neighborhoodFaq ? [neighborhoodFaq] : []),
     {
       question: `Comment le prix au m² à ${city.name} est-il calculé ?`,
       answer: hasCurrentMarketReference
@@ -423,7 +442,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                 <div>
                   <dt>
                     Appartement
-                    {hasCurrentMarketReference ? <span>Repère Marché</span> : usesDvfMedian ? " · médiane DVF" : ""}
+                    {!hasCurrentMarketReference && usesDvfMedian ? " · médiane DVF" : ""}
                   </dt>
                   <dd>
                     <span className={previewStyles.heroPriceIcon}><Building2 aria-hidden="true" size={22} /></span>
@@ -449,7 +468,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                 <div>
                   <dt>
                     Maison
-                    {hasCurrentMarketReference ? <span>Repère Marché</span> : usesDvfMedian ? " · médiane DVF" : ""}
+                    {!hasCurrentMarketReference && usesDvfMedian ? " · médiane DVF" : ""}
                   </dt>
                   <dd>
                     <span className={previewStyles.heroPriceIcon}><Home aria-hidden="true" size={22} /></span>
