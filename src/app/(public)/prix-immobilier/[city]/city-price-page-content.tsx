@@ -63,6 +63,13 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+function formatIrisObservationLabel(stat: { observations: number; reliability: string }) {
+  const saleLabel = `${stat.observations} vente${stat.observations > 1 ? "s" : ""}`;
+  if (stat.reliability === "insufficient") return `${saleLabel} locale${stat.observations > 1 ? "s" : ""} · prix communal`;
+  if (stat.reliability === "exploratory") return `${saleLabel} comparable${stat.observations > 1 ? "s" : ""} · faible échantillon`;
+  return `${saleLabel} comparable${stat.observations > 1 ? "s" : ""}`;
+}
+
 function getAverageMarketPrice(apartment: number, house: number) {
   return Math.round((apartment + house) / 2);
 }
@@ -319,7 +326,11 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
 
           <div className="city-modern-map-wrap">
             {seoPreview && city.slug === "aubagne" ? (
-              <AubagneDvfPreviewMap />
+              <AubagneDvfPreviewMap
+                accessToken={mapboxToken}
+                communalApartmentPrice={market.apartment.averagePricePerM2}
+                communalHousePrice={market.house.averagePricePerM2}
+              />
             ) : (
               <CityPriceMap
                 accessToken={mapboxToken}
@@ -424,8 +435,8 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                   <h3 id="aubagne-iris-comparison-title">Comparer les prix par quartier à Aubagne</h3>
                 </div>
                 <p>
-                  Médianes des ventes comparables DVF 2021–2025. Les appartements et les maisons
-                  sont séparés pour éviter de mélanger deux marchés différents.
+                  Médianes des ventes comparables DVF 2021–2025 dès trois ventes. En dessous,
+                  le repère communal est clairement distingué. Appartements et maisons restent séparés.
                 </p>
               </div>
 
@@ -437,23 +448,23 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                       <small>IRIS {zone.code.slice(-3)}</small>
                     </div>
                     <dl>
-                      <div>
+                      <div data-reliability={zone.apartment.reliability}>
                         <dt><Building2 size={14} /> Appartement</dt>
                         <dd>
                           {zone.apartment.medianPricePerM2 !== null
                             ? <>{formatPrice(zone.apartment.medianPricePerM2)}<small>/m²</small></>
-                            : <span>Données insuffisantes</span>}
+                            : <span>Repère Aubagne : {formatPrice(market.apartment.averagePricePerM2)}/m²</span>}
                         </dd>
-                        <small>{zone.apartment.observations} vente{zone.apartment.observations > 1 ? "s" : ""} comparable{zone.apartment.observations > 1 ? "s" : ""}</small>
+                        <small>{formatIrisObservationLabel(zone.apartment)}</small>
                       </div>
-                      <div>
+                      <div data-reliability={zone.house.reliability}>
                         <dt><Home size={14} /> Maison</dt>
                         <dd>
                           {zone.house.medianPricePerM2 !== null
                             ? <>{formatPrice(zone.house.medianPricePerM2)}<small>/m²</small></>
-                            : <span>Données insuffisantes</span>}
+                            : <span>Repère Aubagne : {formatPrice(market.house.averagePricePerM2)}/m²</span>}
                         </dd>
-                        <small>{zone.house.observations} vente{zone.house.observations > 1 ? "s" : ""} comparable{zone.house.observations > 1 ? "s" : ""}</small>
+                        <small>{formatIrisObservationLabel(zone.house)}</small>
                       </div>
                     </dl>
                   </article>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, ChevronDown, Database, Home, MapPinned } from "lucide-react";
 import {
   aubagneDvfAudit,
@@ -11,6 +12,13 @@ import {
 import styles from "./aubagne-dvf-preview-map.module.css";
 
 type PropertyType = "apartment" | "house";
+type MapStatus = "idle" | "ready" | "missing-token" | "error";
+
+type AubagneDvfPreviewMapProps = {
+  accessToken: string;
+  communalApartmentPrice: number;
+  communalHousePrice: number;
+};
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const countFormatter = new Intl.NumberFormat("fr-FR");
@@ -28,6 +36,10 @@ const FEATURED_LABELS = new Set([
   "Passons",
   "Pérussone",
 ]);
+const MAP_SOURCE_ID = "aubagne-dvf-iris";
+const MAP_FILL_LAYER_ID = "aubagne-dvf-iris-fill";
+const MAP_LINE_LAYER_ID = "aubagne-dvf-iris-line";
+const MAP_LABEL_LAYER_ID = "aubagne-dvf-iris-label";
 
 function getGeometry() {
   const points = aubagneDvfPreviewZones.flatMap((zone) => zone.polygon);
@@ -68,30 +80,227 @@ function getPath(zone: AubagneDvfPreviewZone) {
 function getReliabilityLabel(stat: DvfIrisPriceStat) {
   if (stat.reliability === "robust") return "Repère robuste";
   if (stat.reliability === "indicative") return "Repère indicatif";
+  if (stat.reliability === "exploratory") return "Faible échantillon";
   return "Données insuffisantes";
+}
+
+function getZoneColor(value: number | null, min: number, max: number) {
+  if (value === null) return "#e8e2da";
+  const ratio = max === min ? 0.5 : Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const lightness = 89 - ratio * 43;
+  return `hsl(26, 52%, ${lightness}%)`;
 }
 
 function getZoneFill(value: number | null, min: number, max: number) {
   if (value === null) return "url(#insufficient-data)";
-  const ratio = max === min ? 0.5 : Math.max(0, Math.min(1, (value - min) / (max - min)));
-  const lightness = 89 - ratio * 43;
-  return `hsl(26 52% ${lightness}%)`;
+  return getZoneColor(value, min, max);
 }
 
-export function AubagneDvfPreviewMap() {
+function getPriceScale(propertyType: PropertyType) {
+  const values = aubagneDvfPreviewZones
+    .map((zone) => zone[propertyType].medianPricePerM2)
+    .filter((value): value is number => value !== null);
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
+function buildMapZoneCollection(propertyType: PropertyType, min: number, max: number) {
+  return {
+    type: "FeatureCollection" as const,
+    features: aubagneDvfPreviewZones.map((zone) => {
+      const stat = zone[propertyType];
+      return {
+        type: "Feature" as const,
+        properties: {
+          code: zone.code,
+          color: getZoneColor(stat.medianPricePerM2, min, max),
+          name: zone.name,
+          shortName: zone.name === "Garlaban-Royante" ? "Garlaban" : zone.name,
+        },
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [[...zone.polygon, zone.polygon[0]]],
+        },
+      };
+    }),
+  };
+}
+
+function getMapFeatureCode(feature: unknown) {
+  if (!feature || typeof feature !== "object" || !("properties" in feature)) return null;
+  const properties = (feature as { properties?: { code?: unknown } }).properties;
+  return typeof properties?.code === "string" ? properties.code : null;
+}
+
+export function AubagneDvfPreviewMap({
+  accessToken,
+  communalApartmentPrice,
+  communalHousePrice,
+}: AubagneDvfPreviewMapProps) {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [mapStatus, setMapStatus] = useState<MapStatus>("idle");
   const [propertyType, setPropertyType] = useState<PropertyType>("apartment");
   const [activeZoneCode, setActiveZoneCode] = useState("130050701");
   const activeZone = aubagneDvfPreviewZones.find((zone) => zone.code === activeZoneCode)
     ?? aubagneDvfPreviewZones[0];
   const activeStat = activeZone[propertyType];
   const propertyLabel = propertyType === "apartment" ? "appartements" : "maisons";
+  const communalPrice = propertyType === "apartment"
+    ? communalApartmentPrice
+    : communalHousePrice;
 
-  const scale = useMemo(() => {
-    const values = aubagneDvfPreviewZones
-      .map((zone) => zone[propertyType].medianPricePerM2)
-      .filter((value): value is number => value !== null);
-    return { min: Math.min(...values), max: Math.max(...values) };
-  }, [propertyType]);
+  const scale = useMemo(() => getPriceScale(propertyType), [propertyType]);
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    if (!accessToken) {
+      setMapStatus("missing-token");
+      return;
+    }
+
+    let mapLoaded = false;
+
+    try {
+      mapboxgl.accessToken = accessToken;
+      const initialScale = getPriceScale("apartment");
+      const map = new mapboxgl.Map({
+        attributionControl: true,
+        center: [5.5708, 43.2965],
+        container: mapContainerRef.current,
+        pitch: 0,
+        style: "mapbox://styles/mapbox/light-v11",
+        zoom: 11.6,
+      });
+
+      mapRef.current = map;
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-left");
+
+      map.on("load", () => {
+        mapLoaded = true;
+        map.addSource(MAP_SOURCE_ID, {
+          type: "geojson",
+          data: buildMapZoneCollection("apartment", initialScale.min, initialScale.max),
+        });
+        map.addLayer({
+          id: MAP_FILL_LAYER_ID,
+          type: "fill",
+          source: MAP_SOURCE_ID,
+          paint: {
+            "fill-color": ["get", "color"],
+            "fill-opacity": 0.62,
+          },
+        });
+        map.addLayer({
+          id: MAP_LINE_LAYER_ID,
+          type: "line",
+          source: MAP_SOURCE_ID,
+          paint: {
+            "line-color": [
+              "case",
+              ["==", ["get", "code"], "130050701"],
+              "#2d251f",
+              "#ffffff",
+            ],
+            "line-width": [
+              "case",
+              ["==", ["get", "code"], "130050701"],
+              3.5,
+              1.6,
+            ],
+          },
+        });
+        map.addLayer({
+          id: MAP_LABEL_LAYER_ID,
+          type: "symbol",
+          source: MAP_SOURCE_ID,
+          layout: {
+            "text-allow-overlap": false,
+            "text-field": ["get", "shortName"],
+            "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+            "text-max-width": 10,
+            "text-size": 11,
+          },
+          paint: {
+            "text-color": "#302821",
+            "text-halo-color": "rgba(255, 253, 250, 0.96)",
+            "text-halo-width": 1.5,
+          },
+        });
+
+        const bounds = new mapboxgl.LngLatBounds();
+        aubagneDvfPreviewZones.forEach((zone) => {
+          zone.polygon.forEach((point) => bounds.extend(point));
+        });
+        const isCompactMap = (mapContainerRef.current?.clientWidth ?? 0) <= 700;
+        map.fitBounds(bounds, {
+          duration: 0,
+          maxZoom: 12.5,
+          padding: isCompactMap
+            ? { top: 24, right: 24, bottom: 58, left: 24 }
+            : { top: 30, right: 245, bottom: 68, left: 34 },
+        });
+
+        map.on("click", MAP_FILL_LAYER_ID, (event) => {
+          const code = getMapFeatureCode(event.features?.[0]);
+          if (code) setActiveZoneCode(code);
+        });
+        map.on("mouseenter", MAP_FILL_LAYER_ID, () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", MAP_FILL_LAYER_ID, () => {
+          map.getCanvas().style.cursor = "";
+        });
+
+        setMapStatus("ready");
+      });
+
+      map.on("error", () => {
+        if (!mapLoaded) setMapStatus("error");
+      });
+    } catch {
+      setMapStatus("error");
+    }
+
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [accessToken]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource(MAP_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+    if (mapStatus !== "ready" || !source) return;
+    source.setData(buildMapZoneCollection(propertyType, scale.min, scale.max));
+  }, [mapStatus, propertyType, scale.max, scale.min]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (
+      mapStatus !== "ready"
+      || !map?.getLayer(MAP_FILL_LAYER_ID)
+      || !map.getLayer(MAP_LINE_LAYER_ID)
+    ) return;
+
+    map.setPaintProperty(MAP_FILL_LAYER_ID, "fill-opacity", [
+      "case",
+      ["==", ["get", "code"], activeZoneCode],
+      0.82,
+      0.58,
+    ]);
+    map.setPaintProperty(MAP_LINE_LAYER_ID, "line-color", [
+      "case",
+      ["==", ["get", "code"], activeZoneCode],
+      "#2d251f",
+      "#ffffff",
+    ]);
+    map.setPaintProperty(MAP_LINE_LAYER_ID, "line-width", [
+      "case",
+      ["==", ["get", "code"], activeZoneCode],
+      3.5,
+      1.6,
+    ]);
+  }, [activeZoneCode, mapStatus]);
 
   return (
     <section className={styles.wrapper} aria-label="Prix par quartier à Aubagne">
@@ -137,9 +346,15 @@ export function AubagneDvfPreviewMap() {
         </div>
 
         <div className={styles.mapCanvas}>
+          <div
+            aria-label="Fond cartographique Mapbox d’Aubagne"
+            className={`${styles.mapboxMap} ${mapStatus === "ready" ? styles.mapboxVisible : ""}`}
+            ref={mapContainerRef}
+          />
           <svg
+            aria-hidden={mapStatus === "ready"}
             aria-label={`Carte des prix médians des ${propertyLabel} dans les zones IRIS d’Aubagne`}
-            className={styles.map}
+            className={`${styles.map} ${mapStatus === "ready" ? styles.mapHidden : ""}`}
             role="img"
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
           >
@@ -195,7 +410,11 @@ export function AubagneDvfPreviewMap() {
               <em data-reliability={activeStat.reliability}>{getReliabilityLabel(activeStat)}</em>
             </div>
             <h3>{activeZone.name}</h3>
-            <p className={styles.propertyContext}>Prix médian des {propertyLabel}</p>
+            <p className={styles.propertyContext}>
+              {activeStat.medianPricePerM2 !== null
+                ? `Prix médian des ${propertyLabel}`
+                : `Données de quartier insuffisantes`}
+            </p>
             {activeStat.medianPricePerM2 !== null ? (
               <>
                 <strong className={styles.price}>
@@ -204,12 +423,20 @@ export function AubagneDvfPreviewMap() {
                 <p className={styles.compactStats}>
                   <span><b>{activeStat.observations}</b> ventes comparables</span>
                   <span>50 % entre <b>{euroFormatter.format(activeStat.p25PricePerM2!)} et {euroFormatter.format(activeStat.p75PricePerM2!)} €/m²</b></span>
+                  {activeStat.reliability === "exploratory" ? (
+                    <span className={styles.caution}>À interpréter avec prudence : faible volume de ventes.</span>
+                  ) : null}
                 </p>
               </>
             ) : (
-              <p className={styles.insufficientCard}>
-                {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""} : prix non publié.
-              </p>
+              <div className={styles.communalFallback}>
+                <span>Repère communal à Aubagne</span>
+                <strong>{euroFormatter.format(communalPrice)} €<small>/m²</small></strong>
+                <p>
+                  Seulement {activeStat.observations} vente{activeStat.observations > 1 ? "s" : ""} locale{activeStat.observations > 1 ? "s" : ""} comparable{activeStat.observations > 1 ? "s" : ""}.
+                  Ce montant concerne Aubagne, pas ce quartier précisément.
+                </p>
+              </div>
             )}
           </aside>
 
@@ -217,7 +444,7 @@ export function AubagneDvfPreviewMap() {
             <span>{euroFormatter.format(scale.min)} €/m²</span>
             <i aria-hidden="true" />
             <span>{euroFormatter.format(scale.max)} €/m²</span>
-            <small><b /> Échantillon insuffisant</small>
+            <small><b /> Repère communal si moins de 3 ventes</small>
           </div>
         </div>
       </div>
@@ -234,7 +461,7 @@ export function AubagneDvfPreviewMap() {
             <p>
               Calcul local à partir des ventes DVF de la DGFiP, géolocalisées par data.gouv.fr,
               puis rattachées aux contours IRIS officiels IGN–INSEE. Aucun appel payant à une API
-              n’est nécessaire pour afficher cette carte.
+              n’est nécessaire pour calculer les prix. Mapbox fournit uniquement le fond cartographique.
             </p>
           </div>
           <dl>
@@ -246,7 +473,8 @@ export function AubagneDvfPreviewMap() {
           <p className={styles.methodNote}>
             Une mutation est comptée une seule fois. Les ventes mixtes ou multiples, les surfaces
             manquantes et les valeurs atypiques sont écartées. Seuils : prix robuste dès 15 ventes,
-            indicatif de 8 à 14, non publié en dessous de 8.
+            indicatif de 8 à 14, faible échantillon de 3 à 7. En dessous de 3 ventes,
+            seul le repère communal est présenté.
           </p>
         </div>
       </details>

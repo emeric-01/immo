@@ -275,6 +275,16 @@
   padding-left: 19px;
 }
 
+.irisComparisonGrid dl > div[data-reliability="exploratory"] > small {
+  color: #aa6035;
+  font-weight: 700;
+}
+
+.irisComparisonGrid dl > div[data-reliability="insufficient"] dd > span {
+  color: #7c736b;
+  font-weight: 750;
+}
+
 .dataGuardrail {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -71,9 +71,10 @@ describe("city price SEO preview snapshot", () => {
     expect(aubagneDvfPreviewZones.every((zone) => zone.polygon.length >= 3)).toBe(true);
   });
 
-  it("separates apartment and house medians and withholds weak samples", () => {
+  it("separates apartment and house medians and labels small samples", () => {
     const arnaudSolans = aubagneDvfPreviewZones.find((zone) => zone.name === "Arnaud Solans");
     const charrel = aubagneDvfPreviewZones.find((zone) => zone.name === "Charrel");
+    const garlaban = aubagneDvfPreviewZones.find((zone) => zone.name === "Garlaban-Royante");
 
     expect(arnaudSolans?.apartment).toMatchObject({
       observations: 27,
@@ -91,6 +92,11 @@ describe("city price SEO preview snapshot", () => {
       reliability: "insufficient",
     });
     expect(charrel?.house.medianPricePerM2).toBeNull();
+    expect(garlaban?.apartment).toMatchObject({
+      observations: 3,
+      medianPricePerM2: 3364,
+      reliability: "exploratory",
+    });
   });
 
   it("exposes the DVF audit trail used by the preview", () => {
