@@ -22,9 +22,6 @@
 }
 
 .heroPrices dt {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   color: #786f67;
   font-size: .65rem;
   font-weight: 750;
@@ -32,18 +29,37 @@
   text-transform: uppercase;
 }
 
-.heroPrices dt svg {
+.heroPrices dd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.heroPriceIcon {
+  display: inline-grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(182, 111, 67, .22);
+  border-radius: 12px;
+  background: rgba(182, 111, 67, .08);
+}
+
+.heroPriceIcon svg {
   flex: 0 0 auto;
   color: var(--preview-copper);
   stroke-width: 1.8;
 }
 
-.heroPrices dd {
-  margin: 0;
+.heroPriceAmount {
+  min-width: 0;
   color: var(--preview-ink);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.85rem, 3.3vw, 3.15rem);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .heroPrices small {
@@ -51,6 +67,12 @@
   color: #776e65;
   font-family: inherit;
   font-size: .42em;
+}
+
+.heroPriceRange {
+  color: #786f67;
+  font-size: .72rem;
+  line-height: 1.45;
 }
 
 .neighborhoodSection {

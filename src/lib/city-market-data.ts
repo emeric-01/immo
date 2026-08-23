@@ -52,7 +52,7 @@ export type CitySalePoint = {
 };
 
 export type CityMarketData = {
-  source: "immo-data" | "fallback";
+  source: "dvf" | "immo-data" | "fallback";
   updatedAt: string;
   apartment: PropertyMarketStat;
   house: PropertyMarketStat;

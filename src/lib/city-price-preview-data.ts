@@ -1,44 +1,37 @@
 import type { CityMarketData } from "./city-market-data";
 import { aubagnePreviewZones } from "./aubagne-preview-zones";
 
-// Preview-only fallback captured from the public Aubagne snapshot on 2026-08-16.
+// Preview-only Aubagne snapshot based on official DVF statistics for 2021–2025.
+// The central values are the commune medians published by data.gouv.fr.
+// The ranges contain the middle 50% of comparable resale transactions (Q1–Q3).
 // The canonical price page never reads this fixture.
 const aubagnePricePreviewSnapshot: CityMarketData = {
-  source: "immo-data",
-  updatedAt: "2026-08-16",
+  source: "dvf",
+  updatedAt: "2026-04-27",
   apartment: {
-    averagePricePerM2: 2713,
-    lowPricePerM2: 2081,
-    highPricePerM2: 3361,
+    averagePricePerM2: 2744,
+    lowPricePerM2: 2268,
+    highPricePerM2: 3298,
     confidenceScore: 4,
-    trend1Year: -1,
+    trend1Year: -2.8,
     rangeSource: "transactions",
     trendSource: "history",
   },
   house: {
-    averagePricePerM2: 4720,
-    lowPricePerM2: 3234,
-    highPricePerM2: 4732,
+    averagePricePerM2: 4479,
+    lowPricePerM2: 3598,
+    highPricePerM2: 5373,
     confidenceScore: 4,
-    trend1Year: -5,
+    trend1Year: -3.1,
     rangeSource: "transactions",
     trendSource: "history",
   },
   history: [
-    { apartment: 2518, house: 3609, period: "2014-01" },
-    { apartment: 2438, house: 3570, period: "2015-01" },
-    { apartment: 2390, house: 3579, period: "2016-01" },
-    { apartment: 2373, house: 3616, period: "2017-01" },
-    { apartment: 2361, house: 3703, period: "2018-01" },
-    { apartment: 2424, house: 3852, period: "2019-01" },
-    { apartment: 2491, house: 4034, period: "2020-01" },
-    { apartment: 2589, house: 4283, period: "2021-01" },
-    { apartment: 2704, house: 4579, period: "2022-01" },
-    { apartment: 2869, house: 4961, period: "2023-01" },
-    { apartment: 2812, house: 4893, period: "2024-01" },
-    { apartment: 2731, house: 4711, period: "2025-01" },
-    { apartment: 2726, house: 4720, period: "2026-01" },
-    { apartment: 2713, house: 4720, period: "2026-07" },
+    { apartment: 2583, house: 4313, period: "2021-07" },
+    { apartment: 2783, house: 4389, period: "2022-07" },
+    { apartment: 2888, house: 4822, period: "2023-07" },
+    { apartment: 2706, house: 4492, period: "2024-07" },
+    { apartment: 2631, house: 4354, period: "2025-07" },
   ],
   zones: aubagnePreviewZones,
   salePoints: [
@@ -91,7 +84,7 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
       surfaceM2: 126,
     },
   ],
-  transactionCount: 5529,
+  transactionCount: 2573,
   saleDurationDays: 45,
   neighborhoods: [],
   expensiveStreets: [],

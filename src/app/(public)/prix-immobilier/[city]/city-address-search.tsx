@@ -3,11 +3,15 @@
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { prioritizeAddressSuggestions } from "@/lib/address-suggestions";
+import {
+  getExplicitExternalLocationSuggestions,
+  prioritizeAddressSuggestions,
+} from "@/lib/address-suggestions";
 import type { AddressSuggestion } from "@/lib/immo-data";
 import { MIN_ADDRESS_QUERY_LENGTH } from "@/lib/immo-data";
 
 type CityAddressSearchProps = {
+  allowAnyCity?: boolean;
   cityName: string;
   inseeCode: string;
   postalCode: string;
@@ -42,7 +46,7 @@ function buildEstimationUrl(address: AddressSuggestion) {
   return `/estimation?${params.toString()}`;
 }
 
-export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddressSearchProps) {
+export function CityAddressSearch({ allowAnyCity = false, cityName, inseeCode, postalCode }: CityAddressSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion | null>(null);
@@ -50,6 +54,9 @@ export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddre
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const addressFieldLabel = allowAnyCity
+    ? `Adresse du bien, à ${cityName} ou ailleurs`
+    : `Adresse du bien à ${cityName}`;
 
   useEffect(() => {
     const trimmedQuery = query.trim();
@@ -84,11 +91,12 @@ export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddre
           throw cityResult.reason;
         }
 
-        const prioritizedSuggestions = prioritizeAddressSuggestions(
-          citySuggestions,
-          broadSuggestions,
-          inseeCode,
-        );
+        const explicitExternalSuggestions = allowAnyCity
+          ? getExplicitExternalLocationSuggestions(trimmedQuery, broadSuggestions, inseeCode)
+          : [];
+        const prioritizedSuggestions = explicitExternalSuggestions.length > 0
+          ? prioritizeAddressSuggestions([], explicitExternalSuggestions, inseeCode, false)
+          : prioritizeAddressSuggestions(citySuggestions, broadSuggestions, inseeCode);
         setSuggestions(prioritizedSuggestions);
         setError(prioritizedSuggestions.length ? null : "Aucune adresse trouvée.");
       } catch (requestError) {
@@ -101,7 +109,7 @@ export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddre
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [cityName, inseeCode, postalCode, query, selectedAddress]);
+  }, [allowAnyCity, cityName, inseeCode, postalCode, query, selectedAddress]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,10 +131,10 @@ export function CityAddressSearch({ cityName, inseeCode, postalCode }: CityAddre
             aria-autocomplete="list"
             aria-controls="city-address-suggestions"
             aria-expanded={suggestions.length > 0}
-            aria-label={`Adresse du bien à ${cityName}`}
+            aria-label={addressFieldLabel}
             autoComplete="off"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={`Saisissez votre adresse à ${cityName}`}
+            placeholder={allowAnyCity ? `Adresse du bien, à ${cityName} ou ailleurs` : `Saisissez votre adresse à ${cityName}`}
             role="combobox"
             value={query}
           />

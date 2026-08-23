@@ -11,15 +11,25 @@ import {
 
 describe("city price SEO preview snapshot", () => {
   it("is limited to the Aubagne noindex preview", () => {
-    expect(getCityPricePreviewSnapshot("aubagne")?.apartment.averagePricePerM2).toBe(2713);
+    expect(getCityPricePreviewSnapshot("aubagne")?.apartment).toMatchObject({
+      averagePricePerM2: 2744,
+      lowPricePerM2: 2268,
+      highPricePerM2: 3298,
+    });
     expect(getCityPricePreviewSnapshot("gemenos")).toBeNull();
   });
 
   it("keeps houses and apartments separate", () => {
     const snapshot = getCityPricePreviewSnapshot("aubagne");
 
-    expect(snapshot?.house.averagePricePerM2).toBe(4720);
-    expect(snapshot?.history.length).toBeGreaterThan(10);
+    expect(snapshot?.source).toBe("dvf");
+    expect(snapshot?.house).toMatchObject({
+      averagePricePerM2: 4479,
+      lowPricePerM2: 3598,
+      highPricePerM2: 5373,
+    });
+    expect(snapshot?.history).toHaveLength(5);
+    expect(snapshot?.transactionCount).toBe(2573);
     expect(snapshot?.salePoints[0]?.soldAt).toBe("2025-12-30");
   });
 

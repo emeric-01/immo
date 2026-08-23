@@ -226,7 +226,12 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   const averageTrend = market.apartment.trendSource === "history" && market.house.trendSource === "history" ? Number(
     ((market.apartment.trend1Year + market.house.trend1Year) / 2).toFixed(1),
   ) : null;
-  const sourceLabel = market.source === "immo-data" ? "Transactions DVF agrégées" : "Repères indicatifs";
+  const sourceLabel = market.source === "dvf"
+    ? "Transactions DVF · DGFiP / data.gouv.fr"
+    : market.source === "immo-data"
+      ? "Transactions DVF agrégées"
+      : "Repères indicatifs";
+  const usesDvfMedian = market.source === "dvf";
   const latestObservedSaleDate = getLatestObservedSaleDate(market.salePoints);
   const neighborhoodProfile = seoPreview
     ? getLocalAgencyNeighborhoodProfile(city.slug)
@@ -291,12 +296,28 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             {seoPreview ? (
               <dl className={previewStyles.heroPrices}>
                 <div>
-                  <dt><Building2 aria-hidden="true" size={17} /> Appartement</dt>
-                  <dd>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></dd>
+                  <dt>Appartement{usesDvfMedian ? " · médiane DVF" : ""}</dt>
+                  <dd>
+                    <span className={previewStyles.heroPriceIcon}><Building2 aria-hidden="true" size={22} /></span>
+                    <span className={previewStyles.heroPriceAmount}>{formatPrice(market.apartment.averagePricePerM2)}<small>/m²</small></span>
+                  </dd>
+                  {usesDvfMedian ? (
+                    <span className={previewStyles.heroPriceRange}>
+                      50 % des ventes entre {formatPrice(market.apartment.lowPricePerM2)} et {formatPrice(market.apartment.highPricePerM2)}/m²
+                    </span>
+                  ) : null}
                 </div>
                 <div>
-                  <dt><Home aria-hidden="true" size={17} /> Maison</dt>
-                  <dd>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></dd>
+                  <dt>Maison{usesDvfMedian ? " · médiane DVF" : ""}</dt>
+                  <dd>
+                    <span className={previewStyles.heroPriceIcon}><Home aria-hidden="true" size={22} /></span>
+                    <span className={previewStyles.heroPriceAmount}>{formatPrice(market.house.averagePricePerM2)}<small>/m²</small></span>
+                  </dd>
+                  {usesDvfMedian ? (
+                    <span className={previewStyles.heroPriceRange}>
+                      50 % des ventes entre {formatPrice(market.house.lowPricePerM2)} et {formatPrice(market.house.highPricePerM2)}/m²
+                    </span>
+                  ) : null}
                 </div>
               </dl>
             ) : (
@@ -306,16 +327,21 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             )}
             <p className="city-hero-intro">
               {seoPreview
-                ? `Deux repères distincts pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
+                ? `${usesDvfMedian ? "Deux médianes DVF" : "Deux repères distincts"} pour lire le marché de ${city.name} sans mélanger des biens qui ne se comparent pas.`
                 : `Une lecture claire du marché local pour estimer, acheter ou vérifier le prix d'un bien à ${city.name}.`}
             </p>
 
-            <CityAddressSearch cityName={city.name} inseeCode={city.inseeCode} postalCode={city.postalCode} />
+            <CityAddressSearch
+              allowAnyCity={seoPreview}
+              cityName={city.name}
+              inseeCode={city.inseeCode}
+              postalCode={city.postalCode}
+            />
 
             <div className="city-trust-row">
               {seoPreview ? (
                 <>
-                  <span><Database size={16} /> Repères communaux · Immo Data</span>
+                  <span><Database size={16} /> {usesDvfMedian ? "Transactions publiées · DVF DGFiP" : "Repères communaux · Immo Data"}</span>
                   <span><CalendarDays size={16} /> Calcul actualisé en {formatMonthYear(market.updatedAt)}</span>
                   {latestObservedSaleDate ? (
                     <span><ShieldCheck size={16} /> Dernières mutations disponibles : {formatDate(latestObservedSaleDate)}</span>
