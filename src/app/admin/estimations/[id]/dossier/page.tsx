@@ -26,6 +26,7 @@ export default async function EstimationWorkspacePage({ params }: { params: Prom
     getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode),
     city ? getPublishedCityMarketData(city) : Promise.resolve(null),
   ]);
-  const marketHistory = selectWidestCityPriceHistory(generated.market?.cityPriceHistory, cityMarket?.history);
+  const marketHistory = cityMarket?.history
+    ?? selectWidestCityPriceHistory(generated.market?.cityPriceHistory);
   return <AgentWorkspaceEditor estimationId={source.id} initial={workspace} inseeProfile={inseeProfile} mapboxToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} marketHistory={marketHistory} original={{ high: source.generated_high_price ?? generated.highPrice, low: source.generated_low_price ?? generated.lowPrice, median: source.generated_median_price ?? generated.medianPrice, pricePerM2: generated.pricePerM2 }} snapshots={snapshots} />;
 }

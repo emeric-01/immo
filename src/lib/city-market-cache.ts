@@ -33,7 +33,6 @@ export type CityMarketCacheEntry = {
 
 const DAY_SECONDS = 86_400;
 const CITY_MARKET_CACHE_TAG = "city-market-cache";
-const PUBLIC_SNAPSHOT_REVALIDATE_SECONDS = 15 * 60;
 
 function cacheLifetimeMs() {
   const days = Number(process.env.CITY_MARKET_REVALIDATE_DAYS ?? "30");
@@ -72,11 +71,8 @@ export async function readCityMarketCache(city: City): Promise<CityMarketCacheEn
 
   try {
     const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
+      cache: "no-store",
       headers: headers(config),
-      next: {
-        revalidate: PUBLIC_SNAPSHOT_REVALIDATE_SECONDS,
-        tags: [CITY_MARKET_CACHE_TAG],
-      },
     });
     if (!response.ok) return null;
 
@@ -107,11 +103,8 @@ export async function readCityMarketCaches(cities: City[]) {
 
   try {
     const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
+      cache: "no-store",
       headers: headers(config),
-      next: {
-        revalidate: PUBLIC_SNAPSHOT_REVALIDATE_SECONDS,
-        tags: [CITY_MARKET_CACHE_TAG],
-      },
     });
     if (!response.ok) return entries;
 

@@ -4984,6 +4984,26 @@ button:focus-visible {
   font-size: 0.7rem;
 }
 
+.city-chart-data-warning {
+  margin: 2px 8px 8px;
+  border-left: 2px solid #b77b4c;
+  color: #705847;
+  padding-left: 10px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.city-chart-unavailable {
+  display: grid;
+  gap: 5px;
+  color: var(--city-muted);
+  padding: 22px;
+}
+
+.city-chart-unavailable strong {
+  color: var(--city-ink);
+}
+
 .city-chart-tooltip {
   min-width: 210px;
   border: 1px solid #e3d8cd;
@@ -5014,6 +5034,12 @@ button:focus-visible {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+}
+
+.city-chart-tooltip small {
+  color: var(--city-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
 }
 
 .city-analysis-note {

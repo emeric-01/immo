@@ -1,5 +1,6 @@
 import type { City } from "./cities";
 import { readCityMarketCache, readCityMarketCaches, writeCityMarketCache } from "./city-market-cache";
+import { buildCityPriceHistoryCoverage } from "./price-history";
 
 export type PropertyMarketStat = {
   averagePricePerM2: number;
@@ -26,6 +27,21 @@ export type CityPriceHistoryPoint = {
   period: string;
   apartment: number;
   house: number;
+  apartmentSource?: CityPriceHistoryValueSource;
+  houseSource?: CityPriceHistoryValueSource;
+};
+
+export type CityPriceHistoryValueSource = "dvf" | "immo-data";
+
+export type CityPriceHistorySource = "dvf" | "immo-data" | "immo-data-dvf";
+
+export type CityPriceHistoryCoverage = {
+  expectedFrom: string;
+  expectedTo: string;
+  granularity: "annual" | "monthly" | "mixed";
+  missingApartmentPeriods: string[];
+  missingHousePeriods: string[];
+  status: "complete" | "partial";
 };
 
 export type DvfReliability = "robust" | "indicative" | "exploratory" | "insufficient";
@@ -95,6 +111,8 @@ export type CitySalePoint = {
 
 export type CityMarketData = {
   source: "dvf" | "immo-data" | "fallback";
+  historySource?: CityPriceHistorySource;
+  historyCoverage?: CityPriceHistoryCoverage;
   updatedAt: string;
   apartment: PropertyMarketStat;
   house: PropertyMarketStat;
@@ -898,6 +916,15 @@ function normalizePublishedMarketData(city: City, market: CityMarketData): CityM
   const salePoints = isSynthetic(market.salePoints, syntheticFallback.salePoints)
     ? []
     : market.salePoints;
+  const historySource = market.historySource ?? (
+    market.source === "immo-data" ? "immo-data" : market.source === "dvf" ? "dvf" : undefined
+  );
+  const historyCoverage = market.historyCoverage ?? buildCityPriceHistoryCoverage(
+    history,
+    historySource === "immo-data-dvf"
+      ? { expectedFrom: "2014", expectedTo: "2025", granularity: "annual" }
+      : {},
+  );
   const trendSource = history.length >= 2 ? "history" : "unavailable";
 
   return {
@@ -911,6 +938,8 @@ function normalizePublishedMarketData(city: City, market: CityMarketData): CityM
       trendSource,
     },
     history,
+    historyCoverage,
+    historySource,
     localInfo: getCityLocalInfo(city),
     neighborhoods: isSynthetic(market.neighborhoods, syntheticFallback.neighborhoods)
       ? []

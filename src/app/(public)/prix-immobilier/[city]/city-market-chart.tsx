@@ -12,13 +12,24 @@ import {
   type TooltipContentProps,
   type TooltipValueType,
 } from "recharts";
-import type { DisplayCityPriceHistoryPoint } from "@/lib/price-history";
+import type {
+  CityPriceHistoryCoverage,
+  CityPriceHistoryPoint,
+  CityPriceHistorySource,
+} from "@/lib/city-market-data";
+import {
+  buildCityPriceHistoryCoverage,
+  prepareCityPriceHistoryForDisplay,
+  type DisplayCityPriceHistoryPoint,
+} from "@/lib/price-history";
 
 type CityMarketChartProps = {
   averagePrice?: number;
   cityName: string;
   defaultPeriod?: Period;
-  points: DisplayCityPriceHistoryPoint[];
+  historyCoverage?: CityPriceHistoryCoverage;
+  historySource?: CityPriceHistorySource;
+  points: CityPriceHistoryPoint[];
 };
 
 type Period = "5y" | "all";
@@ -61,23 +72,63 @@ function MarketTooltip({
   return (
     <div className="city-chart-tooltip">
       <span>{label}</span>
-      {payload.map((item) => (
-        <div key={String(item.dataKey)}>
-          <i style={{ background: item.color }} />
-          <span>{item.name}</span>
-          <strong>{priceFormatter.format(Number(item.value))} €/m²</strong>
-        </div>
-      ))}
+      {payload.map((item) => {
+        const point = item.payload as DisplayCityPriceHistoryPoint | undefined;
+        const source = item.dataKey === "apartment" ? point?.apartmentSource : point?.houseSource;
+        return (
+          <div key={String(item.dataKey)}>
+            <i style={{ background: item.color }} />
+            <span>
+              {item.name}
+              {source ? <small> · {source === "dvf" ? "DVF" : "Immo Data stocké"}</small> : null}
+            </span>
+            <strong>{priceFormatter.format(Number(item.value))} €/m²</strong>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all", points }: CityMarketChartProps) {
+export function CityMarketChart({
+  averagePrice,
+  cityName,
+  defaultPeriod = "all",
+  historyCoverage,
+  historySource,
+  points,
+}: CityMarketChartProps) {
   const [period, setPeriod] = useState<Period>(defaultPeriod);
-  const data = useMemo(() => filterCityMarketPoints(points, period), [period, points]);
-  const firstHistoryYear = yearFromPeriod(points[0]?.period ?? "");
-  const hasApartmentHistory = points.some((point) => point.apartment !== undefined);
-  const hasHouseHistory = points.some((point) => point.house !== undefined);
+  const effectiveCoverage = useMemo(
+    () => historyCoverage ?? buildCityPriceHistoryCoverage(points),
+    [historyCoverage, points],
+  );
+  const displayPoints = useMemo(
+    () => prepareCityPriceHistoryForDisplay(points, effectiveCoverage),
+    [effectiveCoverage, points],
+  );
+  const data = useMemo(() => filterCityMarketPoints(displayPoints, period), [displayPoints, period]);
+  const firstHistoryYear = yearFromPeriod(effectiveCoverage.expectedFrom || displayPoints[0]?.period || "");
+  const hasApartmentHistory = displayPoints.some((point) => point.apartment !== undefined);
+  const hasHouseHistory = displayPoints.some((point) => point.house !== undefined);
+  const missingApartmentPeriods = data.filter((point) => point.apartment === undefined).map((point) => point.period);
+  const missingHousePeriods = data.filter((point) => point.house === undefined).map((point) => point.period);
+  const sourceLabel = historySource === "immo-data-dvf"
+    ? "Immo Data stocké + DVF"
+    : historySource === "immo-data"
+      ? "Historique Immo Data stocké"
+      : historySource === "dvf"
+        ? "Historique DVF"
+        : "Source de l’historique non renseignée";
+
+  if (!hasApartmentHistory && !hasHouseHistory) {
+    return (
+      <div className="city-interactive-chart city-chart-unavailable" role="note">
+        <strong>Historique indisponible pour {cityName}</strong>
+        <span>Aucune valeur n’est affichée ou estimée tant que la source n’est pas vérifiée.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="city-interactive-chart">
@@ -100,7 +151,7 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
             Depuis {firstHistoryYear ?? "l’origine"}
           </button>
         </div>
-        <span>Survolez la courbe pour afficher les prix</span>
+        <span>{sourceLabel}</span>
       </div>
 
       <AreaChart
@@ -150,6 +201,7 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
           <Area
             activeDot={{ fill: "#171612", r: 6, stroke: "#fff", strokeWidth: 3 }}
             dataKey="apartment"
+            connectNulls={false}
             fill="url(#apartmentGradient)"
             name="Appartement"
             stroke="#b77b4c"
@@ -161,6 +213,7 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
           <Area
             activeDot={{ fill: "#72775a", r: 6, stroke: "#fff", strokeWidth: 3 }}
             dataKey="house"
+            connectNulls={false}
             fill="url(#houseGradient)"
             name="Maison"
             stroke="#72775a"
@@ -169,6 +222,15 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
           />
         ) : null}
       </AreaChart>
+      {missingApartmentPeriods.length > 0 || missingHousePeriods.length > 0 ? (
+        <p className="city-chart-data-warning" role="note">
+          Données non disponibles —
+          {missingApartmentPeriods.length > 0 ? ` appartements : ${missingApartmentPeriods.join(", ")}` : ""}
+          {missingApartmentPeriods.length > 0 && missingHousePeriods.length > 0 ? " ·" : ""}
+          {missingHousePeriods.length > 0 ? ` maisons : ${missingHousePeriods.join(", ")}` : ""}.
+          La courbe est interrompue ; aucune valeur de remplacement n’est inventée.
+        </p>
+      ) : null}
     </div>
   );
 }

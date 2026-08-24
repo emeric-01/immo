@@ -1043,6 +1043,8 @@ export function EstimationForm({
                     averagePrice={sectorPrice ?? estimation.pricePerM2}
                     cityName={selectedAddress?.cityName ?? "du secteur"}
                     defaultPeriod="5y"
+                    historyCoverage={market.cityPriceHistoryCoverage}
+                    historySource={market.cityPriceHistorySource}
                     points={market.cityPriceHistory}
                   />
                 ) : trendPath ? (

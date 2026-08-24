@@ -85,6 +85,86 @@ export function buildAnnualPriceHistory(sales, sourceYears) {
   });
 }
 
+export function mergeStoredAndDvfHistory(storedHistory, dvfHistory, firstDvfYear) {
+  const storedByYear = new Map();
+  const dvfByYear = new Map();
+
+  for (const point of storedHistory ?? []) {
+    const year = Number.parseInt(String(point?.period ?? "").slice(0, 4), 10);
+    if (!Number.isFinite(year)) continue;
+    const values = storedByYear.get(year) ?? { apartment: [], house: [] };
+    if (point.apartment > 0) {
+      values.apartment.push({
+        source: point.apartmentSource ?? "immo-data",
+        value: point.apartment,
+      });
+    }
+    if (point.house > 0) {
+      values.house.push({
+        source: point.houseSource ?? "immo-data",
+        value: point.house,
+      });
+    }
+    storedByYear.set(year, values);
+  }
+
+  for (const point of dvfHistory ?? []) {
+    const year = Number.parseInt(String(point?.period ?? "").slice(0, 4), 10);
+    if (!Number.isFinite(year) || year < firstDvfYear) continue;
+    dvfByYear.set(year, point);
+  }
+
+  const years = [...new Set([...storedByYear.keys(), ...dvfByYear.keys()])].sort((left, right) => left - right);
+  return years.map((year) => {
+    const stored = storedByYear.get(year) ?? { apartment: [], house: [] };
+    const dvf = dvfByYear.get(year);
+    const apartmentFromDvf = year >= firstDvfYear && dvf?.apartment > 0;
+    const houseFromDvf = year >= firstDvfYear && dvf?.house > 0;
+    const storedApartment = averageStoredValues(stored.apartment);
+    const storedHouse = averageStoredValues(stored.house);
+
+    return {
+      period: String(year),
+      apartment: apartmentFromDvf ? dvf.apartment : storedApartment.value,
+      house: houseFromDvf ? dvf.house : storedHouse.value,
+      apartmentSource: apartmentFromDvf ? "dvf" : storedApartment.source,
+      houseSource: houseFromDvf ? "dvf" : storedHouse.source,
+    };
+  });
+}
+
+export function inspectHistoryCoverage(history, firstYear, lastYear) {
+  const byYear = new Map((history ?? []).map((point) => [Number(point.period), point]));
+  const missingApartmentPeriods = [];
+  const missingHousePeriods = [];
+
+  for (let year = firstYear; year <= lastYear; year += 1) {
+    const point = byYear.get(year);
+    if (!(point?.apartment > 0)) missingApartmentPeriods.push(String(year));
+    if (!(point?.house > 0)) missingHousePeriods.push(String(year));
+  }
+
+  return {
+    expectedFrom: String(firstYear),
+    expectedTo: String(lastYear),
+    granularity: "annual",
+    missingApartmentPeriods,
+    missingHousePeriods,
+    status: missingApartmentPeriods.length || missingHousePeriods.length ? "partial" : "complete",
+  };
+}
+
+function averageStoredValues(values) {
+  if (values.length === 0) return { source: undefined, value: 0 };
+  const source = values.every((item) => item.source === values[0].source)
+    ? values[0].source
+    : "immo-data";
+  return {
+    source,
+    value: Math.round(values.reduce((sum, item) => sum + item.value, 0) / values.length),
+  };
+}
+
 export function pointInGeometry(point, geometry) {
   if (!geometry || !Array.isArray(point)) return false;
   const polygons = geometry.type === "Polygon"

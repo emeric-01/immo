@@ -6,13 +6,13 @@ Le référentiel local couvre 41 villes des Bouches-du-Rhône et du Var. Marseil
 
 Chaque ville dispose d’un jeu préparé comprenant :
 
-- les ventes comparables DVF de 2021 à 2025, période actuellement exposée par l’archive communale `geo-dvf/latest` ;
+- un historique annuel depuis 2014, restauré depuis les snapshots Immo Data déjà stockés et complété par les médianes DVF disponibles ;
 - les polygones IRIS officiels INSEE/IGN ;
 - les noms de quartiers, lotissements et lieux-dits habités issus de la BD TOPO de l’IGN ;
 - les médianes appartement et maison, les quartiles, les volumes, la tendance annuelle et les 20 dernières ventes ;
 - les statistiques par IRIS avec extension de la période lorsque l’échantillon récent est insuffisant.
 
-Les prix, fourchettes, historiques, volumes, cartes et ventes proviennent du référentiel DVF préparé. Le délai moyen de vente est la seule donnée conservée du dernier snapshot Immo Data : elle est stockée avec `saleDurationSource: "immo-data"` et ne déclenche aucun appel API lors de la consultation des pages.
+Les prix courants, fourchettes, volumes, cartes et ventes proviennent du référentiel DVF préparé. Pour l'historique, DVF est prioritaire à partir de 2021 ; lorsqu'une typologie DVF est insuffisante, la valeur Immo Data déjà stockée est conservée avec sa provenance. Aucun appel Immo Data ou Cerema n'est nécessaire.
 
 ## Règles de nommage
 
@@ -53,4 +53,4 @@ Une actualisation validée doit mettre à jour le snapshot partagé avant de con
 
 Les pages publiques lisent les snapshots stockés. Elles ne contactent ni DVF, ni l’IGN, ni l’INSEE à chaque visite.
 
-Les années absentes de la source ne sont jamais transformées en prix nul. Le graphique commence à la première année disposant d’au moins trois ventes comparables pour une typologie ; une typologie insuffisamment documentée est laissée vide au lieu d’être tracée à 0 €/m².
+Les années absentes ne sont jamais supprimées de l'axe et ne deviennent jamais des prix nuls. Le pipeline cherche d'abord la valeur DVF, puis la valeur Immo Data déjà stockée. Si les deux manquent, la publication est interrompue avec la ville, la typologie et l'année concernées ; l'interface affiche explicitement la période inconnue au lieu de relier artificiellement la courbe.

@@ -51,6 +51,8 @@ export async function POST(request: Request) {
           market: {
             ...estimation.market,
             cityPriceHistory: cityMarket.history,
+            cityPriceHistoryCoverage: cityMarket.historyCoverage,
+            cityPriceHistorySource: cityMarket.historySource,
             priceEvolution12Months:
               propertyMarket?.trend1Year ?? estimation.market?.priceEvolution12Months,
             sectorPricePerM2:

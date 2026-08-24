@@ -269,7 +269,7 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
         </p>
       </section> : null}
 
-      {market && averagePrice !== null && market.history.length > 0 ? <section className={styles.trendSection} aria-labelledby="aubagne-trend-title">
+      {market && averagePrice !== null ? <section className={styles.trendSection} aria-labelledby="aubagne-trend-title">
         <div className={styles.trendCopy}>
           <p>Évolution du marché</p>
           <h2 id="aubagne-trend-title">Maisons et appartements à {city.name} ne suivent pas toujours la même trajectoire</h2>
@@ -279,7 +279,13 @@ export async function CityEstimationPage({ citySlug }: { citySlug: string }) {
           </span>
         </div>
         <div className={styles.chartWrap}>
-          <CityMarketChart averagePrice={averagePrice} cityName={city.name} points={market.history} />
+          <CityMarketChart
+            averagePrice={averagePrice}
+            cityName={city.name}
+            historyCoverage={market.historyCoverage}
+            historySource={market.historySource}
+            points={market.history}
+          />
         </div>
       </section> : null}
 

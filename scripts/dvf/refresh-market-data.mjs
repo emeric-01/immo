@@ -6,7 +6,9 @@ import {
   buildAnnualPriceHistory,
   calculateTrend,
   confidenceForCount,
+  inspectHistoryCoverage,
   largestOuterRing,
+  mergeStoredAndDvfHistory,
   pointInGeometry,
   polygonLabelPoint,
   summarizeSales,
@@ -17,8 +19,9 @@ const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 // 2021 onward. Older paths return 404 and must never become zero-price points.
 const DVF_FIRST_YEAR = 2021;
 const DVF_LAST_YEAR = 2025;
+const HISTORY_FIRST_YEAR = 2014;
 const CURRENT_WINDOW_YEARS = 5;
-const SOURCE_RELEASE = "geo-dvf/latest + IGN/INSEE Contours IRIS 2026 + IGN BD TOPO V3";
+const SOURCE_RELEASE = "geo-dvf/latest + historique Immo Data stocké + IGN/INSEE Contours IRIS 2026 + IGN BD TOPO V3";
 const IRIS_SOURCE_DATE = "2026-04-30";
 const HABITATION_SOURCE = "IGN BD TOPO V3 · zone d’habitation";
 const HABITATION_PAGE_SIZE = 1_000;
@@ -33,18 +36,18 @@ await loadEnvironment(path.join(PROJECT_ROOT, ".env.local"));
 const cities = (await readLocalMarketCities()).filter((city) => !cli.city || city.slug === cli.city);
 if (cities.length === 0) throw new Error(`Ville inconnue ou hors périmètre : ${cli.city}`);
 
-const database = cli.persist || cli.persistStaged ? getDatabaseConfig() : null;
+const database = getDatabaseConfig();
 await mkdir(CACHE_DIR, { recursive: true });
 if (cli.stage) await mkdir(cli.stageDir, { recursive: true });
 if (cli.persistStaged) await validateStagedImport(cities);
-const run = database ? await createImportRun(database, cities) : null;
+const run = cli.persist || cli.persistStaged ? await createImportRun(database, cities) : null;
 const results = [];
 const errors = [];
 let processedFiles = 0;
 
 for (const city of cities) {
   try {
-    const existingMarket = database ? await readExistingMarket(database, city.inseeCode) : null;
+    const existingMarket = await readExistingMarket(database, city.inseeCode);
     const staged = cli.persistStaged ? await readStagedCity(city) : null;
     const irisZones = staged?.irisZones ?? await downloadIrisZones(city);
     const habitationNames = staged?.habitationNames ?? await downloadHabitationNames(city, irisZones);
@@ -119,6 +122,13 @@ function years() {
   return Array.from({ length: DVF_LAST_YEAR - DVF_FIRST_YEAR + 1 }, (_, index) => DVF_FIRST_YEAR + index);
 }
 
+function historyYears() {
+  return Array.from(
+    { length: DVF_LAST_YEAR - HISTORY_FIRST_YEAR + 1 },
+    (_, index) => HISTORY_FIRST_YEAR + index,
+  );
+}
+
 async function loadEnvironment(filePath) {
   const contents = await readFile(filePath, "utf8").catch(() => "");
   for (const line of contents.split(/\r?\n/)) {
@@ -189,7 +199,7 @@ async function createImportRun(database, selectedCities) {
     body: JSON.stringify({
       city_insee_codes: selectedCities.map((city) => city.inseeCode),
       source_release: SOURCE_RELEASE,
-      source_years: years(),
+      source_years: historyYears(),
     }),
   });
   return row;
@@ -489,12 +499,32 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
   const apartment = propertyStat(sales, currentSales, "apartment", existingMarket?.apartment);
   const house = propertyStat(sales, currentSales, "house", existingMarket?.house);
   const historyWithCounts = buildAnnualPriceHistory(sales, years());
-  const history = historyWithCounts
+  const dvfHistory = historyWithCounts
     .map(({ period, apartment: apartmentValue, house: houseValue }) => ({
       period,
       apartment: apartmentValue,
       house: houseValue,
     }));
+  const storedHistory = existingMarket?.source === "immo-data"
+    || existingMarket?.historySource === "immo-data-dvf"
+    ? existingMarket.history
+    : [];
+  const history = mergeStoredAndDvfHistory(storedHistory, dvfHistory, DVF_FIRST_YEAR);
+  const historyCoverage = inspectHistoryCoverage(history, HISTORY_FIRST_YEAR, DVF_LAST_YEAR);
+  if (historyCoverage.status === "partial") {
+    const missing = [
+      historyCoverage.missingApartmentPeriods.length
+        ? `appartements (${historyCoverage.missingApartmentPeriods.join(", ")})`
+        : null,
+      historyCoverage.missingHousePeriods.length
+        ? `maisons (${historyCoverage.missingHousePeriods.join(", ")})`
+        : null,
+    ].filter(Boolean).join(" ; ");
+    throw new Error(
+      `Historique incomplet pour ${city.name}: ${missing}. Publication interrompue ; vérifiez la donnée stockée avant de continuer.`,
+    );
+  }
+  const hasStoredHistory = history.some((point) => Number.parseInt(point.period.slice(0, 4), 10) < DVF_FIRST_YEAR);
   apartment.trend1Year = trendFromHistory(historyWithCounts, "apartment");
   house.trend1Year = trendFromHistory(historyWithCounts, "house");
   apartment.trendSource = apartment.trend1Year === 0 ? "unavailable" : "history";
@@ -545,6 +575,8 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
   const currentComparableCount = apartment.observations + house.observations;
   const marketData = {
     source: "dvf",
+    historySource: hasStoredHistory ? "immo-data-dvf" : "dvf",
+    historyCoverage,
     updatedAt: new Date().toISOString().slice(0, 10),
     apartment,
     house,
@@ -566,7 +598,16 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
   const auditData = {
     methodologyVersion: METHODOLOGY_VERSION,
     currentWindow: `${currentStartYear}-${latestYear}`,
-    extendedWindow: `${DVF_FIRST_YEAR}-${latestYear}`,
+    extendedWindow: `${history[0]?.period ?? DVF_FIRST_YEAR}-${latestYear}`,
+    historySource: hasStoredHistory
+      ? "Immo Data stocké + geo-dvf/latest, avec complément Immo Data si DVF est insuffisant"
+      : "geo-dvf/latest",
+    immoDataFallbackApartmentPeriods: history
+      .filter((point) => Number(point.period) >= DVF_FIRST_YEAR && point.apartmentSource === "immo-data")
+      .map((point) => point.period),
+    immoDataFallbackHousePeriods: history
+      .filter((point) => Number(point.period) >= DVF_FIRST_YEAR && point.houseSource === "immo-data")
+      .map((point) => point.period),
     candidateSales: sales.length,
     currentComparableSales: currentComparableCount,
     irisZones: zones.length,

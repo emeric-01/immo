@@ -48,7 +48,18 @@ export type PropertyEstimation = {
       period: string;
       apartment: number;
       house: number;
+      apartmentSource?: "dvf" | "immo-data";
+      houseSource?: "dvf" | "immo-data";
     }>;
+    cityPriceHistorySource?: "dvf" | "immo-data" | "immo-data-dvf";
+    cityPriceHistoryCoverage?: {
+      expectedFrom: string;
+      expectedTo: string;
+      granularity: "annual" | "monthly" | "mixed";
+      missingApartmentPeriods: string[];
+      missingHousePeriods: string[];
+      status: "complete" | "partial";
+    };
     saleDurationDays?: number;
     supplyLevel?: "Faible" | "Modere" | "Eleve";
     demandLevel?: "Faible" | "Bonne demande" | "Forte demande";

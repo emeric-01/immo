@@ -18,7 +18,7 @@ import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
 import styles from "../contenus.module.css";
 
-export const revalidate = 900;
+export const dynamic = "force-dynamic";
 
 type ContentArticlePageProps = {
   params: Promise<{ slug: string }>;
@@ -89,7 +89,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
     : null;
   const chartArticleParts = splitArticleForMarketChart(article.body_markdown);
   const showMarketChart = Boolean(
-    chartArticleParts && relatedCity && cityMarket?.history.length && averagePrice,
+    chartArticleParts && relatedCity && cityMarket && averagePrice,
   );
 
   const jsonLd = {
@@ -152,10 +152,12 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
                   averagePrice={averagePrice}
                   cityName={relatedCity.name}
                   defaultPeriod="5y"
+                  historyCoverage={cityMarket.historyCoverage}
+                  historySource={cityMarket.historySource}
                   points={cityMarket.history}
                 />
                 <p className={styles.articleChartSource}>
-                  Repères construits à partir des transactions DVF publiées par la DGFiP, agrégées par type de bien.
+                  Historique Immo Data déjà stocké et transactions DVF publiées par la DGFiP, agrégés par type de bien.
                   Les prix constatés ne remplacent pas l’estimation des caractéristiques propres au logement.
                 </p>
               </div>

@@ -1,16 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { buildPriceHistoryChartScale, historyDurationLabel, prepareCityPriceHistoryForDisplay, selectWidestCityPriceHistory } from "./price-history";
+import { buildCityPriceHistoryCoverage, buildPriceHistoryChartScale, historyDurationLabel, prepareCityPriceHistoryForDisplay, selectWidestCityPriceHistory } from "./price-history";
 
 describe("prepareCityPriceHistoryForDisplay", () => {
-  it("supprime les années vides et conserve une typologie manquante comme une interruption", () => {
-    expect(prepareCityPriceHistoryForDisplay([
+  it("conserve les années inconnues et les typologies manquantes comme des interruptions", () => {
+    const points = prepareCityPriceHistoryForDisplay([
       { apartment: 0, house: 0, period: "2014" },
       { apartment: 0, house: 4_200, period: "2021" },
       { apartment: 3_400, house: 4_500, period: "2022" },
-    ])).toEqual([
-      { apartment: undefined, house: 4_200, period: "2021" },
-      { apartment: 3_400, house: 4_500, period: "2022" },
     ]);
+
+    expect(points.map((point) => point.period)).toEqual([
+      "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022",
+    ]);
+    expect(points[0]).toMatchObject({ apartment: undefined, house: undefined, period: "2014" });
+    expect(points[7]).toMatchObject({ apartment: undefined, house: 4_200, period: "2021" });
+  });
+
+  it("décrit précisément la couverture inconnue pour chaque typologie", () => {
+    expect(buildCityPriceHistoryCoverage([
+      { apartment: 3_000, house: 4_000, period: "2014" },
+      { apartment: 3_200, house: 0, period: "2016" },
+    ])).toMatchObject({
+      expectedFrom: "2014",
+      expectedTo: "2016",
+      missingApartmentPeriods: ["2015"],
+      missingHousePeriods: ["2015", "2016"],
+      status: "partial",
+    });
   });
 });
 

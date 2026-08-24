@@ -204,7 +204,7 @@ function CityMarketDashboard({
   sourceLabel: string;
 }) {
   const TrendIcon = averageTrend === null ? Clock3 : averageTrend >= 0 ? TrendingUp : TrendingDown;
-  const displayHistory = prepareCityPriceHistoryForDisplay(market.history);
+  const displayHistory = prepareCityPriceHistoryForDisplay(market.history, market.historyCoverage);
   const hasApartmentHistory = displayHistory.some((point) => point.apartment !== undefined);
   const hasHouseHistory = displayHistory.some((point) => point.house !== undefined);
   const marketTrendLabel = averageTrend === null
@@ -227,9 +227,13 @@ function CityMarketDashboard({
             </div>
           ) : null}
         </div>
-        {displayHistory.length > 0
-          ? <CityMarketChart averagePrice={seoPreview ? undefined : averagePrice} cityName={city.name} points={displayHistory} />
-          : <p>L’historique vérifié n’est pas encore disponible pour cette commune.</p>}
+        <CityMarketChart
+          averagePrice={seoPreview ? undefined : averagePrice}
+          cityName={city.name}
+          historyCoverage={market.historyCoverage}
+          historySource={market.historySource}
+          points={market.history}
+        />
       </div>
 
       <aside className="city-dashboard-side" id="ventes">

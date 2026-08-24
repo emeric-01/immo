@@ -1,8 +1,8 @@
 import type { CityMarketData } from "./city-market-data";
 import { aubagnePreviewZones } from "./aubagne-preview-zones";
 
-// Published Aubagne snapshot based on official DVF statistics for 2014–2025.
-// The 2014–2020 annual medians come from the public Cerema DVF+ API; the
+// Offline fallback aligned with the stored Aubagne snapshot for 2014–2025.
+// The 2014–2020 annual values come from the saved Immo Data history; the
 // 2021–2025 points come from the latest geolocated DVF release on data.gouv.fr.
 // The central values are the commune medians published by data.gouv.fr.
 // The displayed ranges use the first and third quartiles of comparable resale transactions (Q1–Q3).
@@ -10,6 +10,15 @@ import { aubagnePreviewZones } from "./aubagne-preview-zones";
 // agency, estimation, directory and editorial pages cannot drift apart.
 const aubagnePricePreviewSnapshot: CityMarketData = {
   source: "dvf",
+  historySource: "immo-data-dvf",
+  historyCoverage: {
+    expectedFrom: "2014",
+    expectedTo: "2025",
+    granularity: "annual",
+    missingApartmentPeriods: [],
+    missingHousePeriods: [],
+    status: "complete",
+  },
   updatedAt: "2026-04-27",
   apartment: {
     averagePricePerM2: 2744,
@@ -30,18 +39,18 @@ const aubagnePricePreviewSnapshot: CityMarketData = {
     trendSource: "history",
   },
   history: [
-    { apartment: 2588, house: 3474, period: "2014" },
-    { apartment: 2423, house: 3537, period: "2015" },
-    { apartment: 2500, house: 3534, period: "2016" },
-    { apartment: 2356, house: 3608, period: "2017" },
-    { apartment: 2398, house: 3613, period: "2018" },
-    { apartment: 2388, house: 3907, period: "2019" },
-    { apartment: 2573, house: 4041, period: "2020" },
-    { apartment: 2583, house: 4313, period: "2021" },
-    { apartment: 2783, house: 4389, period: "2022" },
-    { apartment: 2888, house: 4822, period: "2023" },
-    { apartment: 2706, house: 4492, period: "2024" },
-    { apartment: 2631, house: 4354, period: "2025" },
+    { apartment: 2494, apartmentSource: "immo-data", house: 3594, houseSource: "immo-data", period: "2014" },
+    { apartment: 2398, apartmentSource: "immo-data", house: 3570, houseSource: "immo-data", period: "2015" },
+    { apartment: 2396, apartmentSource: "immo-data", house: 3588, houseSource: "immo-data", period: "2016" },
+    { apartment: 2354, apartmentSource: "immo-data", house: 3658, houseSource: "immo-data", period: "2017" },
+    { apartment: 2397, apartmentSource: "immo-data", house: 3761, houseSource: "immo-data", period: "2018" },
+    { apartment: 2445, apartmentSource: "immo-data", house: 3934, houseSource: "immo-data", period: "2019" },
+    { apartment: 2541, apartmentSource: "immo-data", house: 4140, houseSource: "immo-data", period: "2020" },
+    { apartment: 2574, apartmentSource: "dvf", house: 4310, houseSource: "dvf", period: "2021" },
+    { apartment: 2782, apartmentSource: "dvf", house: 4402, houseSource: "dvf", period: "2022" },
+    { apartment: 2885, apartmentSource: "dvf", house: 4823, houseSource: "dvf", period: "2023" },
+    { apartment: 2705, apartmentSource: "dvf", house: 4523, houseSource: "dvf", period: "2024" },
+    { apartment: 2632, apartmentSource: "dvf", house: 4364, houseSource: "dvf", period: "2025" },
   ],
   zones: aubagnePreviewZones,
   // Twenty latest comparable built-property mutations from the official

@@ -1,4 +1,8 @@
-import type { CityPriceHistoryPoint } from "./city-market-data";
+import type {
+  CityPriceHistoryCoverage,
+  CityPriceHistoryPoint,
+  CityPriceHistoryValueSource,
+} from "./city-market-data";
 
 export type PriceHistoryValuePoint = { label: string; value: number };
 
@@ -6,7 +10,14 @@ export type DisplayCityPriceHistoryPoint = {
   period: string;
   apartment?: number;
   house?: number;
+  apartmentSource?: CityPriceHistoryValueSource;
+  houseSource?: CityPriceHistoryValueSource;
 };
+
+type PriceHistoryCoverageOptions = Partial<Pick<
+  CityPriceHistoryCoverage,
+  "expectedFrom" | "expectedTo" | "granularity"
+>>;
 
 export type PriceHistoryChartScale = {
   delta: number;
@@ -35,6 +46,7 @@ export function selectWidestCityPriceHistory(
 
 export function prepareCityPriceHistoryForDisplay(
   history: CityPriceHistoryPoint[] | null | undefined,
+  coverage?: CityPriceHistoryCoverage,
 ): DisplayCityPriceHistoryPoint[] {
   const byPeriod = new Map<string, DisplayCityPriceHistoryPoint>();
 
@@ -44,12 +56,60 @@ export function prepareCityPriceHistoryForDisplay(
     const apartment = isPositive(point.apartment) ? point.apartment : undefined;
     const house = isPositive(point.house) ? point.house : undefined;
 
-    if (apartment === undefined && house === undefined) continue;
-    byPeriod.set(point.period, { period: point.period, apartment, house });
+    byPeriod.set(point.period, {
+      period: point.period,
+      apartment,
+      house,
+      apartmentSource: apartment === undefined ? undefined : point.apartmentSource,
+      houseSource: house === undefined ? undefined : point.houseSource,
+    });
+  }
+
+  const effectiveCoverage = coverage ?? buildCityPriceHistoryCoverage(history);
+  for (const period of enumeratePeriods(effectiveCoverage)) {
+    if (!byPeriod.has(period)) byPeriod.set(period, { period });
   }
 
   return Array.from(byPeriod.values())
     .sort((left, right) => periodKey(left.period) - periodKey(right.period));
+}
+
+export function buildCityPriceHistoryCoverage(
+  history: CityPriceHistoryPoint[] | null | undefined,
+  options: PriceHistoryCoverageOptions = {},
+): CityPriceHistoryCoverage {
+  const periods = (history ?? [])
+    .map((point) => point?.period)
+    .filter((period): period is string => Boolean(period))
+    .sort((left, right) => periodKey(left) - periodKey(right));
+  const inferredGranularity = inferGranularity(periods);
+  const granularity = options.granularity ?? inferredGranularity;
+  const expectedFrom = options.expectedFrom ?? periods[0] ?? "";
+  const expectedTo = options.expectedTo ?? periods.at(-1) ?? expectedFrom;
+  const byPeriod = new Map((history ?? []).map((point) => [point.period, point]));
+  const expectedPeriods = enumeratePeriods({
+    expectedFrom,
+    expectedTo,
+    granularity,
+    missingApartmentPeriods: [],
+    missingHousePeriods: [],
+    status: "complete",
+  });
+  const missingApartmentPeriods = expectedPeriods.filter(
+    (period) => !isPositive(byPeriod.get(period)?.apartment ?? 0),
+  );
+  const missingHousePeriods = expectedPeriods.filter(
+    (period) => !isPositive(byPeriod.get(period)?.house ?? 0),
+  );
+
+  return {
+    expectedFrom,
+    expectedTo,
+    granularity,
+    missingApartmentPeriods,
+    missingHousePeriods,
+    status: missingApartmentPeriods.length || missingHousePeriods.length ? "partial" : "complete",
+  };
 }
 
 export function historyDurationLabel(firstPeriod: string, lastPeriod: string) {
@@ -127,4 +187,34 @@ function periodParts(period: string) {
   const year = Number(match[1]);
   const month = Math.min(12, Math.max(1, Number(match[2] ?? "1"))) - 1;
   return Number.isFinite(year) ? { month, year } : null;
+}
+
+function inferGranularity(periods: string[]): CityPriceHistoryCoverage["granularity"] {
+  if (periods.length === 0 || periods.every((period) => /^\d{4}$/.test(period))) return "annual";
+  if (periods.every((period) => /^\d{4}-\d{2}$/.test(period))) return "monthly";
+  return "mixed";
+}
+
+function enumeratePeriods(coverage: CityPriceHistoryCoverage) {
+  if (!coverage.expectedFrom || !coverage.expectedTo) return [];
+  if (coverage.granularity === "mixed") return [];
+  const start = periodParts(coverage.expectedFrom);
+  const end = periodParts(coverage.expectedTo);
+  if (!start || !end) return [];
+
+  if (coverage.granularity === "annual") {
+    return Array.from(
+      { length: Math.max(0, end.year - start.year + 1) },
+      (_, index) => String(start.year + index),
+    );
+  }
+
+  const startKey = start.year * 12 + start.month;
+  const endKey = end.year * 12 + end.month;
+  return Array.from({ length: Math.max(0, endKey - startKey + 1) }, (_, index) => {
+    const key = startKey + index;
+    const year = Math.floor(key / 12);
+    const month = key % 12 + 1;
+    return `${year}-${String(month).padStart(2, "0")}`;
+  });
 }

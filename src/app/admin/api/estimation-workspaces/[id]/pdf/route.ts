@@ -27,8 +27,22 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const city = getCityByMarketIdentifier({ inseeCode: source.input_payload.selectedAddress?.inseeCode, name: source.input_payload.selectedAddress?.cityName });
     const agentId = workspace.assigned_admin_user_id || source.assigned_admin_user_id || source.attributed_admin_user_id || source.created_by_admin_user_id;
     const [agent, inseeProfile, snapshots, photos, mapImage, cityMarket] = await Promise.all([getAdminUserSummary(agentId), getInseeHousingProfile(source.input_payload.selectedAddress?.inseeCode), listEstimationReportSnapshots(source.id), getEnabledWorkspacePhotoBuffers(workspace), getStaticMapImage(baseEstimation.result_payload.coordinates), city ? getPublishedCityMarketData(city) : Promise.resolve(null)]);
-    const cityPriceHistory = selectWidestCityPriceHistory(baseEstimation.result_payload.market?.cityPriceHistory, cityMarket?.history);
-    const estimation = cityPriceHistory.length ? { ...baseEstimation, result_payload: { ...baseEstimation.result_payload, market: { ...baseEstimation.result_payload.market, cityPriceHistory } } } : baseEstimation;
+    const cityPriceHistory = cityMarket?.history
+      ?? selectWidestCityPriceHistory(baseEstimation.result_payload.market?.cityPriceHistory);
+    const estimation = cityPriceHistory.length ? {
+      ...baseEstimation,
+      result_payload: {
+        ...baseEstimation.result_payload,
+        market: {
+          ...baseEstimation.result_payload.market,
+          cityPriceHistory,
+          cityPriceHistoryCoverage: cityMarket?.historyCoverage
+            ?? baseEstimation.result_payload.market?.cityPriceHistoryCoverage,
+          cityPriceHistorySource: cityMarket?.historySource
+            ?? baseEstimation.result_payload.market?.cityPriceHistorySource,
+        },
+      },
+    } : baseEstimation;
     const version = nextReportVersion(snapshots);
     const pdf = await renderWorkspaceEstimationPdf(estimation, workspace, agent, { inseeProfile, mapImage, photos, reportVersion: version });
     await saveEstimationReportSnapshot({ estimation, inseeProfile, pdf, session, version, workspace });

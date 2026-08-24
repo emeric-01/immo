@@ -504,7 +504,14 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
           </div>
-          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod={seoEnhanced ? "all" : "5y"} points={market.history} /> : null}
+          <CityMarketChart
+            averagePrice={averagePrice}
+            cityName={city.name}
+            defaultPeriod={seoEnhanced ? "all" : "5y"}
+            historyCoverage={market.historyCoverage}
+            historySource={market.historySource}
+            points={market.history}
+          />
           <p className={styles.marketNote}>
             {localInsight
               ? `Les courbes présentent des repères moyens pour ${city.name}. Elles servent à situer la tendance avant de comparer le bien avec des transactions de même typologie, dans son quartier puis autour de son adresse.`

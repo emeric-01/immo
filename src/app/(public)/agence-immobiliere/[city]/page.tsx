@@ -335,7 +335,14 @@ export default async function LocalAgencyCityPage({ params }: LocalAgencyPagePro
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
           </div>
-          {market.history.length > 0 ? <CityMarketChart averagePrice={averagePrice} cityName={city.name} defaultPeriod="5y" points={market.history} /> : null}
+          <CityMarketChart
+            averagePrice={averagePrice}
+            cityName={city.name}
+            defaultPeriod="5y"
+            historyCoverage={market.historyCoverage}
+            historySource={market.historySource}
+            points={market.history}
+          />
           <p className={styles.marketNote}>Ces moyennes donnent un repère. Elles ne remplacent jamais la visite et l’analyse des caractéristiques propres au bien.</p>
         </article>
 
