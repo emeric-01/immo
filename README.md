@@ -2,6 +2,8 @@
 
 Projet local isole pour l'activite immo.
 
+La règle métier permanente des graphiques « Évolution des prix » est documentée dans [`docs/dvf-market-data.md`](docs/dvf-market-data.md#contrat-permanent-de-lhistorique-des-prix). Elle doit être consultée avant toute modification des historiques, pages marché, estimations ou PDF.
+
 ## Isolation
 
 - Dossier separe de la laverie : `immo-backoffice`

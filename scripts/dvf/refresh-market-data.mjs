@@ -15,6 +15,8 @@ import {
 } from "./market-statistics.mjs";
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
+// Permanent product contract: see docs/dvf-market-data.md. Do not shorten the
+// history or replace missing periods with zero/interpolated values.
 // The rolling geo-dvf "latest" archive currently exposes commune files from
 // 2021 onward. Older paths return 404 and must never become zero-price points.
 const DVF_FIRST_YEAR = 2021;

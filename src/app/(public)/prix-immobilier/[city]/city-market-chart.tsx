@@ -27,8 +27,10 @@ type CityMarketChartProps = {
   averagePrice?: number;
   cityName: string;
   defaultPeriod?: Period;
-  historyCoverage?: CityPriceHistoryCoverage;
-  historySource?: CityPriceHistorySource;
+  // Required at every call site, even when undefined, so a new surface cannot
+  // silently forget the provenance contract documented in docs/dvf-market-data.md.
+  historyCoverage: CityPriceHistoryCoverage | undefined;
+  historySource: CityPriceHistorySource | undefined;
   points: CityPriceHistoryPoint[];
 };
 
