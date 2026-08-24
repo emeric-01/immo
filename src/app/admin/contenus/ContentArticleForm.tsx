@@ -3,7 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { Save } from "lucide-react";
+import { Eye, Save, X } from "lucide-react";
+import { MarkdownContent } from "@/components/content/MarkdownContent";
+import { estimateReadingMinutes } from "@/lib/content/article-utils";
 import type { ContentArticle } from "@/lib/content/articles";
 import admin from "../admin.module.css";
 import { createContentArticleAction, updateContentArticleAction } from "./actions";
@@ -16,10 +18,29 @@ type ContentArticleFormProps = {
 export function ContentArticleForm({ article }: ContentArticleFormProps) {
   const action = article ? updateContentArticleAction : createContentArticleAction;
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [bodyMarkdown, setBodyMarkdown] = useState(article?.body_markdown ?? "");
   const [bodyImageAlt, setBodyImageAlt] = useState("");
   const [coverImageAlt, setCoverImageAlt] = useState(article?.cover_image_alt ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState(article?.cover_image_url ?? "");
+  const [preview, setPreview] = useState<ArticlePreview | null>(null);
+
+  function openPreview() {
+    const form = formRef.current;
+
+    if (!form) return;
+
+    const data = new FormData(form);
+    setPreview({
+      bodyMarkdown,
+      category: String(data.get("category") || "Conseils"),
+      coverImageAlt: coverImageAlt.trim(),
+      coverImageUrl: coverImageUrl.trim(),
+      excerpt: String(data.get("excerpt") || ""),
+      primaryKeyword: String(data.get("primaryKeyword") || ""),
+      title: String(data.get("title") || "Titre de l’article"),
+    });
+  }
 
   function insertBodyImage(image: UploadedBlogImage) {
     const alt = bodyImageAlt.trim() || "Photo illustrant l’article immobilier";
@@ -42,7 +63,7 @@ export function ContentArticleForm({ article }: ContentArticleFormProps) {
   }
 
   return (
-    <form action={action} className={admin.contentForm}>
+    <form action={action} className={admin.contentForm} ref={formRef}>
       {article ? <input name="id" type="hidden" value={article.id} /> : null}
       <section className={admin.formPanel}>
         <div className={admin.formIntro}>
@@ -87,7 +108,10 @@ export function ContentArticleForm({ article }: ContentArticleFormProps) {
         <div className={admin.formIntro}>
           <p className={admin.eyebrow}>Lecture</p>
           <h2>Corps de page</h2>
-          <p>Markdown simple accepté : titres avec <code>##</code>, listes avec <code>-</code>, paragraphes séparés par une ligne vide.</p>
+          <p>
+            Markdown accepté : titres avec <code>##</code>, listes avec <code>-</code>, tableaux et CTA discret avec
+            {" "}<code>:::cta [Libellé](/estimation) Texte</code>.
+          </p>
         </div>
         <label>
           Chapô
@@ -176,8 +200,52 @@ export function ContentArticleForm({ article }: ContentArticleFormProps) {
 
       <div className={admin.formActions}>
         <Link className={admin.secondaryButton} href="/admin/contenus">Annuler</Link>
+        <button className={admin.secondaryButton} onClick={openPreview} type="button"><Eye size={17} /> Aperçu</button>
         <button className={admin.primaryButton} type="submit"><Save size={17} /> Enregistrer</button>
       </div>
+      {preview ? <ArticlePreviewDialog onClose={() => setPreview(null)} preview={preview} /> : null}
     </form>
+  );
+}
+
+type ArticlePreview = {
+  bodyMarkdown: string;
+  category: string;
+  coverImageAlt: string;
+  coverImageUrl: string;
+  excerpt: string;
+  primaryKeyword: string;
+  title: string;
+};
+
+function ArticlePreviewDialog({ onClose, preview }: { onClose: () => void; preview: ArticlePreview }) {
+  return (
+    <div aria-label="Aperçu de l’article" aria-modal="true" className={admin.articlePreviewOverlay} role="dialog">
+      <div className={admin.articlePreviewDialog}>
+        <div className={admin.articlePreviewToolbar}>
+          <div><strong>Aperçu avant enregistrement</strong><span>Les modifications restent locales tant que vous n’enregistrez pas.</span></div>
+          <button aria-label="Fermer l’aperçu" onClick={onClose} type="button"><X size={20} /></button>
+        </div>
+        <article className={admin.articlePreviewPage}>
+          <header>
+            <p>{preview.category || "Conseils"}</p>
+            <h1>{preview.title || "Titre de l’article"}</h1>
+            {preview.excerpt ? <div>{preview.excerpt}</div> : null}
+            <small>
+              Aperçu non publié · {estimateReadingMinutes(preview.bodyMarkdown)} min de lecture
+              {preview.primaryKeyword ? ` · ${preview.primaryKeyword}` : ""}
+            </small>
+          </header>
+          {preview.coverImageUrl ? (
+            <div className={admin.articlePreviewCover}>
+              {/* A plain img also supports temporary blob URLs during an unsaved preview. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt={preview.coverImageAlt || preview.title} src={preview.coverImageUrl} />
+            </div>
+          ) : null}
+          <MarkdownContent className={admin.articlePreviewMarkdown} markdown={preview.bodyMarkdown} />
+        </article>
+      </div>
+    </div>
   );
 }

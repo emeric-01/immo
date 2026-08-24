@@ -1430,6 +1430,69 @@
   backdrop-filter: blur(12px);
 }
 
+.articlePreviewOverlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 17, 17, 0.68);
+  padding: 24px;
+}
+
+.articlePreviewDialog {
+  width: min(1040px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+}
+
+.articlePreviewToolbar {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e7ded5;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 14px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.articlePreviewToolbar > div { display: grid; gap: 2px; }
+.articlePreviewToolbar span { color: #707789; font-size: .76rem; }
+.articlePreviewToolbar button { display: grid; place-items: center; border: 0; background: transparent; cursor: pointer; }
+
+.articlePreviewPage {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 58px 0 72px;
+  color: #24211f;
+}
+
+.articlePreviewPage > header { max-width: 790px; margin: 0 auto 34px; text-align: center; }
+.articlePreviewPage > header > p { margin: 0 0 14px; color: #a45e35; font-size: .76rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.articlePreviewPage h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.2rem, 5vw, 4.5rem); font-weight: 500; line-height: 1.04; }
+.articlePreviewPage > header > div { margin: 22px auto 0; color: #64605c; font-size: 1.08rem; line-height: 1.7; }
+.articlePreviewPage > header small { display: block; margin-top: 18px; color: #77716b; }
+
+.articlePreviewCover { overflow: hidden; aspect-ratio: 16 / 9; margin-bottom: 42px; border-radius: 14px; background: #eee7df; }
+.articlePreviewCover img { width: 100%; height: 100%; object-fit: cover; }
+.articlePreviewMarkdown { max-width: 760px; margin: 0 auto; font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.82; }
+.articlePreviewMarkdown h2 { margin: 2.2em 0 .7em; font-size: 1.75rem; line-height: 1.25; }
+.articlePreviewMarkdown h3 { margin: 1.8em 0 .6em; font-size: 1.3rem; }
+.articlePreviewMarkdown img { max-width: 100%; height: auto; border-radius: 10px; }
+
+@media (max-width: 700px) {
+  .articlePreviewOverlay { padding: 0; }
+  .articlePreviewDialog { max-height: 100vh; border-radius: 0; }
+  .articlePreviewPage { width: min(100% - 28px, 920px); padding-top: 38px; }
+}
+
 .articleList {
   display: grid;
   gap: 12px;
