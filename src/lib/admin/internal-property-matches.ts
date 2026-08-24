@@ -3,7 +3,7 @@ import "server-only";
 import type { AdminBuyerSearchLocation, AdminBuyerSearchRow } from "@/lib/admin/buyer-searches";
 import { southCities } from "@/lib/cities";
 import type { CityMarketData } from "@/lib/city-market-data";
-import { readCityMarketCache } from "@/lib/city-market-cache";
+import { getPublishedCityMarketDataSet } from "@/lib/published-city-market";
 import { INTERKAB_CITIES, getAllStoredInterkabListings } from "@/lib/interkab";
 import { scoreInterkabListing } from "@/lib/interkab-scoring";
 import { adminRest } from "@/lib/properties";
@@ -138,8 +138,7 @@ export async function getInternalPropertyMatches(search: AdminBuyerSearchRow, lo
     ...selectedCities,
     ...agencyRows.map((property) => southCities.find((city) => normalize(city.name) === normalize(property.city_name))).filter((city): city is (typeof southCities)[number] => Boolean(city)),
   ].map((city) => [city.inseeCode, city])).values());
-  const marketEntries = await Promise.all(marketCities.map(async (city) => [city.inseeCode, (await readCityMarketCache(city))?.data ?? null] as const));
-  const marketsByInseeCode = new Map(marketEntries);
+  const marketsByInseeCode = await getPublishedCityMarketDataSet(marketCities);
 
   const agencyCandidates: InternalMatchCandidate[] = agencyRows.map((property): InternalMatchCandidate => {
     const city = southCities.find((candidate) => normalize(candidate.name) === normalize(property.city_name));

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { getCityByMarketIdentifier } from "@/lib/cities";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { normalizePropertyTypes } from "./options";
 import type { BuyerSearchFormData, PropertyType } from "./types";
 import type {
@@ -39,6 +41,7 @@ type MarketPriceCandidate = {
   marketPricePerM2: number;
   preliminaryScore: number;
   propertyType: PropertyType;
+  source: BuyerSearchMarketScore["source"];
 };
 
 export async function analyzeBuyerSearchMarket(
@@ -52,7 +55,6 @@ export async function analyzeBuyerSearchMarket(
   const cities = data.location.cities.slice(0, MAX_SCORING_CITIES);
 
   if (
-    !config ||
     !idealBudget ||
     !maximumBudget ||
     !minimumLivingArea ||
@@ -83,16 +85,16 @@ export async function analyzeBuyerSearchMarket(
   const transactionParams = buildTransactionParams(data, candidate.city, candidate.propertyType);
   const historyParams = buildPriceHistoryParams(candidate.city, candidate.propertyType);
   const [transactions, priceHistory] = await Promise.all([
-    transactionParams
+    config && transactionParams
       ? optionalImmoData(() =>
           fetchImmoData<TransactionsResponse>(config, "/v1/transactions", transactionParams),
         )
       : undefined,
-    optionalImmoData(() =>
+    config ? optionalImmoData(() =>
       fetchImmoData<PriceHistoryResponse>(config, "/v1/market/price/history", historyParams, {
         revalidateSeconds: CURRENT_PRICE_REVALIDATE_SECONDS,
       }),
-    ),
+    ) : undefined,
   ]);
   const comparableTransactions = Math.max(0, transactions?.total ?? 0);
   const bestMatch: BuyerSearchMarketCombination = {
@@ -138,9 +140,9 @@ export async function analyzeBuyerSearchMarket(
     computedAt: new Date().toISOString(),
     factors: buildFactors(data, bestMatch),
     label: marketScoreLabel(score),
-    methodVersion: "price-sqm-v3",
+    methodVersion: "price-sqm-v4",
     score,
-    source: "immo-data",
+    source: candidate.source,
     status: marketScoreStatus(score),
     target: {
       idealBudget,
@@ -190,14 +192,26 @@ export async function enrichMarketScoreTrends(
 }
 
 async function analyzePriceCandidate(
-  config: ImmoDataConfig,
+  config: ImmoDataConfig | null,
   city: BuyerSearchFormData["location"]["cities"][number],
   propertyType: PropertyType,
   maximumCapacityPerM2: number,
 ): Promise<MarketPriceCandidate | null> {
-  if (!city.cityCode) {
-    return null;
+  const knownCity = getCityByMarketIdentifier({ inseeCode: city.cityCode, name: city.name });
+  const publishedMarket = knownCity ? await getPublishedCityMarketData(knownCity) : null;
+  const publishedPrice = publishedMarket?.[propertyType].averagePricePerM2;
+
+  if (publishedPrice && publishedPrice > 0) {
+    return buildMarketPriceCandidate(
+      city,
+      propertyType,
+      maximumCapacityPerM2,
+      publishedPrice,
+      "published-market",
+    );
   }
+
+  if (!config || !city.cityCode) return null;
 
   const priceParams = new URLSearchParams({
     code: city.cityCode,
@@ -217,6 +231,22 @@ async function analyzePriceCandidate(
     return null;
   }
 
+  return buildMarketPriceCandidate(
+    city,
+    propertyType,
+    maximumCapacityPerM2,
+    marketPricePerM2,
+    "immo-data",
+  );
+}
+
+function buildMarketPriceCandidate(
+  city: BuyerSearchFormData["location"]["cities"][number],
+  propertyType: PropertyType,
+  maximumCapacityPerM2: number,
+  marketPricePerM2: number,
+  source: BuyerSearchMarketScore["source"],
+): MarketPriceCandidate {
   const gapPercent = Number(
     (((maximumCapacityPerM2 - marketPricePerM2) / marketPricePerM2) * 100).toFixed(1),
   );
@@ -231,6 +261,7 @@ async function analyzePriceCandidate(
       0,
     ),
     propertyType,
+    source,
   };
 }
 

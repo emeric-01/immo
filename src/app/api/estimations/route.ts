@@ -7,7 +7,7 @@ import { getClientSession } from "@/lib/client-access/auth";
 import { savePropertyEstimation } from "@/lib/client-access/estimations";
 import { recordEstimationApiUsage } from "@/lib/estimation-api-alerts";
 import { getCityByMarketIdentifier } from "@/lib/cities";
-import { readCityMarketCache } from "@/lib/city-market-cache";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { getCurrentAttribution, recordAttributedConversion } from "@/lib/attribution";
 
 function isValidEstimationInput(
@@ -43,20 +43,20 @@ export async function POST(request: Request) {
       inseeCode: input.selectedAddress?.inseeCode,
       name: input.selectedAddress?.cityName,
     });
-    const cachedCityMarket = city ? await readCityMarketCache(city) : null;
-    const propertyMarket = cachedCityMarket?.data[input.propertyType];
-    const enrichedEstimation = cachedCityMarket
+    const cityMarket = city ? await getPublishedCityMarketData(city) : null;
+    const propertyMarket = cityMarket?.[input.propertyType];
+    const enrichedEstimation = cityMarket
       ? {
           ...estimation,
           market: {
             ...estimation.market,
-            cityPriceHistory: cachedCityMarket.data.history,
+            cityPriceHistory: cityMarket.history,
             priceEvolution12Months:
               propertyMarket?.trend1Year ?? estimation.market?.priceEvolution12Months,
             sectorPricePerM2:
               propertyMarket?.averagePricePerM2 ?? estimation.market?.sectorPricePerM2,
             saleDurationDays:
-              cachedCityMarket.data.saleDurationDays ?? estimation.market?.saleDurationDays,
+              cityMarket.saleDurationDays ?? estimation.market?.saleDurationDays,
           },
         }
       : estimation;

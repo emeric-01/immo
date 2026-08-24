@@ -581,6 +581,69 @@
   font-weight: 800;
 }
 
+.markdown :global(.contentCta) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 30px 0;
+  border: 1px solid #ded4ca;
+  border-left: 3px solid #b9764d;
+  border-radius: 14px;
+  background: #fbf8f4;
+  padding: 17px 19px;
+}
+
+.markdown :global(.contentCta p) {
+  margin: 0;
+  color: #514b45;
+  font-size: .94rem;
+  line-height: 1.55;
+}
+
+.markdown :global(.contentCta a) {
+  flex: 0 0 auto;
+  color: #7f4b2e;
+  font-size: .82rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.markdown :global(.contentTableScroll) {
+  overflow-x: auto;
+  margin: 26px 0;
+  border: 1px solid #ded4ca;
+  border-radius: 14px;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .94rem;
+  line-height: 1.5;
+}
+
+.markdown th,
+.markdown td {
+  min-width: 170px;
+  border-bottom: 1px solid #e7ded5;
+  padding: 13px 15px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown th {
+  background: #f6efe8;
+  color: #342d27;
+  font-size: .78rem;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.markdown tr:last-child td {
+  border-bottom: 0;
+}
+
 .markdown figure {
   margin: 32px 0;
 }
@@ -624,6 +687,12 @@
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .markdown :global(.contentCta) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
   }
 
   .card {

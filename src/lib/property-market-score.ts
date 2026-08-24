@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getCityByMarketIdentifier } from "@/lib/cities";
-import { readCityMarketCache } from "@/lib/city-market-cache";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import type { CityMarketData, CitySalePoint, PropertyMarketStat } from "@/lib/city-market-data";
 import type { Property } from "@/lib/properties";
 
@@ -148,8 +148,8 @@ export async function getPropertyMarketScores(properties: Property[]) {
   await Promise.all(uniqueCities.map(async (cityName) => {
     const city = getCityByMarketIdentifier({ name: cityName });
     if (!city) return;
-    const cached = await readCityMarketCache(city);
-    if (cached?.data) markets.set(cityName, cached.data);
+    const market = await getPublishedCityMarketData(city);
+    if (market) markets.set(cityName, market);
   }));
   return new Map(properties.map((property) => [property.id, markets.has(property.city_name) ? calculatePropertyMarketScore(property, markets.get(property.city_name) as CityMarketData) : null]));
 }

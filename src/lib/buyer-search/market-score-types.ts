@@ -30,9 +30,9 @@ export type BuyerSearchMarketScore = {
   computedAt: string;
   factors: BuyerSearchMarketFactor[];
   label: string;
-  methodVersion: "price-sqm-v1" | "price-sqm-v2" | "price-sqm-v3";
+  methodVersion: "price-sqm-v1" | "price-sqm-v2" | "price-sqm-v3" | "price-sqm-v4";
   score: number;
-  source: "immo-data";
+  source: "published-market" | "immo-data";
   status: BuyerSearchMarketScoreStatus;
   target: {
     idealBudget: number;
@@ -58,7 +58,8 @@ export function isBuyerSearchMarketScore(value: unknown): value is BuyerSearchMa
     (
       candidate.methodVersion === "price-sqm-v1" ||
       candidate.methodVersion === "price-sqm-v2" ||
-      candidate.methodVersion === "price-sqm-v3"
+      candidate.methodVersion === "price-sqm-v3" ||
+      candidate.methodVersion === "price-sqm-v4"
     ) &&
     Boolean(candidate.bestMatch) &&
     Boolean(candidate.target)

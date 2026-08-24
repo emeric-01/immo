@@ -4,9 +4,13 @@ import {
   calculateMarketCombinationScore,
   calculatePriceTrend,
 } from "./market-score";
+import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import type { BuyerSearchFormData } from "./types";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/published-city-market", () => ({
+  getPublishedCityMarketData: vi.fn(async () => null),
+}));
 
 const search: BuyerSearchFormData = {
   location: {
@@ -65,6 +69,7 @@ const search: BuyerSearchFormData = {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
+  vi.mocked(getPublishedCityMarketData).mockResolvedValue(null);
 });
 
 describe("buyer search market score", () => {
@@ -127,7 +132,7 @@ describe("buyer search market score", () => {
       sixMonthsPercent: 4.8,
       twelveMonthsPercent: 10,
     });
-    expect(result?.methodVersion).toBe("price-sqm-v3");
+    expect(result?.methodVersion).toBe("price-sqm-v4");
     expect(fetchMock).toHaveBeenCalledTimes(3);
 
     const transactionUrl = fetchMock.mock.calls
@@ -147,6 +152,31 @@ describe("buyer search market score", () => {
     expect(transactionUrl).toContain("livingAreaMin=100");
     expect(transactionUrl).toContain("landAreaMin=350");
     expect(transactionUrl).toContain("minRoom=4");
+  });
+
+  it("prioritizes the published house price and keeps apartment and house references separate", async () => {
+    vi.stubEnv("IMMO_DATA_API_KEY", "test-token");
+    vi.stubEnv("IMMO_DATA_BASE_URL", "https://api.example.test");
+    vi.mocked(getPublishedCityMarketData).mockResolvedValue({
+      apartment: { averagePricePerM2: 3_100 },
+      house: { averagePricePerM2: 4_000 },
+    } as Awaited<ReturnType<typeof getPublishedCityMarketData>>);
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("/v1/market/price/history")) return Response.json({ data: [] });
+      return Response.json({ total: 10 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await analyzeBuyerSearchMarket(search);
+
+    expect(result?.bestMatch).toMatchObject({
+      marketPricePerM2: 4_000,
+      propertyType: "house",
+    });
+    expect(result?.methodVersion).toBe("price-sqm-v4");
+    expect(result?.source).toBe("published-market");
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/market/price/current"))).toBe(false);
   });
 
   it("keeps every city for comparison and only queries transactions for the strongest match", async () => {
