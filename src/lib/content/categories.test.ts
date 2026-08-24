@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getContentCategoryLabel, normalizeContentCategory } from "./categories";
+import { getContentCategory, getContentCategoryLabel, normalizeContentCategory } from "./categories";
 
 describe("content categories", () => {
   it.each([
@@ -16,5 +16,10 @@ describe("content categories", () => {
 
   it("provides the public label", () => {
     expect(getContentCategoryLabel("marche-immobilier-local")).toBe("Marché immobilier local");
+  });
+
+  it("provides explicit buyer and seller folder labels", () => {
+    expect(getContentCategory("acheter")?.folderLabel).toBe("Dossier acquéreur");
+    expect(getContentCategory("vendre")?.folderLabel).toBe("Dossier vendeur");
   });
 });

@@ -1,6 +1,7 @@
 export const contentCategories = [
   {
     description: "Recherche, financement, visites et vérifications avant de s’engager.",
+    folderLabel: "Dossier acquéreur",
     label: "Acheter",
     metaDescription: "Conseils pour rechercher, visiter et acheter un bien immobilier avec méthode dans les Bouches-du-Rhône et le Var.",
     pageTitle: "Acheter un bien immobilier",
@@ -8,6 +9,7 @@ export const contentCategories = [
   },
   {
     description: "Préparation, valorisation, mandat et étapes d’une vente réussie.",
+    folderLabel: "Dossier vendeur",
     label: "Vendre",
     metaDescription: "Conseils pour préparer, valoriser et vendre un bien immobilier dans les meilleures conditions.",
     pageTitle: "Vendre un bien immobilier",
@@ -15,6 +17,7 @@ export const contentCategories = [
   },
   {
     description: "Méthodes, critères de valeur et particularités de chaque bien.",
+    folderLabel: "Dossier estimation",
     label: "Estimer",
     metaDescription: "Comprendre les méthodes d’estimation immobilière et les critères qui font varier la valeur d’une maison ou d’un appartement.",
     pageTitle: "Estimer la valeur d’un bien",
@@ -22,6 +25,7 @@ export const contentCategories = [
   },
   {
     description: "Prix au m², transactions DVF et analyses des communes et quartiers.",
+    folderLabel: "Marché immobilier local",
     label: "Marché immobilier local",
     metaDescription: "Analyses du marché immobilier local, prix au m² et tendances dans les Bouches-du-Rhône et le Var.",
     pageTitle: "Comprendre le marché immobilier local",
@@ -29,6 +33,7 @@ export const contentCategories = [
   },
   {
     description: "Urbanisme, réglementation, travaux et décisions patrimoniales.",
+    folderLabel: "Conseils immobiliers",
     label: "Conseils immobiliers",
     metaDescription: "Guides pratiques sur l’urbanisme, les travaux, la réglementation et les décisions liées à un projet immobilier.",
     pageTitle: "Conseils immobiliers pratiques",

@@ -37,7 +37,7 @@ export function ContentArchive({ activeCategory, allArticles, articles, heading 
           const count = categoryCounts.get(category.slug) ?? 0;
           return <Link className={styles.categoryFolder} data-active={active || undefined} href={`/contenus/categorie/${category.slug}`} key={category.slug}>
             {active ? <FolderOpen aria-hidden="true" size={24} /> : <Folder aria-hidden="true" size={24} />}
-            <span><strong>{category.label}</strong><small>{count} article{count > 1 ? "s" : ""}</small></span>
+            <span><strong>{category.folderLabel}</strong><small>{count} article{count > 1 ? "s" : ""}</small></span>
           </Link>;
         })}
       </div>

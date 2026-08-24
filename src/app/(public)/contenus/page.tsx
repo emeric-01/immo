@@ -7,7 +7,7 @@ import styles from "./contenus.module.css";
 export const revalidate = 900;
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Conseils immobilier, data et marché local | Les Jumelles Immo",
+  title: "Conseils immobiliers, achat, vente et estimation | Les Jumelles Immo",
   description: "Articles, analyses et conseils immobiliers pour comprendre les prix au m², vendre au meilleur prix et valoriser un bien dans le 13 et le 83.",
   path: "/contenus",
 });

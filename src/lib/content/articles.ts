@@ -6,6 +6,7 @@ import { createArticleSlug, estimateReadingMinutes, normalizeArticleExcerpt } fr
 import {
   contentCategories,
   defaultContentCategory,
+  getContentCategory,
   normalizeContentCategory,
   type ContentCategorySlug,
 } from "./categories";
@@ -89,7 +90,7 @@ export async function getAdminContentArticles(filters: { category?: string; q?: 
   }
 
   const category = filters.category && filters.category !== "all"
-    ? normalizeContentCategory(filters.category)
+    ? getContentCategory(filters.category)?.slug ?? null
     : null;
   const categoryFiltered = category
     ? result.data.filter((article) => normalizeContentCategory(article.category) === category)

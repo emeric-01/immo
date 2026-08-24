@@ -36,11 +36,11 @@ export default async function ContentCategoryPage({ params }: ContentCategoryPag
   return <main className={styles.page}>
     <div className={styles.shell}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Dossier · {category.label}</p>
+        <p className={styles.eyebrow}>{category.folderLabel}</p>
         <h1>{category.pageTitle}</h1>
         <p>{category.description}</p>
       </section>
-      <ContentArchive activeCategory={category.slug} allArticles={allArticles} articles={articles} heading={`Articles du dossier ${category.label}`} />
+      <ContentArchive activeCategory={category.slug} allArticles={allArticles} articles={articles} heading={`Articles — ${category.folderLabel}`} />
     </div>
   </main>;
 }
