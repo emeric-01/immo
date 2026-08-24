@@ -12,6 +12,7 @@ import {
   getPublishedContentArticles,
   type ContentArticle,
 } from "@/lib/content/articles";
+import { getContentCategoryLabel, normalizeContentCategory } from "@/lib/content/categories";
 import { createSocialImageUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { CityMarketChart } from "../../prix-immobilier/[city]/city-market-chart";
@@ -32,12 +33,13 @@ export async function generateMetadata({ params }: ContentArticlePageProps): Pro
 
   const title = article.seo_title || `${article.title} | Les Jumelles Immo`;
   const socialTitle = article.title;
+  const categoryLabel = getContentCategoryLabel(article.category);
   const description = article.seo_description || article.excerpt || "Conseil immobilier local par Les Jumelles Immo.";
   const path = `/contenus/${article.slug}`;
   const socialImage = article.cover_image_url || createSocialImageUrl({
     title: socialTitle,
     description,
-    eyebrow: article.category,
+    eyebrow: categoryLabel,
   });
   const images = [{
     alt: article.cover_image_alt || socialTitle,
@@ -76,6 +78,8 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
   const relatedCity = article.related_city_slug
     ? getCityBySlug(article.related_city_slug)
     : detectArticleCity(article);
+  const categoryLabel = getContentCategoryLabel(article.category);
+  const categorySlug = normalizeContentCategory(article.category);
   const publishedArticles = await getPublishedContentArticles(30);
   const suggestedArticles = selectSuggestedArticles(article, publishedArticles, relatedCity);
   const suggestedCities = relatedCity ? selectSuggestedCities(relatedCity) : [];
@@ -107,7 +111,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
         <Link className={styles.backLink} href="/contenus"><ArrowLeft size={18} /> Tous les contenus</Link>
         <article>
           <header className={styles.articleHero}>
-            <p className={styles.eyebrow}>{article.category}</p>
+            <Link className={styles.articleCategoryLink} href={`/contenus/categorie/${categorySlug}`}>{categoryLabel}</Link>
             <h1>{article.title}</h1>
             <p>{article.excerpt}</p>
             <div className={styles.articleMeta}>
@@ -221,10 +225,10 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
                             />
                           </div>
                         ) : (
-                          <div className={styles.relatedArticleFallback}>{suggestedArticle.category}</div>
+                          <div className={styles.relatedArticleFallback}>{getContentCategoryLabel(suggestedArticle.category)}</div>
                         )}
                         <div className={styles.relatedArticleContent}>
-                          <span>{suggestedArticle.category} · {suggestedArticle.reading_minutes} min</span>
+                          <span>{getContentCategoryLabel(suggestedArticle.category)} · {suggestedArticle.reading_minutes} min</span>
                           <h3>{suggestedArticle.title}</h3>
                           <div>Lire l’article <ArrowRight size={16} /></div>
                         </div>

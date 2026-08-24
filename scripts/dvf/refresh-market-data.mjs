@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   METHODOLOGY_VERSION,
+  buildAnnualPriceHistory,
   calculateTrend,
   confidenceForCount,
   largestOuterRing,
@@ -12,7 +13,9 @@ import {
 } from "./market-statistics.mjs";
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
-const DVF_FIRST_YEAR = 2014;
+// The rolling geo-dvf "latest" archive currently exposes commune files from
+// 2021 onward. Older paths return 404 and must never become zero-price points.
+const DVF_FIRST_YEAR = 2021;
 const DVF_LAST_YEAR = 2025;
 const CURRENT_WINDOW_YEARS = 5;
 const SOURCE_RELEASE = "geo-dvf/latest + IGN/INSEE Contours IRIS 2026 + IGN BD TOPO V3";
@@ -485,23 +488,13 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
   const currentSales = sales.filter((sale) => sale.sourceYear >= currentStartYear && sale.sourceYear <= latestYear);
   const apartment = propertyStat(sales, currentSales, "apartment", existingMarket?.apartment);
   const house = propertyStat(sales, currentSales, "house", existingMarket?.house);
-  const historyWithCounts = years().map((year) => {
-    const yearly = sales.filter((sale) => sale.sourceYear === year);
-    const apartmentSummary = summarizeSales(yearly.filter((sale) => sale.propertyType === "apartment"));
-    const houseSummary = summarizeSales(yearly.filter((sale) => sale.propertyType === "house"));
-    return {
-      period: String(year),
-      apartment: apartmentSummary.medianPricePerM2 ?? 0,
-      house: houseSummary.medianPricePerM2 ?? 0,
-      apartmentCount: apartmentSummary.observations,
-      houseCount: houseSummary.observations,
-    };
-  });
-  const history = historyWithCounts.map(({ period, apartment: apartmentValue, house: houseValue }) => ({
-    period,
-    apartment: apartmentValue,
-    house: houseValue,
-  }));
+  const historyWithCounts = buildAnnualPriceHistory(sales, years());
+  const history = historyWithCounts
+    .map(({ period, apartment: apartmentValue, house: houseValue }) => ({
+      period,
+      apartment: apartmentValue,
+      house: houseValue,
+    }));
   apartment.trend1Year = trendFromHistory(historyWithCounts, "apartment");
   house.trend1Year = trendFromHistory(historyWithCounts, "house");
   apartment.trendSource = apartment.trend1Year === 0 ? "unavailable" : "history";
@@ -585,7 +578,7 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
     marketData,
     auditData,
     latestSaleAt,
-    observedFrom: `${DVF_FIRST_YEAR}-01-01`,
+    observedFrom: `${history[0]?.period ?? DVF_FIRST_YEAR}-01-01`,
     observedTo: `${latestYear}-12-31`,
     transactionCount: currentComparableCount,
   };

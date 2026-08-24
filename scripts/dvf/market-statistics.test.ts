@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateTrend,
+  buildAnnualPriceHistory,
   confidenceForCount,
   pointInGeometry,
   reliabilityForCount,
@@ -37,6 +38,21 @@ describe("DVF market statistics", () => {
 
   it("calculates the annual price trend", () => {
     expect(calculateTrend(2_706, 2_631)).toBe(-2.8);
+  });
+
+  it("does not create zero-price years when the source has no comparable sales", () => {
+    const sales = [
+      ...[3_000, 3_100, 3_200].map((pricePerM2) => ({ pricePerM2, propertyType: "apartment", sourceYear: 2021 })),
+      ...[4_000, 4_100, 4_200].map((pricePerM2) => ({ pricePerM2, propertyType: "house", sourceYear: 2021 })),
+    ];
+
+    expect(buildAnnualPriceHistory(sales, [2014, 2020, 2021])).toEqual([{
+      apartment: 3_100,
+      apartmentCount: 3,
+      house: 4_100,
+      houseCount: 3,
+      period: "2021",
+    }]);
   });
 
   it("assigns a sale to an IRIS polygon", () => {

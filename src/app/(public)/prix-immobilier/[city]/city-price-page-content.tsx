@@ -32,6 +32,7 @@ import {
   getAubagneNearbyPreviewPrice,
 } from "@/lib/city-price-preview-data";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
+import { prepareCityPriceHistoryForDisplay } from "@/lib/price-history";
 import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
 import { resolvePublishedCityMarket } from "@/lib/published-city-market";
 import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
@@ -203,6 +204,9 @@ function CityMarketDashboard({
   sourceLabel: string;
 }) {
   const TrendIcon = averageTrend === null ? Clock3 : averageTrend >= 0 ? TrendingUp : TrendingDown;
+  const displayHistory = prepareCityPriceHistoryForDisplay(market.history);
+  const hasApartmentHistory = displayHistory.some((point) => point.apartment !== undefined);
+  const hasHouseHistory = displayHistory.some((point) => point.house !== undefined);
   const marketTrendLabel = averageTrend === null
     ? "Historique encore insuffisant"
     : Math.abs(averageTrend) < 1
@@ -216,10 +220,15 @@ function CityMarketDashboard({
       <div className="city-dashboard-chart">
         <div className="city-dashboard-title">
           <div><p className="city-section-kicker">Historique du marché</p><h2 id="trend-title">Évolution des prix</h2></div>
-          {market.history.length > 0 ? <div className="city-chart-legend"><span className="apartment">Appartement</span><span className="house">Maison</span></div> : null}
+          {displayHistory.length > 0 ? (
+            <div className="city-chart-legend">
+              {hasApartmentHistory ? <span className="apartment">Appartement</span> : null}
+              {hasHouseHistory ? <span className="house">Maison</span> : null}
+            </div>
+          ) : null}
         </div>
-        {market.history.length > 0
-          ? <CityMarketChart averagePrice={seoPreview ? undefined : averagePrice} cityName={city.name} points={market.history} />
+        {displayHistory.length > 0
+          ? <CityMarketChart averagePrice={seoPreview ? undefined : averagePrice} cityName={city.name} points={displayHistory} />
           : <p>L’historique vérifié n’est pas encore disponible pour cette commune.</p>}
       </div>
 

@@ -10,6 +10,12 @@ import {
   updateContentArticle,
   validateArticleInput,
 } from "@/lib/content/articles";
+import { contentCategories } from "@/lib/content/categories";
+
+function revalidateContentArchives() {
+  revalidatePath("/contenus");
+  contentCategories.forEach((category) => revalidatePath(`/contenus/categorie/${category.slug}`));
+}
 
 export async function createContentArticleAction(formData: FormData) {
   const session = await requireAdminSession();
@@ -30,7 +36,7 @@ export async function createContentArticleAction(formData: FormData) {
     redirect(`/admin/contenus/nouveau?error=${encodeURIComponent(error instanceof Error ? error.message : "Creation impossible")}`);
   }
 
-  revalidatePath("/contenus");
+  revalidateContentArchives();
   revalidatePath("/admin/contenus");
   redirect(`/admin/contenus/${articleId}?saved=1`);
 }
@@ -59,7 +65,7 @@ export async function updateContentArticleAction(formData: FormData) {
     redirect(`/admin/contenus/${id}?error=${encodeURIComponent(error instanceof Error ? error.message : "Enregistrement impossible")}`);
   }
 
-  revalidatePath("/contenus");
+  revalidateContentArchives();
   revalidatePath(`/contenus/${slug}`);
   revalidatePath("/admin/contenus");
   revalidatePath(`/admin/contenus/${id}`);

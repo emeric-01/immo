@@ -2,6 +2,12 @@ import type { CityPriceHistoryPoint } from "./city-market-data";
 
 export type PriceHistoryValuePoint = { label: string; value: number };
 
+export type DisplayCityPriceHistoryPoint = {
+  period: string;
+  apartment?: number;
+  house?: number;
+};
+
 export type PriceHistoryChartScale = {
   delta: number;
   points: Array<PriceHistoryValuePoint & { xRatio: number; yRatio: number }>;
@@ -25,6 +31,25 @@ export function selectWidestCityPriceHistory(
     if (newest !== 0) return newest;
     return right.length - left.length;
   })[0] ?? [];
+}
+
+export function prepareCityPriceHistoryForDisplay(
+  history: CityPriceHistoryPoint[] | null | undefined,
+): DisplayCityPriceHistoryPoint[] {
+  const byPeriod = new Map<string, DisplayCityPriceHistoryPoint>();
+
+  for (const point of history ?? []) {
+    if (!point?.period) continue;
+
+    const apartment = isPositive(point.apartment) ? point.apartment : undefined;
+    const house = isPositive(point.house) ? point.house : undefined;
+
+    if (apartment === undefined && house === undefined) continue;
+    byPeriod.set(point.period, { period: point.period, apartment, house });
+  }
+
+  return Array.from(byPeriod.values())
+    .sort((left, right) => periodKey(left.period) - periodKey(right.period));
 }
 
 export function historyDurationLabel(firstPeriod: string, lastPeriod: string) {

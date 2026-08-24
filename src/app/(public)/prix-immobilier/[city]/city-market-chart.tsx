@@ -12,13 +12,13 @@ import {
   type TooltipContentProps,
   type TooltipValueType,
 } from "recharts";
-import type { CityPriceHistoryPoint } from "@/lib/city-market-data";
+import type { DisplayCityPriceHistoryPoint } from "@/lib/price-history";
 
 type CityMarketChartProps = {
   averagePrice?: number;
   cityName: string;
   defaultPeriod?: Period;
-  points: CityPriceHistoryPoint[];
+  points: DisplayCityPriceHistoryPoint[];
 };
 
 type Period = "5y" | "all";
@@ -32,7 +32,7 @@ function yearFromPeriod(period: string) {
   return Number.isFinite(year) ? year : null;
 }
 
-export function filterCityMarketPoints(points: CityPriceHistoryPoint[], period: Period) {
+export function filterCityMarketPoints(points: DisplayCityPriceHistoryPoint[], period: Period) {
   if (period === "all" || points.length === 0) return points;
 
   const latestYear = points.reduce<number | null>((latest, point) => {
@@ -76,6 +76,8 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
   const [period, setPeriod] = useState<Period>(defaultPeriod);
   const data = useMemo(() => filterCityMarketPoints(points, period), [period, points]);
   const firstHistoryYear = yearFromPeriod(points[0]?.period ?? "");
+  const hasApartmentHistory = points.some((point) => point.apartment !== undefined);
+  const hasHouseHistory = points.some((point) => point.house !== undefined);
 
   return (
     <div className="city-interactive-chart">
@@ -144,24 +146,28 @@ export function CityMarketChart({ averagePrice, cityName, defaultPeriod = "all",
           />
         ) : null}
         <Tooltip content={MarketTooltip} cursor={{ stroke: "#171612", strokeDasharray: "4 4" }} />
-        <Area
-          activeDot={{ fill: "#171612", r: 6, stroke: "#fff", strokeWidth: 3 }}
-          dataKey="apartment"
-          fill="url(#apartmentGradient)"
-          name="Appartement"
-          stroke="#b77b4c"
-          strokeWidth={3}
-          type="monotone"
-        />
-        <Area
-          activeDot={{ fill: "#72775a", r: 6, stroke: "#fff", strokeWidth: 3 }}
-          dataKey="house"
-          fill="url(#houseGradient)"
-          name="Maison"
-          stroke="#72775a"
-          strokeWidth={3}
-          type="monotone"
-        />
+        {hasApartmentHistory ? (
+          <Area
+            activeDot={{ fill: "#171612", r: 6, stroke: "#fff", strokeWidth: 3 }}
+            dataKey="apartment"
+            fill="url(#apartmentGradient)"
+            name="Appartement"
+            stroke="#b77b4c"
+            strokeWidth={3}
+            type="monotone"
+          />
+        ) : null}
+        {hasHouseHistory ? (
+          <Area
+            activeDot={{ fill: "#72775a", r: 6, stroke: "#fff", strokeWidth: 3 }}
+            dataKey="house"
+            fill="url(#houseGradient)"
+            name="Maison"
+            stroke="#72775a"
+            strokeWidth={3}
+            type="monotone"
+          />
+        ) : null}
       </AreaChart>
     </div>
   );

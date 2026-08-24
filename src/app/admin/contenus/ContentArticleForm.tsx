@@ -7,6 +7,7 @@ import { Eye, Save, X } from "lucide-react";
 import { MarkdownContent } from "@/components/content/MarkdownContent";
 import { estimateReadingMinutes } from "@/lib/content/article-utils";
 import type { ContentArticle } from "@/lib/content/articles";
+import { contentCategories, getContentCategoryLabel, normalizeContentCategory } from "@/lib/content/categories";
 import admin from "../admin.module.css";
 import { createContentArticleAction, updateContentArticleAction } from "./actions";
 import { BlogImageUploader, type UploadedBlogImage } from "./BlogImageUploader";
@@ -33,7 +34,7 @@ export function ContentArticleForm({ article }: ContentArticleFormProps) {
     const data = new FormData(form);
     setPreview({
       bodyMarkdown,
-      category: String(data.get("category") || "Conseils"),
+      category: getContentCategoryLabel(String(data.get("category") || "conseils-immobiliers")),
       coverImageAlt: coverImageAlt.trim(),
       coverImageUrl: coverImageUrl.trim(),
       excerpt: String(data.get("excerpt") || ""),
@@ -91,7 +92,10 @@ export function ContentArticleForm({ article }: ContentArticleFormProps) {
           </label>
           <label>
             Catégorie
-            <input name="category" defaultValue={article?.category ?? "conseils"} placeholder="conseils" />
+            <select name="category" defaultValue={normalizeContentCategory(article?.category)}>
+              {contentCategories.map((category) => <option key={category.slug} value={category.slug}>{category.label}</option>)}
+            </select>
+            <small>La catégorie détermine le dossier public dans lequel l’article sera rangé.</small>
           </label>
           <label>
             Mot-clé principal

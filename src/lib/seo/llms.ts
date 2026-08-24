@@ -1,4 +1,5 @@
 import { localMarketCities } from "@/lib/cities";
+import { contentCategories } from "@/lib/content/categories";
 import { absoluteUrl } from "@/lib/site";
 
 type LlmsArticle = {
@@ -48,6 +49,12 @@ export function buildLlmsText({ articles, properties }: LlmsTextOptions) {
     link("Conseils et contenus", "/contenus", "analyses locales et conseils immobiliers"),
     link("Agence et equipe", "/qui-sommes-nous"),
     link("Parrainage immobilier", "/parrainage"),
+    "",
+    "## Dossiers de conseils immobiliers",
+    "",
+    ...contentCategories.map((category) =>
+      link(category.label, `/contenus/categorie/${category.slug}`, category.description),
+    ),
     "",
     "## Prix au m2 par ville",
     "",

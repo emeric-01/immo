@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { buildPriceHistoryChartScale, historyDurationLabel, selectWidestCityPriceHistory } from "./price-history";
+import { buildPriceHistoryChartScale, historyDurationLabel, prepareCityPriceHistoryForDisplay, selectWidestCityPriceHistory } from "./price-history";
+
+describe("prepareCityPriceHistoryForDisplay", () => {
+  it("supprime les années vides et conserve une typologie manquante comme une interruption", () => {
+    expect(prepareCityPriceHistoryForDisplay([
+      { apartment: 0, house: 0, period: "2014" },
+      { apartment: 0, house: 4_200, period: "2021" },
+      { apartment: 3_400, house: 4_500, period: "2022" },
+    ])).toEqual([
+      { apartment: undefined, house: 4_200, period: "2021" },
+      { apartment: 3_400, house: 4_500, period: "2022" },
+    ]);
+  });
+});
 
 describe("selectWidestCityPriceHistory", () => {
   it("préfère la série qui remonte le plus loin même si elle a moins de points", () => {

@@ -67,6 +67,24 @@ export function calculateTrend(previousValue, currentValue) {
   return Number((((currentValue - previousValue) / previousValue) * 100).toFixed(1));
 }
 
+export function buildAnnualPriceHistory(sales, sourceYears) {
+  return sourceYears.flatMap((year) => {
+    const yearly = sales.filter((sale) => sale.sourceYear === year);
+    const apartmentSummary = summarizeSales(yearly.filter((sale) => sale.propertyType === "apartment"));
+    const houseSummary = summarizeSales(yearly.filter((sale) => sale.propertyType === "house"));
+
+    if (apartmentSummary.observations < 3 && houseSummary.observations < 3) return [];
+
+    return [{
+      period: String(year),
+      apartment: apartmentSummary.medianPricePerM2 ?? 0,
+      house: houseSummary.medianPricePerM2 ?? 0,
+      apartmentCount: apartmentSummary.observations,
+      houseCount: houseSummary.observations,
+    }];
+  });
+}
+
 export function pointInGeometry(point, geometry) {
   if (!geometry || !Array.isArray(point)) return false;
   const polygons = geometry.type === "Polygon"

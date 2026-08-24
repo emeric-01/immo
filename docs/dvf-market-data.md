@@ -6,7 +6,7 @@ Le référentiel local couvre 41 villes des Bouches-du-Rhône et du Var. Marseil
 
 Chaque ville dispose d’un jeu préparé comprenant :
 
-- les ventes comparables DVF de 2014 à 2025 ;
+- les ventes comparables DVF de 2021 à 2025, période actuellement exposée par l’archive communale `geo-dvf/latest` ;
 - les polygones IRIS officiels INSEE/IGN ;
 - les noms de quartiers, lotissements et lieux-dits habités issus de la BD TOPO de l’IGN ;
 - les médianes appartement et maison, les quartiles, les volumes, la tendance annuelle et les 20 dernières ventes ;
@@ -52,3 +52,5 @@ Une actualisation validée doit mettre à jour le snapshot partagé avant de con
 4. le sitemap et son `lastmod`, calculé depuis la date réelle du snapshot publié.
 
 Les pages publiques lisent les snapshots stockés. Elles ne contactent ni DVF, ni l’IGN, ni l’INSEE à chaque visite.
+
+Les années absentes de la source ne sont jamais transformées en prix nul. Le graphique commence à la première année disposant d’au moins trois ventes comparables pour une typologie ; une typologie insuffisamment documentée est laissée vide au lieu d’être tracée à 0 €/m².

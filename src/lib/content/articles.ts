@@ -3,6 +3,12 @@ import "server-only";
 import type { AdminDataState } from "@/lib/admin/clients";
 import { absoluteUrl } from "@/lib/site";
 import { createArticleSlug, estimateReadingMinutes, normalizeArticleExcerpt } from "./article-utils";
+import {
+  contentCategories,
+  defaultContentCategory,
+  normalizeContentCategory,
+  type ContentCategorySlug,
+} from "./categories";
 
 export type ContentStatus = "draft" | "published" | "archived";
 
@@ -30,7 +36,7 @@ export type ContentArticle = {
 
 export type ArticleInput = {
   bodyMarkdown: string;
-  category: string;
+  category: ContentCategorySlug;
   coverImageAlt: string;
   coverImageUrl: string;
   excerpt: string;
@@ -59,7 +65,7 @@ export function isContentDatabaseConfigured() {
   return Boolean(getConfig());
 }
 
-export async function getAdminContentArticles(filters: { q?: string; status?: string } = {}): Promise<AdminDataState<ContentArticle[]>> {
+export async function getAdminContentArticles(filters: { category?: string; q?: string; status?: string } = {}): Promise<AdminDataState<ContentArticle[]>> {
   const config = getConfig();
 
   if (!config) {
@@ -82,14 +88,20 @@ export async function getAdminContentArticles(filters: { q?: string; status?: st
     return result;
   }
 
+  const category = filters.category && filters.category !== "all"
+    ? normalizeContentCategory(filters.category)
+    : null;
+  const categoryFiltered = category
+    ? result.data.filter((article) => normalizeContentCategory(article.category) === category)
+    : result.data;
   const query = filters.q?.trim().toLowerCase();
 
   if (!query) {
-    return result;
+    return { data: categoryFiltered, status: "ready" };
   }
 
   return {
-    data: result.data.filter((article) =>
+    data: categoryFiltered.filter((article) =>
       [
         article.title,
         article.slug,
@@ -161,14 +173,29 @@ export async function getPublishedContentArticle(slug: string) {
 
 export async function getContentArticleSitemapEntries() {
   const articles = await getPublishedContentArticles(500);
-
-  return articles.map((article) => ({
+  const articleEntries = articles.map((article) => ({
     changeFrequency: "monthly" as const,
     images: article.cover_image_url ? [article.cover_image_url] : undefined,
     lastModified: article.updated_at || article.published_at || article.created_at,
     priority: 0.65,
     url: absoluteUrl(`/contenus/${article.slug}`),
   }));
+  const categoryEntries = contentCategories.flatMap((category) => {
+    const categoryArticles = articles.filter((article) => normalizeContentCategory(article.category) === category.slug);
+    if (!categoryArticles.length) return [];
+    const lastModified = categoryArticles.reduce((latest, article) => {
+      const candidate = article.updated_at || article.published_at || article.created_at;
+      return new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
+    }, categoryArticles[0].updated_at || categoryArticles[0].published_at || categoryArticles[0].created_at);
+    return [{
+      changeFrequency: "weekly" as const,
+      lastModified,
+      priority: 0.7,
+      url: absoluteUrl(`/contenus/categorie/${category.slug}`),
+    }];
+  });
+
+  return [...categoryEntries, ...articleEntries];
 }
 
 export async function createContentArticle(input: ArticleInput, adminId: string | null) {
@@ -207,7 +234,7 @@ export function parseArticleFormData(formData: FormData): ArticleInput {
 
   return {
     bodyMarkdown: String(formData.get("bodyMarkdown") ?? ""),
-    category: String(formData.get("category") ?? "conseils"),
+    category: normalizeContentCategory(String(formData.get("category") ?? defaultContentCategory)),
     coverImageAlt: String(formData.get("coverImageAlt") ?? ""),
     coverImageUrl: String(formData.get("coverImageUrl") ?? ""),
     excerpt: String(formData.get("excerpt") ?? ""),
@@ -239,7 +266,7 @@ function buildPayload(input: ArticleInput, slug: string, now: string, adminId: s
 
   return {
     body_markdown: bodyMarkdown,
-    category: input.category.trim() || "conseils",
+    category: normalizeContentCategory(input.category),
     cover_image_alt: nullable(input.coverImageAlt),
     cover_image_url: nullable(input.coverImageUrl),
     excerpt: excerpt || null,

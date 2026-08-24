@@ -6,6 +6,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin/permissions";
 import { formatArticleDate } from "@/lib/content/article-utils";
 import { getAdminContentArticles } from "@/lib/content/articles";
+import { contentCategories, getContentCategoryLabel } from "@/lib/content/categories";
 import admin from "../admin.module.css";
 
 export const metadata: Metadata = {
@@ -23,14 +24,14 @@ const statusLabels = {
 export default async function AdminContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ category?: string; error?: string; q?: string; status?: string }>;
 }) {
   const session = await requireAdminSession();
   await requireAdminPermission(session, "contents:read");
   const canWrite = await hasAdminPermission(session, "contents:write");
   const params = await searchParams;
 
-  const articles = await getAdminContentArticles({ q: params.q, status: params.status });
+  const articles = await getAdminContentArticles({ category: params.category, q: params.q, status: params.status });
   const data = articles.status === "ready" ? articles.data : [];
   const published = data.filter((article) => article.status === "published").length;
   const drafts = data.filter((article) => article.status === "draft").length;
@@ -67,6 +68,10 @@ export default async function AdminContentPage({
             <option value="published">Publiés</option>
             <option value="archived">Archivés</option>
           </select>
+          <select name="category" defaultValue={params.category ?? "all"}>
+            <option value="all">Toutes les catégories</option>
+            {contentCategories.map((category) => <option key={category.slug} value={category.slug}>{category.label}</option>)}
+          </select>
           <button type="submit">Filtrer</button>
         </form>
 
@@ -86,7 +91,7 @@ export default async function AdminContentPage({
                 <div>
                   <div className={admin.articleBadges}>
                     <span className={admin.statusBadge} data-status={article.status}>{statusLabels[article.status]}</span>
-                    <span className={admin.categoryBadge}>{article.category}</span>
+                    <span className={admin.categoryBadge}>{getContentCategoryLabel(article.category)}</span>
                   </div>
                   <h2>{article.title}</h2>
                   <p>{article.excerpt ?? "Sans résumé pour le moment."}</p>

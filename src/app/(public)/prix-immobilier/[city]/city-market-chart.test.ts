@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CityPriceHistoryPoint } from "@/lib/city-market-data";
+import { prepareCityPriceHistoryForDisplay } from "@/lib/price-history";
 import { filterCityMarketPoints } from "./city-market-chart";
 
 const annualHistory: CityPriceHistoryPoint[] = Array.from({ length: 12 }, (_, index) => ({
@@ -20,6 +21,20 @@ describe("city market chart periods", () => {
       "2023",
       "2024",
       "2025",
+    ]);
+  });
+
+  it("starts at the first year containing an observed price", () => {
+    const points = prepareCityPriceHistoryForDisplay([
+      { apartment: 0, house: 0, period: "2014" },
+      { apartment: 0, house: 0, period: "2020" },
+      { apartment: 4_100, house: 5_200, period: "2021" },
+      { apartment: 4_200, house: 5_300, period: "2022" },
+    ]);
+
+    expect(filterCityMarketPoints(points, "all").map((point) => point.period)).toEqual([
+      "2021",
+      "2022",
     ]);
   });
 });
