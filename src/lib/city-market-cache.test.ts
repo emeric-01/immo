@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCityBySlug } from "./cities";
-import { readCityMarketCaches } from "./city-market-cache";
+import { readCityMarketCache, readCityMarketCaches } from "./city-market-cache";
 import type { CityMarketData } from "./city-market-data";
 
 function city(slug: string) {
@@ -27,6 +27,23 @@ describe("city market cache", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+  });
+
+  it("bypasses the former Immo Data cache key for a city page", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
+      {
+        fetched_at: "2026-08-23T23:09:58.000Z",
+        insee_code: "13005",
+        market_data: { ...market, source: "dvf" },
+      },
+    ]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await readCityMarketCache(city("aubagne"));
+
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("order=fetched_at.desc");
   });
 
   it("reads lightweight published city summaries in one Supabase request", async () => {

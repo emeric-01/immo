@@ -107,6 +107,7 @@ export type CityMarketData = {
   salePoints: CitySalePoint[];
   transactionCount?: number;
   saleDurationDays?: number;
+  saleDurationSource?: "immo-data";
   neighborhoods: Array<{
     name: string;
     pricePerM2: number;

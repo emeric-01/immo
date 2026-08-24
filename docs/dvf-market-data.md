@@ -12,6 +12,8 @@ Chaque ville dispose d’un jeu préparé comprenant :
 - les médianes appartement et maison, les quartiles, les volumes, la tendance annuelle et les 20 dernières ventes ;
 - les statistiques par IRIS avec extension de la période lorsque l’échantillon récent est insuffisant.
 
+Les prix, fourchettes, historiques, volumes, cartes et ventes proviennent du référentiel DVF préparé. Le délai moyen de vente est la seule donnée conservée du dernier snapshot Immo Data : elle est stockée avec `saleDurationSource: "immo-data"` et ne déclenche aucun appel API lors de la consultation des pages.
+
 ## Règles de nommage
 
 - `officialName` conserve le nom IRIS publié par l’INSEE.

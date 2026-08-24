@@ -66,6 +66,7 @@ export async function readCityMarketCache(city: City): Promise<CityMarketCacheEn
   const params = new URLSearchParams({
     insee_code: `eq.${city.inseeCode}`,
     limit: "1",
+    order: "fetched_at.desc",
     select: "insee_code,market_data,fetched_at",
   });
 

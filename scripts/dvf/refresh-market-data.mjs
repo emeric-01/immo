@@ -560,6 +560,9 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
     salePoints: latestSales,
     transactionCount: currentComparableCount,
     saleDurationDays: existingMarket?.saleDurationDays,
+    saleDurationSource: existingMarket?.saleDurationDays
+      ? existingMarket.saleDurationSource ?? "immo-data"
+      : undefined,
     neighborhoods: zones
       .filter((zone) => zone.pricePerM2 > 0)
       .map((zone) => ({ name: zone.name, pricePerM2: zone.pricePerM2 })),
