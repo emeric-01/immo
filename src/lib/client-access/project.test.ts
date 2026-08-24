@@ -27,14 +27,14 @@ describe("client buyer search access", () => {
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain("id=eq.search-456");
     expect(url).toContain("client_account_id=eq.client-account-123");
-    expect(url).toContain("status=neq.deleted_by_client");
+    expect(url).toContain("status=not.in.(archived,deleted_by_client)");
     expect(init).toMatchObject({ method: "PATCH" });
     expect(JSON.parse(String(init.body))).toMatchObject({
       status: "deleted_by_client",
     });
   });
 
-  it("excludes deleted searches from the client dashboard", async () => {
+  it("excludes archived and deleted searches from the client dashboard", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
     const fetchMock = vi.fn().mockResolvedValue(Response.json([]));
@@ -42,6 +42,8 @@ describe("client buyer search access", () => {
 
     await getClientBuyerSearches(session);
 
-    expect(String(fetchMock.mock.calls[0][0])).toContain("status=neq.deleted_by_client");
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "status=not.in.(archived,deleted_by_client)",
+    );
   });
 });

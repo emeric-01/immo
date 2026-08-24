@@ -29,7 +29,7 @@ describe("city market cache", () => {
     vi.unstubAllGlobals();
   });
 
-  it("reads all published city snapshots in one Supabase request", async () => {
+  it("reads lightweight published city summaries in one Supabase request", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
@@ -45,6 +45,7 @@ describe("city market cache", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain("insee_code=in.%28%2213001%22%2C%2213005%22%29");
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("source%3Amarket_data-%3E%3Esource");
     expect(snapshots.get("13001")?.data.apartment.averagePricePerM2).toBe(5_300);
     expect(snapshots.has("13005")).toBe(false);
   });

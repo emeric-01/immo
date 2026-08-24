@@ -35,7 +35,7 @@ describe("price sitemap scope", () => {
     const entries = await getSitemapSectionEntries("prix-m2");
     const urls = entries.map((entry) => entry.url);
 
-    expect(entries).toHaveLength(43);
+    expect(entries).toHaveLength(41);
     expect(urls).toContain("https://jumellesimmo.fr/prix-m2/aubagne");
     expect(urls).toContain("https://jumellesimmo.fr/prix-m2/hyeres");
     expect(urls).not.toContain("https://jumellesimmo.fr/prix-m2/nice");

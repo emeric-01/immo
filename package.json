@@ -5,6 +5,8 @@
   "packageManager": "pnpm@11.7.0",
   "scripts": {
     "dvf:refresh": "node scripts/dvf/refresh-market-data.mjs",
+    "dvf:stage": "node scripts/dvf/refresh-market-data.mjs --stage",
+    "dvf:persist-staged": "node scripts/dvf/refresh-market-data.mjs --persist-staged",
     "dev": "next dev -H 127.0.0.1 -p 3001",
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 3001",

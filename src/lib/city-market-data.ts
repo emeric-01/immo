@@ -42,10 +42,16 @@ export type DvfIrisPriceStat = {
 export type CityPriceZone = {
   id: string;
   name: string;
+  officialName?: string;
   pricePerM2: number;
   color: string;
   polygon: [number, number][];
   includedNeighborhoods?: string[];
+  allNeighborhoodNames?: string[];
+  namingSources?: Array<{
+    label: string;
+    url: string;
+  }>;
   mapLabel?: string;
   code?: string;
   labelPoint?: [number, number];

@@ -15,17 +15,25 @@ const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 const DVF_FIRST_YEAR = 2014;
 const DVF_LAST_YEAR = 2025;
 const CURRENT_WINDOW_YEARS = 5;
-const SOURCE_RELEASE = "geo-dvf/latest + IGN/INSEE Contours IRIS 2026";
+const SOURCE_RELEASE = "geo-dvf/latest + IGN/INSEE Contours IRIS 2026 + IGN BD TOPO V3";
 const IRIS_SOURCE_DATE = "2026-04-30";
+const HABITATION_SOURCE = "IGN BD TOPO V3 · zone d’habitation";
+const HABITATION_PAGE_SIZE = 1_000;
 const CACHE_DIR = path.join(tmpdir(), "jumelles-immo-dvf");
+const DEFAULT_STAGE_DIR = path.join(PROJECT_ROOT, ".local", "dvf-market-staging");
+const IRIS_DISPLAY_NAME_OVERRIDES = new Map([
+  ["130050705", "Beaudinard"],
+]);
 const cli = parseCli(process.argv.slice(2));
 
 await loadEnvironment(path.join(PROJECT_ROOT, ".env.local"));
 const cities = (await readLocalMarketCities()).filter((city) => !cli.city || city.slug === cli.city);
 if (cities.length === 0) throw new Error(`Ville inconnue ou hors périmètre : ${cli.city}`);
 
-const database = cli.persist ? getDatabaseConfig() : null;
+const database = cli.persist || cli.persistStaged ? getDatabaseConfig() : null;
 await mkdir(CACHE_DIR, { recursive: true });
+if (cli.stage) await mkdir(cli.stageDir, { recursive: true });
+if (cli.persistStaged) await validateStagedImport(cities);
 const run = database ? await createImportRun(database, cities) : null;
 const results = [];
 const errors = [];
@@ -34,29 +42,39 @@ let processedFiles = 0;
 for (const city of cities) {
   try {
     const existingMarket = database ? await readExistingMarket(database, city.inseeCode) : null;
-    const irisZones = await downloadIrisZones(city);
-    const sales = [];
+    const staged = cli.persistStaged ? await readStagedCity(city) : null;
+    const irisZones = staged?.irisZones ?? await downloadIrisZones(city);
+    const habitationNames = staged?.habitationNames ?? await downloadHabitationNames(city, irisZones);
+    if (!staged) enrichIrisZoneNames(irisZones, habitationNames);
+    const collectedSales = staged?.sales ?? [];
 
-    for (const sourceCode of sourceCodesForCity(city)) {
-      for (const year of years()) {
-        const fileSales = await downloadAndParseDvf(city, sourceCode, year, irisZones);
-        processedFiles += 1;
-        sales.push(...fileSales);
+    if (!staged) {
+      for (const sourceCode of sourceCodesForCity(city)) {
+        for (const year of years()) {
+          const fileSales = await downloadAndParseDvf(city, sourceCode, year, irisZones);
+          processedFiles += 1;
+          collectedSales.push(...fileSales);
+        }
       }
     }
 
+    const sales = dedupeComparableSales(collectedSales);
     const snapshot = buildCitySnapshot(city, irisZones, sales, existingMarket, run?.id ?? null);
     results.push({
       city: city.name,
       insee: city.inseeCode,
       sales: sales.length,
       zones: irisZones.length,
+      neighborhoodNames: habitationNames.length,
       apartment: snapshot.marketData.apartment.averagePricePerM2,
       house: snapshot.marketData.house.averagePricePerM2,
     });
 
     if (database && run) {
       await persistCity(database, run.id, city, irisZones, sales, snapshot);
+    }
+    if (cli.stage) {
+      await stageCity(city, irisZones, habitationNames, sales, snapshot);
     }
 
     console.log(`[DVF] ${city.name}: ${sales.length} ventes, ${irisZones.length} zones IRIS`);
@@ -71,6 +89,7 @@ for (const city of cities) {
 if (database && run) {
   await finishImportRun(database, run.id, results, errors, processedFiles);
 }
+if (cli.stage) await writeStageManifest(results, errors);
 
 console.table(results);
 if (errors.length > 0) {
@@ -83,6 +102,12 @@ function parseCli(argumentsList) {
   return {
     city,
     persist: argumentsList.includes("--persist"),
+    persistStaged: argumentsList.includes("--persist-staged"),
+    stage: argumentsList.includes("--stage"),
+    stageDir: path.resolve(
+      argumentsList.find((argument) => argument.startsWith("--stage-dir="))?.split("=")[1]
+        ?? DEFAULT_STAGE_DIR,
+    ),
     refreshDownloads: argumentsList.includes("--refresh-downloads"),
   };
 }
@@ -124,7 +149,11 @@ function sourceCodesForCity(city) {
 function getDatabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Configuration Supabase absente.");
+  if (!url || !key) {
+    throw new Error(
+      "Configuration Supabase absente : renseignez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY dans .env.local.",
+    );
+  }
   return { url, key };
 }
 
@@ -143,10 +172,11 @@ async function databaseRequest(database, pathname, options = {}) {
     ...fetchOptions,
     headers: { ...databaseHeaders(database, prefer), ...headers },
   });
+  const responseBody = await response.text();
   if (!response.ok) {
-    throw new Error(`Supabase ${response.status}: ${await response.text()}`);
+    throw new Error(`Supabase ${response.status}: ${responseBody}`);
   }
-  return response.status === 204 ? null : response.json();
+  return responseBody ? JSON.parse(responseBody) : null;
 }
 
 async function createImportRun(database, selectedCities) {
@@ -201,11 +231,141 @@ async function downloadIrisZones(city) {
   const collection = await response.json();
   return (collection.features ?? []).map((feature) => ({
     code: feature.properties.code_iris,
-    name: titleCase(feature.properties.nom_iris),
+    officialName: titleCase(feature.properties.nom_iris),
+    name: IRIS_DISPLAY_NAME_OVERRIDES.get(feature.properties.code_iris)
+      ?? titleCase(feature.properties.nom_iris),
     type: feature.properties.type_iris ?? null,
     geometry: feature.geometry,
     labelPoint: polygonLabelPoint(feature.geometry),
+    neighborhoodNames: [],
+    featuredNeighborhoodNames: [],
+    namingSources: [
+      {
+        label: "Contours IRIS INSEE/IGN",
+        url: "https://geoservices.ign.fr/contoursiris",
+      },
+    ],
   }));
+}
+
+async function downloadHabitationNames(city, irisZones) {
+  const cachePath = path.join(CACHE_DIR, `habitation-${city.slug}.json`);
+  if (!cli.refreshDownloads) {
+    const cached = await readFile(cachePath, "utf8").catch(() => null);
+    if (cached) return JSON.parse(cached);
+  }
+
+  const codes = sourceCodesForCity(city);
+  const names = [];
+  let startIndex = 0;
+  let matched = Number.POSITIVE_INFINITY;
+
+  while (startIndex < matched) {
+    const parameters = new URLSearchParams({
+      SERVICE: "WFS",
+      VERSION: "2.0.0",
+      REQUEST: "GetFeature",
+      TYPENAMES: "BDTOPO_V3:zone_d_habitation",
+      OUTPUTFORMAT: "application/json",
+      SRSNAME: "EPSG:4326",
+      CQL_FILTER: `insee_commune IN (${codes.map((code) => `'${code}'`).join(",")})`,
+      COUNT: String(HABITATION_PAGE_SIZE),
+      STARTINDEX: String(startIndex),
+    });
+    const response = await fetch(`https://data.geopf.fr/wfs/ows?${parameters}`);
+    if (!response.ok) throw new Error(`Noms de quartiers IGN indisponibles (${response.status}).`);
+    const collection = await response.json();
+    const features = collection.features ?? [];
+    matched = Number(collection.numberMatched ?? features.length);
+
+    for (const feature of features) {
+      const toponym = titleCase(feature.properties?.toponyme);
+      if (!toponym || !feature.geometry || feature.properties?.etat_de_l_objet === "Détruit") continue;
+      const labelPoint = polygonLabelPoint(feature.geometry);
+      const iris = irisZones.find((zone) => pointInGeometry(labelPoint, zone.geometry));
+      if (!iris) continue;
+      names.push({
+        id: feature.properties?.cleabs ?? feature.id,
+        irisCode: iris.code,
+        name: toponym,
+        nature: feature.properties?.nature ?? null,
+        detailedNature: feature.properties?.nature_detaillee ?? null,
+        status: feature.properties?.statut_du_toponyme ?? null,
+        importance: integerOrNull(feature.properties?.importance),
+        fictitiousGeometry: Boolean(feature.properties?.fictif),
+        labelPoint,
+        source: HABITATION_SOURCE,
+      });
+    }
+
+    if (features.length < HABITATION_PAGE_SIZE) break;
+    startIndex += features.length;
+  }
+
+  const unique = deduplicateHabitationNames(names);
+  await writeFile(cachePath, JSON.stringify(unique));
+  return unique;
+}
+
+function deduplicateHabitationNames(names) {
+  const unique = new Map();
+  for (const name of names) {
+    const key = `${name.irisCode}:${normalizePlaceName(name.name)}`;
+    const existing = unique.get(key);
+    if (!existing || habitationNameScore(name) > habitationNameScore(existing)) unique.set(key, name);
+  }
+  return [...unique.values()].sort((left, right) =>
+    left.irisCode.localeCompare(right.irisCode)
+    || habitationNameScore(right) - habitationNameScore(left)
+    || left.name.localeCompare(right.name, "fr"),
+  );
+}
+
+function enrichIrisZoneNames(irisZones, habitationNames) {
+  for (const zone of irisZones) {
+    const names = habitationNames.filter((place) => place.irisCode === zone.code);
+    zone.neighborhoodNames = names.map((place) => place.name);
+    zone.featuredNeighborhoodNames = names
+      .filter(isSuitablePublicNeighborhoodName)
+      .slice(0, 6)
+      .map((place) => place.name);
+    zone.namingSources = [
+      ...zone.namingSources,
+      ...(names.length > 0
+        ? [{ label: HABITATION_SOURCE, url: "https://geoservices.ign.fr/bdtopo" }]
+        : []),
+    ];
+  }
+}
+
+function isSuitablePublicNeighborhoodName(place) {
+  if (place.detailedNature === "Résidence") return false;
+  if (place.nature === "Quartier") return true;
+  if (place.nature !== "Lieu-dit habité") return false;
+  return place.status === "Validé" || (place.importance !== null && place.importance <= 4);
+}
+
+function habitationNameScore(place) {
+  const natureScore = place.detailedNature === "Quartier urbain"
+    ? 100
+    : place.detailedNature === "Lotissement"
+      ? 85
+      : place.nature === "Quartier"
+        ? 75
+        : place.nature === "Lieu-dit habité"
+          ? 60
+          : 20;
+  const statusScore = place.status === "Validé" ? 20 : place.status === "Collecté" ? 8 : 0;
+  const importanceScore = place.importance === null ? 0 : Math.max(0, 7 - place.importance) * 3;
+  return natureScore + statusScore + importanceScore + (place.fictitiousGeometry ? 0 : 10);
+}
+
+function normalizePlaceName(value) {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("fr-FR")
+    .replace(/[^a-z0-9]/g, "");
 }
 
 async function downloadAndParseDvf(city, sourceCode, year, irisZones) {
@@ -358,7 +518,12 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
       code: zone.code,
       name: zone.name,
       mapLabel: zone.name,
-      includedNeighborhoods: [zone.name],
+      officialName: zone.officialName,
+      includedNeighborhoods: zone.featuredNeighborhoodNames.length > 0
+        ? zone.featuredNeighborhoodNames
+        : [zone.name],
+      allNeighborhoodNames: zone.neighborhoodNames,
+      namingSources: zone.namingSources,
       pricePerM2: combined.medianPricePerM2 ?? Math.round((apartment.averagePricePerM2 + house.averagePricePerM2) / 2),
       color: "#c9895e",
       polygon: largestOuterRing(zone.geometry),
@@ -464,6 +629,10 @@ async function persistCity(database, runId, city, irisZones, sales, snapshot) {
     city_slug: city.slug,
     city_name: city.name,
     iris_name: zone.name,
+    official_name: zone.officialName,
+    display_name: zone.name,
+    neighborhood_names: zone.neighborhoodNames,
+    naming_sources: zone.namingSources,
     iris_type: zone.type,
     geometry: zone.geometry,
     label_longitude: zone.labelPoint[0],
@@ -493,7 +662,13 @@ async function persistCity(database, runId, city, irisZones, sales, snapshot) {
     import_run_id: runId,
     updated_at: new Date().toISOString(),
   }));
-  await upsertBatches(database, "dvf_comparable_sales", "mutation_id", saleRows, 400);
+  await upsertBatches(
+    database,
+    "dvf_comparable_sales",
+    "mutation_id,city_insee_code",
+    saleRows,
+    400,
+  );
 
   for (const year of years()) {
     await databaseRequest(
@@ -532,6 +707,106 @@ async function persistCity(database, runId, city, irisZones, sales, snapshot) {
       updated_at: new Date().toISOString(),
     }),
   });
+}
+
+async function stageCity(city, irisZones, habitationNames, sales, snapshot) {
+  const cityDirectory = path.join(cli.stageDir, city.slug);
+  await mkdir(cityDirectory, { recursive: true });
+  await Promise.all([
+    writeFile(
+      path.join(cityDirectory, "market-snapshot.json"),
+      JSON.stringify({ city, ...snapshot }, null, 2),
+    ),
+    writeFile(
+      path.join(cityDirectory, "iris-zones.json"),
+      JSON.stringify(irisZones, null, 2),
+    ),
+    writeFile(
+      path.join(cityDirectory, "neighborhood-names.json"),
+      JSON.stringify(habitationNames, null, 2),
+    ),
+    writeFile(
+      path.join(cityDirectory, "comparable-sales.ndjson"),
+      `${sales.map((sale) => JSON.stringify(sale)).join("\n")}\n`,
+    ),
+  ]);
+}
+
+async function readStagedCity(city) {
+  const cityDirectory = path.join(cli.stageDir, city.slug);
+  const [snapshotFile, irisFile, namesFile, salesFile] = await Promise.all([
+    readFile(path.join(cityDirectory, "market-snapshot.json"), "utf8"),
+    readFile(path.join(cityDirectory, "iris-zones.json"), "utf8"),
+    readFile(path.join(cityDirectory, "neighborhood-names.json"), "utf8"),
+    readFile(path.join(cityDirectory, "comparable-sales.ndjson"), "utf8"),
+  ]);
+  const snapshotDocument = JSON.parse(snapshotFile);
+  return {
+    snapshot: {
+      importRunId: null,
+      marketData: snapshotDocument.marketData,
+      auditData: snapshotDocument.auditData,
+      latestSaleAt: snapshotDocument.latestSaleAt,
+      observedFrom: snapshotDocument.observedFrom,
+      observedTo: snapshotDocument.observedTo,
+      transactionCount: snapshotDocument.transactionCount,
+    },
+    irisZones: JSON.parse(irisFile),
+    habitationNames: JSON.parse(namesFile),
+    sales: salesFile.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)),
+  };
+}
+
+async function validateStagedImport(selectedCities) {
+  const manifestPath = path.join(cli.stageDir, "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const stagedCodes = new Set((manifest.cities ?? []).map((city) => city.insee));
+  const missingCities = selectedCities.filter((city) => !stagedCodes.has(city.inseeCode));
+
+  if ((manifest.errors ?? []).length > 0) {
+    throw new Error(`Le staging contient ${manifest.errors.length} erreur(s) et ne peut pas être publié.`);
+  }
+  if (manifest.methodologyVersion !== METHODOLOGY_VERSION) {
+    throw new Error(
+      `Méthodologie de staging incompatible : ${manifest.methodologyVersion ?? "absente"}.`,
+    );
+  }
+  if (missingCities.length > 0) {
+    throw new Error(
+      `Ville(s) absente(s) du staging : ${missingCities.map((city) => city.slug).join(", ")}.`,
+    );
+  }
+}
+
+function dedupeComparableSales(sales) {
+  const uniqueSales = new Map();
+  for (const sale of sales) {
+    const existing = uniqueSales.get(sale.mutationId);
+    if (!existing || (!existing.irisCode && sale.irisCode)) {
+      uniqueSales.set(sale.mutationId, sale);
+    }
+  }
+  return [...uniqueSales.values()];
+}
+
+async function writeStageManifest(results, errors) {
+  await writeFile(
+    path.join(cli.stageDir, "manifest.json"),
+    JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      methodologyVersion: METHODOLOGY_VERSION,
+      sourceRelease: SOURCE_RELEASE,
+      sourceYears: years(),
+      cities: results,
+      errors,
+      totals: {
+        cities: results.length,
+        comparableSales: results.reduce((total, city) => total + city.sales, 0),
+        irisZones: results.reduce((total, city) => total + city.zones, 0),
+        neighborhoodNames: results.reduce((total, city) => total + city.neighborhoodNames, 0),
+      },
+    }, null, 2),
+  );
 }
 
 async function upsertBatches(database, table, conflictColumn, rows, batchSize = 100) {

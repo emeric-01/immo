@@ -10,6 +10,16 @@ type CacheRow = {
   market_data: CityMarketData;
 };
 
+type CacheSummaryRow = {
+  apartment?: CityMarketData["apartment"];
+  fetched_at: string;
+  house?: CityMarketData["house"];
+  insee_code: string;
+  market_data?: CityMarketData;
+  source?: CityMarketData["source"];
+  updated_at?: string;
+};
+
 type SupabaseServerConfig = {
   serviceRoleKey: string;
   url: string;
@@ -90,7 +100,8 @@ export async function readCityMarketCaches(cities: City[]) {
   const codes = cities.map((city) => `"${city.inseeCode}"`).join(",");
   const params = new URLSearchParams({
     insee_code: `in.(${codes})`,
-    select: "insee_code,market_data,fetched_at",
+    select:
+      "insee_code,fetched_at,source:market_data->>source,updated_at:market_data->>updatedAt,apartment:market_data->apartment,house:market_data->house",
   });
 
   try {
@@ -103,12 +114,28 @@ export async function readCityMarketCaches(cities: City[]) {
     });
     if (!response.ok) return entries;
 
-    const rows = (await response.json()) as CacheRow[];
+    const rows = (await response.json()) as CacheSummaryRow[];
     for (const row of rows) {
-      if (!row.insee_code || !row.market_data || !row.fetched_at) continue;
+      const data = row.market_data ?? (
+        row.source && row.updated_at && row.apartment && row.house
+          ? {
+              source: row.source,
+              updatedAt: row.updated_at,
+              apartment: row.apartment,
+              house: row.house,
+              history: [],
+              zones: [],
+              salePoints: [],
+              neighborhoods: [],
+              expensiveStreets: [],
+              affordableStreets: [],
+            } satisfies CityMarketData
+          : null
+      );
+      if (!row.insee_code || !data || !row.fetched_at) continue;
 
       entries.set(row.insee_code, {
-        data: row.market_data,
+        data,
         fetchedAt: row.fetched_at,
         fresh: Date.now() - new Date(row.fetched_at).getTime() < cacheLifetimeMs(),
       });

@@ -18,4 +18,5 @@ yarn-error.log*
 
 .vercel
 supabase/.temp/
+.local/dvf-market-staging/
 tmp
