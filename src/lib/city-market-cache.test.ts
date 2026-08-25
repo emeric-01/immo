@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCityBySlug } from "./cities";
-import { readCityMarketCache, readCityMarketCaches } from "./city-market-cache";
+import { readCityMarketCache, readCityMarketCaches, readCityMarketTrends } from "./city-market-cache";
 import type { CityMarketData } from "./city-market-data";
 
 function city(slug: string) {
@@ -77,5 +77,38 @@ describe("city market cache", () => {
 
     expect(snapshots.size).toBe(0);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not turn an unavailable trend into a published zero", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
+      {
+        fetched_at: "2026-08-24T13:40:40.000Z",
+        insee_code: "13013",
+        market_data: {
+          ...market,
+          source: "dvf",
+          apartment: { ...market.apartment, trend1Year: 0, trendSource: "unavailable" },
+          house: { ...market.house, trend1Year: 4.7, trendSource: "history" },
+        },
+      },
+      {
+        fetched_at: "2026-08-24T13:40:40.000Z",
+        insee_code: "83053",
+        market_data: {
+          ...market,
+          source: "dvf",
+          apartment: { ...market.apartment, trend1Year: 0, trendSource: "unavailable" },
+          house: { ...market.house, trend1Year: 0, trendSource: "unavailable" },
+        },
+      },
+    ]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const trends = await readCityMarketTrends([city("belcodene"), city("evenos")]);
+
+    expect(trends.get("13013")).toBe(4.7);
+    expect(trends.has("83053")).toBe(false);
   });
 });

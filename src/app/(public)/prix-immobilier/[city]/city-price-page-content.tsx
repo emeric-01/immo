@@ -22,19 +22,18 @@ import {
   type City,
 } from "@/lib/cities";
 import {
-  getCityMarketDataSet,
   isDvfMarketZone,
   type CityMarketData,
   type CitySalePoint,
   type PropertyMarketStat,
 } from "@/lib/city-market-data";
+import { loadCityPricePageMarket } from "@/lib/city-price-page-market";
 import {
   getAubagneNearbyPreviewPrice,
 } from "@/lib/city-price-preview-data";
 import { getLocalAgencyNeighborhoodProfile } from "@/lib/local-agency-neighborhoods";
 import { prepareCityPriceHistoryForDisplay } from "@/lib/price-history";
 import { aubagneDvfPreviewZones } from "@/lib/aubagne-dvf-preview-data";
-import { resolvePublishedCityMarket } from "@/lib/published-city-market";
 import { AubagneDvfPreviewMap } from "./aubagne-dvf-preview-map";
 import { CityMarketChart } from "./city-market-chart";
 import { CityPriceMap } from "./city-price-map";
@@ -157,7 +156,7 @@ function MarketPriceCard({
         </div>
       </div>
       <span className={hasObservedTrend ? (stat.trend1Year >= 0 ? "city-trend positive" : "city-trend negative") : "city-trend"}>
-        {hasObservedTrend ? <><TrendIcon size={14} /> {formatPercent(stat.trend1Year)}</> : "Évolution à venir"}
+        {hasObservedTrend ? <><TrendIcon size={14} /> {formatPercent(stat.trend1Year)}</> : "Évolution non publiée"}
       </span>
     </article>
   );
@@ -243,11 +242,11 @@ function CityMarketDashboard({
               <span><TrendIcon aria-hidden="true" size={22} /></span>
               <div>
                 <small>Tendance sur un an</small>
-                <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+                <strong>{averageTrend !== null ? formatPercent(averageTrend) : "Non publiée"}</strong>
                 <p>
-                  Appartement {market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "à venir"}
+                  Appartement {market.apartment.trendSource !== "unavailable" ? formatPercent(market.apartment.trend1Year) : "non publiée"}
                   <span aria-hidden="true"> · </span>
-                  Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "à venir"}
+                  Maison {market.house.trendSource !== "unavailable" ? formatPercent(market.house.trend1Year) : "non publiée"}
                 </p>
                 <em>{marketTrendLabel}</em>
               </div>
@@ -342,11 +341,11 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
   if (!city) notFound();
 
   const nearbyCities = getNearbyLocalMarketCities(city);
-  const publishedMarket = seoPreview ? await resolvePublishedCityMarket(city) : null;
-  const marketSnapshots = publishedMarket
-    ? new Map<string, CityMarketData>()
-    : await getCityMarketDataSet([city, ...nearbyCities]);
-  const market = publishedMarket?.base ?? marketSnapshots.get(city.inseeCode);
+  const { market, marketSnapshots, publishedMarket } = await loadCityPricePageMarket(
+    city,
+    nearbyCities,
+    seoPreview,
+  );
 
   if (!market) return <CityMarketUnavailable city={city} />;
 
@@ -644,7 +643,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
             <MarketPriceCard centralLabel={usesDvfMedian ? "Médiane" : undefined} icon={Home} label="Maison" stat={houseOverviewStat} />
             <article className="city-market-signal-card">
               <span>Évolution sur un an</span>
-              <strong>{averageTrend !== null ? formatPercent(averageTrend) : "À venir"}</strong>
+              <strong>{averageTrend !== null ? formatPercent(averageTrend) : "Non publiée"}</strong>
               <p>{averageTrend === null ? "Historique insuffisant pour publier une tendance" : Math.abs(averageTrend) < 1 ? "Un marché globalement stable" : averageTrend > 0 ? "Une dynamique haussière" : "Un marché en léger ajustement"}</p>
             </article>
           </div>
@@ -834,7 +833,7 @@ async function renderCityPricePage(citySlug: string, seoPreview: boolean) {
                   <strong>
                     {seoPreview && (nearby || previewNearby)
                       ? `App. ${formatPrice(nearby?.apartment.averagePricePerM2 ?? previewNearby!.apartment)} · Maison ${formatPrice(nearby?.house.averagePricePerM2 ?? previewNearby!.house)}`
-                      : price !== null ? `${formatPrice(price)}/m²` : "Donnée à venir"}
+                      : price !== null ? `${formatPrice(price)}/m²` : "Prix non publié"}
                   </strong>
                   <ArrowRight size={15} />
                 </Link>

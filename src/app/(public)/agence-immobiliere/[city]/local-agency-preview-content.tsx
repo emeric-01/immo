@@ -502,7 +502,7 @@ async function renderLocalAgencyCityPage(citySlug: string, seoPreview: boolean) 
           <div className={styles.marketMetrics}>
             <span><Building2 /><small>Appartement</small><strong>{formatPrice(market.apartment.averagePricePerM2)}<b>/m²</b></strong></span>
             <span><Home /><small>Maison</small><strong>{formatPrice(market.house.averagePricePerM2)}<b>/m²</b></strong></span>
-            <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "À venir"}</strong></span>
+            <span><Sparkles /><small>Tendance annuelle</small><strong>{averageTrend !== null ? formatTrend(averageTrend) : "Non publiée"}</strong></span>
           </div>
           <CityMarketChart
             averagePrice={averagePrice}

@@ -68,7 +68,7 @@ export default async function EstimationCitiesPage() {
                   <span>Estimation immobilière</span>
                   <strong>{city.name}</strong>
                   {city.trend1Year === null ? (
-                    <small className={styles.missingTrend}>Évolution locale à venir</small>
+                    <small className={styles.missingTrend}>Évolution locale non publiée</small>
                   ) : (
                     <small className={city.trend1Year >= 0 ? styles.positiveTrend : styles.negativeTrend}>
                       Évolution sur 1 an&nbsp;: {formatTrend(city.trend1Year)}

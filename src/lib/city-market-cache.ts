@@ -190,7 +190,8 @@ export async function readCityMarketTrends(cities: City[]) {
 
     const rows = (await response.json()) as CacheRow[];
     for (const row of rows) {
-      const values = [row.market_data?.apartment?.trend1Year, row.market_data?.house?.trend1Year]
+      const values = [row.market_data?.apartment, row.market_data?.house]
+        .map((market) => market?.trendSource === "unavailable" ? null : market?.trend1Year)
         .filter((value): value is number => typeof value === "number");
       if (values.length > 0) {
         trends.set(

@@ -143,17 +143,17 @@ export function CityDirectory({ cities }: { cities: DirectoryCity[] }) {
                           <small>
                             {city.apartmentPrice !== null && city.housePrice !== null
                               ? `Appartement ${formatter.format(city.apartmentPrice)} · Maison ${formatter.format(city.housePrice)} €/m²`
-                              : "Snapshot de marché à venir"}
+                              : "Prix maison/appartement non publiés"}
                           </small>
                         </div>
                         <div className={styles.cityPrice}>
                           <span>{city.averagePrice !== null ? "Prix moyen observé" : "Données de marché"}</span>
                           <strong>
-                            {city.averagePrice !== null ? <>{formatter.format(city.averagePrice)} €<small>/m²</small></> : "À venir"}
+                            {city.averagePrice !== null ? <>{formatter.format(city.averagePrice)} €<small>/m²</small></> : "Non publié"}
                           </strong>
                         </div>
                         {city.trend === null ? (
-                          <span className={styles.missingTrend}>Donnée à venir</span>
+                          <span className={styles.missingTrend}>Évolution non publiée</span>
                         ) : (
                           <span className={city.trend >= 0 ? styles.positiveTrend : styles.negativeTrend}>
                             <TrendIcon aria-hidden="true" size={14} />

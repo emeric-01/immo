@@ -157,9 +157,9 @@ export default async function HomePage() {
                 </div>
                 <div className={styles.cityCardBody}>
                   <h3>Prix m² à {city.name}</h3>
-                  <strong>{average !== null ? `${formatPrice(average)} €/m²` : "Données à venir"}</strong>
+                  <strong>{average !== null ? `${formatPrice(average)} €/m²` : "Prix non publié"}</strong>
                   {trend === null ? (
-                    <span className={styles.trendMissing}>Évolution à venir</span>
+                    <span className={styles.trendMissing}>Évolution non publiée</span>
                   ) : (
                     <span className={trend >= 0 ? styles.trendUp : styles.trendDown}><TrendIcon size={14} /> {trend > 0 ? "+" : ""}{trend.toLocaleString("fr-FR")} % sur 1 an</span>
                   )}
