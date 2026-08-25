@@ -45,7 +45,7 @@ function buyerMatch(listing: InterkabListing, search: AdminBuyerSearchRow) {
 export function scoreInterkabListing(
   listing: InterkabListing,
   searches: AdminBuyerSearchRow[],
-  market: CityMarketData | null,
+  market: Pick<CityMarketData, "apartment" | "house"> | null,
 ): InterkabListingScore {
   const type = propertyType(listing);
   const pricePerM2 = listing.price && listing.surfaceM2 ? Math.round(listing.price / listing.surfaceM2) : null;

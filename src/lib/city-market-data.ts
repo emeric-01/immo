@@ -1,5 +1,10 @@
 import type { City } from "./cities";
-import { readCityMarketCache, readCityMarketCaches, writeCityMarketCache } from "./city-market-cache";
+import {
+  readCityMarketCache,
+  readCityMarketCaches,
+  readCityMarketCacheSummaries,
+  writeCityMarketCache,
+} from "./city-market-cache";
 import { buildCityPriceHistoryCoverage } from "./price-history";
 
 export type PropertyMarketStat = {
@@ -140,6 +145,11 @@ export type CityMarketData = {
   }>;
   localInfo?: CityLocalInfo;
 };
+
+export type CityMarketSummary = Pick<
+  CityMarketData,
+  "apartment" | "house" | "source" | "transactionCount" | "updatedAt"
+>;
 
 type ImmoDataConfig = {
   apiKey: string;
@@ -1268,6 +1278,18 @@ export async function getCityMarketDataSet(cities: City[]) {
     if (cached?.data) {
       markets.set(city.inseeCode, normalizePublishedMarketData(city, cached.data));
     }
+  }
+
+  return markets;
+}
+
+export async function getCityMarketSummarySet(cities: City[]) {
+  const cachedMarkets = await readCityMarketCacheSummaries(cities);
+  const markets = new Map<string, CityMarketSummary>();
+
+  for (const city of cities) {
+    const cached = cachedMarkets.get(city.inseeCode);
+    if (cached?.data) markets.set(city.inseeCode, cached.data);
   }
 
   return markets;

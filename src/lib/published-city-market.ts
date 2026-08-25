@@ -3,8 +3,9 @@ import "server-only";
 import type { City } from "@/lib/cities";
 import {
   getCityMarketData,
-  getCityMarketDataSet,
+  getCityMarketSummarySet,
   type CityMarketData,
+  type CityMarketSummary,
 } from "@/lib/city-market-data";
 import { getCityPricePreviewSnapshot } from "@/lib/city-price-preview-data";
 import {
@@ -18,10 +19,10 @@ export type PublishedCityMarket = {
   pulse: InterkabMarketPulse | null;
 };
 
-function applyMarketPulse(
-  market: CityMarketData,
+function applyMarketPulse<T extends CityMarketSummary>(
+  market: T,
   pulse: InterkabMarketPulse | null,
-): CityMarketData {
+): T {
   if (!pulse?.apartment?.nowcastPricePerM2 && !pulse?.house?.nowcastPricePerM2) {
     return market;
   }
@@ -39,7 +40,26 @@ function applyMarketPulse(
       averagePricePerM2:
         pulse.house?.nowcastPricePerM2 ?? market.house.averagePricePerM2,
     },
-  };
+  } as T;
+}
+
+async function resolvePublishedCityMarketSummary(
+  city: City,
+  cachedMarket?: CityMarketSummary | null,
+) {
+  const base = cachedMarket ?? getCityPricePreviewSnapshot(city.slug);
+  if (!base) return null;
+
+  const pulse = base.source === "dvf"
+    ? await getInterkabMarketPulse(
+      city.inseeCode,
+      base.apartment.averagePricePerM2,
+      base.house.averagePricePerM2,
+      { allowLiveFallback: false },
+    )
+    : null;
+
+  return applyMarketPulse(base, pulse);
 }
 
 export async function resolvePublishedCityMarket(
@@ -72,20 +92,20 @@ export async function getPublishedCityMarketData(city: City) {
 }
 
 export async function getPublishedCityMarketDataSet(cities: City[]) {
-  const cachedMarkets = await getCityMarketDataSet(cities);
+  const cachedMarkets = await getCityMarketSummarySet(cities);
   const resolved = await Promise.all(
     cities.map(async (city) => ({
       city,
-      market: await resolvePublishedCityMarket(
+      market: await resolvePublishedCityMarketSummary(
         city,
         cachedMarkets.get(city.inseeCode) ?? null,
       ),
     })),
   );
-  const markets = new Map<string, CityMarketData>();
+  const markets = new Map<string, CityMarketSummary>();
 
   for (const { city, market } of resolved) {
-    if (market) markets.set(city.inseeCode, market.current);
+    if (market) markets.set(city.inseeCode, market);
   }
 
   return markets;

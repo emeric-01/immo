@@ -4,33 +4,39 @@ import type { City } from "./cities";
 import type { CityMarketData } from "./city-market-data";
 
 vi.mock("server-only", () => ({}));
-vi.mock("./city-market-data", () => ({ getCityMarketDataSet: vi.fn() }));
+vi.mock("./city-market-data", () => ({
+  getCityMarketData: vi.fn(),
+  getCityMarketSummarySet: vi.fn(),
+}));
 vi.mock("./published-city-market", () => ({ resolvePublishedCityMarket: vi.fn() }));
 
-import { getCityMarketDataSet } from "./city-market-data";
+import { getCityMarketData, getCityMarketSummarySet } from "./city-market-data";
 import { loadCityPricePageMarket } from "./city-price-page-market";
 import { resolvePublishedCityMarket } from "./published-city-market";
 
 const allauch = { inseeCode: "13002", slug: "allauch" } as City;
 const planDeCuques = { inseeCode: "13075", slug: "plan-de-cuques" } as City;
 const marseille = { inseeCode: "13055", slug: "marseille" } as City;
-const allauchMarket = { source: "dvf" } as CityMarketData;
+const allauchMarket = {
+  history: [{ apartment: 3_000, house: 4_000, period: "2014" }],
+  source: "dvf",
+} as CityMarketData;
 const planDeCuquesMarket = { source: "dvf" } as CityMarketData;
 const marseilleMarket = { source: "dvf" } as CityMarketData;
 
 describe("city price page market loading", () => {
   beforeEach(() => {
-    vi.mocked(getCityMarketDataSet).mockReset();
+    vi.mocked(getCityMarketData).mockReset();
+    vi.mocked(getCityMarketSummarySet).mockReset();
     vi.mocked(resolvePublishedCityMarket).mockReset();
   });
 
-  it("keeps neighboring snapshots when the current city uses the published model", async () => {
+  it("loads the complete current snapshot separately from lightweight neighbors", async () => {
     const snapshots = new Map([
-      [allauch.inseeCode, allauchMarket],
       [planDeCuques.inseeCode, planDeCuquesMarket],
       [marseille.inseeCode, marseilleMarket],
     ]);
-    vi.mocked(getCityMarketDataSet).mockResolvedValue(snapshots);
+    vi.mocked(getCityMarketSummarySet).mockResolvedValue(snapshots);
     vi.mocked(resolvePublishedCityMarket).mockResolvedValue({
       base: allauchMarket,
       current: allauchMarket,
@@ -43,13 +49,25 @@ describe("city price page market loading", () => {
       true,
     );
 
-    expect(getCityMarketDataSet).toHaveBeenCalledWith([
-      allauch,
+    expect(getCityMarketSummarySet).toHaveBeenCalledWith([
       planDeCuques,
       marseille,
     ]);
-    expect(resolvePublishedCityMarket).toHaveBeenCalledWith(allauch, allauchMarket);
+    expect(resolvePublishedCityMarket).toHaveBeenCalledWith(allauch);
+    expect(result.market?.history).toEqual(allauchMarket.history);
+    expect(result.marketSnapshots.get(allauch.inseeCode)).toBe(allauchMarket);
     expect(result.marketSnapshots.get(planDeCuques.inseeCode)).toBe(planDeCuquesMarket);
     expect(result.marketSnapshots.get(marseille.inseeCode)).toBe(marseilleMarket);
+  });
+
+  it("loads a complete stored snapshot when the published model is disabled", async () => {
+    vi.mocked(getCityMarketSummarySet).mockResolvedValue(new Map());
+    vi.mocked(getCityMarketData).mockResolvedValue(allauchMarket);
+
+    const result = await loadCityPricePageMarket(allauch, [], false);
+
+    expect(getCityMarketData).toHaveBeenCalledWith(allauch);
+    expect(resolvePublishedCityMarket).not.toHaveBeenCalled();
+    expect(result.market?.history).toEqual(allauchMarket.history);
   });
 });

@@ -2,7 +2,7 @@ import "server-only";
 
 import { revalidateTag } from "next/cache";
 import type { City } from "./cities";
-import type { CityMarketData } from "./city-market-data";
+import type { CityMarketData, CityMarketSummary } from "./city-market-data";
 
 type CacheRow = {
   fetched_at: string;
@@ -15,8 +15,8 @@ type CacheSummaryRow = {
   fetched_at: string;
   house?: CityMarketData["house"];
   insee_code: string;
-  market_data?: CityMarketData;
   source?: CityMarketData["source"];
+  transaction_count?: CityMarketData["transactionCount"];
   updated_at?: string;
 };
 
@@ -27,6 +27,12 @@ type SupabaseServerConfig = {
 
 export type CityMarketCacheEntry = {
   data: CityMarketData;
+  fetchedAt: string;
+  fresh: boolean;
+};
+
+export type CityMarketCacheSummaryEntry = {
+  data: CityMarketSummary;
   fetchedAt: string;
   fresh: boolean;
 };
@@ -97,8 +103,43 @@ export async function readCityMarketCaches(cities: City[]) {
   const codes = cities.map((city) => `"${city.inseeCode}"`).join(",");
   const params = new URLSearchParams({
     insee_code: `in.(${codes})`,
+    select: "insee_code,market_data,fetched_at",
+  });
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/city_market_cache?${params}`, {
+      cache: "no-store",
+      headers: headers(config),
+    });
+    if (!response.ok) return entries;
+
+    const rows = (await response.json()) as CacheRow[];
+    for (const row of rows) {
+      if (!row.insee_code || !row.market_data || !row.fetched_at) continue;
+
+      entries.set(row.insee_code, {
+        data: row.market_data,
+        fetchedAt: row.fetched_at,
+        fresh: Date.now() - new Date(row.fetched_at).getTime() < cacheLifetimeMs(),
+      });
+    }
+  } catch {
+    return entries;
+  }
+
+  return entries;
+}
+
+export async function readCityMarketCacheSummaries(cities: City[]) {
+  const config = getConfig();
+  const entries = new Map<string, CityMarketCacheSummaryEntry>();
+  if (!config || cities.length === 0) return entries;
+
+  const codes = cities.map((city) => `"${city.inseeCode}"`).join(",");
+  const params = new URLSearchParams({
+    insee_code: `in.(${codes})`,
     select:
-      "insee_code,fetched_at,source:market_data->>source,updated_at:market_data->>updatedAt,apartment:market_data->apartment,house:market_data->house",
+      "insee_code,fetched_at,source:market_data->>source,updated_at:market_data->>updatedAt,transaction_count:market_data->transactionCount,apartment:market_data->apartment,house:market_data->house",
   });
 
   try {
@@ -110,26 +151,23 @@ export async function readCityMarketCaches(cities: City[]) {
 
     const rows = (await response.json()) as CacheSummaryRow[];
     for (const row of rows) {
-      const data = row.market_data ?? (
-        row.source && row.updated_at && row.apartment && row.house
-          ? {
-              source: row.source,
-              updatedAt: row.updated_at,
-              apartment: row.apartment,
-              house: row.house,
-              history: [],
-              zones: [],
-              salePoints: [],
-              neighborhoods: [],
-              expensiveStreets: [],
-              affordableStreets: [],
-            } satisfies CityMarketData
-          : null
-      );
-      if (!row.insee_code || !data || !row.fetched_at) continue;
+      if (
+        !row.insee_code
+        || !row.source
+        || !row.updated_at
+        || !row.apartment
+        || !row.house
+        || !row.fetched_at
+      ) continue;
 
       entries.set(row.insee_code, {
-        data,
+        data: {
+          source: row.source,
+          updatedAt: row.updated_at,
+          apartment: row.apartment,
+          house: row.house,
+          transactionCount: row.transaction_count,
+        },
         fetchedAt: row.fetched_at,
         fresh: Date.now() - new Date(row.fetched_at).getTime() < cacheLifetimeMs(),
       });

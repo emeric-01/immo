@@ -4,6 +4,8 @@ import { getCityBySlug } from "./cities";
 
 vi.mock("./city-market-cache", () => ({
   readCityMarketCache: vi.fn(),
+  readCityMarketCaches: vi.fn(),
+  readCityMarketCacheSummaries: vi.fn(),
   writeCityMarketCache: vi.fn(),
 }));
 

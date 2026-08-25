@@ -108,7 +108,12 @@ function areaAnalysis(matches: InternalPropertyMatch[], alternatives: InternalPr
   return "Aucun bien suffisamment proche des critères n’est disponible actuellement dans ce secteur.";
 }
 
-function marketMetrics(propertyType: string, price: number | null, surfaceM2: number | null, market: CityMarketData | null) {
+function marketMetrics(
+  propertyType: string,
+  price: number | null,
+  surfaceM2: number | null,
+  market: Pick<CityMarketData, "apartment" | "house"> | null,
+) {
   const category = propertyCategory(propertyType);
   const marketPricePerM2 = category === "house"
     ? market?.house.averagePricePerM2 ?? null

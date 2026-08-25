@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCityBySlug } from "./cities";
-import { readCityMarketCache, readCityMarketCaches, readCityMarketTrends } from "./city-market-cache";
+import {
+  readCityMarketCache,
+  readCityMarketCaches,
+  readCityMarketCacheSummaries,
+  readCityMarketTrends,
+} from "./city-market-cache";
 import type { CityMarketData } from "./city-market-data";
 
 function city(slug: string) {
@@ -46,14 +51,35 @@ describe("city market cache", () => {
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain("order=fetched_at.desc");
   });
 
-  it("reads lightweight published city summaries in one Supabase request", async () => {
+  it("keeps complete published snapshots in batch reads", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
+    const detailedMarket = {
+      ...market,
+      historySource: "immo-data-dvf" as const,
+      historyCoverage: {
+        expectedFrom: "2014",
+        expectedTo: "2025",
+        granularity: "annual" as const,
+        missingApartmentPeriods: [],
+        missingHousePeriods: [],
+        status: "complete" as const,
+      },
+      history: [
+        {
+          apartment: 3_000,
+          apartmentSource: "immo-data" as const,
+          house: 4_000,
+          houseSource: "immo-data" as const,
+          period: "2014",
+        },
+      ],
+    } satisfies CityMarketData;
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
       {
         fetched_at: "2026-08-10T12:00:00.000Z",
         insee_code: "13001",
-        market_data: market,
+        market_data: detailedMarket,
       },
     ]), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
@@ -62,9 +88,35 @@ describe("city market cache", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain("insee_code=in.%28%2213001%22%2C%2213005%22%29");
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("source%3Amarket_data-%3E%3Esource");
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("select=insee_code%2Cmarket_data%2Cfetched_at");
     expect(snapshots.get("13001")?.data.apartment.averagePricePerM2).toBe(5_300);
+    expect(snapshots.get("13001")?.data.history).toEqual(detailedMarket.history);
+    expect(snapshots.get("13001")?.data.historyCoverage?.status).toBe("complete");
     expect(snapshots.has("13005")).toBe(false);
+  });
+
+  it("reads lightweight summaries without presenting them as complete snapshots", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-test");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
+      {
+        apartment: market.apartment,
+        fetched_at: "2026-08-10T12:00:00.000Z",
+        house: market.house,
+        insee_code: "13001",
+        source: market.source,
+        transaction_count: 42,
+        updated_at: market.updatedAt,
+      },
+    ]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const summaries = await readCityMarketCacheSummaries([city("aix-en-provence")]);
+
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("source%3Amarket_data-%3E%3Esource");
+    expect(summaries.get("13001")?.data.apartment.averagePricePerM2).toBe(5_300);
+    expect(summaries.get("13001")?.data.transactionCount).toBe(42);
+    expect(summaries.get("13001")?.data).not.toHaveProperty("history");
   });
 
   it("returns no invented snapshot when Supabase is not configured", async () => {

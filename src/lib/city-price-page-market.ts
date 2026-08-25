@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { City } from "./cities";
-import { getCityMarketDataSet } from "./city-market-data";
+import { getCityMarketData, getCityMarketSummarySet } from "./city-market-data";
 import { resolvePublishedCityMarket } from "./published-city-market";
 
 export async function loadCityPricePageMarket(
@@ -9,16 +9,17 @@ export async function loadCityPricePageMarket(
   nearbyCities: City[],
   usePublishedMarket: boolean,
 ) {
-  const marketSnapshots = await getCityMarketDataSet([city, ...nearbyCities]);
-  const publishedMarket = usePublishedMarket
-    ? await resolvePublishedCityMarket(
-      city,
-      marketSnapshots.get(city.inseeCode) ?? null,
-    )
-    : null;
+  const [marketSnapshots, publishedMarket, storedMarket] = await Promise.all([
+    getCityMarketSummarySet(nearbyCities),
+    usePublishedMarket ? resolvePublishedCityMarket(city) : Promise.resolve(null),
+    usePublishedMarket ? Promise.resolve(null) : getCityMarketData(city),
+  ]);
+  const market = publishedMarket?.base ?? storedMarket;
+
+  if (market) marketSnapshots.set(city.inseeCode, market);
 
   return {
-    market: publishedMarket?.base ?? marketSnapshots.get(city.inseeCode) ?? null,
+    market,
     marketSnapshots,
     publishedMarket,
   };
