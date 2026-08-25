@@ -9,6 +9,6 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const results = await syncDueInterkabCities(4);
+  const results = await syncDueInterkabCities();
   return NextResponse.json({ processed: results.length, results });
 }

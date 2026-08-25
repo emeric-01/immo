@@ -5,7 +5,10 @@ import {
   readCityMarketCacheSummaries,
   writeCityMarketCache,
 } from "./city-market-cache";
-import { buildCityPriceHistoryCoverage } from "./price-history";
+import {
+  buildCityPriceHistoryCoverage,
+  calculateLatestCityPriceHistoryTrend,
+} from "./price-history";
 
 export type PropertyMarketStat = {
   averagePricePerM2: number;
@@ -935,17 +938,28 @@ function normalizePublishedMarketData(city: City, market: CityMarketData): CityM
       ? { expectedFrom: "2014", expectedTo: "2025", granularity: "annual" }
       : {},
   );
-  const trendSource = history.length >= 2 ? "history" : "unavailable";
+  const apartmentTrend = calculateLatestCityPriceHistoryTrend(
+    history,
+    "apartment",
+    historyCoverage.granularity,
+  );
+  const houseTrend = calculateLatestCityPriceHistoryTrend(
+    history,
+    "house",
+    historyCoverage.granularity,
+  );
 
   return {
     ...market,
     apartment: {
       ...withObservedTransactionRange(market.apartment, salePoints, "Appartement"),
-      trendSource,
+      trend1Year: apartmentTrend ?? 0,
+      trendSource: apartmentTrend === null ? "unavailable" : "history",
     },
     house: {
       ...withObservedTransactionRange(market.house, salePoints, "Maison"),
-      trendSource,
+      trend1Year: houseTrend ?? 0,
+      trendSource: houseTrend === null ? "unavailable" : "history",
     },
     history,
     historyCoverage,

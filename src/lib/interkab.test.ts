@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseInterkabDetailPage, parseInterkabLocationId, parseInterkabSearchPage } from "./interkab";
+import { INTERKAB_SYNC_BATCH_SIZE, parseInterkabDetailPage, parseInterkabLocationId, parseInterkabSearchPage } from "./interkab";
 
 describe("Interkab pilot parser", () => {
+  it("keeps cron work within one city per invocation", () => {
+    expect(INTERKAB_SYNC_BATCH_SIZE).toBe(1);
+  });
+
   it("reads the internal city identifier selected by Interkab", () => {
     expect(parseInterkabLocationId('<select id="search_uniqueGeolocalite"><option value="4497_689" selected="selected">Gémenos</option></select>')).toBe("4497_689");
   });

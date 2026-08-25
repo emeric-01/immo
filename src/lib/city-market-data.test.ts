@@ -92,4 +92,45 @@ describe("published city market data", () => {
     expect(published?.zones).toEqual([]);
     expect(published?.neighborhoods).toEqual([]);
   });
+
+  it("recalculates the published annual trend from the complete merged history", async () => {
+    const aix = city("aix-en-provence");
+    const snapshot = {
+      ...getStaticCityMarketData(aix),
+      source: "dvf" as const,
+      historySource: "immo-data-dvf" as const,
+      historyCoverage: {
+        expectedFrom: "2024",
+        expectedTo: "2025",
+        granularity: "annual" as const,
+        missingApartmentPeriods: [],
+        missingHousePeriods: [],
+        status: "complete" as const,
+      },
+      apartment: {
+        ...getStaticCityMarketData(aix).apartment,
+        trend1Year: 0,
+        trendSource: "unavailable" as const,
+      },
+      house: {
+        ...getStaticCityMarketData(aix).house,
+        trend1Year: 34.8,
+        trendSource: "history" as const,
+      },
+      history: [
+        { apartment: 3_758, house: 4_951, period: "2024" },
+        { apartment: 3_602, house: 4_656, period: "2025" },
+      ],
+    };
+    vi.mocked(readCityMarketCache).mockResolvedValue({
+      data: snapshot,
+      fetchedAt: "2026-08-24T12:00:00.000Z",
+      fresh: true,
+    });
+
+    const published = await getCityMarketData(aix);
+
+    expect(published?.apartment).toMatchObject({ trend1Year: -4.2, trendSource: "history" });
+    expect(published?.house).toMatchObject({ trend1Year: -6, trendSource: "history" });
+  });
 });

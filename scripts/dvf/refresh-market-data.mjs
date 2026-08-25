@@ -4,7 +4,7 @@ import path from "node:path";
 import {
   METHODOLOGY_VERSION,
   buildAnnualPriceHistory,
-  calculateTrend,
+  calculateLatestAnnualTrend,
   confidenceForCount,
   inspectHistoryCoverage,
   largestOuterRing,
@@ -527,10 +527,12 @@ function buildCitySnapshot(city, irisZones, sales, existingMarket, importRunId) 
     );
   }
   const hasStoredHistory = history.some((point) => Number.parseInt(point.period.slice(0, 4), 10) < DVF_FIRST_YEAR);
-  apartment.trend1Year = trendFromHistory(historyWithCounts, "apartment");
-  house.trend1Year = trendFromHistory(historyWithCounts, "house");
-  apartment.trendSource = apartment.trend1Year === 0 ? "unavailable" : "history";
-  house.trendSource = house.trend1Year === 0 ? "unavailable" : "history";
+  const apartmentTrend = calculateLatestAnnualTrend(history, "apartment");
+  const houseTrend = calculateLatestAnnualTrend(history, "house");
+  apartment.trend1Year = apartmentTrend ?? 0;
+  house.trend1Year = houseTrend ?? 0;
+  apartment.trendSource = apartmentTrend === null ? "unavailable" : "history";
+  house.trendSource = houseTrend === null ? "unavailable" : "history";
 
   const zones = irisZones.map((zone) => {
     const zoneCurrent = currentSales.filter((sale) => sale.irisCode === zone.code);
@@ -652,13 +654,6 @@ function adaptiveZoneStat(currentSales, allSales, propertyType, currentStartYear
   if (current.observations >= 3) return { ...current, observedPeriod: `${currentStartYear}–${latestYear}` };
   const extended = summarizeSales(allSales.filter((sale) => sale.propertyType === propertyType));
   return { ...extended, observedPeriod: `${DVF_FIRST_YEAR}–${latestYear}` };
-}
-
-function trendFromHistory(history, propertyType) {
-  const available = history.filter((point) => point[propertyType] > 0 && point[`${propertyType}Count`] >= 3);
-  const [previous, current] = available.slice(-2);
-  if (!previous || !current || Number(current.period) - Number(previous.period) !== 1) return 0;
-  return calculateTrend(previous[propertyType], current[propertyType]);
 }
 
 async function persistCity(database, runId, city, irisZones, sales, snapshot) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCityPriceHistoryCoverage, buildPriceHistoryChartScale, historyDurationLabel, prepareCityPriceHistoryForDisplay, selectWidestCityPriceHistory } from "./price-history";
+import { buildCityPriceHistoryCoverage, buildPriceHistoryChartScale, calculateLatestCityPriceHistoryTrend, historyDurationLabel, prepareCityPriceHistoryForDisplay, selectWidestCityPriceHistory } from "./price-history";
 
 describe("prepareCityPriceHistoryForDisplay", () => {
   it("conserve les années inconnues et les typologies manquantes comme des interruptions", () => {
@@ -52,6 +52,29 @@ describe("selectWidestCityPriceHistory", () => {
 describe("historyDurationLabel", () => {
   it("présente clairement le recul disponible", () => {
     expect(historyDurationLabel("2014-01", "2026-07")).toBe("12,5 ans d’historique");
+  });
+});
+
+describe("calculateLatestCityPriceHistoryTrend", () => {
+  it("calcule la tendance sur les deux dernières années calendaires", () => {
+    expect(calculateLatestCityPriceHistoryTrend([
+      { apartment: 3_758, house: 4_293, period: "2024" },
+      { apartment: 3_602, house: 4_496, period: "2025" },
+    ], "apartment", "annual")).toBe(-4.2);
+  });
+
+  it("ne saute jamais une année inconnue pour fabriquer une tendance", () => {
+    expect(calculateLatestCityPriceHistoryTrend([
+      { apartment: 3_000, house: 4_000, period: "2023" },
+      { apartment: 3_200, house: 4_200, period: "2025" },
+    ], "apartment", "annual")).toBeNull();
+  });
+
+  it("conserve une tendance nulle lorsqu'elle est réellement observée", () => {
+    expect(calculateLatestCityPriceHistoryTrend([
+      { apartment: 3_000, house: 4_000, period: "2024" },
+      { apartment: 3_000, house: 4_100, period: "2025" },
+    ], "apartment", "annual")).toBe(0);
   });
 });
 

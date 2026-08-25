@@ -112,6 +112,28 @@ export function buildCityPriceHistoryCoverage(
   };
 }
 
+export function calculateLatestCityPriceHistoryTrend(
+  history: CityPriceHistoryPoint[] | null | undefined,
+  propertyType: "apartment" | "house",
+  granularity: CityPriceHistoryCoverage["granularity"],
+): number | null {
+  if (granularity === "mixed") return null;
+
+  const byPeriod = new Map(
+    (history ?? [])
+      .filter((point) => point?.period)
+      .map((point) => [periodKey(point.period), point] as const),
+  );
+  const latestKey = Math.max(...byPeriod.keys());
+  if (!Number.isFinite(latestKey)) return null;
+
+  const previousValue = byPeriod.get(latestKey - 12)?.[propertyType];
+  const currentValue = byPeriod.get(latestKey)?.[propertyType];
+  if (!isPositive(previousValue ?? 0) || !isPositive(currentValue ?? 0)) return null;
+
+  return Number((((currentValue! - previousValue!) / previousValue!) * 100).toFixed(1));
+}
+
 export function historyDurationLabel(firstPeriod: string, lastPeriod: string) {
   const start = periodParts(firstPeriod);
   const end = periodParts(lastPeriod);

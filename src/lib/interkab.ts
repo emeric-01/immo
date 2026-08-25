@@ -6,9 +6,14 @@ export const AUBAGNE_INTERKAB_URL =
 
 const FOUR_DAYS = 60 * 60 * 24 * 4;
 const PILOT_DETAIL_LIMIT = 6;
+const INTERKAB_REQUEST_TIMEOUT_MS = 20_000;
+const STALE_SYNC_RUN_MS = 10 * 60 * 1000;
 
 export const INTERKAB_CITIES = localMarketCities;
-export const INTERKAB_SYNC_BATCH_SIZE = 4;
+// Eleven daily cron slots cover the 41 cities within the four-day refresh
+// interval. Keeping one city per invocation prevents large catalogues such as
+// Marseille and Toulon from sharing Vercel's five-minute execution budget.
+export const INTERKAB_SYNC_BATCH_SIZE = 1;
 
 export type InterkabListing = {
   agencyName: string | null;
@@ -162,6 +167,7 @@ async function fetchHtml(url: string) {
   const response = await fetch(url, {
     headers: { Accept: "text/html", "User-Agent": "JumellesImmo-Interkab-Pilot/1.0" },
     next: { revalidate: FOUR_DAYS },
+    signal: AbortSignal.timeout(INTERKAB_REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`Interkab a répondu avec le statut ${response.status}.`);
   return response.text();
@@ -423,6 +429,18 @@ function wait(milliseconds: number) {
 }
 
 export async function syncDueInterkabCities(limit = INTERKAB_SYNC_BATCH_SIZE) {
+  const staleBefore = new Date(Date.now() - STALE_SYNC_RUN_MS).toISOString();
+  await supabaseRequest(
+    `interkab_sync_runs?status=eq.running&started_at=lt.${encodeURIComponent(staleBefore)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: "error",
+        error_message: "Exécution interrompue avant sa finalisation.",
+        completed_at: new Date().toISOString(),
+      }),
+    },
+  );
   await seedInterkabCities();
   const response = await supabaseRequest(`interkab_cities?sync_enabled=is.true&next_sync_at=lte.${encodeURIComponent(new Date().toISOString())}&select=insee_code&order=next_sync_at.asc&limit=${limit}`);
   const due = await response.json() as Array<{ insee_code: string }>;

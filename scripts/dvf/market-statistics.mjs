@@ -67,6 +67,25 @@ export function calculateTrend(previousValue, currentValue) {
   return Number((((currentValue - previousValue) / previousValue) * 100).toFixed(1));
 }
 
+export function calculateLatestAnnualTrend(history, propertyType) {
+  const byYear = new Map();
+
+  for (const point of history ?? []) {
+    const year = Number.parseInt(String(point?.period ?? ""), 10);
+    if (!Number.isFinite(year)) continue;
+    byYear.set(year, point);
+  }
+
+  const latestYear = Math.max(...byYear.keys());
+  if (!Number.isFinite(latestYear)) return null;
+
+  const previousValue = byYear.get(latestYear - 1)?.[propertyType];
+  const currentValue = byYear.get(latestYear)?.[propertyType];
+  if (!(previousValue > 0) || !(currentValue > 0)) return null;
+
+  return calculateTrend(previousValue, currentValue);
+}
+
 export function buildAnnualPriceHistory(sales, sourceYears) {
   return sourceYears.flatMap((year) => {
     const yearly = sales.filter((sale) => sale.sourceYear === year);

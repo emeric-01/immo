@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateTrend,
+  calculateLatestAnnualTrend,
   buildAnnualPriceHistory,
   confidenceForCount,
   inspectHistoryCoverage,
@@ -40,6 +41,29 @@ describe("DVF market statistics", () => {
 
   it("calculates the annual price trend", () => {
     expect(calculateTrend(2_706, 2_631)).toBe(-2.8);
+  });
+
+  it("calculates the latest annual trend from the merged published history", () => {
+    expect(calculateLatestAnnualTrend([
+      { apartment: 3_500, house: 4_500, period: "2023" },
+      { apartment: 3_758, house: 4_293, period: "2024" },
+      { apartment: 3_602, house: 4_496, period: "2025" },
+    ], "apartment")).toBe(-4.2);
+    expect(calculateLatestAnnualTrend([
+      { apartment: 3_469, house: 4_951, period: "2024" },
+      { apartment: 4_273, house: 4_656, period: "2025" },
+    ], "house")).toBe(-6);
+  });
+
+  it("distinguishes a verified stable trend from an unavailable trend", () => {
+    expect(calculateLatestAnnualTrend([
+      { apartment: 3_000, period: "2024" },
+      { apartment: 3_000, period: "2025" },
+    ], "apartment")).toBe(0);
+    expect(calculateLatestAnnualTrend([
+      { apartment: 3_000, period: "2023" },
+      { apartment: 3_100, period: "2025" },
+    ], "apartment")).toBeNull();
   });
 
   it("does not create zero-price years when the source has no comparable sales", () => {
