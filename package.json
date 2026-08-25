@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@11.7.0",
   "scripts": {
+    "audit:production": "node scripts/audit-production.mjs",
     "dvf:refresh": "node scripts/dvf/refresh-market-data.mjs",
     "dvf:stage": "node scripts/dvf/refresh-market-data.mjs --stage",
     "dvf:persist-staged": "node scripts/dvf/refresh-market-data.mjs --persist-staged",
