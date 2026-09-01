@@ -252,12 +252,7 @@
   border-bottom: 0;
 }
 
-.buyerSearchTable {
-  container-name: buyer-searches;
-  container-type: inline-size;
-}
-
-@container buyer-searches (max-width: 1180px) {
+@media (max-width: 1680px) {
   .tablePanel.buyerSearchTable table,
   .buyerSearchTable tbody {
     display: block;
@@ -341,7 +336,7 @@
   }
 }
 
-@container buyer-searches (max-width: 920px) {
+@media (max-width: 1280px) {
   .buyerSearchTable tr {
     grid-template-columns: repeat(2, minmax(0, 1fr)) 44px;
     grid-template-areas:
@@ -353,7 +348,7 @@
   }
 }
 
-@container buyer-searches (max-width: 520px) {
+@media (max-width: 600px) {
   .buyerSearchTable tbody {
     padding: 8px;
   }

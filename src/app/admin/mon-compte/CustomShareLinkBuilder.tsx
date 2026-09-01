@@ -15,6 +15,8 @@ export function CustomShareLinkBuilder({ attribution, siteUrl }: Props) {
   const [input, setInput] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const inputId = `custom-share-url-${attribution.code}`;
+  const helpId = `custom-share-help-${attribution.code}`;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,11 +48,13 @@ export function CustomShareLinkBuilder({ attribution, siteUrl }: Props) {
         </div>
       </div>
       <form className={styles.customLinkForm} onSubmit={handleSubmit}>
-        <label htmlFor={`custom-share-url-${attribution.code}`}>URL d’une page Les Jumelles Immo</label>
+        <label htmlFor={inputId}>URL d’une page Les Jumelles Immo</label>
         <div>
           <input
+            aria-describedby={helpId}
+            aria-invalid={Boolean(error)}
             autoComplete="url"
-            id={`custom-share-url-${attribution.code}`}
+            id={inputId}
             inputMode="url"
             onChange={(event) => handleInput(event.target.value)}
             placeholder={`${siteUrl}/prix-immobilier/...`}
@@ -60,7 +64,7 @@ export function CustomShareLinkBuilder({ attribution, siteUrl }: Props) {
           />
           <button type="submit"><Link2 aria-hidden="true" size={18}/>Générer le lien</button>
         </div>
-        <small>L’origine et votre référence agent seront ajoutées automatiquement.</small>
+        <small id={helpId}>L’origine et votre référence agent seront ajoutées automatiquement.</small>
       </form>
       {error ? <p className={styles.customLinkError} role="alert">{error}</p> : null}
       {generatedUrl ? (

@@ -52,10 +52,10 @@ export default async function AdminAccountPage() {
                 <h3>Liens à partager</h3>
                 <CustomShareLinkBuilder
                   attribution={{
-                    campaign: link.utm_campaign,
+                    campaign: link.utm_campaign || "agent",
                     code: link.code,
-                    medium: link.utm_medium,
-                    source: link.utm_source,
+                    medium: link.utm_medium || "referral",
+                    source: link.utm_source || link.code,
                   }}
                   siteUrl={publicSiteUrl}
                 />
