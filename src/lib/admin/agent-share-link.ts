@@ -34,9 +34,13 @@ export function buildAgentShareLink(
     return { error: "Utilisez uniquement une URL du site Les Jumelles Immo.", success: false };
   }
 
-  destination.searchParams.set("utm_source", attribution.source);
-  destination.searchParams.set("utm_medium", attribution.medium);
-  destination.searchParams.set("utm_campaign", attribution.campaign);
+  if (/^\/(?:admin|api|l)(?:\/|$)/.test(destination.pathname)) {
+    return { error: "Choisissez une page publique du site.", success: false };
+  }
+
+  destination.searchParams.delete("utm_source");
+  destination.searchParams.delete("utm_medium");
+  destination.searchParams.delete("utm_campaign");
   destination.searchParams.set("ref", attribution.code);
 
   return { success: true, url: destination.toString() };

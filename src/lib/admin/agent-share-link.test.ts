@@ -9,7 +9,7 @@ const attribution = {
 };
 
 describe("buildAgentShareLink", () => {
-  it("ajoute l’origine et la référence agent à une URL du site", () => {
+  it("ajoute uniquement la référence agent visible à l’URL du site", () => {
     const result = buildAgentShareLink(
       "https://jumellesimmo.fr/prix-immobilier/aubagne?bien=maison#estimation",
       "https://jumellesimmo.fr",
@@ -18,11 +18,11 @@ describe("buildAgentShareLink", () => {
 
     expect(result).toEqual({
       success: true,
-      url: "https://jumellesimmo.fr/prix-immobilier/aubagne?bien=maison&utm_source=sebastien-ledoyen&utm_medium=referral&utm_campaign=agent&ref=sebastien-ledoyen#estimation",
+      url: "https://jumellesimmo.fr/prix-immobilier/aubagne?bien=maison&ref=sebastien-ledoyen#estimation",
     });
   });
 
-  it("accepte un chemin relatif et remplace les anciens paramètres de suivi", () => {
+  it("accepte un chemin relatif et retire les anciens paramètres de suivi", () => {
     const result = buildAgentShareLink(
       "/estimation?utm_source=ancien&ref=ancien",
       "https://jumellesimmo.fr",
@@ -31,7 +31,7 @@ describe("buildAgentShareLink", () => {
 
     expect(result).toEqual({
       success: true,
-      url: "https://jumellesimmo.fr/estimation?utm_source=sebastien-ledoyen&ref=sebastien-ledoyen&utm_medium=referral&utm_campaign=agent",
+      url: "https://jumellesimmo.fr/estimation?ref=sebastien-ledoyen",
     });
   });
 
@@ -50,6 +50,8 @@ describe("buildAgentShareLink", () => {
     ["pas une url", "Cette URL n’est pas valide."],
     ["https://example.com/estimation", "Utilisez uniquement une URL du site Les Jumelles Immo."],
     ["javascript:alert(1)", "Utilisez uniquement une URL du site Les Jumelles Immo."],
+    ["https://jumellesimmo.fr/admin", "Choisissez une page publique du site."],
+    ["https://jumellesimmo.fr/l/sebastien", "Choisissez une page publique du site."],
   ])("refuse une destination non partageable", (input, error) => {
     expect(buildAgentShareLink(input, "https://jumellesimmo.fr", attribution)).toEqual({ error, success: false });
   });
