@@ -125,7 +125,7 @@ function SearchTable({
   searches: AdminBuyerSearchRow[];
 }) {
   return (
-    <div className={styles.tablePanel}>
+    <div className={`${styles.tablePanel} ${styles.buyerSearchTable}`}>
       <table>
         <thead>
           <tr>
@@ -142,7 +142,7 @@ function SearchTable({
         <tbody>
           {searches.map((search) => (
             <tr key={search.id}>
-              <td>
+              <td data-label="Client">
                 <div className={styles.clientCell}>
                   <span>
                     <UserRound size={18} aria-hidden="true" />
@@ -157,16 +157,16 @@ function SearchTable({
                   </div>
                 </div>
               </td>
-              <td><strong>{search.admin_agent?.full_name ?? "Non attribué"}</strong><small>{search.admin_agent?.email ?? "—"}</small></td>
-              <td>
+              <td data-label="Agent"><strong>{search.admin_agent?.full_name ?? "Non attribué"}</strong><small>{search.admin_agent?.email ?? "—"}</small></td>
+              <td data-label="Recherche">
                 <strong>{formatAdminPropertyTypes(search.property_types)}</strong>
                 <small>{search.location_summary || "Secteur non renseigne"}</small>
               </td>
-              <td>
+              <td data-label="Budget">
                 <strong>{formatCurrency(search.maximum_budget)}</strong>
                 <small>{search.minimum_living_area ? `${search.minimum_living_area} m2 min.` : "Surface non renseignee"}</small>
               </td>
-              <td>
+              <td data-label="Cohérence">
                 {search.market_score !== null ? (
                   <span className={styles.marketScoreBadge} data-score={scoreTone(search.market_score)}>
                     {search.market_score}/100
@@ -175,18 +175,22 @@ function SearchTable({
                   <small>Non calcule</small>
                 )}
               </td>
-              <td>
+              <td data-label="Contact">
                 <strong>{formatPreferredChannels(search.preferred_channels, search.preferred_channel)}</strong>
                 <small>{search.contact_email}</small>
               </td>
-              <td>
+              <td data-label="Statut">
                 <span className={styles.statusBadge} data-status={search.status}>
                   {formatStatus(search.status)}
                 </span>
                 {search.deleted_at ? <small>Le {formatDate(search.deleted_at)}</small> : null}
               </td>
               <td>
-                <Link className={styles.iconLink} href={`/admin/recherches/${search.id}`}>
+                <Link
+                  aria-label={`Ouvrir la recherche de ${search.contact_first_name} ${search.contact_last_name}`}
+                  className={styles.iconLink}
+                  href={`/admin/recherches/${search.id}`}
+                >
                   <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </td>

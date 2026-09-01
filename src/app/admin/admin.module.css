@@ -252,6 +252,127 @@
   border-bottom: 0;
 }
 
+.buyerSearchTable {
+  container-name: buyer-searches;
+  container-type: inline-size;
+}
+
+@container buyer-searches (max-width: 1180px) {
+  .tablePanel.buyerSearchTable table,
+  .buyerSearchTable tbody {
+    display: block;
+    min-width: 0;
+  }
+
+  .buyerSearchTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .buyerSearchTable tbody {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+    background: #faf8f5;
+  }
+
+  .buyerSearchTable tr {
+    display: grid;
+    grid-template-columns:
+      minmax(190px, 1.1fr)
+      minmax(170px, 0.9fr)
+      minmax(220px, 1.2fr)
+      minmax(120px, 0.65fr)
+      44px;
+    grid-template-areas:
+      "client agent contact status action"
+      "search search budget score action";
+    gap: 18px 22px;
+    align-items: center;
+    border: 1px solid #e3dcd4;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 18px;
+    box-shadow: 0 8px 20px rgba(17, 17, 17, 0.035);
+  }
+
+  .buyerSearchTable td {
+    min-width: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .buyerSearchTable td:nth-child(1) { grid-area: client; }
+  .buyerSearchTable td:nth-child(2) { grid-area: agent; }
+  .buyerSearchTable td:nth-child(3) { grid-area: search; }
+  .buyerSearchTable td:nth-child(4) { grid-area: budget; }
+  .buyerSearchTable td:nth-child(5) { grid-area: score; }
+  .buyerSearchTable td:nth-child(6) { grid-area: contact; }
+  .buyerSearchTable td:nth-child(7) { grid-area: status; }
+  .buyerSearchTable td:nth-child(8) {
+    grid-area: action;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+  }
+
+  .buyerSearchTable td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 7px;
+    color: #8a8179;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .buyerSearchTable .clientCell {
+    align-items: flex-start;
+  }
+
+  .buyerSearchTable .clientCell > span {
+    flex: 0 0 auto;
+  }
+}
+
+@container buyer-searches (max-width: 920px) {
+  .buyerSearchTable tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 44px;
+    grid-template-areas:
+      "client client action"
+      "agent status action"
+      "search search search"
+      "budget score score"
+      "contact contact contact";
+  }
+}
+
+@container buyer-searches (max-width: 520px) {
+  .buyerSearchTable tbody {
+    padding: 8px;
+  }
+
+  .buyerSearchTable tr {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-areas:
+      "client action"
+      "status status"
+      "agent agent"
+      "search search"
+      "budget budget"
+      "score score"
+      "contact contact";
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
 .tablePanel td > strong,
 .tablePanel td > small {
   display: block;
