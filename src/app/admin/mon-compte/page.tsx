@@ -7,6 +7,7 @@ import { getSiteUrl } from "@/lib/site";
 import admin from "../admin.module.css";
 import { CopyLinkButton } from "../mes-liens/CopyLinkButton";
 import styles from "./account.module.css";
+import { CustomShareLinkBuilder } from "./CustomShareLinkBuilder";
 import { PasswordChangeForm } from "./PasswordChangeForm";
 import { ProfileForm } from "./ProfileForm";
 
@@ -49,6 +50,15 @@ export default async function AdminAccountPage() {
               return <article className={styles.linkCard} key={link.id}>
                 <div className={styles.linkLabel}><ShieldCheck size={16}/>{link.label}</div>
                 <h3>Liens à partager</h3>
+                <CustomShareLinkBuilder
+                  attribution={{
+                    campaign: link.utm_campaign,
+                    code: link.code,
+                    medium: link.utm_medium,
+                    source: link.utm_source,
+                  }}
+                  siteUrl={publicSiteUrl}
+                />
                 <section className={`${styles.destinationCard} ${styles.genericLinkCard}`}>
                   <div className={styles.destinationHeader}>
                     <span className={styles.destinationIcon}><Link2 size={18}/></span>
