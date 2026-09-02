@@ -4,6 +4,7 @@ import type { BuyerSearchCity } from "@/lib/buyer-search/types";
 
 const GEO_API_COMMUNES_URL = "https://geo.api.gouv.fr/communes";
 const MIN_QUERY_LENGTH = 2;
+const MAX_QUERY_LENGTH = 120;
 const MAX_RESULTS = 8;
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = normalizeQuery(searchParams.get("q") ?? "");
 
-  if (query.length < MIN_QUERY_LENGTH) {
+  if (query.length < MIN_QUERY_LENGTH || query.length > MAX_QUERY_LENGTH) {
     return json([]);
   }
 

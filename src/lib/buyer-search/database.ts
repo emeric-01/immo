@@ -66,7 +66,10 @@ export async function createBuyerSearchRecord(
   }
 
   const buyerSearchId = metadata.submissionId ?? crypto.randomUUID();
-  const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
+  const clientAccount = await upsertClientAccount(config, data, {
+    allowProfileUpdate: metadata.source === "client_space",
+    attribution: metadata.attribution,
+  });
 
   try {
     await insertSupabaseRows(
@@ -173,7 +176,10 @@ export async function updateBuyerSearchRecord(
 
   const isInternalCrm = metadata.source === "admin_import";
   if (!isInternalCrm) {
-    const clientAccount = await upsertClientAccount(config, data, metadata.attribution);
+    const clientAccount = await upsertClientAccount(config, data, {
+      allowProfileUpdate: metadata.source === "client_space",
+      attribution: metadata.attribution,
+    });
     updateRow.client_account_id = clientAccount.id;
   }
 
@@ -239,7 +245,14 @@ async function calculateAndStoreMarketScore(
   }
 }
 
-async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchFormData, attribution?: AttributionSnapshot | null) {
+async function upsertClientAccount(
+  config: SupabaseConfig,
+  data: BuyerSearchFormData,
+  {
+    allowProfileUpdate,
+    attribution,
+  }: { allowProfileUpdate: boolean; attribution?: AttributionSnapshot | null },
+) {
   const normalizedEmail = data.contact.email.trim().toLowerCase();
   const preferredChannels = normalizePreferredChannels(
     data.contact.preferredChannels?.length ? data.contact.preferredChannels : data.contact.preferredChannel,
@@ -259,16 +272,25 @@ async function upsertClientAccount(config: SupabaseConfig, data: BuyerSearchForm
   );
 
   if (existing[0]) {
-    await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}`, payload);
-    if (attribution) {
+    if (allowProfileUpdate) {
+      await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}`, payload);
+    }
+    if (allowProfileUpdate && attribution) {
       await updateSupabaseRows(config, "client_accounts", `id=eq.${encodeURIComponent(existing[0].id)}&attribution_visitor_id=is.null`, {
         attribution_visitor_id: attribution.visitorAttributionId,
         attributed_admin_user_id: attribution.attributedAdminUserId,
         first_attribution: attribution,
       });
     }
-    await linkExistingReferrals(config, existing[0].id, normalizedEmail);
-    await linkCrmContactsToClientAccount(existing[0].id, normalizedEmail, data.contact.phone.trim());
+    if (allowProfileUpdate) {
+      await linkExistingReferrals(config, existing[0].id, normalizedEmail);
+      await linkCrmContactsToClientAccount(
+        existing[0].id,
+        normalizedEmail,
+        data.contact.phone.trim(),
+        { allowPhoneMatch: true },
+      );
+    }
     return existing[0];
   }
 

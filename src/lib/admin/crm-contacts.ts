@@ -257,8 +257,16 @@ export async function createInternalEstimation(contact: CrmContact, session: Adm
   }
 }
 
-export async function linkCrmContactsToClientAccount(clientAccountId: string, email: string, phone: string) {
-  const filters = [email ? `email.eq.${encodeURIComponent(email.toLowerCase())}` : "", phone ? `phone.eq.${encodeURIComponent(phone)}` : ""].filter(Boolean);
+export async function linkCrmContactsToClientAccount(
+  clientAccountId: string,
+  email: string,
+  phone: string,
+  { allowPhoneMatch = false }: { allowPhoneMatch?: boolean } = {},
+) {
+  const filters = [
+    email ? `email.eq.${encodeURIComponent(email.toLowerCase())}` : "",
+    allowPhoneMatch && phone ? `phone.eq.${encodeURIComponent(phone)}` : "",
+  ].filter(Boolean);
   if (!filters.length) return;
   try {
     await clientSupabaseRequest(`crm_contacts?linked_client_account_id=is.null&or=(${filters.join(",")})`, {

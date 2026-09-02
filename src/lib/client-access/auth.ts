@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { clientSupabaseRequest } from "./supabase";
 
 const clientCookieName = "les-jumelles-client";
 const sessionDurationSeconds = 60 * 60 * 24 * 30;
@@ -37,7 +38,39 @@ export async function getClientSession(): Promise<ClientSession | null> {
     return null;
   }
 
-  return verifySessionCookie(cookie, secret);
+  const session = verifySessionCookie(cookie, secret);
+
+  if (!session) {
+    return null;
+  }
+
+  try {
+    const accounts = await clientSupabaseRequest<Array<{
+      access_enabled: boolean;
+      email: string;
+      first_name: string;
+      id: string;
+      last_name: string;
+      phone: string;
+    }>>(
+      `client_accounts?id=eq.${encodeURIComponent(session.id)}&access_enabled=eq.true&select=id,email,first_name,last_name,phone,access_enabled&limit=1`,
+    );
+    const account = accounts[0];
+
+    if (!account?.access_enabled) {
+      return null;
+    }
+
+    return {
+      email: account.email,
+      firstName: account.first_name,
+      id: account.id,
+      lastName: account.last_name,
+      phone: account.phone,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function requireClientSession() {

@@ -48,6 +48,19 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.staticlbi.com", pathname: "/**" },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       ...legacyAgenceAsmRedirects,

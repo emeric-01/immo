@@ -481,15 +481,6 @@ export function EstimationForm({
           confidenceScore: estimation?.confidenceScore,
           surfaceM2: Number(form.surfaceM2),
           rooms: Number(form.rooms),
-          estimationInput: {
-            address: form.address.trim(),
-            propertyType: form.propertyType,
-            surfaceM2: Number(form.surfaceM2),
-            rooms: Number(form.rooms),
-            condition: form.condition || undefined,
-            selectedAddress: selectedAddress ?? undefined,
-          },
-          estimationResult: estimation,
         }),
       });
       const result = (await response.json()) as { error?: string };

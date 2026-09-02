@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendSellerLeadNotificationEmail } from "@/lib/email/buyer-search-emails";
 import { clientSupabaseRequest } from "@/lib/client-access/supabase";
-import { attributionColumns, getCurrentAttribution, recordAttributedConversion, type AttributionSnapshot } from "@/lib/attribution";
+import { getCurrentAttribution, recordAttributedConversion, type AttributionSnapshot } from "@/lib/attribution";
 import { linkCrmContactsToClientAccount } from "@/lib/admin/crm-contacts";
 
 type SellerLeadPayload = {
@@ -23,8 +23,6 @@ type SellerLeadPayload = {
   rooms?: unknown;
   surfaceM2?: unknown;
   website?: unknown;
-  estimationInput?: unknown;
-  estimationResult?: unknown;
 };
 
 const propertyTypes = new Set(["house", "apartment", "land", "other"]);
@@ -44,6 +42,14 @@ function readShortString(value: unknown, maximumLength = 120) {
 
   const normalized = value.trim();
   return normalized && normalized.length <= maximumLength ? normalized : undefined;
+}
+
+function readUuid(value: unknown) {
+  const candidate = readShortString(value, 36);
+
+  return candidate && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : undefined;
 }
 
 async function saveLeadAccountAndEstimation({
@@ -67,13 +73,7 @@ async function saveLeadAccountAndEstimation({
   );
   let accountId = existing[0]?.id;
 
-  if (accountId) {
-    await clientSupabaseRequest(`client_accounts?id=eq.${encodeURIComponent(accountId)}`, {
-      body: JSON.stringify({ first_name: firstName, last_name: lastName, phone }),
-      method: "PATCH",
-    });
-    if (attribution) await clientSupabaseRequest(`client_accounts?id=eq.${encodeURIComponent(accountId)}&attribution_visitor_id=is.null`, { body: JSON.stringify({ attribution_visitor_id: attribution.visitorAttributionId, attributed_admin_user_id: attribution.attributedAdminUserId, first_attribution: attribution }), method: "PATCH" });
-  } else {
+  if (!accountId) {
     const created = await clientSupabaseRequest<Array<{ id: string }>>(
       "client_accounts?select=id",
       {
@@ -100,53 +100,18 @@ async function saveLeadAccountAndEstimation({
 
   await linkCrmContactsToClientAccount(accountId, normalizedEmail, phone);
 
-  const estimationId = readShortString(payload.estimationId);
+  const estimationId = readUuid(payload.estimationId);
   if (estimationId) {
+    const recentAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     await clientSupabaseRequest(
-      `property_estimations?id=eq.${encodeURIComponent(estimationId)}&client_account_id=is.null`,
+      `property_estimations?id=eq.${encodeURIComponent(estimationId)}&client_account_id=is.null&record_origin=eq.public&created_at=gte.${encodeURIComponent(recentAfter)}`,
       {
         body: JSON.stringify({ client_account_id: accountId }),
         method: "PATCH",
       },
     );
-    return accountId;
   }
 
-  if (!payload.estimationInput || !payload.estimationResult) {
-    return;
-  }
-
-  const input = payload.estimationInput as Record<string, unknown>;
-  const result = payload.estimationResult as Record<string, unknown>;
-  const selectedAddress = input.selectedAddress as Record<string, unknown> | undefined;
-  const postCodes = selectedAddress?.postCode;
-
-  await clientSupabaseRequest("property_estimations", {
-    body: JSON.stringify({
-      address_label: readShortString(result.addressLabel, 250) || readShortString(payload.address, 250),
-      city_name: readShortString(payload.city, 120),
-      client_account_id: accountId,
-      confidence_score: readPositiveNumber(payload.confidenceScore, 5),
-      high_price: readPositiveNumber(payload.estimatedHighPrice, 100_000_000),
-      generated_high_price: readPositiveNumber(payload.estimatedHighPrice, 100_000_000),
-      input_payload: input,
-      low_price: readPositiveNumber(payload.estimatedLowPrice, 100_000_000),
-      generated_low_price: readPositiveNumber(payload.estimatedLowPrice, 100_000_000),
-      median_price: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
-      generated_median_price: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
-      postal_code: Array.isArray(postCodes) ? readShortString(postCodes[0], 12) : undefined,
-      price_per_m2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
-      property_type: payload.propertyType,
-      generated_result_payload: result,
-      result_payload: result,
-      record_origin: "client",
-      rooms: readPositiveNumber(payload.rooms, 100),
-      source: readShortString(result.source, 120) || "Immo Data",
-      surface_m2: readPositiveNumber(payload.surfaceM2, 100_000),
-      ...attributionColumns(attribution),
-    }),
-    method: "POST",
-  });
   return accountId;
 }
 
@@ -158,10 +123,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const address = typeof payload.address === "string" ? payload.address.trim() : "";
-    const city = typeof payload.city === "string" ? payload.city.trim() : "";
-    const phone = typeof payload.phone === "string" ? payload.phone.trim() : "";
-    const email = typeof payload.email === "string" ? payload.email.trim() : "";
+    const address = readShortString(payload.address, 250) ?? "";
+    const city = readShortString(payload.city, 120) ?? "";
+    const phone = readShortString(payload.phone, 30) ?? "";
+    const email = readShortString(payload.email, 180) ?? "";
     const firstName = readShortString(payload.firstName, 80);
     const lastName = readShortString(payload.lastName, 80);
     const propertyType = typeof payload.propertyType === "string" ? payload.propertyType : "";
@@ -197,7 +162,7 @@ export async function POST(request: Request) {
       estimatedLowPrice: readPositiveNumber(payload.estimatedLowPrice, 100_000_000),
       estimatedMedianPrice: readPositiveNumber(payload.estimatedMedianPrice, 100_000_000),
       estimatedPricePerM2: readPositiveNumber(payload.estimatedPricePerM2, 100_000),
-      estimationId: readShortString(payload.estimationId),
+      estimationId: readUuid(payload.estimationId),
       email,
       firstName,
       lastName,

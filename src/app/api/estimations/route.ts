@@ -5,7 +5,11 @@ import {
 } from "@/lib/immo-data";
 import { getClientSession } from "@/lib/client-access/auth";
 import { savePropertyEstimation } from "@/lib/client-access/estimations";
-import { recordEstimationApiUsage } from "@/lib/estimation-api-alerts";
+import {
+  estimationHourlyIpLimit,
+  isEstimationRateLimited,
+  recordEstimationApiUsage,
+} from "@/lib/estimation-api-alerts";
 import { getCityByMarketIdentifier } from "@/lib/cities";
 import { getPublishedCityMarketData } from "@/lib/published-city-market";
 import { getCurrentAttribution, recordAttributedConversion } from "@/lib/attribution";
@@ -13,14 +17,53 @@ import { getCurrentAttribution, recordAttributedConversion } from "@/lib/attribu
 function isValidEstimationInput(
   input: Partial<PropertyEstimationInput>,
 ): input is PropertyEstimationInput {
-  return Boolean(
-    input.address &&
-      (input.propertyType === "apartment" || input.propertyType === "house") &&
-      typeof input.surfaceM2 === "number" &&
-      input.surfaceM2 > 0 &&
-      typeof input.rooms === "number" &&
-      input.rooms > 0,
+  const address = typeof input.address === "string" ? input.address.trim() : "";
+  const optionalNumbers: Array<[number | undefined, number, number]> = [
+    [input.landAreaM2, 0, 10_000_000],
+    [input.bathrooms, 0, 100],
+    [input.constructionYear, 1000, 2200],
+    [input.buildingLevels, 0, 300],
+    [input.floor, -10, 300],
+  ];
+  const optionalBooleans = [
+    input.hasOutdoorSpace,
+    input.hasParking,
+    input.hasElevator,
+    input.hasCellar,
+    input.hasPool,
+    input.hasNiceView,
+  ];
+  const selectedAddress = input.selectedAddress;
+  const selectedAddressIsValid = !selectedAddress || (
+    typeof selectedAddress === "object"
+    && typeof selectedAddress.label === "string"
+    && selectedAddress.label.length <= 300
+    && Number.isFinite(selectedAddress.latitude)
+    && selectedAddress.latitude >= -90
+    && selectedAddress.latitude <= 90
+    && Number.isFinite(selectedAddress.longitude)
+    && selectedAddress.longitude >= -180
+    && selectedAddress.longitude <= 180
   );
+
+  return address.length >= 3
+    && address.length <= 250
+    && (input.propertyType === "apartment" || input.propertyType === "house")
+    && typeof input.surfaceM2 === "number"
+    && Number.isFinite(input.surfaceM2)
+    && input.surfaceM2 > 0
+    && input.surfaceM2 <= 100_000
+    && typeof input.rooms === "number"
+    && Number.isInteger(input.rooms)
+    && input.rooms > 0
+    && input.rooms <= 100
+    && optionalNumbers.every(([value, minimum, maximum]) => value === undefined || (
+      typeof value === "number" && Number.isFinite(value) && value >= minimum && value <= maximum
+    ))
+    && optionalBooleans.every((value) => value === undefined || typeof value === "boolean")
+    && (input.condition === undefined || ["new", "good", "refresh", "renovate"].includes(input.condition))
+    && (input.dpe === undefined || ["A", "B", "C", "D", "E", "F", "G"].includes(input.dpe))
+    && selectedAddressIsValid;
 }
 
 export async function POST(request: Request) {
@@ -37,7 +80,15 @@ export async function POST(request: Request) {
       );
     }
 
-    await recordEstimationApiUsage(request);
+    const usage = await recordEstimationApiUsage(request);
+
+    if (isEstimationRateLimited(usage)) {
+      return NextResponse.json(
+        { error: `La limite de ${estimationHourlyIpLimit} estimations par heure est atteinte.` },
+        { headers: { "Retry-After": "3600" }, status: 429 },
+      );
+    }
+
     const estimation = await createImmoDataEstimation(input);
     const city = getCityByMarketIdentifier({
       inseeCode: input.selectedAddress?.inseeCode,

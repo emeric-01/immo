@@ -12,12 +12,18 @@ type UsageCounter = {
   ip_count: number;
 };
 
-export async function recordEstimationApiUsage(request: Request) {
+export const estimationHourlyIpLimit = 5;
+
+export function isEstimationRateLimited(counter: UsageCounter | null) {
+  return Boolean(counter && counter.ip_count > estimationHourlyIpLimit);
+}
+
+export async function recordEstimationApiUsage(request: Request): Promise<UsageCounter | null> {
   try {
     const clientIp = getClientIp(request);
 
     if (isMonitoringExcludedIp(clientIp)) {
-      return;
+      return null;
     }
 
     const ipHash = hashClientIp(clientIp);
@@ -30,19 +36,24 @@ export async function recordEstimationApiUsage(request: Request) {
     );
     const counter = counters[0];
 
-    if (!counter || (!counter.alert_ip && !counter.alert_global)) {
-      return;
+    if (!counter) {
+      return null;
     }
 
-    await sendEstimationVolumeAlertEmail({
-      globalCount: counter.global_count,
-      ipCount: counter.ip_count,
-      scope: counter.alert_global ? "global" : "ip",
-      windowStartedAt: counter.bucket_started_at,
-    });
+    if (counter.alert_ip || counter.alert_global) {
+      await sendEstimationVolumeAlertEmail({
+        globalCount: counter.global_count,
+        ipCount: counter.ip_count,
+        scope: counter.alert_global ? "global" : "ip",
+        windowStartedAt: counter.bucket_started_at,
+      });
+    }
+
+    return counter;
   } catch (error) {
-    // Monitoring must never prevent a legitimate estimation.
+    // A monitoring outage must never prevent a legitimate estimation.
     console.error("Estimation API monitoring failed", error);
+    return null;
   }
 }
 

@@ -97,9 +97,9 @@ export async function createAdminUser(input: {
   const email = normalizeEmail(input.email);
   const referralCode = normalizeAttributionCode(input.referralCode || suggestAttributionCode(input.fullName));
 
-  if (!email || input.password.length < 10) {
+  if (!email || input.password.length < 12 || input.password.length > 1024) {
     return {
-      message: "Renseignez un email valide et un mot de passe d'au moins 10 caracteres.",
+      message: "Renseignez un email valide et un mot de passe de 12 caractères minimum.",
       success: false,
     };
   }
@@ -225,7 +225,7 @@ export async function authenticateAdminUser(email: string, password: string) {
 
   const normalizedEmail = normalizeEmail(email);
 
-  if (!normalizedEmail || !password) {
+  if (!normalizedEmail || email.length > 180 || !password || password.length > 1024) {
     return null;
   }
 

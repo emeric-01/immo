@@ -84,7 +84,7 @@ export function CreateAdminUserForm() {
         <label htmlFor="email">Email</label>
         <input id="email" name="email" placeholder="claire@lesjumelles.immo" required type="email" />
         <label htmlFor="password">Mot de passe provisoire</label>
-        <input id="password" minLength={10} name="password" required type="password" />
+        <input id="password" maxLength={1024} minLength={12} name="password" required type="password" />
         <label htmlFor="referralCode">Code du lien d’attribution</label>
         <input
           autoCapitalize="none"

@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { AdminSession } from "./auth";
-import { adminPermissions, defaultPermissionsByRole, type AdminPermission } from "./permission-definitions";
+import { adminPermissions, type AdminPermission } from "./permission-definitions";
 
 export type { AdminPermission } from "./permission-definitions";
 
@@ -26,7 +26,7 @@ export async function getAdminPermissions(session: AdminSession): Promise<AdminP
 
   const config = getConfig();
 
-  if (!config) return [...defaultPermissionsByRole[session.role]];
+  if (!config) return [];
 
   const userParams = new URLSearchParams({
     admin_user_id: `eq.${session.id}`,
@@ -42,17 +42,16 @@ export async function getAdminPermissions(session: AdminSession): Promise<AdminP
   try {
     const headers = { apikey: config.key, Authorization: `Bearer ${config.key}` };
     const userResponse = await fetch(`${config.url}/rest/v1/admin_user_permissions?${userParams}`, { cache: "no-store", headers });
-    if (userResponse.ok) {
-      const rows = await userResponse.json() as Array<{ is_allowed: boolean; permission: AdminPermission }>;
-      if (rows.length > 0) return rows.filter((row) => row.is_allowed).map((row) => row.permission);
-    }
+    if (!userResponse.ok) return [];
+    const rows = await userResponse.json() as Array<{ is_allowed: boolean; permission: AdminPermission }>;
+    if (rows.length > 0) return rows.filter((row) => row.is_allowed).map((row) => row.permission);
 
     const roleResponse = await fetch(`${config.url}/rest/v1/admin_role_permissions?${roleParams}`, { cache: "no-store", headers });
-    if (!roleResponse.ok) return [...defaultPermissionsByRole[session.role]];
+    if (!roleResponse.ok) return [];
     const roleRows = await roleResponse.json() as Array<{ permission: AdminPermission }>;
-    return roleRows.length ? roleRows.map((row) => row.permission) : [...defaultPermissionsByRole[session.role]];
+    return roleRows.map((row) => row.permission);
   } catch {
-    return [...defaultPermissionsByRole[session.role]];
+    return [];
   }
 }
 

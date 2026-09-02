@@ -24,6 +24,7 @@ type LoginChallenge = {
 
 const challengeDurationMinutes = 10;
 const resendDelaySeconds = 60;
+const emailPattern = /^\S+@\S+\.\S+$/;
 
 export async function requestClientLoginCode({
   email,
@@ -35,6 +36,11 @@ export async function requestClientLoginCode({
   userAgent?: string | null;
 }) {
   const normalizedEmail = email.trim().toLowerCase();
+
+  if (normalizedEmail.length > 180 || !emailPattern.test(normalizedEmail)) {
+    return;
+  }
+
   const account = await findClientAccount(normalizedEmail);
 
   // Keep the public response identical whether or not the account exists.
@@ -94,6 +100,15 @@ export async function requestClientLoginCode({
 
 export async function verifyClientLoginCode(email: string, code: string) {
   const normalizedEmail = email.trim().toLowerCase();
+
+  if (
+    normalizedEmail.length > 180
+    || !emailPattern.test(normalizedEmail)
+    || !/^\d{6}$/.test(code.trim())
+  ) {
+    return false;
+  }
+
   const account = await findClientAccount(normalizedEmail);
 
   if (!account?.access_enabled) {
@@ -115,20 +130,20 @@ export async function verifyClientLoginCode(email: string, code: string) {
   const isValid =
     expected.length === received.length && timingSafeEqual(expected, received);
 
-  await clientSupabaseRequest(
-    `client_login_challenges?id=eq.${encodeURIComponent(challenge.id)}`,
+  const claimed = await clientSupabaseRequest<Array<{ id: string }>>(
+    `client_login_challenges?id=eq.${encodeURIComponent(challenge.id)}&attempt_count=eq.${challenge.attempt_count}&consumed_at=is.null&select=id`,
     {
       body: JSON.stringify(
         isValid
           ? { consumed_at: new Date().toISOString() }
           : { attempt_count: challenge.attempt_count + 1 },
       ),
-      headers: { Prefer: "return=minimal" },
+      headers: { Prefer: "return=representation" },
       method: "PATCH",
     },
   );
 
-  if (!isValid) {
+  if (!isValid || !claimed[0]) {
     return false;
   }
 

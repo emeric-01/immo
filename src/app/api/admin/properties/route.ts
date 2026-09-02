@@ -4,6 +4,8 @@ import { hasAdminPermission } from "@/lib/admin/permissions";
 import { adminRest, getSupabaseAdminConfig } from "@/lib/properties";
 import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 import { geocodePropertyAddress } from "@/lib/property-geocoding";
+import { ImageUploadValidationError, validateImageUpload } from "@/lib/validated-image-upload";
+import { sanitizePropertyDescription } from "@/lib/sanitize-rich-html";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 const number = (form: FormData, key: string) => { const value = text(form, key); return value ? Number(value) : null; };
@@ -16,6 +18,9 @@ export async function POST(request: Request) {
   if (!(await hasAdminPermission(session, "properties:create"))) return NextResponse.json({ error: "Vous ne pouvez pas créer de bien." }, { status: 403 });
   try {
     const form = await request.formData();
+    const files = form.getAll("photos").filter((item): item is File => item instanceof File && item.size > 0);
+    if (files.length > 30) return NextResponse.json({ error: "Une annonce accepte au maximum 30 photos." }, { status: 400 });
+    const validatedFiles = await Promise.all(files.map((file) => validateImageUpload(file, 10 * 1024 * 1024)));
     const title = text(form, "title"); const city = text(form, "city_name");
     const requestedStatus = text(form, "status");
     const status = propertyStatuses.has(requestedStatus) ? requestedStatus : "draft";
@@ -31,7 +36,8 @@ export async function POST(request: Request) {
       neighborhood: text(form, "neighborhood") || null, property_type: text(form, "property_type") || "apartment",
       transaction_type: text(form, "transaction_type") || "sale", price: number(form, "price"), surface_m2: number(form, "surface_m2"),
       rooms: number(form, "rooms"), bedrooms: number(form, "bedrooms"), floor_label: text(form, "floor_label") || null,
-      short_description: text(form, "short_description") || null, description: text(form, "description") || null,
+      short_description: text(form, "short_description") || null,
+      description: sanitizePropertyDescription(text(form, "description")) || null,
       address: text(form, "address") || null, latitude: geocode?.latitude ?? null, longitude: geocode?.longitude ?? null, energy_rating: text(form, "energy_rating") || null,
       condominium_charges_monthly: number(form, "condominium_charges_monthly"), property_tax_annual: number(form, "property_tax_annual"),
       condominium_lots: number(form, "condominium_lots"), terrace_m2: number(form, "terrace_m2"), heating: text(form, "heating") || null,
@@ -47,15 +53,13 @@ export async function POST(request: Request) {
       updated_by_admin_id: session.id === "bootstrap" ? null : session.id,
     };
     const [property] = await adminRest<{ id: string; slug: string }[]>("properties", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
-    const config = getSupabaseAdminConfig(); const files = form.getAll("photos").filter((item): item is File => item instanceof File && item.size > 0);
-    if (config) for (const [position, file] of files.entries()) {
-      if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) continue;
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-      const storagePath = `${property.id}/${crypto.randomUUID()}.${ext}`;
-      const uploaded = await fetch(`${config.url}/storage/v1/object/property-images/${storagePath}`, { method: "POST", headers: { apikey: config.key, Authorization: `Bearer ${config.key}`, "Content-Type": file.type, "x-upsert": "false" }, body: await file.arrayBuffer() });
+    const config = getSupabaseAdminConfig();
+    if (config) for (const [position, image] of validatedFiles.entries()) {
+      const storagePath = `${property.id}/${crypto.randomUUID()}.${image.extension}`;
+      const uploaded = await fetch(`${config.url}/storage/v1/object/property-images/${storagePath}`, { method: "POST", headers: { apikey: config.key, Authorization: `Bearer ${config.key}`, "Content-Type": image.contentType, "x-upsert": "false" }, body: image.bytes });
       if (!uploaded.ok) throw new Error(await uploaded.text());
       await adminRest("property_images", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ property_id: property.id, storage_path: storagePath, public_url: `${config.url}/storage/v1/object/public/property-images/${storagePath}`, alt_text: `${title} — photo ${position + 1}`, position, is_cover: position === 0 }) });
     }
     return NextResponse.json({ id: property.id, slug: property.slug });
-  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Création impossible." }, { status: 500 }); }
+  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Création impossible." }, { status: error instanceof ImageUploadValidationError ? 400 : 500 }); }
 }

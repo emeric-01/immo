@@ -4,6 +4,8 @@ import { hasAdminPermission } from "@/lib/admin/permissions";
 import { adminRest, getAdminProperty, getSupabaseAdminConfig, type PropertyImage } from "@/lib/properties";
 import { EXCLUSIVE_MANDATE_AMENITY } from "@/lib/property-constants";
 import { geocodePropertyAddress } from "@/lib/property-geocoding";
+import { ImageUploadValidationError, validateImageUpload } from "@/lib/validated-image-upload";
+import { sanitizePropertyDescription } from "@/lib/sanitize-rich-html";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 const number = (form: FormData, key: string) => text(form, key) ? Number(text(form, key)) : null;
@@ -22,6 +24,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Vous pouvez modifier uniquement les biens que vous avez créés." }, { status: 403 });
     }
     const form = await request.formData();
+    const files = form.getAll("photos").filter((value): value is File => value instanceof File && value.size > 0);
+    if (files.length > 30) return NextResponse.json({ error: "Une annonce accepte au maximum 30 nouvelles photos par enregistrement." }, { status: 400 });
+    const validatedFiles = await Promise.all(files.map((file) => validateImageUpload(file, 10 * 1024 * 1024)));
     const requestedStatus = text(form, "status");
     const status = propertyStatuses.has(requestedStatus) ? requestedStatus : "draft";
     const geocode = await geocodePropertyAddress(text(form, "address"), text(form, "postal_code"), text(form, "city_name"));
@@ -35,7 +40,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       property_type: text(form, "property_type") || "apartment", price: number(form, "price"),
       surface_m2: number(form, "surface_m2"), rooms: number(form, "rooms"), bedrooms: number(form, "bedrooms"),
       floor_label: text(form, "floor_label") || null, short_description: text(form, "short_description") || null,
-      description: text(form, "description") || null, address: text(form, "address") || null,
+      description: sanitizePropertyDescription(text(form, "description")) || null,
+      address: text(form, "address") || null,
       ...(geocode ? { latitude: geocode.latitude, longitude: geocode.longitude } : {}),
       energy_rating: text(form, "energy_rating") || null,
       condominium_charges_monthly: number(form, "condominium_charges_monthly"),
@@ -70,18 +76,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     const previous = await adminRest<PropertyImage[]>(`property_images?property_id=eq.${id}&select=*&order=position.desc&limit=1`);
     let position = (previous[0]?.position ?? -1) + 1;
-    const files = form.getAll("photos").filter((value): value is File => value instanceof File && value.size > 0);
-    if (config) for (const file of files) {
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-      const path = `${id}/${crypto.randomUUID()}.${ext}`;
-      const upload = await fetch(`${config.url}/storage/v1/object/property-images/${path}`, { method: "POST", headers: { apikey: config.key, Authorization: `Bearer ${config.key}`, "Content-Type": file.type }, body: await file.arrayBuffer() });
+    if (config) for (const image of validatedFiles) {
+      const path = `${id}/${crypto.randomUUID()}.${image.extension}`;
+      const upload = await fetch(`${config.url}/storage/v1/object/property-images/${path}`, { method: "POST", headers: { apikey: config.key, Authorization: `Bearer ${config.key}`, "Content-Type": image.contentType, "x-upsert": "false" }, body: image.bytes });
       if (!upload.ok) throw new Error(await upload.text());
       await adminRest("property_images", { method: "POST", body: JSON.stringify({ property_id: id, storage_path: path, public_url: `${config.url}/storage/v1/object/public/property-images/${path}`, position, is_cover: position === 0 }) });
       position++;
     }
     return NextResponse.json({ slug: property.slug });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Modification impossible" }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Modification impossible" }, { status: error instanceof ImageUploadValidationError ? 400 : 500 });
   }
 }
 

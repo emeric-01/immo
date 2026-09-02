@@ -242,7 +242,7 @@ export default async function ContentArticlePage({ params }: ContentArticlePageP
             </footer>
           ) : null}
         </article>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </div>
     </main>
   );

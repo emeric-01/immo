@@ -40,7 +40,7 @@ export default async function AdminLoginPage({
             <label htmlFor="email">Email</label>
             <input id="email" name="email" type="email" placeholder="admin@lesjumelles.immo" required />
             <label htmlFor="password">Mot de passe</label>
-            <input id="password" name="password" type="password" placeholder="Votre mot de passe" required />
+            <input id="password" maxLength={1024} name="password" type="password" placeholder="Votre mot de passe" required />
             <p className={styles.helpText}>Le token bootstrap reste accepte tant qu&apos;aucun compte admin n&apos;est cree.</p>
             {hasError ? <p className={styles.errorText}>Code incorrect.</p> : null}
             <button type="submit">Entrer dans l&apos;admin</button>

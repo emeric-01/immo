@@ -6,7 +6,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./google-analytics-consent.module.css";
 
-const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-64T2J16ZH4";
+const configuredMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() ?? "";
+const MEASUREMENT_ID = /^G-[A-Z0-9]+$/.test(configuredMeasurementId)
+  ? configuredMeasurementId
+  : "G-64T2J16ZH4";
 const STORAGE_KEY = "jumellesimmo-analytics-consent";
 const CONSENT_DURATION = 180 * 24 * 60 * 60 * 1000;
 

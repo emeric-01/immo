@@ -3,7 +3,13 @@ import { NextResponse } from "next/server";
 function readVercelHeader(headers: Headers, key: string) {
   const value = headers.get(key);
 
-  return value ? decodeURIComponent(value) : undefined;
+  if (!value) return undefined;
+
+  try {
+    return decodeURIComponent(value).slice(0, 120);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function GET(request: Request) {

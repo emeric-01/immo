@@ -5,6 +5,7 @@ import type { AdminSession } from "@/lib/admin/auth";
 import { getAdminEstimation, getAdminEstimations, type AdminEstimation } from "@/lib/admin/estimations";
 import type { PropertyEstimation, PropertyEstimationInput } from "@/lib/immo-data";
 import { normalizeReportBlocks, reportBlockDefinitions, type EstimationReportBlock } from "@/lib/estimation-report-config";
+import { validateImageUpload } from "@/lib/validated-image-upload";
 
 export type EstimationAgentWorkspace = {
   id: string;
@@ -147,22 +148,19 @@ export async function updateEstimationAgentWorkspace(id: string, update: Workspa
 }
 
 const ASSET_BUCKET = "estimation-report-assets";
-const allowedPhotoTypes = new Set<EstimationWorkspacePhoto["contentType"]>(["image/jpeg", "image/png", "image/webp"]);
 
 export async function uploadEstimationWorkspacePhoto(id: string, file: File, session: AdminSession) {
   const dossier = await getEstimationAgentWorkspace(id, session);
   if (!dossier) throw new Error("Dossier professionnel introuvable");
   if (dossier.workspace.photos.length >= 10) throw new Error("Le rapport accepte au maximum 10 photos.");
-  if (!allowedPhotoTypes.has(file.type as EstimationWorkspacePhoto["contentType"])) throw new Error("Format accepté : JPG, PNG ou WebP.");
-  if (file.size <= 0 || file.size > 12 * 1024 * 1024) throw new Error("Chaque photo doit peser moins de 12 Mo.");
+  const image = await validateImageUpload(file, 12 * 1024 * 1024);
 
-  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const photo: EstimationWorkspacePhoto = {
     id: randomUUID(),
-    storagePath: `${id}/${randomUUID()}.${extension}`,
+    storagePath: `${id}/${randomUUID()}.${image.extension}`,
     name: file.name.slice(0, 180),
     caption: "",
-    contentType: file.type as EstimationWorkspacePhoto["contentType"],
+    contentType: image.contentType,
     size: file.size,
     enabled: true,
     createdAt: new Date().toISOString(),
@@ -170,7 +168,7 @@ export async function uploadEstimationWorkspacePhoto(id: string, file: File, ses
   const { url, key } = config();
   const upload = await fetch(`${url}/storage/v1/object/${ASSET_BUCKET}/${photo.storagePath}`, {
     method: "POST",
-    body: new Uint8Array(await file.arrayBuffer()),
+    body: image.bytes,
     headers: headers(key, { "Content-Type": photo.contentType, "x-upsert": "false" }),
   });
   if (!upload.ok) throw new Error(`Envoi de la photo impossible (${upload.status}) : ${await upload.text()}`);

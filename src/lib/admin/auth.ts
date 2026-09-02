@@ -3,7 +3,12 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { authenticateAdminUser, isAdminUsersDatabaseConfigured, type SafeAdminUser } from "./users";
+import {
+  authenticateAdminUser,
+  getAdminUserSummary,
+  isAdminUsersDatabaseConfigured,
+  type SafeAdminUser,
+} from "./users";
 
 const adminCookieName = "les-jumelles-admin";
 const sessionDurationSeconds = 60 * 60 * 8;
@@ -45,7 +50,24 @@ export async function getAdminSession(): Promise<AdminSession | null> {
     return null;
   }
 
-  return verifySessionCookie(cookie, secret);
+  const session = verifySessionCookie(cookie, secret);
+
+  if (!session || session.role === "bootstrap") {
+    return session;
+  }
+
+  const activeUser = await getAdminUserSummary(session.id);
+
+  if (!activeUser) {
+    return null;
+  }
+
+  return {
+    email: activeUser.email,
+    fullName: activeUser.full_name,
+    id: activeUser.id,
+    role: activeUser.role,
+  };
 }
 
 export async function requireAdminSession() {
@@ -59,6 +81,10 @@ export async function requireAdminSession() {
 }
 
 export async function setAdminSession(email: string, password: string) {
+  if (email.length > 180 || password.length > 1024) {
+    return false;
+  }
+
   const adminUser = await authenticateAdminUser(email, password);
 
   if (adminUser) {
@@ -73,7 +99,7 @@ export async function setAdminSession(email: string, password: string) {
 
   const token = getAdminToken();
 
-  if (!token || password !== token) {
+  if (!token || !secretsMatch(password, token)) {
     return false;
   }
 
@@ -85,6 +111,14 @@ export async function setAdminSession(email: string, password: string) {
   });
 
   return true;
+}
+
+function secretsMatch(received: string, expected: string) {
+  const receivedBuffer = Buffer.from(received);
+  const expectedBuffer = Buffer.from(expected);
+
+  return receivedBuffer.length === expectedBuffer.length
+    && timingSafeEqual(receivedBuffer, expectedBuffer);
 }
 
 export async function clearAdminSession() {
