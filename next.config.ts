@@ -51,6 +51,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/documents/estimation-location-tivoli.pdf",
+        headers: [
+          { key: "Content-Disposition", value: 'inline; filename="estimation-location-tivoli.pdf"' },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
